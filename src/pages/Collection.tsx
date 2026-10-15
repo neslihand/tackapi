@@ -1,0 +1,35 @@
+import { useState } from 'react';
+import { ArrowRight, ArrowUpRight, Check, Compass, Download, LockKeyhole, Rotate3D, Stamp } from 'lucide-react';
+import { useContent } from '../lib/contentStore';
+import { achievements, type Achievement } from '../lib/progress';
+import { useProgress } from '../lib/store';
+import { Link } from '../lib/navigation';
+import { Modal, PageHeading, symbols } from '../components/UI';
+
+function Medallion({ achievement, large = false }: { achievement: Achievement; large?: boolean }) {
+  const Icon = symbols[achievement.symbol as keyof typeof symbols];
+  return <span className={`medallion ${achievement.metal} ${achievement.value >= achievement.required ? 'unlocked' : 'locked'} ${large ? 'large' : ''}`}><span className="medallion-dots" /><span className="medallion-ring"><small>EŞİK · ANADOLU MİRASI</small><Icon strokeWidth={1} /><span className="medallion-laurels">❧ ✧ ❧</span></span></span>;
+}
+export function Achievements() {
+  const { progress } = useProgress();
+  const { artifacts } = useContent();
+  const list = achievements(progress, artifacts);
+  const [selected, setSelected] = useState<Achievement | null>(null);
+  const [flipped, setFlipped] = useState(false);
+  return <div className="achievement-page" data-nav-theme="dark"><div className="page-shell"><PageHeading kicker="MERAKININ HAZİNESİ" title={<>Hikâyeler birikir.<br /><em>İzleri sende kalır.</em></>}>Her madalyon, attığın bir adımın hatırası. Yeni bir hikâye keşfet, koleksiyonunu büyüt.</PageHeading><div className="collection-counter"><span>{list.filter(a => a.value >= a.required).length}</span> / 6 MADALYON <i>✧</i> <span>{Object.keys(progress.discovered).length}</span> KEŞİF</div><div className="medallion-grid">{list.map(a => <button className="medallion-item" key={a.id} onClick={() => { setSelected(a); setFlipped(false); }}><Medallion achievement={a} /><h2>{a.name}</h2><span className="medallion-status">{a.value >= a.required ? <><Check size={13} /> KOLEKSİYONUNDA</> : <><LockKeyhole size={12} /> {Math.min(a.value, a.required)} / {a.required} TAMAMLANDI</>}</span><div className="achievement-progress"><span style={{ width: `${Math.min(100, a.value / a.required * 100)}%` }} /></div></button>)}</div><div className="collection-bottom"><p>Her yeni keşif, yeni bir kapıyı aralar.</p><Link className="button gold" to="/kesfet">Keşfe devam et <ArrowRight size={18} /></Link></div></div>{selected && <Modal title={selected.name} onClose={() => setSelected(null)}><button className={`medallion-inspect ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)} aria-label="Madalyonu çevir" aria-pressed={flipped}><span className="medallion-front"><Medallion achievement={selected} large /></span><span className="medallion-back"><Compass size={50} strokeWidth={1} /><strong>{selected.value >= selected.required ? 'BU İZ SENİN' : 'SIRADAKİ KEŞFİN'}</strong><span>EŞİK · MİRAS KOLEKSİYONU</span></span></button><span className="flip-hint"><Rotate3D size={15} /> Çevirmek için madalyona dokun</span><p>{selected.description}</p><p className="achievement-modal-progress">{Math.min(selected.value, selected.required)} / {selected.required} tamamlandı</p><Link className="button dark" to={selected.id === 'quiz' ? '/oyun' : '/kesfet'} onClick={() => setSelected(null)}>{selected.value >= selected.required ? 'Keşfe devam et' : 'Göreve başla'}<ArrowUpRight size={17} /></Link></Modal>}</div>;
+}
+
+export function Passport() {
+  const { progress, storageAvailable, notify } = useProgress();
+  const { artifacts } = useContent();
+  const found = artifacts.filter(a => progress.discovered[a.id]);
+  const cities = new Set(found.map(a => a.city)).size;
+  const [page, setPage] = useState(0);
+  const pages = Math.max(1, Math.ceil(found.length / 4));
+  function download() {
+    const content = { platform: 'EŞİK — Tarihe Açılan Kapı', exportedAt: new Date().toISOString(), notice: 'Dijital keşif kaydıdır; fiziksel ziyaret doğrulaması içermez.', discoveries: found.map(a => ({ name: a.name, city: a.city, discoveredAt: progress.discovered[a.id] })), achievements: achievements(progress, artifacts).filter(a => a.value >= a.required).map(a => a.name), quiz: progress.quiz };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' }));
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'esik-miras-pasaportum.json'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify('Pasaportun JSON dosyası olarak indirildi.');
+  }
+  return <div className="page-shell passport-page"><PageHeading kicker="SENİN KEŞİF GÜNLÜĞÜN" title={<>Biriktirdiğin <em>hikâyeler.</em></>}>Bir yerin hikâyesini öğrendiğinde, o yer artık biraz da senindir.</PageHeading><div className="passport-stats"><div><strong>{found.length.toString().padStart(2, '0')}</strong><span>KEŞFEDİLEN ESER</span></div><div><strong>{cities.toString().padStart(2, '0')}</strong><span>FARKLI ŞEHİR</span></div><div><strong>{achievements(progress, artifacts).filter(a => a.value >= a.required).length.toString().padStart(2, '0')}</strong><span>KAZANILAN MADALYON</span></div></div><div className="passport-book"><div className="passport-cover"><span>TÜRKİYE KÜLTÜREL MİRASI</span><div className="passport-cover-frame"><Compass size={90} strokeWidth={0.7} /><h2>MİRAS<br />PASAPORTU</h2><div className="cover-rule" /><p>Merakla başlayan<br />bir ömürlük yolculuk.</p></div><span>EŞİK · DİJİTAL KEŞİF GÜNLÜĞÜ</span></div><div className="passport-paper"><div className="paper-heading"><span>KEŞİF MÜHÜRLERİ</span><Stamp size={22} /></div>{!found.length ? <div className="passport-empty"><Compass size={53} strokeWidth={1} /><h3>İlk mühür,<br /><em>ilk hikâyeni bekliyor.</em></h3><p>Bir eserin hikâyesini oku ve sonunda “Pasaportuma mühürle” seçeneğine dokun.</p><Link className="text-link" to="/kesfet">İlk keşfine başla <ArrowUpRight size={17} /></Link></div> : <div className="passport-stamp-grid" key={page}>{found.slice(page * 4, page * 4 + 4).map((a, i) => <Link className={`passport-stamp stamp-${i}`} to={`/eser/${a.slug}`} key={a.id}><span>{a.city.toLocaleUpperCase('tr-TR')}</span><Stamp size={29} strokeWidth={1.2} /><strong>{a.name}</strong><small>{new Date(progress.discovered[a.id]).toLocaleDateString('tr-TR')}</small><span>DİJİTAL KEŞİF · EŞİK</span></Link>)}</div>}<div className="passport-pagination"><button onClick={() => setPage(p => p - 1)} disabled={page === 0} aria-label="Önceki pasaport sayfası">←</button><span>SAYFA {page + 1} / {pages}</span><button onClick={() => setPage(p => p + 1)} disabled={page + 1 >= pages} aria-label="Sonraki pasaport sayfası">→</button></div></div></div><div className="passport-bottom"><p>{storageAvailable ? 'İlerlemen bu tarayıcıda saklanır. Tarayıcı verilerini silmek pasaportunu da siler.' : 'Tarayıcı depolaması kullanılamıyor. İlerlemen yalnızca bu oturumda tutuluyor.'}<br />Mühürler dijital keşfi temsil eder; fiziksel ziyaret doğrulaması değildir.</p><button className="text-link" onClick={download}><Download size={17} /> Pasaportumu indir</button></div></div>;
+}
