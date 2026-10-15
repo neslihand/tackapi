@@ -1,0 +1,53 @@
+export type Progress = {
+  version: 1;
+  discovered: Record<string, string>;
+  favorites: string[];
+  quiz: { completed: number; best: number };
+};
+export const STORAGE_KEY = 'esik:passport:v1';
+export const emptyProgress = (): Progress => ({ version: 1, discovered: {}, favorites: [], quiz: { completed: 0, best: 0 } });
+
+export function parseProgress(value: string | null, validIds: string[]): Progress {
+  if (!value) return emptyProgress();
+  try {
+    const data = JSON.parse(value);
+    if (data.version !== 1) return emptyProgress();
+    const discovered: Record<string, string> = {};
+    for (const [id, date] of Object.entries(data.discovered || {})) {
+      if (validIds.includes(id) && typeof date === 'string' && Number.isFinite(Date.parse(date))) discovered[id] = date;
+    }
+    const favorites = Array.isArray(data.favorites) ? [...new Set<string>(data.favorites.filter((id: unknown) => typeof id === 'string' && validIds.includes(id)))] : [];
+    const completed = Number.isSafeInteger(data.quiz?.completed) && data.quiz.completed >= 0 ? data.quiz.completed : 0;
+    const best = Number.isFinite(data.quiz?.best) ? Math.min(100, Math.max(0, data.quiz.best)) : 0;
+    return { version: 1, discovered, favorites, quiz: { completed, best } };
+  } catch { return emptyProgress(); }
+}
+
+export function discover(progress: Progress, id: string, date = new Date().toISOString()): Progress {
+  if (progress.discovered[id]) return progress;
+  return { ...progress, discovered: { ...progress.discovered, [id]: date } };
+}
+
+export function distanceKm(a: [number, number], b: [number, number]) {
+  const rad = (n: number) => n * Math.PI / 180;
+  const dLat = rad(b[0] - a[0]);
+  const dLng = rad(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
+}
+
+export const normalize = (value: string) => value.toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+
+export type Achievement = { id: string; name: string; description: string; required: number; value: number; metal: string; symbol: string };
+export function achievements(progress: Progress, entries: { id: string; city: string }[]): Achievement[] {
+  const count = entries.filter(a => progress.discovered[a.id]).length;
+  const cities = new Set(entries.filter(a => progress.discovered[a.id]).map(a => a.city)).size;
+  return [
+    { id: 'first', name: 'İlk Adım', description: 'İlk eserinin hikâyesini keşfet ve pasaportuna mühürle.', required: 1, value: count, metal: 'bronze', symbol: 'door' },
+    { id: 'architect', name: 'Mimari Kâşif', description: 'Üç farklı mimari eseri keşfet.', required: 3, value: count, metal: 'silver', symbol: 'building' },
+    { id: 'traveler', name: 'Tarih Yolcusu', description: 'Beş eserin hikâyesini pasaportunda biriktir.', required: 5, value: count, metal: 'gold', symbol: 'compass' },
+    { id: 'cities', name: 'Şehir Gezgini', description: 'Üç farklı şehirdeki eserleri keşfet.', required: 3, value: cities, metal: 'silver', symbol: 'map' },
+    { id: 'guardian', name: 'Miras Koruyucusu', description: 'İlk koleksiyondaki altı eserin tamamını keşfet.', required: 6, value: count, metal: 'gold', symbol: 'shield' },
+    { id: 'quiz', name: 'Bilgi Avcısı', description: 'Tarihin İzinde bilgi yarışmasının ilk turunu tamamla.', required: 1, value: progress.quiz.completed, metal: 'bronze', symbol: 'sparkles' },
+  ];
+}
