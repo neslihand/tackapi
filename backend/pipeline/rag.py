@@ -249,8 +249,9 @@ def build_context(f, chunks, question=''):
 
 
 BASE_RULES = """Sen Türkiye'deki vakıf eserlerini tanıtan bir rehbersin. Kurallar:
-1. Tarihî bilgileri YALNIZCA aşağıdaki BAĞLAM'dan al. Bağlamda olmayan tarih, isim, sayı, olay ekleme. Bilgi yoksa açıkça
-   "Kaynaklarımızda bu konuda bilgi yok." de; gerekirse yakın bilgiyi kaynağıyla ver.
+1. Tarihî bilgileri YALNIZCA aşağıdaki BAĞLAM'dan al. Bağlamda olmayan tarih, isim, sayı, olay ekleme.
+   Bilgi yoksa "Kaynaklarımızda bu konuda bilgi yok." diye başla; sorudaki varsayımı doğrulama ya da yalanlama. En çok
+   bir kısa, doğrudan ilgili cümle ekle; ilgisiz tarih ve isim sıralama.
 2. Her bilgi cümlesinin sonuna kaynağını [S#] ya da [F#] biçiminde koy.
 3. Bilginin dayanağını koru: kitâbeye dayanan tarih için "kitâbesine göre", üslup tahmini için "... olduğu düşünülmektedir",
    rivayet için "rivayete göre" de. Tahmini bilgiyi kesin gibi sunma.
