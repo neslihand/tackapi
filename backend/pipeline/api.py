@@ -13,15 +13,20 @@ Uç noktalar
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
 
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
+VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 """
-import os, sys
+import os, sys, re, time, logging, threading
+from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
+import gemini_client as G
 import rag
+
+log = logging.getLogger('vakif.api')
 
 app = FastAPI(title='Vakıf Eserleri API')
 app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST'], allow_headers=['Content-Type'],
@@ -168,19 +173,53 @@ def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
 
+class Turn(BaseModel):
+    role: Literal['user', 'assistant']
+    content: str = Field(max_length=4000)
+
+
 class ChatIn(BaseModel):
-    slug: str
+    slug: str = Field(max_length=200)
     question: str = Field(min_length=2, max_length=1000)
     mode: Literal['standard', 'child', 'story'] = 'standard'
     lang: Literal['tr', 'en'] = 'tr'
-    history: list[dict] = []
+    history: list[Turn] = Field(default=[], max_length=20)
+
+
+# Basit, süreç içi hız sınırı (IP başına kayan pencere). Birden çok süreç ya da vekil sunucu arkasında
+# çalışırken yeterli değildir; o durumda sınır vekil sunucuda (nginx vb.) uygulanmalı.
+RATE_N, RATE_WINDOW = (int(x) for x in os.environ.get('VAKIF_CHAT_RATE', '10/60').split('/'))
+_hits: dict[str, deque] = defaultdict(deque)
+_hits_lock = threading.Lock()
+
+
+def _rate_limit(ip):
+    now = time.monotonic()
+    with _hits_lock:
+        q = _hits[ip]
+        while q and now - q[0] > RATE_WINDOW:
+            q.popleft()
+        if len(q) >= RATE_N:
+            retry = int(RATE_WINDOW - (now - q[0])) + 1
+            raise HTTPException(429, 'Çok fazla soru gönderildi, lütfen biraz bekleyin.', headers={'Retry-After': str(retry)})
+        q.append(now)
+        if len(_hits) > 10_000:  # eski IP'leri unut
+            for k in [k for k, v in _hits.items() if not v or now - v[-1] > RATE_WINDOW]:
+                del _hits[k]
 
 
 @app.post('/api/chat')
-def chat(body: ChatIn):
+def chat(body: ChatIn, request: Request):
+    _rate_limit(request.client.host if request.client else '-')
     try:
-        r = rag.answer(db, body.question, body.slug, body.mode, body.lang, body.history)
+        r = rag.answer(db, body.question, body.slug, body.mode, body.lang, [t.model_dump() for t in body.history])
     except KeyError:
         raise HTTPException(404, 'Eser bulunamadı')
+    except G.LLMError as e:
+        log.warning('Gemini hatası: %s', str(e)[:300])
+        busy = re.search(r'429|RESOURCE_EXHAUSTED', str(e))
+        raise HTTPException(503, 'Yapay zekâ servisi şu an yoğun, lütfen biraz sonra tekrar deneyin.' if busy else
+                            'Yapay zekâ servisine şu an ulaşılamıyor, lütfen biraz sonra tekrar deneyin.',
+                            headers={'Retry-After': '30'})
     r.pop('plan', None)
     return r

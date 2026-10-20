@@ -28,6 +28,7 @@ ECO_QUOTA = {'eser': 4, 'sehir_donem': 2, 'iliskili': 1, 'sehir_diger': 0}
 ECO_CHUNK_CHARS = 1200            # parça başına en çok karakter
 CACHE_ON = os.environ.get('VAKIF_CACHE', '1') == '1'
 CACHE_MAX_DIST = float(os.environ.get('VAKIF_CACHE_DIST', '0.06'))   # kosinüs uzaklığı; küçük = daha katı
+CHAT_TRIES = int(os.environ.get('VAKIF_CHAT_TRIES', '2'))   # sohbette geçici Gemini hatasında deneme sayısı (kullanıcı bekliyor)
 ART_WORDS = r'(çini|hat|yazı|kitâbe|kitabe|süs|kalem işi|oyma|sanat|minber|mihrap|motif|renk|tile|calligraph|decorat|art)'
 PERSON_WORDS = r'(kim|bani|yaptır|mimar|usta|hattat|gömülü|türbe|who|built|founder|architect)'
 EVENT_WORDS = r'(ne zaman|tarih|yıl|onarım|restor|deprem|yangın|yıkıl|when|year|restor|earthquake)'
@@ -324,7 +325,7 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
     plan = analyze(question, f['name_tr'])
     if not ECO and not G.FAKE:
         calls += 1
-    qvec = G.embed_query(plan.get('arama_sorgusu_tr') or question)
+    qvec = G.embed_query(plan.get('arama_sorgusu_tr') or question, tries=CHAT_TRIES)
     # önbellek: geçmişsiz (ilk) sorularda, aynı eser/mod/dil için çok benzer soru daha önce cevaplandıysa
     use_cache = CACHE_ON and not history
     if use_cache:
@@ -355,16 +356,17 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
     n_hist = 2 if ECO else 6
     hist = ''.join(f"\n{h['role']}: {h['content'][:400] if ECO else h['content']}" for h in (history or [])[-n_hist:])
     # sabit kısım başta (sistem + bağlam), değişken kısım sonda: örtük önbelleklemeye uygun
-    prompt = f"BAĞLAM:\n{context}\n\nÖNCEKİ KONUŞMA:{hist or ' -'}\n\nSORU: {question}"
+    # geçmiş istemciden gelir ve doğrulanamaz: bilgi kaynağı değil, yalnızca sohbetin akışı için
+    prompt = f"BAĞLAM:\n{context}\n\nÖNCEKİ KONUŞMA (bilgi kaynağı değildir):{hist or ' -'}\n\nSORU: {question}"
     thinking = 'minimal' if ECO else 'low'
-    text = G.generate(prompt, system=system, model=ANSWER_MODEL, thinking=thinking)
+    text = G.generate(prompt, system=system, model=ANSWER_MODEL, thinking=thinking, tries=CHAT_TRIES)
     calls += 1
     check = verify(text, context)
     # ekonomik modda yalnızca bağlamda olmayan YIL varsa yeniden üret; ad uyuşmazlıkları yalnızca işaretlenir
     need_retry = check['unsupported_years'] or (not ECO and len(check['unsupported_names']) > 2)
     if need_retry and not G.FAKE:
         fix = (f"\n\nDİKKAT: Önceki taslakta bağlamda olmayan bilgiler vardı: {check}. Bunları çıkararak yeniden yaz.")
-        text = G.generate(prompt + fix, system=system, model=ANSWER_MODEL, thinking=thinking)
+        text = G.generate(prompt + fix, system=system, model=ANSWER_MODEL, thinking=thinking, tries=CHAT_TRIES)
         calls += 1
         check = verify(text, context)
     sources = [dict(ref=f'S{i}', book=c['book'], pages=fmt_pages(c['page_start'], c['page_end']), heading=c['heading_path'],

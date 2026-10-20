@@ -2,7 +2,7 @@
 
 VAKIF_VECTOR=pgvector (varsayılan) | array  → embedding sütunu tipi (test ortamında real[])
 """
-import os, json, subprocess, re
+import os, json, subprocess, re, threading, atexit
 
 VECTOR_MODE = os.environ.get('VAKIF_VECTOR', 'pgvector')
 
@@ -17,23 +17,62 @@ VEC_CAST = '::vector' if VECTOR_MODE == 'pgvector' else '::real[]'
 
 
 class DB:
+    """Küçük bağlantı havuzu: her sorgu boştaki bir bağlantıyı ödünç alır, bitince geri bırakır. Böylece FastAPI'nin
+    iş parçacıkları aynı bağlantıda sıraya girmez. Kopan bağlantı atılır; okuma sorgusu bağlantı koptuysa bir kez
+    yeni bağlantıyla tekrarlanır (yazma sorguları tekrarlanmaz)."""
+    MAX_IDLE = 8
+
     def __init__(self, dsn=None):
         self.dsn = dsn or os.environ.get('DATABASE_URL')
+        self._idle = []
+        self._lock = threading.Lock()
         try:
             import psycopg
-            from psycopg.rows import dict_row
-            self.conn = psycopg.connect(self.dsn, row_factory=dict_row, autocommit=True)
+            self._psycopg = psycopg
             self.mode = 'psycopg'
+            self._release(self._borrow())  # erken hata: adres yanlışsa başlangıçta anlaşılsın
+            atexit.register(self.close)
         except ImportError:
-            self.conn = None
             self.mode = 'psql'
+
+    def close(self):
+        with self._lock:
+            idle, self._idle = self._idle, []
+        for c in idle:
+            c.close()
+
+    def _borrow(self):
+        with self._lock:
+            while self._idle:
+                c = self._idle.pop()
+                if not (c.closed or c.broken):
+                    return c
+        from psycopg.rows import dict_row
+        return self._psycopg.connect(self.dsn, row_factory=dict_row, autocommit=True)
+
+    def _release(self, c):
+        with self._lock:
+            if not (c.closed or c.broken) and len(self._idle) < self.MAX_IDLE:
+                self._idle.append(c)
+                return
+        c.close()
+
+    def _run(self, sql, params, fetch):
+        conn = self._borrow()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(sql, params or {})
+                return (cur.fetchall() if cur.description else []) if fetch else None
+        finally:
+            self._release(conn)
 
     # %(ad)s biçimli parametreler
     def query(self, sql, params=None):
         if self.mode == 'psycopg':
-            with self.conn.cursor() as cur:
-                cur.execute(sql, params or {})
-                return cur.fetchall() if cur.description else []
+            try:
+                return self._run(sql, params, True)
+            except self._psycopg.OperationalError:
+                return self._run(sql, params, True)  # bağlantı koptuysa havuzdan atıldı; yeni bağlantıyla bir kez daha
         sql = self._inline(sql, params or {})
         wrapped = f"SELECT coalesce(json_agg(t), '[]'::json) FROM ({sql.rstrip().rstrip(';')}) t"
         r = subprocess.run(['psql', self.dsn, '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', wrapped],
@@ -44,9 +83,7 @@ class DB:
 
     def execute(self, sql, params=None):
         if self.mode == 'psycopg':
-            with self.conn.cursor() as cur:
-                cur.execute(sql, params or {})
-            return
+            return self._run(sql, params, False)
         sql = self._inline(sql, params or {})
         r = subprocess.run(['psql', self.dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1'], input=sql, capture_output=True, text=True)
         if r.returncode:

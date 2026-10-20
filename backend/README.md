@@ -426,11 +426,31 @@ Cevap alanları:
 - `usage`: model, çağrı sayısı, yaklaşık token
 - `cached`: önbellekten gelip gelmediği
 
-Hata kodları: eser yoksa `404`, gövde kurallara uymuyorsa `422`.
+`history` en çok 20 öğe alır; her öğe `role` (`user` / `assistant`) ve en çok 4.000 karakterlik `content` taşır.
+Geçmiş istemciden geldiği için doğrulanamaz; modele "bilgi kaynağı değildir" notuyla verilir.
+
+Hata kodları:
+- `404`: eser yok
+- `422`: gövde kurallara uymuyor (ör. geçersiz `history`)
+- `429`: IP başına sohbet sınırı aşıldı (`VAKIF_CHAT_RATE`, varsayılan 60 sn'de 10 soru); `Retry-After` başlığı döner
+- `503`: Gemini'ye ulaşılamadı ya da kota doldu; `Retry-After` başlığı döner
+
+Hız sınırı süreç içinde tutulur. Birden çok süreçle ya da vekil sunucu arkasında çalışırken sınırı vekil sunucuda uygula.
 
 ---
 
 ## 10. Değerlendirme
+
+### Otomatik testler
+`tests/` klasöründeki testler Gemini'yi çağırmaz (`VAKIF_FAKE_LLM=1`). Veritabanı testleri için ayrı, boş bir test
+veritabanı gerekir. Testler bu veritabanının `public` şemasını silip `schema.sql` ve `tests/seed.sql` ile yeniden kurar.
+Gerçek veritabanını korumak için adı `_test` ile bitmeyen veritabanında çalışmazlar. `VAKIF_TEST_DSN` yoksa veritabanı
+testleri atlanır.
+```powershell
+createdb vakif_test   # bir kez
+$env:VAKIF_TEST_DSN = "postgresql://kullanici:sifre@localhost:5432/vakif_test"
+python -m unittest discover -s tests -v
+```
 
 ### Bölümleme
 ```bash
@@ -478,6 +498,10 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_CACHE_DIST` | `0.06` | Önbellek benzerlik eşiği (kosinüs mesafesi) |
 | `VAKIF_FAKE_LLM` | — | `1` ise Gemini çağrılmaz (test modu) |
 | `VAKIF_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | API'yi çağırabilecek ön yüz adresleri (virgülle ayrılmış) |
+| `VAKIF_CHAT_RATE` | `10/60` | IP başına sohbet sınırı: `istek/saniye` |
+| `VAKIF_CHAT_TRIES` | `2` | Sohbette geçici Gemini hatalarında deneme sayısı (betikler 5 dener) |
+| `VAKIF_LLM_TIMEOUT` | `300` | Gemini isteği zaman aşımı (sn); API için 60 gibi daha kısa bir değer önerilir |
+| `VAKIF_TEST_DSN` | — | Testlerin kullanacağı veritabanı; adı `_test` ile bitmeli, testler onu **sıfırdan kurar** |
 
 ---
 

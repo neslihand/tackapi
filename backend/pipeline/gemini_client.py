@@ -16,6 +16,7 @@ EMBED_DIM = int(os.environ.get('VAKIF_EMBED_DIM', '1536'))
 GEN_MODEL = os.environ.get('VAKIF_GEN_MODEL', 'gemini-3.8-flash')
 LITE_MODEL = os.environ.get('VAKIF_LITE_MODEL', 'gemini-3.5-flash-lite')
 FAKE = os.environ.get('VAKIF_FAKE_LLM') == '1'
+TIMEOUT_S = int(os.environ.get('VAKIF_LLM_TIMEOUT', '300'))   # istek başına; API için daha kısa tutulabilir
 
 _client = None
 
@@ -26,8 +27,12 @@ def client():
         from google import genai  # pip install google-genai
         from google.genai import types
         _client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'),
-                               http_options=types.HttpOptions(timeout=300_000))  # ms
+                               http_options=types.HttpOptions(timeout=TIMEOUT_S * 1000))  # ms
     return _client
+
+
+class LLMError(RuntimeError):
+    """Gemini çağrısı başarısız (kota, ağ, geçersiz istek). Mesaj özgün hatayı içerir."""
 
 
 def _retry(fn, tries=5):
@@ -37,7 +42,7 @@ def _retry(fn, tries=5):
         except Exception as e:  # 429/5xx/zaman aşımı/bağlantı için üstel bekleme
             msg = str(e)
             if i == tries - 1 or not re.search(r'(429|500|503|RESOURCE_EXHAUSTED|UNAVAILABLE|deadline|timeout|timed out|ConnectError|SSL)', msg, re.I):
-                raise
+                raise LLMError(msg) from e
             wait = min(60, 5 * 2 ** i)
             print(f'  Gemini hatası, {wait} sn bekleniyor: {msg[:80]}', flush=True)
             time.sleep(wait)
@@ -59,11 +64,11 @@ def embed_documents(items, dim=EMBED_DIM):
     return _embed(texts, dim)
 
 
-def embed_query(q, dim=EMBED_DIM):
-    return _embed([f"task: search result | query: {q}"], dim)[0]
+def embed_query(q, dim=EMBED_DIM, tries=5):
+    return _embed([f"task: search result | query: {q}"], dim, tries)[0]
 
 
-def _embed(texts, dim):
+def _embed(texts, dim, tries=5):
     if FAKE:
         return [_fake_vec(t, dim) for t in texts]
     from google.genai import types
@@ -74,7 +79,7 @@ def _embed(texts, dim):
         contents = [types.Content(parts=[types.Part(text=t)]) for t in batch]
         res = _retry(lambda: client().models.embed_content(
             model=EMBED_MODEL, contents=contents,
-            config=types.EmbedContentConfig(output_dimensionality=dim)))
+            config=types.EmbedContentConfig(output_dimensionality=dim)), tries)
         if len(res.embeddings) != len(batch):
             raise RuntimeError(f'{len(batch)} metin gönderildi, {len(res.embeddings)} embedding döndü')
         out += [e.values for e in res.embeddings]
@@ -82,8 +87,8 @@ def _embed(texts, dim):
 
 
 # ---------------------------------------------------------------------------- üretim
-def generate(prompt, system=None, schema=None, model=None, thinking='low'):
-    """Metin ya da (schema verilirse) JSON döndürür."""
+def generate(prompt, system=None, schema=None, model=None, thinking='low', tries=5):
+    """Metin ya da (schema verilirse) JSON döndürür. tries: geçici hatalarda en çok deneme sayısı."""
     model = model or GEN_MODEL
     if FAKE:
         return _fake_generate(prompt, system, schema)
@@ -96,7 +101,7 @@ def generate(prompt, system=None, schema=None, model=None, thinking='low'):
             kw['response_format'] = {'type': 'text', 'mime_type': 'application/json', 'schema': schema}
         if thinking:
             kw['generation_config'] = {'thinking_level': thinking}
-        r = _retry(lambda: c.interactions.create(**kw))
+        r = _retry(lambda: c.interactions.create(**kw), tries)
         text = r.output_text
     else:
         from google.genai import types
@@ -104,7 +109,7 @@ def generate(prompt, system=None, schema=None, model=None, thinking='low'):
         if schema:
             cfg.update(response_mime_type='application/json', response_json_schema=schema)
         r = _retry(lambda: c.models.generate_content(model=model, contents=prompt,
-                                                     config=types.GenerateContentConfig(**cfg)))
+                                                     config=types.GenerateContentConfig(**cfg)), tries)
         text = r.text
     return json.loads(text) if schema else text
 
