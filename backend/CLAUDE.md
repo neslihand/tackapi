@@ -23,9 +23,14 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   - Ortam değişkenleri `$env:X="..."` ile tanımlanır ve yalnızca o pencerede geçerlidir.
 - Yerel PostgreSQL; `vector` ve `pg_trgm` eklentileri kurulu. Sürücü `psycopg` 3. Değerler sunucu tarafında bağlandığı
   için **boş olabilen SQL parametrelerine tip ver** (`%(x)s::text`), yoksa `AmbiguousParameter` hatası alırsın.
-- **Dosya kodlaması:** Windows varsayılanı cp1254'tür. Yeni yazılan her `open()` çağrısında `encoding='utf-8'` kullan.
-  Eski betiklerin (`extract_gemini.py`, `finalize.py`, `load_db.py` …) çoğunda belirtilmemiş. Mevcut `data/extractions/*.json`
-  dosyaları büyük ihtimalle cp1254 ile yazıldı. Okuma tarafını UTF-8'e çevirmeden önce bu dosyaları dönüştür.
+- **Dosya kodlaması:** Windows varsayılanı cp1254'tür (bu makinede Python UTF-8 modu kapalı). Her `open()` ve metin
+  modundaki `subprocess.run()` çağrısında `encoding='utf-8'` kullan. `pipeline/` içindeki tüm çağrılar Ekim 2026'da
+  UTF-8'e geçirildi. `data/extractions/*.json` dosyalarının 753'ü de geçerli UTF-8; dönüştürme gerekmiyor.
+- **psql ve ASCII olmayan yollar:** psql, SQL içindeki `\copy` yolunu Windows ANSI kodlamasıyla açar; proje
+  `...\Masaüstü\...` altında olduğu için mutlak yol bozulur. `load_db.copy_names()` yalnızca dosya adını verir ve
+  psql `data/load` klasöründe çalışır. Yeni `\copy` kullanan betiklerde de bunu kullan.
+- **Tek seferlik test kümesi:** Gerçek veritabanına dokunmadan denemek için `initdb` ile scratch klasöründe ayrı bir
+  küme kurulabilir (`pg_ctl -o "-p 55432"`). `VAKIF_TEST_DSN` adı `_test` ile bitmeli (bkz. README §10).
 - Gemini ücretsiz katmanında kota proje ve model başınadır. Aynı projede yeni anahtar almak işe yaramaz.
 - Geliştirici Türkçe konuşuyor. Açıklamaları Türkçe ve sade yap. Düşük maliyet önemli bir öncelik.
 
