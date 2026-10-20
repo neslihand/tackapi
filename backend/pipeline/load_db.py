@@ -220,10 +220,22 @@ UNION ALL SELECT 'editorial_note(seed)', count(*) FROM editorial_note;
 
 
 PSQL = r'C:\Program Files\PostgreSQL\18\bin\psql.exe'
+PSQL_ENV = {**os.environ, 'PGCLIENTENCODING': 'UTF8'}  # psql ile Python arasındaki metin hep UTF-8
+
+
+def copy_names(files):
+    """\\copy için dosya adları. psql, SQL içindeki yolu Windows ANSI kodlamasıyla açtığı için 'Masaüstü' gibi ASCII
+    olmayan yollar bozulur; bu yüzden yalnızca dosya adı verilir ve psql OUT klasöründe çalıştırılır (bkz. psql())."""
+    for v in files.values():
+        if os.path.dirname(os.path.abspath(v)) != os.path.abspath(OUT):
+            raise ValueError(f'{v} {OUT} klasöründe değil')
+    return {k: os.path.basename(v) for k, v in files.items()}
 
 
 def psql(dsn, sql_file):
-    r = subprocess.run([PSQL, dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', sql_file], capture_output=True, text=True)
+    r = subprocess.run([PSQL, dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', os.path.abspath(sql_file)], cwd=OUT,
+                       capture_output=True, text=True,
+                       encoding='utf-8', errors='replace', env=PSQL_ENV)
     if r.returncode:
         sys.stderr.write(r.stderr)
         raise SystemExit(r.returncode)
@@ -233,7 +245,7 @@ def psql(dsn, sql_file):
 def psql_rows(dsn, sql):
     """Salt okunur sorgu: satırları '|' ile ayrılmış alan listeleri olarak döndürür."""
     r = subprocess.run([PSQL, dsn, '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', sql],
-                       capture_output=True, text=True, encoding='utf-8')
+                       capture_output=True, text=True, encoding='utf-8', env=PSQL_ENV)
     if r.returncode:
         sys.stderr.write(r.stderr)
         raise SystemExit(r.returncode)
@@ -280,7 +292,7 @@ def main():
     a = ap.parse_args()
     files, counts = build()
     print('hazırlandı:', counts)
-    sql = LOAD_SQL.format(**{k: os.path.abspath(v) for k, v in files.items()})
+    sql = LOAD_SQL.format(**copy_names(files))
     load_path = os.path.join(OUT, 'load.sql')
     open(load_path, 'w', encoding='utf-8').write(sql)
     if a.build_only:

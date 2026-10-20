@@ -9,7 +9,7 @@ import json, os, sys, re, glob, argparse, subprocess
 sys.path.insert(0, os.path.dirname(__file__))
 from segment import ascii_fold, norm_title
 from periods import PERIODS, main_period
-from load_db import write_jsonl, OUT, psql
+from load_db import write_jsonl, OUT, psql, copy_names
 
 DATA = os.path.join(os.path.dirname(__file__), '..', 'data')
 TITLES = r'^(sultan|hz\.?|hazreti|şeyh|seyh|hattat|mimar|vali|hacı|haci|emir|molla|prof\.?|dr\.?)\s+'
@@ -48,14 +48,14 @@ def rng(a, b):
 
 
 def build(src):
-    mons = {m['slug']: m for m in json.load(open(os.path.join(DATA, 'monuments_all.json')))}
+    mons = {m['slug']: m for m in json.load(open(os.path.join(DATA, 'monuments_all.json'), encoding='utf-8'))}
     children = {}
     for m in mons.values():
         if m.get('parent_slug'):
             children.setdefault(m['parent_slug'], []).append(m)
     upd, persons, mp, events, arts, waqfs, links, notes = [], {}, [], [], [], [], [], []
     for path in sorted(glob.glob(os.path.join(src, '*.json'))):
-        ext = json.load(open(path))
+        ext = json.load(open(path, encoding='utf-8'))
         slug = ext.get('_slug') or os.path.basename(path)[:-5]
         m = mons.get(slug)
         if not m:
@@ -255,7 +255,7 @@ def main():
     files, counts = build(a.src)
     print('hazırlandı:', counts)
     p = os.path.join(OUT, 'load_extractions.sql')
-    open(p, 'w').write(SQL.format(**{k: os.path.abspath(v) for k, v in files.items()}))
+    open(p, 'w', encoding='utf-8').write(SQL.format(**copy_names(files)))
     print(psql(a.dsn, p))
 
 

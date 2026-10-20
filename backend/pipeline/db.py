@@ -13,7 +13,8 @@ def vec_literal(v):
     return '{' + ','.join(f'{x:.6f}' for x in v) + '}'
 
 
-VEC_CAST = '::vector' if VECTOR_MODE == 'pgvector' else '::real[]'
+PSQL_ENV = {**os.environ, 'PGCLIENTENCODING': 'UTF8'}  # psql ile Python arasındaki metin hep UTF-8
+VEC_CAST ='::vector' if VECTOR_MODE == 'pgvector' else '::real[]'
 
 
 class DB:
@@ -76,7 +77,7 @@ class DB:
         sql = self._inline(sql, params or {})
         wrapped = f"SELECT coalesce(json_agg(t), '[]'::json) FROM ({sql.rstrip().rstrip(';')}) t"
         r = subprocess.run(['psql', self.dsn, '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', wrapped],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, encoding='utf-8', env=PSQL_ENV)
         if r.returncode:
             raise RuntimeError(r.stderr)
         return json.loads(r.stdout or '[]')
@@ -85,7 +86,8 @@ class DB:
         if self.mode == 'psycopg':
             return self._run(sql, params, False)
         sql = self._inline(sql, params or {})
-        r = subprocess.run(['psql', self.dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1'], input=sql, capture_output=True, text=True)
+        r = subprocess.run(['psql', self.dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1'], input=sql, capture_output=True, text=True,
+                           encoding='utf-8', env=PSQL_ENV)
         if r.returncode:
             raise RuntimeError(r.stderr)
 
