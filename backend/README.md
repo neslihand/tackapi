@@ -183,6 +183,8 @@ python -m uvicorn api:app --reload --port 8000   # http://localhost:8000/docs
 
 > ⚠️ **`load_db.py` tüm tabloları boşaltıp yeniden yükler.** Embedding'ler ve çıkarımlar da silinir.
 > İlk kurulumdan sonra çalıştırma; çıkarım güncellemeleri için `load_extractions.py`'yi kullan.
+> Veritabanında veri varsa betik silinecekleri listeler ve hiçbir şey yapmadan durur. Bilerek sıfırlamak için
+> önce `pg_dump` ile yedek al, sonra `python load_db.py --reset --yes` (şemayı da yeniden kurmak için `--init --reset --yes`).
 
 > 💡 `VAKIF_FAKE_LLM=1` ayarlanırsa Gemini hiç çağrılmaz. Sahte embedding ve cevaplarla bütün hat
 > API anahtarı olmadan test edilebilir.

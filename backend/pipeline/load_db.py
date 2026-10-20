@@ -3,10 +3,12 @@
 Kullanım:
   python load_db.py --dsn postgresql://user:pass@host:5432/vakif [--init] [--no-vector]
 
---init      : schema.sql'i çalıştırır (tabloları oluşturur)
---no-vector : pgvector olmayan test ortamı için (embedding sütunu real[] olur)
+--init         : schema.sql'i çalıştırır (tabloları oluşturur)
+--no-vector    : pgvector olmayan test ortamı için (embedding sütunu real[] olur)
+--reset --yes  : veritabanında veri varken çalıştırmak için zorunlu (yoksa betik hiçbir şey yapmadan durur)
 
 Yükleme idempotent değildir: önce tabloları boşaltır (TRUNCATE ... CASCADE) sonra yükler.
+Embedding'ler ve çıkarımlar da silinir; bu yüzden dolu veritabanında koruma devrededir.
 Gemini çıkarım sonuçları (extract_gemini.py) ayrıca load_extractions.py ile yüklenir.
 """
 import json, os, sys, argparse, subprocess, tempfile, re
@@ -215,19 +217,62 @@ UNION ALL SELECT 'editorial_note(seed)', count(*) FROM editorial_note;
 """
 
 
+PSQL = r'C:\Program Files\PostgreSQL\18\bin\psql.exe'
+
+
 def psql(dsn, sql_file):
-    r = subprocess.run([r'C:\Program Files\PostgreSQL\18\bin\psql.exe', dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', sql_file], capture_output=True, text=True)
+    r = subprocess.run([PSQL, dsn, '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', sql_file], capture_output=True, text=True)
     if r.returncode:
         sys.stderr.write(r.stderr)
         raise SystemExit(r.returncode)
     return r.stdout
 
 
+def psql_rows(dsn, sql):
+    """Salt okunur sorgu: satırları '|' ile ayrılmış alan listeleri olarak döndürür."""
+    r = subprocess.run([PSQL, dsn, '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', sql],
+                       capture_output=True, text=True, encoding='utf-8')
+    if r.returncode:
+        sys.stderr.write(r.stderr)
+        raise SystemExit(r.returncode)
+    return [l.split('|') for l in r.stdout.splitlines() if l]
+
+
+def existing_data(dsn):
+    """Silinecek veriyi sayar (yalnızca SELECT). Şema yoksa boş sözlük döner."""
+    exists = psql_rows(dsn, "SELECT to_regclass('public.monument') IS NOT NULL, to_regclass('public.answer_cache') IS NOT NULL")[0]
+    if exists[0] != 't':
+        return {}
+    sql = """SELECT (SELECT count(*) FROM monument), (SELECT count(*) FROM chunk),
+                    (SELECT count(*) FROM chunk WHERE embedding IS NOT NULL),
+                    (SELECT count(*) FROM monument_person) + (SELECT count(*) FROM event) + (SELECT count(*) FROM artwork)"""
+    if exists[1] == 't':
+        sql += ', (SELECT count(*) FROM answer_cache)'
+    vals = [int(v) for v in psql_rows(dsn, sql)[0]]
+    names = ['eser', 'parça', "embedding'li parça", 'çıkarım satırı', 'önbellek cevabı']
+    return {n: v for n, v in zip(names, vals) if v}
+
+
+def guard(dsn, reset, yes):
+    """Tabloda veri varsa yükleme ancak --reset --yes ile çalışır (TRUNCATE / DROP geri alınamaz)."""
+    found = existing_data(dsn)
+    if not found or (reset and yes):
+        return
+    sys.stderr.write('DURDURULDU: veritabanında veri var ve bu komut hepsini siler:\n')
+    for k, v in found.items():
+        sys.stderr.write(f'  - {v} {k}\n')
+    sys.stderr.write('Çıkarım güncellemesi için load_extractions.py, eksik embedding için embed_gemini.py yeterlidir.\n'
+                     'Gerçekten sıfırlamak istiyorsan önce yedek al (pg_dump), sonra --reset --yes ile çalıştır.\n')
+    raise SystemExit(2)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dsn', default=os.environ.get('DATABASE_URL'))
     ap.add_argument('--init', action='store_true')
-    ap.add_argument('--reset', action='store_true', help='--init öncesi bu projenin tablolarını siler (DİKKAT)')
+    ap.add_argument('--reset', action='store_true',
+                    help='mevcut veriyi silmeyi kabul et; --init ile tabloları da düşürür (DİKKAT, --yes ile birlikte)')
+    ap.add_argument('--yes', action='store_true', help='--reset için onay')
     ap.add_argument('--no-vector', action='store_true')
     ap.add_argument('--build-only', action='store_true')
     a = ap.parse_args()
@@ -240,6 +285,7 @@ def main():
         return
     if not a.dsn:
         raise SystemExit('--dsn ya da DATABASE_URL gerekli')
+    guard(a.dsn, a.reset, a.yes)
     if a.init:
         schema = open(os.path.join(ROOT, 'schema.sql'), encoding='utf-8').read()
         if a.reset:
