@@ -1,0 +1,25 @@
+# Telifli kaynak metinler ve bunlardan türeyen veriler
+raw/
+data/*/segments.json
+data/*/monuments.json
+data/*/sections.json
+data/monuments_all.json
+data/sections_all.json
+data/chunks.jsonl
+data/extractions/
+data/load/
+data/review/
+data/eval_*.json
+data/eval_results.json
+
+# Gizli bilgiler
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/

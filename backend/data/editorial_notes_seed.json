@@ -1,0 +1,17 @@
+[
+ {"kind": "contradiction", "book": "konya-1", "needle": "Ocak 1231 senesinde Konya",
+  "note": "Konya Tarihi bölümü Mevlâna'nın 1228'de Konya'ya geldiğini ve 12 Ocak 1231'de vefat ettiğini yazıyor. Aynı kitabın Mevlâna Külliyesi bölümünde 1231 babası Bahaeddin Veled'in vefat yılı, Mevlâna'nın vefatı ise 17 Aralık 1273 olarak verilmiş.",
+  "instruction": "Mevlâna'nın vefat tarihini sorulursa Mevlâna Külliyesi bölümündeki 17 Aralık 1273 tarihini kullan; Konya Tarihi bölümündeki 1231 tarihi kaynak içi bir çelişkidir, 1231 Bahaeddin Veled'in vefat yılıdır."},
+ {"kind": "likely_error", "book": "konya-1", "needle": "XIII. Haçlı Seferleri",
+  "note": "'XIII. Haçlı Seferleri’nde İznik’in düşmesi' ifadesi bağlama göre I. Haçlı Seferi (1097) olmalı; aynı bölümde birkaç satır önce 'I. Haçlı Seferleri' yazıyor.",
+  "instruction": "İznik'in düşmesini I. Haçlı Seferi (1097) bağlamında anlat; 'XIII.' ifadesini kullanma."},
+ {"kind": "contradiction", "book": "konya-1", "needle": "Şerafeddin Anber",
+  "note": "Anber Reis (Feridiye) Camii metninde bani için Şerafeddin, Şehabeddin ve Seyfeddin adları birlikte geçiyor.",
+  "instruction": "Anber Reis Camii'nin banisinin adı kaynakta tutarsız (Şerafeddin / Şehabeddin Anber); adı verirken bu tutarsızlığı belirt."},
+ {"kind": "toc_mismatch", "book": "konya-1", "needle": null,
+  "note": "İçindekiler'de 'Şeyh Ulema Yusuf Ağa Camii' iki kez geçiyor (ikincisi büyük olasılıkla Aziziye Camii); Aziziye Camii içindekilerde yok. Altınkalem Mescidi içindekilerde ALTINŞEHİR, metinde AKŞEHİR başlığı altında.",
+  "instruction": null},
+ {"kind": "translation", "book": "konya-1", "needle": null,
+  "note": "Konya ciltlerinin İngilizce metni makine çevirisi niteliğinde ve terim hataları içeriyor (puşide→pushchair, matbah→printing house, fil ayağı→elephant feet, sikke→coins). İngilizce arayüzde kitap metni yerine Türkçe metinden üretilen çeviri kullanılır.",
+  "instruction": null}
+]

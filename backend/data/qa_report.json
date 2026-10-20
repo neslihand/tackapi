@@ -1,0 +1,940 @@
+{
+ "bursa-1": {
+  "book": "bursa-1",
+  "monuments": 154,
+  "synthetic": 5,
+  "with_parent": 38,
+  "toc_entries": 132,
+  "toc_unmatched": [
+   [
+    "I. Murad Hudâvendigâr Türbesi",
+    107
+   ],
+   [
+    "II. MURAD KÜLLİYESİ Muradiye Camii",
+    115
+   ],
+   [
+    "Muradiye Çeşmesi",
+    127
+   ],
+   [
+    "Muradiye Hamamı",
+    130
+   ],
+   [
+    "Hamza Bey Türbesi",
+    184
+   ],
+   [
+    "Demirtaş (Timurtaş)",
+    13
+   ],
+   [
+    "Demirtaş (Timurtaş) Camii",
+    null
+   ],
+   [
+    "Haziresi",
+    223
+   ],
+   [
+    "Acem Reis (Arap Dede) Acemler Camii",
+    236
+   ],
+   [
+    "Ali Paşa Camii ve Haziresi",
+    255
+   ],
+   [
+    "Davutpaşa (Batpazarı) Camii",
+    286
+   ],
+   [
+    "Mescidi",
+    311
+   ],
+   [
+    "Mescidi",
+    314
+   ],
+   [
+    "Hafsa Sultan (Bedreddin) Hatice İsfendiyâr Sultan (Atpazarı) Camii ve Kabri",
+    333
+   ],
+   [
+    "Camii ve Haziresi",
+    352
+   ],
+   [
+    "Molla Gürani (Yeşil-Güranlı) Mescidi",
+    400
+   ],
+   [
+    "Paşa Camii",
+    413
+   ],
+   [
+    "Hz. Üftâde Tekke Camii",
+    455
+   ]
+  ],
+  "body_not_in_toc": [
+   "Haziresi",
+   "Acemler Camii",
+   "Ali Paşa Camii Haziresi",
+   "Ali Paşa Camii Haziresi",
+   "Başçı İbrahim Bey Grave",
+   "Mecnundede Camii Haziresi",
+   "Davutpaşa (Batpazarı) Camii",
+   "Daya Hatun (Taya Kadın) Camii Haziresi",
+   "Nakkaş Ali Mescidi Hazire Alanı",
+   "Paşa Mosque",
+   "Şeyh Konevî Camii",
+   "İbn-i Yiğit Haziresi"
+  ],
+  "flags": {
+   "duplicate_title": 10,
+   "title_toc": 12,
+   "start_unverified": 13,
+   "district_carried": 2,
+   "not_in_toc": 12,
+   "en_misaligned": 12,
+   "short_tr": 8,
+   "title_inferred_from_previous": 2,
+   "title_english_title": 2,
+   "title_first_line": 1
+  },
+  "kinds": {
+   "mosque": 56,
+   "madrasa": 2,
+   "imaret": 2,
+   "bath": 4,
+   "tomb": 17,
+   "fountain": 2,
+   "han": 2,
+   "graveyard": 61,
+   "masjid": 8,
+   "complex": 5
+  },
+  "glyph_fixes": {
+   "pct": 80,
+   "pct_unresolved": 0,
+   "bang": 0,
+   "digit": 1
+  },
+  "seg_stats": {
+   "cluster_category": 2,
+   "running_header": 1,
+   "paired": 54,
+   "entries": 154,
+   "tr_direction_after": 1,
+   "tr_loc_named": 67,
+   "tr_heading_direct": 54,
+   "tr_loc_unnamed": 28,
+   "tr_loc_unnamed+mono": 2,
+   "tr_fallback_after": 1,
+   "tr_loc_named+mono": 2,
+   "en_direction_after": 1,
+   "en_loc_named": 48,
+   "en_heading_direct": 71,
+   "en_loc_unnamed": 33,
+   "en_loc_named+mono": 1,
+   "en_loc_unnamed+mono": 1,
+   "tr_continuation_fix": 3,
+   "en_continuation_fix": 1,
+   "tr_boundary_repair": 2,
+   "en_boundary_repair": 4
+  }
+ },
+ "bursa-2": {
+  "book": "bursa-2",
+  "monuments": 125,
+  "synthetic": 3,
+  "with_parent": 21,
+  "toc_entries": 120,
+  "toc_unmatched": [
+   [
+    "İç Koza Hanı",
+    41
+   ],
+   [
+    "Atatürk İlköğretim Okulu",
+    64
+   ],
+   [
+    "Ahmet Vefik Paşa Tiyatrosu",
+    99
+   ],
+   [
+    "Belediye Binası",
+    103
+   ],
+   [
+    "Fransız Kilisesi",
+    113
+   ],
+   [
+    "Çeşmesi",
+    123
+   ],
+   [
+    "Beşikçiler Sinan Dede Eyne Bey (İnebey) Hamamı",
+    124
+   ],
+   [
+    "Çeşmesi",
+    126
+   ],
+   [
+    "Çeşmesi",
+    131
+   ],
+   [
+    "Nûmâniye Dergâhı",
+    171
+   ],
+   [
+    "Ebû İshak Türbesi",
+    211
+   ],
+   [
+    "Üç Kozlar (Kuzular) Türbe ve Haziresi",
+    253
+   ],
+   [
+    "Üç Kozlar (Kuzular) Hz. Üftâde Türbesi",
+    259
+   ],
+   [
+    "EMİR SULTAN KÜLLİYESİ Emir Sultan Camii",
+    273
+   ],
+   [
+    "Emir Sultan Türbesi",
+    298
+   ],
+   [
+    "Darüssaade Ağası UMUR BEY KÜLLİYESİ Umur Bey Camii ve Haziresi",
+    317
+   ],
+   [
+    "Umur Bey Haziresi",
+    327
+   ],
+   [
+    "Umur Bey Türbesi",
+    331
+   ],
+   [
+    "YEŞİL ÇELEBİ MEHMED KÜLLİYESİ Yeşil Camii",
+    337
+   ],
+   [
+    "Yıldırım Darüşşifası",
+    447
+   ],
+   [
+    "Açık (Umur Bey) Namazgâh",
+    466
+   ],
+   [
+    "Babadağ Camii",
+    468
+   ],
+   [
+    "Musa Baba Camii and Graveyard Mücelliddin Ömer Ağa (Resulzade) Camii",
+    501
+   ],
+   [
+    "Selami Dergâhı Camii",
+    260
+   ],
+   [
+    "Âşık Yunus (Kara Abdürrezzak) Grave Baba Zâkir Türbesi",
+    535
+   ]
+  ],
+  "body_not_in_toc": [
+   "Inner Koza Han",
+   "Atatürk Primary School",
+   "Ahmet Vefik Paşa Theater",
+   "Town Hall",
+   "Fransız Kilisesi",
+   "Nûmâniye Sufi Lodge",
+   "Dergâhın Hazire Alanı",
+   "Dergâhın Hazire Alanı Haziresi",
+   "Hz. Üftâde Sufi Lodge",
+   "Şair (Gedik) Ahmet Paşa Türbesi Haziresi",
+   "Ârif-i billâh Emîr Sultân-ı kerrûbî’s-sıfât",
+   "Jumada al-Thani 865 Hijri (March 1461 Gregorian)”",
+   "Muharrem ayı başında (Haziran 1406).”",
+   "Umur Bey Open-air Prayer Area",
+   "Musa Baba Camii Haziresi",
+   "Camii",
+   "Selami Dergâhı Camii"
+  ],
+  "flags": {
+   "title_toc": 31,
+   "en_misaligned": 17,
+   "title_english_title": 7,
+   "not_in_toc": 17,
+   "start_unverified": 4,
+   "title_first_line": 2,
+   "district_carried": 5,
+   "short_tr": 8,
+   "title_inferred_from_previous": 3,
+   "duplicate_title": 4,
+   "en_missing": 1
+  },
+  "kinds": {
+   "han": 8,
+   "bedesten": 1,
+   "madrasa": 14,
+   "other": 6,
+   "house": 2,
+   "church": 1,
+   "fountain": 10,
+   "bath": 9,
+   "tekke": 5,
+   "graveyard": 16,
+   "tomb": 28,
+   "complex": 4,
+   "mosque": 22,
+   "imaret": 1,
+   "bridge": 1
+  },
+  "glyph_fixes": {
+   "pct": 33,
+   "pct_unresolved": 0,
+   "bang": 0,
+   "digit": 0
+  },
+  "seg_stats": {
+   "cluster_category": 6,
+   "cluster_noise": 2,
+   "paired": 13,
+   "entries": 125,
+   "tr_direction_mixed": 1,
+   "tr_loc_named": 78,
+   "tr_loc_unnamed": 29,
+   "tr_heading_direct": 16,
+   "tr_loc_named+mono": 2,
+   "en_direction_mixed": 1,
+   "en_heading_direct": 55,
+   "en_loc_named": 44,
+   "en_loc_unnamed": 21,
+   "en_loc_unnamed+mono": 1,
+   "en_loc_named+mono": 2,
+   "en_fallback_mixed": 1,
+   "en_heading_direct+mono": 1,
+   "tr_continuation_fix": 3,
+   "en_continuation_fix": 4,
+   "tr_boundary_repair": 5,
+   "en_boundary_repair": 11
+  }
+ },
+ "bursa-3": {
+  "book": "bursa-3",
+  "monuments": 101,
+  "synthetic": 0,
+  "with_parent": 10,
+  "toc_entries": 95,
+  "toc_unmatched": [
+   [
+    "Eşrefzâde Camii, Minaresi ve Haziresi",
+    35
+   ],
+   [
+    "Koimesis Tes Theotokos Hyankinthos Nilüfer Hatun İmareti",
+    111
+   ],
+   [
+    "İshak Paşa Medresesi",
+    144
+   ],
+   [
+    "Hançerli Fatma Sultan (Yıldırım-Yukarı İmaret) Camii",
+    162
+   ],
+   [
+    "Cami-i Atik (Eski Hacı Ali Eski (Tekke-i Atik, Cami-i Atik) Camii",
+    269
+   ],
+   [
+    "Eski (Tekke-i Atik, Hacı Mehmet Ağa (Tekke-i Cedid, Koca Ali Efendi) Camii",
+    273
+   ],
+   [
+    "Hacı Mehmet Ağa (Tekke-i Cedid, Hasan Mısrî Bey Camii",
+    278
+   ],
+   [
+    "Minaresi",
+    298
+   ],
+   [
+    "Selimiye Camii",
+    null
+   ],
+   [
+    "Minaresi",
+    300
+   ],
+   [
+    "Şeyh Müftü Camii",
+    301
+   ],
+   [
+    "Lala Şahin Paşa Kümbeti",
+    308
+   ],
+   [
+    "Özlüce Kilisesi Camii",
+    323
+   ],
+   [
+    "Gölyazı Hamamı",
+    326
+   ],
+   [
+    "Gölyazı Sur Duvarları",
+    331
+   ],
+   [
+    "Postinpûş Camii (Seyyid Mehmet Dede Zaviyesi)",
+    391
+   ]
+  ],
+  "body_not_in_toc": [
+   "Bibliyography Ayasofya (Orhan) Camii Haziresi",
+   "Bibliyography Ayasofya (Orhan) Camii Haziresi",
+   "Nilüfer Hatun İmareti",
+   "İmaret) Camii",
+   "Issız (Susuz) Han",
+   "Han Odası",
+   "Sinan Bey Çeşmesi",
+   "Hacı Mehmet Ağa (Tekke-i Cedid, Koca Ali Efendi) Camii",
+   "Hasan Misrî Bey Mosque",
+   "Şeyh Mufti Mosque",
+   "Şeyh Müftü Türbesi",
+   "Özlüce Kilisesi",
+   "Gölyazı Town Walls",
+   "Kurşunlu Han",
+   "Postinpûş Camii"
+  ],
+  "flags": {
+   "duplicate_title": 4,
+   "title_inferred_from_previous": 2,
+   "not_in_toc": 15,
+   "start_unverified": 7,
+   "en_misaligned": 13,
+   "title_toc": 28,
+   "short_tr": 5,
+   "en_missing": 2,
+   "title_first_line": 4,
+   "title_english_title": 4,
+   "district_carried": 1
+  },
+  "kinds": {
+   "mosque": 51,
+   "graveyard": 5,
+   "masjid": 1,
+   "tomb": 14,
+   "madrasa": 3,
+   "bath": 9,
+   "church": 2,
+   "imaret": 2,
+   "complex": 2,
+   "han": 4,
+   "fountain": 3,
+   "house": 3,
+   "other": 1,
+   "bedesten": 1
+  },
+  "glyph_fixes": {
+   "pct": 0,
+   "pct_unresolved": 0,
+   "bang": 0,
+   "digit": 0
+  },
+  "seg_stats": {
+   "cluster_noise": 4,
+   "cluster_category": 1,
+   "running_header": 2,
+   "paired": 19,
+   "entries": 101,
+   "tr_direction_mixed": 1,
+   "tr_heading_direct": 21,
+   "tr_loc_unnamed": 21,
+   "tr_loc_named": 56,
+   "tr_loc_unnamed+mono": 3,
+   "en_direction_mixed": 1,
+   "en_heading_direct": 55,
+   "en_loc_named": 23,
+   "en_loc_unnamed": 15,
+   "en_loc_unnamed+mono": 5,
+   "en_heading_direct+mono": 2,
+   "en_loc_named+mono": 1,
+   "tr_continuation_fix": 2,
+   "en_continuation_fix": 13,
+   "tr_boundary_repair": 2,
+   "en_boundary_repair": 28
+  }
+ },
+ "konya-1": {
+  "book": "konya-1",
+  "monuments": 197,
+  "synthetic": 0,
+  "with_parent": 14,
+  "toc_entries": 189,
+  "toc_unmatched": [
+   [
+    "Nasuh Bey Dârü’l-Huffaz) Yolcuoğlu (Gazioğlu) Camii",
+    153
+   ],
+   [
+    "Selahaddin (Keçeciler) Camii",
+    190
+   ],
+   [
+    "Obruk Köyü Camii",
+    195
+   ],
+   [
+    "Tahir and Zühre (Dön Baba- Hoca Hasan Camii",
+    116
+   ],
+   [
+    "Tellioğlu (Sungurbey) Camii",
+    122
+   ],
+   [
+    "Gedikli Ahmet Paşa Camii",
+    385
+   ],
+   [
+    "Minaresi",
+    389
+   ],
+   [
+    "Hisarlık Beldesi Asarlık Camii",
+    null
+   ],
+   [
+    "Sırıstat (Büyük) Camii",
+    392
+   ],
+   [
+    "Söğüt Büyük Camii",
+    393
+   ],
+   [
+    "Ulu Camii",
+    417
+   ],
+   [
+    "Kebir) Camii",
+    451
+   ],
+   [
+    "Şeyh Ulema Yusuf Ağa Camii",
+    280
+   ],
+   [
+    "Minaresi",
+    318
+   ],
+   [
+    "ALTINŞEHİR",
+    323
+   ],
+   [
+    "İplikçi (Ambarlar Kerim Ağa) Camii",
+    343
+   ],
+   [
+    "Ali Paşa Camii",
+    378
+   ]
+  ],
+  "body_not_in_toc": [
+   "Hoca Hasan Camii",
+   "Tellioğlu (Sungurbey) Camii Mescit Meram, Sungur Mahallesi, Telli",
+   "Yolcuoğlu (Gazioğlu) Camii",
+   "Şadırvanı",
+   "Aziziye Camii",
+   "İplikçi (Ambardar Kerim Ağa) Camii",
+   "Ali Paşa Camii",
+   "Bayındır Köyü Camii",
+   "Gedik Ahmet Paşa Camii",
+   "O"
+  ],
+  "flags": {
+   "start_unverified": 21,
+   "en_missing": 1,
+   "title_completed_with_parent": 1,
+   "en_misaligned": 19,
+   "title_toc": 11,
+   "duplicate_title": 4,
+   "not_in_toc": 10,
+   "short_tr": 3,
+   "district_carried": 1
+  },
+  "kinds": {
+   "complex": 1,
+   "tomb": 15,
+   "tekke": 3,
+   "masjid": 43,
+   "imaret": 1,
+   "other": 1,
+   "fountain": 4,
+   "house": 1,
+   "mosque": 125,
+   "graveyard": 2,
+   "madrasa": 1
+  },
+  "glyph_fixes": {
+   "pct": 0,
+   "pct_unresolved": 0,
+   "bang": 0,
+   "digit": 0
+  },
+  "seg_stats": {
+   "cluster_category": 1,
+   "running_header": 4,
+   "cluster_noise": 2,
+   "entries": 182,
+   "tr_direction_before": 1,
+   "tr_loc_named": 100,
+   "tr_loc_unnamed": 78,
+   "tr_fallback_before": 2,
+   "tr_heading_direct+mono": 1,
+   "tr_loc_unnamed+mono": 1,
+   "en_direction_before": 1,
+   "en_loc_named": 81,
+   "en_loc_unnamed": 81,
+   "en_heading_direct": 10,
+   "en_loc_unnamed+mono": 1,
+   "en_fallback_before+mono": 1,
+   "en_heading_direct+mono": 1,
+   "en_loc_named+mono": 4,
+   "en_fallback_before": 3,
+   "tr_continuation_fix": 3,
+   "en_continuation_fix": 1,
+   "tr_boundary_repair": 5,
+   "en_boundary_repair": 4
+  }
+ },
+ "konya-2": {
+  "book": "konya-2",
+  "monuments": 98,
+  "synthetic": 0,
+  "with_parent": 16,
+  "toc_entries": 85,
+  "toc_unmatched": [
+   [
+    "Eşrefoğlu Süleyman Bey Camii",
+    16
+   ],
+   [
+    "Hamam",
+    28
+   ],
+   [
+    "İmaret",
+    42
+   ],
+   [
+    "Hamam",
+    44
+   ],
+   [
+    "Çeşme",
+    46
+   ],
+   [
+    "Lala Mustafa Paşa Camii",
+    57
+   ],
+   [
+    "İmaret",
+    63
+   ],
+   [
+    "Arasta",
+    64
+   ],
+   [
+    "Tabhane",
+    68
+   ],
+   [
+    "Tabhane Medrese (Sıbyan Mektebi)",
+    69
+   ],
+   [
+    "Karatay Medresesi",
+    85
+   ],
+   [
+    "Çeşmesi",
+    235
+   ],
+   [
+    "Karakayış Sarı Cami Çeşmesi",
+    236
+   ],
+   [
+    "Çeşmesi",
+    238
+   ],
+   [
+    "Şükran Mescidi",
+    null
+   ],
+   [
+    "Dokuzun (Derbent-Şadiye- Zazadin (Saadettin Köpek) Hanı",
+    262
+   ],
+   [
+    "Tombs",
+    119
+   ],
+   [
+    "Ateşbaz Veli Kümbeti ve Zaviyesi",
+    125
+   ],
+   [
+    "Sultan Hatun Türbesi",
+    208
+   ],
+   [
+    "Rüstem Paşa (Şifa) Hamamı",
+    227
+   ],
+   [
+    "Birinci İzzettin Keykavus (Yarım-Anonim) Kümbeti",
+    182
+   ]
+  ],
+  "body_not_in_toc": [
+   "Beyşehir Eşrefoğlu Bedesteni",
+   "Karapınar Sultan II. Selim Külliyesinde İmaret",
+   "Hamamı",
+   "Karapinar Sultan Selim Ii Complex Inn Çeşmesi",
+   "Karapinar Sultan Selim Ii Complex Inn Fountain",
+   "Karapinar Sultan Selim Ii Complex Inn",
+   "Kurşunlu Camii",
+   "Ilgın Lala Mustafa Paşa İmareti",
+   "Ilgın Lala Mustafa Paşa Imarat",
+   "Ilgın Lala Mustafa Paşa Külliyesi",
+   "Ilgın Lala Mustafa Paşa Bazaar",
+   "Ilgın Lala Mustafa Paşa Külliyesi",
+   "Madrasa (primary School)",
+   "Ilgın Lala Mustafa Paşa Külliyesi",
+   "Uzman Sanat Tarihçisi Burhan ÖZTÜRK",
+   "Ateşbaz Veli Türbesi",
+   "Süt Tekke (ferhuniye Masjid) and Keykavus Kizi Tomb",
+   "İzzettin Keykavus I (half-anonymous) Kumbet",
+   "Yarım (Anonim) Türbe",
+   "Sultan Hatun Türbesi",
+   "Hocacihan Sarnıcı",
+   "İnlice Han",
+   "Vakıf İş Hanı (Vakıflar Bölge Müdürlüğü",
+   "Vakıf İş Hanı (Vakıflar Bölge Müdürlüğü Hizmet Binası)",
+   "Elikesik Han",
+   "Zazadin (Sadeddin Köpek) Hanı",
+   "Horozlu (Rûzbe) Han",
+   "Zıvarık Han",
+   "Kazan Höyüğü Köyü Taş Han",
+   "Konut"
+  ],
+  "flags": {
+   "en_misaligned": 19,
+   "not_in_toc": 30,
+   "start_unverified": 13,
+   "district_carried": 14,
+   "duplicate_title": 5,
+   "title_toc": 7,
+   "title_completed_with_parent": 7,
+   "short_tr": 6,
+   "title_english_title": 4,
+   "en_missing": 1,
+   "title_first_line": 1
+  },
+  "kinds": {
+   "complex": 7,
+   "mosque": 5,
+   "tomb": 33,
+   "bath": 7,
+   "bedesten": 5,
+   "imaret": 2,
+   "fountain": 8,
+   "han": 18,
+   "other": 2,
+   "madrasa": 8,
+   "tekke": 1,
+   "library": 1,
+   "house": 1
+  },
+  "glyph_fixes": {
+   "pct": 0,
+   "pct_unresolved": 0,
+   "bang": 0,
+   "digit": 0
+  },
+  "seg_stats": {
+   "cluster_category": 4,
+   "running_header": 4,
+   "cluster_noise": 17,
+   "paired": 9,
+   "entries": 98,
+   "tr_direction_mixed": 1,
+   "tr_loc_named": 48,
+   "tr_heading_direct": 13,
+   "tr_loc_unnamed": 26,
+   "tr_fallback_mixed": 6,
+   "tr_heading_direct+mono": 1,
+   "tr_fallback_mixed+mono": 1,
+   "tr_loc_named+mono": 2,
+   "tr_loc_unnamed+mono": 1,
+   "en_direction_mixed": 1,
+   "en_loc_unnamed": 28,
+   "en_heading_direct": 20,
+   "en_fallback_mixed": 4,
+   "en_heading_direct+mono": 4,
+   "en_loc_named": 37,
+   "en_loc_named+mono": 2,
+   "en_loc_unnamed+mono": 3,
+   "tr_continuation_fix": 4,
+   "en_continuation_fix": 6,
+   "tr_boundary_repair": 2,
+   "en_boundary_repair": 1
+  }
+ },
+ "hatay-1": {
+  "book": "hatay-1",
+  "monuments": 78,
+  "synthetic": 0,
+  "with_parent": 0,
+  "toc_entries": 77,
+  "toc_unmatched": [
+   [
+    "TAKDİM PREFACE Respectfully, Osman ÇELİK General Manager Vakıf Katılım",
+    8
+   ],
+   [
+    "ŞEYH ALİ CAMİ VE KÜLLİYESİ",
+    159
+   ],
+   [
+    "KARHANE MESCİDİ",
+    258
+   ],
+   [
+    "RIFATAĞA (CİVELEK) MESCİDİ",
+    306
+   ],
+   [
+    "DEĞİRMENYOLU MESCİD-OKUL",
+    350
+   ],
+   [
+    "EBUL FUTTUH CAMİİ",
+    374
+   ],
+   [
+    "ŞEYH HIZIR TÜRBESİ",
+    408
+   ],
+   [
+    "ŞEYH HIDIR TÜRBESİ",
+    416
+   ],
+   [
+    "ŞEYH KASEM TÜRBESİ",
+    426
+   ],
+   [
+    "ŞEYH HIZIR TÜRBESİ",
+    430
+   ],
+   [
+    "ŞEYH HASAN GATELLİ TÜRBESİ",
+    436
+   ],
+   [
+    "BUTİK OTEL",
+    462
+   ],
+   [
+    "4. MINTIKA 78 PARSEL ESKİ EV",
+    484
+   ],
+   [
+    "3. MINTIKA 466 PARSEL KONUT",
+    486
+   ]
+  ],
+  "body_not_in_toc": [
+   "Şeyh Ali Camii ve Külliyesi",
+   "Mustafa Şevki Paşa Camii ve Külliyesi",
+   "Kerhan (Yemeniciler) Mescidi",
+   "Rıfat Ağa Mescidi",
+   "Değirmen Yolu Mescid-Okul",
+   "Ebu’l Fütuh Camii",
+   "5. Mıntıka905 Parsel Şeyh Hıdır Türbesi",
+   "Şeyh Kasım Türbesi",
+   "5. Mıntıka 905 Parsel Hızır Türbesi",
+   "Şeyh Hasan Gatelli (Albitelli) Ziyareti Sheıkh Hasan Gatelli (Albitelli) Holy Vısıt Sıte",
+   "Workplace and Others",
+   "İskenderun Butik Otel İskenderun Boutique Hotel",
+   "Old Houses and",
+   "3rd DISTRICT PLOT NO. 466 HOUSE"
+  ],
+  "flags": {
+   "start_unverified": 31,
+   "district_carried": 3,
+   "not_in_toc": 14,
+   "title_english_title": 3,
+   "title_toc": 1,
+   "en_misaligned": 2
+  },
+  "kinds": {
+   "complex": 6,
+   "han": 2,
+   "masjid": 12,
+   "mosque": 27,
+   "tomb": 17,
+   "church": 5,
+   "bedesten": 1,
+   "house": 5,
+   "other": 2,
+   "bath": 1
+  },
+  "glyph_fixes": {
+   "pct": 0,
+   "pct_unresolved": 0,
+   "bang": 0,
+   "digit": 0
+  },
+  "seg_stats": {
+   "cluster_noise": 2,
+   "running_header": 7,
+   "entries": 78,
+   "tr_direction_after": 6,
+   "tr_heading_direct": 77,
+   "en_direction_after": 6,
+   "en_heading_direct": 77,
+   "en_boundary_repair": 4,
+   "cluster_category": 4,
+   "tr_continuation_fix": 2,
+   "tr_boundary_repair": 2,
+   "paired": 1,
+   "tr_heading_direct+mono": 1,
+   "en_heading_direct+mono": 1,
+   "en_continuation_fix": 1
+  }
+ }
+}
