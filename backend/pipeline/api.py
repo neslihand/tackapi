@@ -71,14 +71,35 @@ def _century(n, lang):
     return f'{n}{suffix} century'
 
 
+PARTS = {2: (('ilk yarısı', 'ikinci yarısı'), ('first half', 'second half')),
+         4: (('ilk çeyreği', 'ikinci çeyreği', 'üçüncü çeyreği', 'son çeyreği'),
+             ('first quarter', 'second quarter', 'third quarter', 'last quarter'))}
+
+
 def built_label(lo, hi, lang):
-    """Yıl aralığını kart etiketine çevirir: 1425 · 1425–1426 · 15. yüzyıl. Tarih yoksa None."""
+    """Yıl aralığını kart etiketine çevirir. Tarih yoksa None.
+
+    1425 · 1425–1426 · 17. yüzyıl (1601–1700 ya da 1600–1699) · 17.–18. yüzyıl (1601–1800) ·
+    17. yüzyılın ilk yarısı (1601–1650) · 17. yüzyılın son çeyreği (1676–1700). Diğer aralıklar yıl olarak yazılır.
+    """
     if lo is None:
         return None
     if hi is None or hi == lo:
         return str(lo)
     if lo % 100 == 0 and hi == lo + 99:
         return _century(lo // 100 + 1, lang)
+    if lo % 100 == 1 and hi % 100 == 0:                       # tam yüzyıllar: 1601–1700, 1601–1800
+        a, b = lo // 100 + 1, hi // 100
+        if a == b:
+            return _century(a, lang)
+        if lang == 'tr':
+            return f'{a}.–{b}. yüzyıl'
+        return f"{_century(a, lang).split()[0]}–{_century(b, lang).split()[0]} centuries"
+    for n, (tr, en) in PARTS.items():                       # yarım ve çeyrek yüzyıllar
+        size = 100 // n
+        if hi - lo == size - 1 and lo % size == 1 and (lo - 1) // 100 == (hi - 1) // 100:
+            c, i = (lo - 1) // 100 + 1, ((lo - 1) % 100) // size
+            return f'{c}. yüzyılın {tr[i]}' if lang == 'tr' else f'{en[i]} of the {_century(c, lang)}'
     return f'{lo}–{hi}'
 
 

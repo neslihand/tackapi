@@ -46,6 +46,19 @@ class ApiTest(unittest.TestCase):
         t = next(i for i in d['items'] if i['kind'] == 'tomb')
         self.assertEqual(t['built']['label'], '15. yüzyıl')
 
+    def test_built_labels(self):
+        cases = [((1425, 1425), '1425', '1425'), ((1425, 1426), '1425–1426', '1425–1426'),
+                 ((1400, 1499), '15. yüzyıl', '15th century'), ((1601, 1700), '17. yüzyıl', '17th century'),
+                 ((1601, 1800), '17.–18. yüzyıl', '17th–18th centuries'),
+                 ((1601, 1650), '17. yüzyılın ilk yarısı', 'first half of the 17th century'),
+                 ((1551, 1600), '16. yüzyılın ikinci yarısı', 'second half of the 16th century'),
+                 ((1676, 1700), '17. yüzyılın son çeyreği', 'last quarter of the 17th century'),
+                 ((1201, 1300), '13. yüzyıl', '13th century'), ((1101, 1200), '12. yüzyıl', '12th century'),
+                 ((1674, 1695), '1674–1695', '1674–1695'), ((None, None), None, None)]
+        for (lo, hi), tr, en in cases:
+            self.assertEqual(self.api.built_label(lo, hi, 'tr'), tr, (lo, hi))
+            self.assertEqual(self.api.built_label(lo, hi, 'en'), en, (lo, hi))
+
     def test_list_english(self):
         d = self.get('?lang=en&city=bursa')
         m = next(i for i in d['items'] if i['slug'] == 'bursa-osmangazi-muradiye-camii')
