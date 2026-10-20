@@ -273,12 +273,45 @@ LANG = {'tr': "Cevabı Türkçe yaz.",
                "in Turkish (e.g. 'Muradiye Mosque'), and explain Turkish terms briefly.")}
 
 
+# Özel ad içinde geçse de tek başına bilgi taşımayan sözcükler (unvan, yapı türü; TR ve EN)
+GENERIC_NAME_WORDS = set('''cami camii camisi mescit mescidi türbe türbesi külliye külliyesi medrese medresesi hamam hamamı
+    han hanı çeşme çeşmesi hazire haziresi imaret imareti zaviye zaviyesi tekke tekkesi köprü köprüsü sultan sultanı bey beyi
+    paşa paşası efendi hatun ağa hazret hazreti şeyh mimar usta ulu büyük küçük yeni eski
+    mosque masjid tomb complex madrasa bath fountain inn lodge bridge the of and'''.split())
+# Cümle başında büyük harfle yazıldığı için ada yapışan sözcükler ('Ayrıca Habib' → 'Habib')
+SENTENCE_START_WORDS = set('''ayrıca ancak fakat ama bu şu o bunun bunlar burada sonra daha ile ve kaynaklarımızda kaynaklarda
+    kaynağa kitâbede kitabede kitâbesine kitabesine eserin caminin yapının rivayete göre also however this that in our the'''.split())
+
+
+def _tr_lower(s):
+    return s.replace('I', 'ı').replace('İ', 'i').lower()
+
+
 def verify(answer, context):
-    """Cevaptaki 3-4 haneli yıllar ve çok kelimeli özel adlar bağlamda geçiyor mu?"""
-    ctx = context.lower()
-    bad_years = [y for y in set(re.findall(r'\b(1[0-9]{3}|[5-9][0-9]{2})\b', answer)) if y not in context]
-    names = set(re.findall(r'\b([A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+(?:\s+(?:[A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+|II?I?\.|IV\.|V\.))+)', answer))
-    bad_names = [n for n in names if n.lower() not in ctx and n.split()[0].lower() not in ctx]
+    """Cevaptaki yıllar ve çok kelimeli özel adlar bağlamda geçiyor mu?
+
+    - Yıl: 3-4 haneli sayı bağlamda aynı sayı olarak geçmeli ('142', '1425' içinde geçti sayılmaz).
+      '600 yıl önce' gibi süre ifadeleri yıl değildir (kural 6: hesap yapılabilir).
+    - Ad: addaki her anlamlı sözcük (unvan ve yapı türü hariç) bağlamda geçmeli. Türkçe ekler için ilk 5 harf
+      karşılaştırılır ('Muradiye'nin', 'Murad'ı' → 'murad').
+    """
+    ctx_nums = set(re.findall(r'\d+', context))
+    years = re.findall(r'\b(1[0-9]{3}|[5-9][0-9]{2})\b(?!\s*(?:yıl\b|yıl önce|yıllık|years? (?:ago|old)))', answer)
+    bad_years = {y for y in years if y not in ctx_nums}
+    ctx_words = re.findall(r'\w+', _tr_lower(context))
+    prefixes = {w[:n] for w in ctx_words for n in (3, 4, 5)}
+    names = set()
+    for n in re.findall(r'\b([A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+(?:\s+(?:[A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+|II?I?\.|IV\.|V\.))+)', answer):
+        words = n.split()
+        while words and _tr_lower(words[0]) in SENTENCE_START_WORDS:
+            words.pop(0)
+        if words:
+            names.add(' '.join(words))
+
+    def supported(name):
+        toks = [t for t in re.findall(r'\w+', _tr_lower(name)) if len(t) >= 3 and t not in GENERIC_NAME_WORDS]
+        return all(t[:5] in prefixes for t in toks)
+    bad_names = [n for n in names if not supported(n)]
     return dict(unsupported_years=sorted(bad_years), unsupported_names=sorted(bad_names)[:10])
 
 

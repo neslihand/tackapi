@@ -71,6 +71,28 @@ class VerifyTest(unittest.TestCase):
     def test_unsupported_year(self):
         self.assertEqual(rag.verify('Cami 1453 yılında onarıldı.', self.CTX)['unsupported_years'], ['1453'])
 
+    def test_year_must_match_whole_number(self):
+        # '828' bağlamdaki '1828' içinde geçiyor ama aynı sayı değil (önceki kontrol bunu desteklenmiş sayıyordu)
+        self.assertEqual(rag.verify('Hicri 828 tarihli kitâbe.', 'Bkz. arşiv no 1828.')['unsupported_years'], ['828'])
+        self.assertEqual(rag.verify('Hicri 828 tarihli kitâbe.', self.CTX)['unsupported_years'], [])
+
+    def test_durations_are_not_years(self):
+        v = rag.verify('Cami yaklaşık 600 yıl önce, 1425 yılında yapıldı. 600 years ago.', self.CTX)
+        self.assertEqual(v['unsupported_years'], [])
+
+    def test_name_needs_every_word(self):
+        # önceden ilk sözcük ('Sultan') bağlamda geçtiği için desteklenmiş sayılıyordu
+        self.assertEqual(rag.verify('yapıyı Sultan Mehmed yaptırdı.', self.CTX)['unsupported_names'],
+                         ['Sultan Mehmed'])
+
+    def test_sentence_start_word_is_not_part_of_name(self):
+        v = rag.verify('Ayrıca Habib Neccar burada anılır. Kaynaklarımızda Muradiye Camii geçer.', self.CTX)
+        self.assertEqual(v['unsupported_names'], ['Habib Neccar'])
+
+    def test_name_with_suffix_and_generic_words(self):
+        v = rag.verify("Muradiye Camisi'nin bânîsi Sultan Murad'dır. The Muradiye Mosque is old.", self.CTX)
+        self.assertEqual(v['unsupported_names'], [])
+
 
 if __name__ == '__main__':
     unittest.main()
