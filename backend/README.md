@@ -367,11 +367,36 @@ Sohbetin düşük maliyetli olması öncelikli bir hedef olduğu için **ekonomi
 | `kind` | metin | — | Tür: `mosque`, `tomb`, `madrasa`, `bath`, `complex`… |
 | `period` | metin | — | Dönem slug'ı; üst dönem verilirse alt dönemler de gelir |
 | `q` | metin | — | Ad araması (bulanık, alternatif adlarda da) |
-| `lang` | `tr`/`en` | `tr` | Ad, özet ve dönem adının dili |
-| `limit` | tam sayı | 50 | En çok 200 |
-| `offset` | tam sayı | 0 | Sayfalama |
+| `lang` | `tr`/`en` | `tr` | Ad, etiket, özet ve dönem adının dili |
+| `page` | tam sayı | 1 | 1'den başlar |
+| `page_size` | tam sayı | 50 | En çok 200 |
 
-Dönen alanlar: `slug`, `name`, `kind`, `city`, `district`, `period`, `period_name`, `built_from`, `built_to`, `date_basis`, `parent_slug`, `summary`.
+Cevap biçimi:
+```json
+{
+  "total": 5, "page": 1, "page_size": 50,
+  "items": [{
+    "slug": "bursa-osmangazi-muradiye-camii", "name": "Muradiye Camii", "alt_names": ["Hüdavendigâr Camii"],
+    "kind": "mosque", "kind_label": "Cami",
+    "city": {"slug": "bursa", "name": "Bursa"}, "district": "Osmangazi", "neighborhood": "Muradiye",
+    "period": {"slug": "erken-osmanli", "name": "Erken Osmanlı"},
+    "built": {"from": 1425, "to": 1426, "label": "1425–1426", "basis": "inscription", "basis_label": "Kitâbesine göre"},
+    "parent": {"slug": "bursa-ii-murad-kulliyesi", "name": "II. Murad Külliyesi"},
+    "children_count": 1, "summary": "…", "status": "standing", "has_artworks": true, "image": null,
+    "source": {"book": "Bursa Vakıf Eserleri I. Cilt", "pages": [75, 81]}
+  }],
+  "facets": {
+    "cities":  [{"slug": "bursa", "name": "Bursa", "count": 4}],
+    "kinds":   [{"slug": "mosque", "label": "Cami", "count": 2}],
+    "periods": [{"slug": "erken-osmanli", "name": "Erken Osmanlı", "parent": "osmanli", "count": 4}]
+  }
+}
+```
+- `built.label` tam yüzyıl aralıklarını "15. yüzyıl" / "15th century" olarak yazar; tarih yoksa `null` olur.
+- `period`, `parent` ve `source.pages` bilgi yoksa `null` olur. `image` görsel desteği gelene kadar `null` kalır.
+- `has_artworks` alt eserlerin (ör. haziredeki mezar taşları) sanat eserlerini de sayar.
+- Her facet, kendi filtresi hariç diğer filtreler uygulanarak sayılır. Örneğin `city=bursa` seçiliyken
+  `facets.cities` diğer şehirlerin sayılarını da gösterir.
 
 ### `GET /api/monuments/{slug}?lang=tr|en`
 - **`card`:** Künye ile birlikte `events`, `persons`, `artworks`, `children`, `notes`.
@@ -452,6 +477,7 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_CACHE` | `1` | Cevap önbelleği |
 | `VAKIF_CACHE_DIST` | `0.06` | Önbellek benzerlik eşiği (kosinüs mesafesi) |
 | `VAKIF_FAKE_LLM` | — | `1` ise Gemini çağrılmaz (test modu) |
+| `VAKIF_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | API'yi çağırabilecek ön yüz adresleri (virgülle ayrılmış) |
 
 ---
 
@@ -476,8 +502,8 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 
 **Yol haritası**
 - [ ] Yönetici uç noktaları: web üzerinden yeni şehir ve eser ekleme (`ingest.py`, `review_status` iş akışı, yetkilendirme)
-- [ ] Liste uç noktasını ön yüz JSON sözleşmesine taşıma: `total`, `facets`, `built.label`, `children_count`, `image`
-- [ ] `load_db.py` için yanlışlıkla sıfırlamaya karşı koruma
+- [x] Liste uç noktasını ön yüz JSON sözleşmesine taşıma: `total`, `facets`, `built.label`, `children_count`, `image`
+- [x] `load_db.py` için yanlışlıkla sıfırlamaya karşı koruma
 - [ ] Çocuk ve hikâye metinlerini Batch API ile önceden üretip önbelleğe alma
 - [ ] Görsel desteği
 
