@@ -237,6 +237,8 @@ SELECT doc->>'kind', m.id, doc->>'note',
        CASE WHEN doc->>'kind' = 'contradiction' THEN 'Kaynakta çelişki var: ' || (doc->>'note') || ' — iki bilgiyi de kaynağıyla belirt, birini kesin doğru gibi sunma.' END,
        'open'
 FROM stg JOIN monument m ON m.slug = doc->>'monument_slug';
+-- olgular değişti: önbellekteki cevaplar eskimiş olabilir
+DO $$ BEGIN IF to_regclass('answer_cache') IS NOT NULL THEN TRUNCATE answer_cache; END IF; END $$;
 COMMIT;
 SELECT 'person' t, count(*) FROM person UNION ALL SELECT 'monument_person', count(*) FROM monument_person
 UNION ALL SELECT 'event', count(*) FROM event UNION ALL SELECT 'artwork', count(*) FROM artwork

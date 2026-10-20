@@ -328,7 +328,25 @@ CREATE TABLE editorial_note (
 CREATE INDEX ON editorial_note USING gin (chunk_ids);
 
 -- ---------------------------------------------------------------------
--- 10. GÖRÜNÜMLER
+-- 10. SOHBET CEVAP ÖNBELLEĞİ (rag.py; eski veritabanlarında çalışma anında da oluşturulur)
+-- load_db.py ve load_extractions.py veriyi değiştirdiğinde bu tabloyu boşaltır.
+-- ---------------------------------------------------------------------
+CREATE TABLE answer_cache (
+    id                  bigserial PRIMARY KEY,
+    monument_slug       text NOT NULL,
+    mode                text NOT NULL,
+    lang                text NOT NULL,
+    question            text NOT NULL,
+    q_embedding         vector(1536),
+    result              jsonb NOT NULL,
+    model               text,
+    hits                int NOT NULL DEFAULT 0,
+    created_at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX answer_cache_key ON answer_cache (monument_slug, mode, lang);
+
+-- ---------------------------------------------------------------------
+-- 11. GÖRÜNÜMLER
 -- ---------------------------------------------------------------------
 -- Liste ekranı: dönem/şehir/tür filtreli eser listesi
 CREATE VIEW monument_list AS

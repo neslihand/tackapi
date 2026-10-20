@@ -376,7 +376,8 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
                   usage=dict(eco=ECO, model=ANSWER_MODEL, llm_calls=calls,
                              prompt_chars=len(system) + len(prompt), approx_prompt_tokens=(len(system) + len(prompt)) // 4),
                   cached=False)
-    if use_cache and not check['unsupported_years'] and not G.FAKE:
+    # yalnızca doğrulamadan temiz geçen cevaplar önbelleğe girer (hatalı cevap tekrar tekrar dönmesin)
+    if use_cache and not check['unsupported_years'] and not check['unsupported_names'] and not G.FAKE:
         try:
             cache_put(db, slug, mode, lang, question, qvec, result)
         except Exception:

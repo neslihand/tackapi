@@ -207,6 +207,8 @@ SELECT doc->>'kind',
                  WHERE b.slug = doc->>'book' AND doc->>'needle' IS NOT NULL AND position(doc->>'needle' IN c.content) > 0), '{{}}'),
        doc->>'note', doc->>'instruction', 'confirmed'
 FROM stg;
+-- parça kimlikleri yeniden üretildi: önbellekteki cevaplar ve kaynak bağlantıları geçersiz
+DO $$ BEGIN IF to_regclass('answer_cache') IS NOT NULL THEN TRUNCATE answer_cache; END IF; END $$;
 COMMIT;
 ANALYZE;
 SELECT 'city' t, count(*) FROM city UNION ALL SELECT 'book', count(*) FROM source_book
@@ -290,7 +292,7 @@ def main():
         schema = open(os.path.join(ROOT, 'schema.sql'), encoding='utf-8').read()
         if a.reset:
             schema = ('DROP VIEW IF EXISTS monument_list, monument_city_context CASCADE;\n'
-                      'DROP TABLE IF EXISTS editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
+                      'DROP TABLE IF EXISTS answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
                       'person, monument, period, source_section, source_book, city CASCADE;\n') + schema
         if a.no_vector:
             schema = schema.replace('CREATE EXTENSION IF NOT EXISTS vector;', '')

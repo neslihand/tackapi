@@ -26,7 +26,8 @@ def fresh_db():
     with psycopg.connect(DSN, autocommit=True) as c:
         c.execute('DROP SCHEMA public CASCADE; CREATE SCHEMA public;')
         for f in ('schema.sql', os.path.join('tests', 'seed.sql')):
-            c.execute(open(os.path.join(ROOT, f), encoding='utf-8').read())
+            with open(os.path.join(ROOT, f), encoding='utf-8') as fh:
+                c.execute(fh.read())
         for cid, text in c.execute('SELECT id, content_for_embed FROM chunk').fetchall():
             c.execute('UPDATE chunk SET embedding = %s::vector WHERE id = %s', (vec_literal(G._fake_vec(text, G.EMBED_DIM)), cid))
     os.environ['DATABASE_URL'] = DSN
