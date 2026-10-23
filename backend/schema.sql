@@ -115,7 +115,10 @@ CREATE TABLE monument (
     en_usable           boolean NOT NULL DEFAULT false, -- kitaptaki EN metin arayüzde gösterilebilir mi
     qa_flags            text[] NOT NULL DEFAULT '{}',  -- otomatik kalite bayrakları (insan kontrolü için)
     extraction          jsonb,                         -- Gemini çıkarımının ham çıktısı (denetim izi)
-    review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published'))
+    review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published')),
+    source_note         text,                          -- panelden eklenen eserin kaynağı (kitap dışı)
+    created_by          text,                          -- panelden ekleyen kişi (kitap kayıtlarında boş)
+    updated_at          timestamptz                    -- son panel değişikliği
 );
 CREATE INDEX ON monument USING gin (qa_flags);
 CREATE INDEX ON monument (city_id, kind);
@@ -352,7 +355,7 @@ CREATE TABLE image (
     alt_en              text,
     caption_tr          text,
     edited              boolean NOT NULL DEFAULT false, -- yönetim panelinde değiştirildiyse yükleyici dokunmaz
-    review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published')),
+    review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published','rejected')),  -- rejected: atıldı
     created_at          timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX image_monument_sort ON image (monument_id, sort);
@@ -365,7 +368,19 @@ CREATE TABLE schema_migration (
 );
 -- Bu şema aşağıdaki göçlerin sonucunu zaten içerir; yeni kurulumda tekrar çalışmasınlar.
 -- (Yeni bir göç eklerken şemayı da güncelle ve adını buraya ekle.)
-INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_image_table.sql');
+INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_image_table.sql'),
+                                         ('003_admin.sql');
+
+-- Yönetim paneli denetim kaydı: kim, ne zaman, neyi değiştirdi (pipeline/admin.py)
+CREATE TABLE admin_log (
+    id                  bigserial PRIMARY KEY,
+    at                  timestamptz NOT NULL DEFAULT now(),
+    actor               text NOT NULL,
+    action              text NOT NULL,                 -- monument.update, image.publish, ...
+    target              text NOT NULL,                 -- eser slug'ı ya da image:<id>
+    detail              jsonb                          -- değişen alanlar (önce/sonra)
+);
+CREATE INDEX admin_log_at ON admin_log (at DESC);
 
 -- ---------------------------------------------------------------------
 -- 11. SOHBET CEVAP ÖNBELLEĞİ (rag.py; eski veritabanlarında çalışma anında da oluşturulur)

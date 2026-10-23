@@ -325,6 +325,7 @@ city ────────┼─< monument >── period         │
 | `image` | Fotoğraf: eser (ya da yalnızca şehir/kitap), dosya, boyut, kaynak sayfa, alternatif metin, kapak, sıra, `review_status`, `edited` |
 | `answer_cache` | Sohbet cevap önbelleği |
 | `schema_migration` | Uygulanmış göç dosyaları (`migrations/`, `migrate.py`) |
+| `admin_log` | Yönetim paneli denetim kaydı: kim, ne zaman, neyi değiştirdi (önce/sonra) |
 
 **Yayın durumu:** Herkese açık uçlar yalnızca `review_status = 'published'` olan eser ve fotoğrafları gösterir.
 Envanter kitaplarından yüklenen eserler yayında başlar; yönetim panelinden eklenenler `draft` başlar.
@@ -490,6 +491,43 @@ Hata kodları:
 
 Hız sınırı süreç içinde tutulur. Birden çok süreçle ya da vekil sunucu arkasında çalışırken sınırı vekil sunucuda uygula.
 
+### Yönetim API'si (`/api/admin/*`, `pipeline/admin.py`)
+Kimlik doğrulama için kişi başına bir anahtar tanımlanır (anahtar en az 16 karakter):
+```powershell
+$env:VAKIF_ADMIN_TOKENS = "neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>"
+```
+İstekler `Authorization: Bearer <anahtar>` başlığı taşır. Değişken tanımlı değilse yönetim uçları `503` döner.
+Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablosuna yazılır.
+
+| Yöntem | Uç nokta | Amaç |
+|---|---|---|
+| GET | `/api/admin/me` | Anahtarın sahibi |
+| GET | `/api/admin/stats` | Durumlara göre eser ve fotoğraf sayıları, bağlanmamış fotoğraf, fotoğrafsız eser |
+| GET | `/api/admin/monuments?q&city&status&has_image&page` | Taslaklar dahil eser listesi, yayımlanmış ve bekleyen fotoğraf sayısı |
+| GET | `/api/admin/monuments/{slug}` | Düzenlenebilir tüm alanlar, metin ve tüm fotoğraflar |
+| POST | `/api/admin/monuments` | Yeni eser (`draft` başlar); isteğe bağlı `text_tr`/`text_en` |
+| PATCH | `/api/admin/monuments/{slug}` | Künye alanları, dönem, üst eser, tarih, koordinat, özet, kaynak notu, `review_status` |
+| PUT | `/api/admin/monuments/{slug}/text` | Panel eserinin metni: parçalanır ve embedding'i üretilir |
+| DELETE | `/api/admin/monuments/{slug}` | Yalnızca panelden eklenmiş, alt eseri olmayan eser |
+| GET | `/api/admin/images?status&unassigned&book&monument&page` | Fotoğraf kontrol kuyruğu |
+| PATCH | `/api/admin/images/{id}` | Esere bağla, durum, alternatif metin, açıklama, sıra, kapak |
+| POST | `/api/admin/images/bulk` | Toplu onay ya da ret (`{ids, review_status}`) |
+| POST | `/api/admin/monuments/{slug}/images` | Fotoğraf yükleme (multipart: `file`, `alt_tr` zorunlu); JPEG/PNG/WebP, en çok 15 MB |
+| DELETE | `/api/admin/images/{id}` | Yüklenen fotoğraf dosyasıyla silinir; kitap fotoğrafı `rejected` olur |
+| POST | `/api/admin/cities` | Yeni şehir |
+| GET | `/api/admin/log?target` | Denetim kaydı |
+
+Kurallar:
+- **Kitap metni panelden değiştirilemez** (`409`), çünkü doğruluk kaynağıdır. Kitap eserlerinin künye alanları
+  düzenlenebilir. Kitap eserleri silinemez; yayından kaldırmak için durumları `draft` yapılır.
+- Panelden eklenen eserin metni "Yönetim paneli girişleri" adlı şehir başına bir kaynak kitaba bağlanır. Kaynağı
+  `source_note` alanında yazılır. Gemini'ye ulaşılamazsa metin yine kaydedilir; `embed_gemini.py` eksik embedding'leri
+  sonra tamamlar.
+- Panelde değiştirilen fotoğraf `edited` olarak işaretlenir ve `load_images.py` ona bir daha dokunmaz.
+- Kapak yalnızca bir esere bağlı ve yayımlanmış bir fotoğraf olabilir. Kapak yayından kalkarsa bir sonraki
+  yayımlanmış fotoğraf kapak olur.
+- Eserle ilgili her değişiklik o eserin sohbet önbelleğini temizler.
+
 ---
 
 ## 10. Değerlendirme
@@ -554,6 +592,7 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_CHAT_RATE` | `10/60` | IP başına sohbet sınırı: `istek/saniye` |
 | `VAKIF_CHAT_TRIES` | `2` | Sohbette geçici Gemini hatalarında deneme sayısı (betikler 5 dener) |
 | `VAKIF_LLM_TIMEOUT` | `300` | Gemini isteği zaman aşımı (sn); API için 60 gibi daha kısa bir değer önerilir |
+| `VAKIF_ADMIN_TOKENS` | — | Yönetim API'si anahtarları: `ad:anahtar,ad2:anahtar2` (anahtar ≥ 16 karakter) |
 | `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |
 | `VAKIF_MEDIA_DIR` | `backend/media` | WebP fotoğrafların yazıldığı ve `/media` adresinden sunulduğu klasör |
 | `VAKIF_TEST_DSN` | — | Testlerin kullanacağı veritabanı; adı `_test` ile bitmeli, testler onu **sıfırdan kurar** |
@@ -580,7 +619,9 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 - Bazı betikler dosyaları sistem kodlamasıyla yazıyor. `eval_rag.py` UTF-8'e geçirildi; diğerleri ileride topluca geçirilecek.
 
 **Yol haritası**
-- [ ] Yönetici uç noktaları: web üzerinden yeni şehir ve eser ekleme (`ingest.py`, `review_status` iş akışı, yetkilendirme)
+- [x] Yönetici uç noktaları: yeni şehir ve eser ekleme, düzenleme, fotoğraf onayı, `review_status` iş akışı, yetkilendirme
+- [ ] `ingest.py`: bir envanter kitabının tamamını (bölümleme → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden ekleme
+- [x] Görsel desteği (kitap fotoğrafları + panelden yükleme)
 - [x] Liste uç noktasını ön yüz JSON sözleşmesine taşıma: `total`, `facets`, `built.label`, `children_count`, `image`
 - [x] `load_db.py` için yanlışlıkla sıfırlamaya karşı koruma
 - [ ] Çocuk ve hikâye metinlerini Batch API ile önceden üretip önbelleğe alma

@@ -14,6 +14,7 @@ Uç noktalar
 
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
+VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
 """
 import os, sys, re, time, logging, threading, mimetypes
 from collections import defaultdict, deque
@@ -25,12 +26,13 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag
+import rag, admin, images
 
 log = logging.getLogger('vakif.api')
 
 app = FastAPI(title='Vakıf Eserleri API')
-app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST'], allow_headers=['Content-Type'],
+app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+                   allow_headers=['Content-Type', 'Authorization'],
                    allow_origins=[o.strip() for o in os.environ.get(
                        'VAKIF_CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if o.strip()])
 db = DB()
@@ -41,6 +43,9 @@ mimetypes.add_type('image/webp', '.webp')
 MEDIA_DIR = os.environ.get('VAKIF_MEDIA_DIR', os.path.join(os.path.dirname(__file__), '..', 'media'))
 app.mount('/media', StaticFiles(directory=MEDIA_DIR, check_dir=False), name='media')
 PUBLISHED = "m.review_status = 'published'"
+
+# Yönetim uçları (/api/admin/*, bkz. admin.py)
+app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.save_webp(data, rel, MEDIA_DIR)))
 
 
 def image_obj(r, lang, prefix=''):

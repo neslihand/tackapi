@@ -48,7 +48,8 @@ def main():
     ap.add_argument('--src', default=os.path.join(DATA, 'images.jsonl'))
     a = ap.parse_args()
     db = DB(a.dsn)
-    rows = [json.loads(l) for l in open(a.src, encoding='utf-8')]
+    with open(a.src, encoding='utf-8') as f:
+        rows = [json.loads(l) for l in f if l.strip()]
     missing = 0
     for r in rows:
         if r['monument_slug'] and not db.query('SELECT 1 FROM monument WHERE slug = %(s)s', dict(s=r['monument_slug'])):

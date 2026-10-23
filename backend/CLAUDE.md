@@ -40,11 +40,17 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **Embedding:** 3.248 parçanın yaklaşık 3.230'u gömüldü. Kalanlar kota nedeniyle eksik; `python embed_gemini.py` tamamlar.
   12 sözlük parçası `is_retrievable=false` olduğu için kasıtlı olarak boştur.
 - **RAG değerlendirmesi** (ekonomik mod, gerçek API, 15 soru): `route_ok 12/12`, `mention_ok 6/6`, `refuse_ok 1/1`,
-  `grounded 14/15`. q04 reddetme sorusu doğru şekilde reddedildi ama cevapta desteksiz bir yıl ya da ad var. Sistem
-  talimatı sıkılaştırılabilir.
-- **API:** FastAPI ile 4 uç nokta yerelde çalışıyor (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`).
-  `/api/monuments` ön yüz sözleşmesini (`total`, `items`, `facets`; `page`/`page_size`) döndürüyor. CORS izinli adresleri
-  `VAKIF_CORS_ORIGINS` ile ayarlanıyor (varsayılan Vite: `localhost:5173`).
+  `grounded 14/15`. Bu ölçüm verify() sıkılaştırılmadan ve q04 talimatı değişmeden önceydi; yeniden ölçülmedi.
+- **Fotoğraflar:** `images.py` 6 kitap PDF'inden 1.547 fotoğraf çıkardı (552/753 eser fotoğraflı, %90 kesin eşleşme).
+  WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin 22 fotoğrafı
+  yinelenen kayıt nedeniyle taslakta.
+- **API:** Herkese açık uçlar (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`, `/media`) yalnızca
+  `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
+  `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).
+- **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
+  `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
+- **Testler:** `python -m unittest discover -s tests` (51 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+  boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
 `segment → finalize → chunk` (çevrim dışı, deterministik) → `load_db` (yalnızca bir kez) → `extract_gemini` + `load_extractions` →
@@ -74,6 +80,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 5. **Tek veritabanı.** İlişkisel veri, tam metin ve vektör arama PostgreSQL ile pgvector'da birlikte tutulur. Embedding
    1536 boyutludur (`gemini-embedding-2`). Model veya boyut değişirse hepsi yeniden gömülmelidir.
 6. **Her adım tekrar çalıştırılabilir ve kaldığı yerden devam eder.**
+7. **Kitap metni panelden değiştirilemez.** Kitap eserlerinin yalnızca künye alanları düzenlenir; kitap eseri silinmez,
+   yayından kaldırılır. Panelden eklenen eserler `draft` başlar ve kaynağı `source_note` alanında yazılır.
+8. **Kitap fotoğrafı silinmez, `rejected` olur.** Panelde dokunulan fotoğraf `edited` işaretlenir ve `load_images.py` onu
+   bir daha değiştirmez.
 
 ## Tuzaklar (daha önce yaşandı)
 - ⚠️ **`load_db.py` tüm tabloları TRUNCATE eder.** Embedding'ler ve çıkarımlar silinir. İlk kurulumdan sonra çalıştırma.
@@ -87,19 +97,16 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - Kitaplardaki bozuk karakterler (`%` → İ/Ş/ff, `!` → ş) yalnızca Bursa I–II'de var ve `clean.fix_glyphs` ile onarılıyor.
 
 ## Bekleyen işler (öncelik sırasıyla öneri)
-1. **Yönetici veri girişi:** Web üzerinden yeni şehir ve eser ekleme.
-   - `ingest.py`: tek metin ya da kitap için segment→chunk→extract→embed adımlarını yalnızca o kayıtlar için çalıştırır, TRUNCATE yapmaz.
-   - Korumalı `/api/admin/*` uç noktaları.
-   - `review_status` iş akışı: `draft → reviewed → published`. Herkese açık uç noktalar yalnızca yayınlanmış kaydı göstermeli.
-   - Ön yüz teknolojisi henüz netleşmedi; geliştiriciye sor.
-2. ~~Liste uç noktasını ön yüz sözleşmesine taşı~~ (yapıldı, Ekim 2026; biçim README §9'da). `image` görsel desteği
-   gelene kadar `null`. `review_status` filtresi henüz yok: kayıtların büyük ihtimalle hepsi `draft` (varsayılan),
-   bu yüzden filtre eklemeden önce mevcut kayıtların durumuna karar verilmeli.
-3. ~~`load_db.py` için güvenlik kontrolü~~ (yapıldı, Ekim 2026).
-4. q04: reddetme cevaplarında ek bilgi vermemesi için sistem talimatını sıkılaştır.
-5. Tüm betiklerde UTF-8'e geçiş (yukarıdaki kodlama notuna dikkat).
-6. Çocuk ve hikâye metinlerini Batch API ile önceden üretip önbelleğe almak (maliyet).
-7. Bilinen veri sorunları: Konya II'deki Karapınar ve Ilgın külliye başlıkları; `en_misaligned` kayıtları.
+Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında canlı demo olarak yapılacak.
+1. **Ön yüzü arka uca bağlamak** (`../frontend`, React + Vite). Statik 6 örnek eser kaldırılacak; liste, eser sayfası,
+   galeri, sohbet (3 anlatım modu), harita ve yönetim sayfası API'den beslenecek.
+2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
+   ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
+3. Harita ve "Yakınımdakiler" için eser koordinatları (adres ve mahalle bilgisinden toplu coğrafi kodlama ve kontrol).
+4. Veri temizliği: yinelenen Bursa "Ulucami" kaydı; Hatay'da başlığı İngilizceyle karışmış kayıtlar ("Workplace and
+   Others"); Konya II'deki Karapınar ve Ilgın başlıkları; `en_misaligned` kayıtları.
+5. Gerçek API ile `eval_rag.py` ölçümü (verify ve q04 değişiklikleri sonrası).
+6. Çocuk ve hikâye anlatımlarını demo eserleri için önceden üretip önbelleğe almak (maliyet ve sahnede güvenilirlik).
 
 ## Çalışma şekli
 - Değişiklikten sonra mümkünse önce `VAKIF_FAKE_LLM=1` ile, sonra `python eval_rag.py` ile doğrula. Değerlendirme skorları

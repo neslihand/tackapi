@@ -239,10 +239,12 @@ def scan_image(doc, i, info, W, H, uses, seen, order, pps, titles, state, mons, 
     return [row]
 
 
-def save_webp(data, rel):
+def save_webp(data, rel, media=None):
+    """Görsel baytlarını <media>/<rel> (1.600 px) ve <media>/thumbs/<rel> (480 px) olarak WebP'ye çevirir."""
     from PIL import Image
-    full = os.path.join(MEDIA, rel)
-    thumb = os.path.join(MEDIA, 'thumbs', rel)
+    media = media or MEDIA
+    full = os.path.join(media, rel)
+    thumb = os.path.join(media, 'thumbs', rel)
     if os.path.exists(full) and os.path.exists(thumb):
         return  # kaldığı yerden devam
     im = Image.open(io.BytesIO(data))

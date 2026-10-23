@@ -1,7 +1,7 @@
 """REST API testleri (geçici test veritabanı + sahte Gemini)."""
-import os, shutil, tempfile, unittest
+import os, unittest
 from unittest import mock
-from _testdb import needs_db, fresh_db
+from _testdb import needs_db, fresh_db, MEDIA
 
 CHAT = {'slug': 'bursa-osmangazi-muradiye-camii', 'question': 'Bu cami ne zaman yapıldı?'}
 
@@ -11,20 +11,13 @@ class ApiTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         fresh_db()
-        os.environ['VAKIF_CHAT_RATE'] = '5/60'
-        cls.media = tempfile.mkdtemp()
-        os.environ['VAKIF_MEDIA_DIR'] = cls.media
-        os.makedirs(os.path.join(cls.media, 'thumbs', 'books', 'bursa-1'))
-        with open(os.path.join(cls.media, 'thumbs', 'books', 'bursa-1', '019-a1.webp'), 'wb') as f:
+        os.makedirs(os.path.join(MEDIA, 'thumbs', 'books', 'bursa-1'), exist_ok=True)
+        with open(os.path.join(MEDIA, 'thumbs', 'books', 'bursa-1', '019-a1.webp'), 'wb') as f:
             f.write(b'RIFF-ornek')
         from fastapi.testclient import TestClient
         import api, gemini_client
         cls.api, cls.G = api, gemini_client
         cls.c = TestClient(api.app)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.media, ignore_errors=True)
 
     def setUp(self):
         self.api._hits.clear()
