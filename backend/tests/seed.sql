@@ -19,6 +19,10 @@ INSERT INTO monument(slug, city_id, district, neighborhood, kind, name_tr, name_
    NULL, NULL, NULL),
   ('konya-meram-ornek-camii', 2, 'Meram', NULL, 'mosque', 'Örnek Camii', NULL, NULL, 2, '[1220,1221)', 'waqfiyya', 2,
    '[10,12)', false, NULL, NULL, 'standing');
+UPDATE monument SET review_status = 'published';
+-- yönetim panelinden eklenmiş, henüz yayınlanmamış kayıt: herkese açık uçlarda görünmemeli
+INSERT INTO monument(slug, city_id, district, kind, name_tr, book_id, is_synthetic, review_status)
+VALUES ('bursa-osmangazi-taslak-cesme', 1, 'Osmangazi', 'fountain', 'Taslak Çeşme', 1, false, 'draft');
 UPDATE monument SET parent_id = 1 WHERE slug = 'bursa-osmangazi-muradiye-camii';
 UPDATE monument SET parent_id = 2 WHERE slug = 'bursa-osmangazi-muradiye-camii-haziresi';
 INSERT INTO artwork(monument_id, kind, description_tr) VALUES (3, 'gravestone', 'mezar taşı');
@@ -34,3 +38,13 @@ INSERT INTO chunk(section_id, book_id, seq, lang, kind, city_id, monument_id, co
    'title: Muradiye Camii | text: Caminin kitâbesine göre yapımı 1426 yılında tamamlanmıştır.', 'h1'),
   (2, 1, 1, 'tr', 'city_history', 1, NULL, NULL, '[1400,1450)', 20, 21, 'Bursa › Bursa Tarihi',
    'Bursa bu dönemde ipek ticaretinin merkeziydi.', 'title: Bursa Tarihi | text: Bursa bu dönemde ipek ticaretinin merkeziydi.', 'h2');
+
+-- Fotoğraflar: kapak + galeri (yayında), kontrol bekleyen (taslak), esere bağlanmamış (taslak)
+INSERT INTO image(monument_id, city_id, book_id, source, sha1, file, width, height, printed_page, sort, is_cover,
+                  alt_tr, alt_en, review_status) VALUES
+  (2, 1, 1, 'book', 'a1', 'books/bursa-1/019-a1.webp', 1300, 890, 75, 1, true, 'Muradiye Camii – Bursa Vakıf Eserleri I, s. 75',
+   'Muradiye Mosque – photo from Bursa Vakıf Eserleri I, p. 75', 'published'),
+  (2, 1, 1, 'book', 'a2', 'books/bursa-1/020-a2.webp', 690, 515, 76, 2, false, 'Muradiye Camii – Bursa Vakıf Eserleri I, s. 76',
+   NULL, 'published'),
+  (2, 1, 1, 'book', 'a3', 'books/bursa-1/021-a3.webp', 690, 515, 77, 3, false, 'kontrol bekliyor', NULL, 'draft'),
+  (NULL, 1, 1, 'book', 'a4', 'books/bursa-1/017-a4.webp', 1774, 889, 32, 1, false, 'Bursa Vakıf Eserleri I, s. 32', NULL, 'draft');

@@ -159,12 +159,13 @@ TRUNCATE stg;
 \copy stg FROM '{monuments}' WITH (FORMAT csv, QUOTE e'\x01', DELIMITER e'\x02')
 INSERT INTO monument(slug, city_id, district, kind, name_tr, name_en, period_id, built_years, date_basis,
                      section_id, book_id, pages, heading_path, title_source, toc_title, toc_page, is_synthetic,
-                     en_usable, qa_flags)
+                     en_usable, qa_flags, review_status)
 SELECT doc->>'slug', c.id, doc->>'district', doc->>'kind', doc->>'name_tr', doc->>'name_en', p.id,
        (doc->>'built_years')::int4range, doc->>'date_basis', sk.id, b.id, (doc->>'pages')::int4range,
        doc->>'heading_path', doc->>'title_source', doc->>'toc_title', (doc->>'toc_page')::int,
        (doc->>'is_synthetic')::boolean, (doc->>'en_usable')::boolean,
-       ARRAY(SELECT jsonb_array_elements_text(doc->'qa_flags'))
+       ARRAY(SELECT jsonb_array_elements_text(doc->'qa_flags')),
+       'published'  -- resmî envanter kitabından gelen kayıtlar yayında başlar; panelden eklenenler 'draft'
 FROM stg JOIN city c ON c.slug = doc->>'city'
 JOIN source_book b ON b.slug = doc->>'book'
 LEFT JOIN period p ON p.slug = doc->>'period'
@@ -254,16 +255,17 @@ def psql_rows(dsn, sql):
 
 def existing_data(dsn):
     """Silinecek veriyi sayar (yalnızca SELECT). Şema yoksa boş sözlük döner."""
-    exists = psql_rows(dsn, "SELECT to_regclass('public.monument') IS NOT NULL, to_regclass('public.answer_cache') IS NOT NULL")[0]
-    if exists[0] != 't':
+    if psql_rows(dsn, "SELECT to_regclass('public.monument') IS NOT NULL")[0][0] != 't':
         return {}
     sql = """SELECT (SELECT count(*) FROM monument), (SELECT count(*) FROM chunk),
                     (SELECT count(*) FROM chunk WHERE embedding IS NOT NULL),
                     (SELECT count(*) FROM monument_person) + (SELECT count(*) FROM event) + (SELECT count(*) FROM artwork)"""
-    if exists[1] == 't':
-        sql += ', (SELECT count(*) FROM answer_cache)'
+    names = ['eser', 'parça', "embedding'li parça", 'çıkarım satırı']
+    for table, label in (('answer_cache', 'önbellek cevabı'), ('image', 'fotoğraf kaydı')):
+        if psql_rows(dsn, f"SELECT to_regclass('public.{table}') IS NOT NULL")[0][0] == 't':
+            sql += f', (SELECT count(*) FROM {table})'
+            names.append(label)
     vals = [int(v) for v in psql_rows(dsn, sql)[0]]
-    names = ['eser', 'parça', "embedding'li parça", 'çıkarım satırı', 'önbellek cevabı']
     return {n: v for n, v in zip(names, vals) if v}
 
 
@@ -304,7 +306,7 @@ def main():
         schema = open(os.path.join(ROOT, 'schema.sql'), encoding='utf-8').read()
         if a.reset:
             schema = ('DROP VIEW IF EXISTS monument_list, monument_city_context CASCADE;\n'
-                      'DROP TABLE IF EXISTS answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
+                      'DROP TABLE IF EXISTS schema_migration, image, answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
                       'person, monument, period, source_section, source_book, city CASCADE;\n') + schema
         if a.no_vector:
             schema = schema.replace('CREATE EXTENSION IF NOT EXISTS vector;', '')

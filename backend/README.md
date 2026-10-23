@@ -175,7 +175,16 @@ python load_extractions.py                # tekrar tekrar çalıştırılabilir
 # 6) Embedding (kaldığı yerden devam eder)
 python embed_gemini.py
 
-# 7) Deneme, değerlendirme, API
+# 7) Fotoğraflar (kitap PDF'leri VAKIF_PDF_DIR klasöründe; bkz. §5.8)
+python images.py --report                 # önce yalnızca rapor: data/review/gorseller.csv
+python images.py --write                  # media/ altına WebP (kaldığı yerden devam eder)
+python load_images.py                     # image tablosuna yükler (tekrar çalıştırılabilir)
+
+# 8) Mevcut bir veritabanını güncelleme (şema değişiklikleri; veriyi silmez)
+python migrate.py                         # bekleyen göçleri listeler
+python migrate.py --apply
+
+# 9) Deneme, değerlendirme, API
 python rag.py bursa-osmangazi-muradiye-camii "Bu cami yapıldığında Bursa nasıl bir şehirdi?" --mode child
 python eval_rag.py
 python -m uvicorn api:app --reload --port 8000   # http://localhost:8000/docs
@@ -250,6 +259,34 @@ Betik kaldığı yerden devam eder (`data/extractions/<slug>.json` varsa o eseri
 - Kota (429) hatasında 65 sn bekler; üst üste 5 kez hata alırsa durur.
 - Gruplar arasındaki bekleme `VAKIF_EMBED_PAUSE` değişkeniyle ayarlanır.
 
+### 5.8 Fotoğraflar: `images.py`, `load_images.py`
+Fotoğraflar yalnızca envanter kitaplarının PDF'lerinden alınır (`books.py` → `pdf`, klasör `VAKIF_PDF_DIR`). Kitaplar
+çift sayfa olarak taranmıştır; her PDF sayfasında iki basılı sayfa ve üst köşelerde sayfa numaraları vardır.
+
+**Fotoğraf hangi esere ait?** Okuma sırasıyla (sol yarım, sonra sağ yarım) ilerlenir:
+1. Eser başlıkları PDF'te bulunur. Başlık birden çok satıra ya da bloğa bölünmüş olabilir (`SOKULLU MEHMET PAŞA` +
+   `CAMİİ VE KÜLLİYESİ`). Aynı adlı kayıtlar varsa sayfayı kapsayan en uzun kayıt seçilir.
+2. Kitapta her eser büyük bir fotoğrafla açılır ve başlık fotoğrafın altındadır. Bu yüzden başlığın bulunduğu yarım
+   sayfadaki fotoğraflar yeni esere, başlıksız sayfalardaki fotoğraflar en son başlayan esere bağlanır
+   (yöntem: `baslik`, `onceki_baslik`).
+3. Bölüm ayracından sonra ("Külliyeler / COMPLEXES") yeni bir başlık gelene kadar fotoğraflar hiçbir esere bağlanmaz.
+4. İlk eserden önceki fotoğraflar (kitabın tematik girişi, açılış fotoğrafları) `giris`; şehir tarihi gibi bir bölüme
+   düşenler `bolum`; hiçbir yere düşmeyenler `baglanmamis` olarak işaretlenir. Bunlar hiçbir eserin galerisinde
+   görünmez; yönetim panelinde bir esere ya da şehre bağlanmayı ya da atılmayı bekler.
+5. **Çapraz kontrol:** Fotoğrafın basılı sayfası, eserin metinden çıkarılan sayfa aralığından çok uzaksa
+   (`*_aralik_disi`) ya da aynı yarımda iki başlık varsa kontrol istenir.
+
+Kontrol gerektiren fotoğraflar `draft`, diğerleri `published` olarak yüklenir. Elenenler: kısa kenarı 400 px'ten küçük
+ya da sayfanın %3'ünden azını kaplayan görseller, 4'ten fazla sayfada tekrarlanan süs ve logolar, tek renkli dokular
+ve aynı görselin kopyaları. Her eserin ilk yayımlanmış fotoğrafı kapak olur. Alternatif metin şablonla yazılır:
+"Muradiye Camii – Bursa Vakıf Eserleri I, s. 77".
+
+Ekim 2026 sonucu: 6 kitaptan 1.547 fotoğraf; %90'ı kesin eşleşme; 753 eserin 552'si en az bir fotoğrafa sahip.
+Kontrol listesi: `data/review/gorseller.csv` (kontrol gerektirenler en üstte).
+
+`load_images.py` sha1 ile eşler ve tekrar çalıştırılabilir. Yönetim panelinde değiştirilmiş (`edited`) satırlara dokunmaz.
+WebP dosyaları `media/` altına yazılır (1.600 px ve 480 px'lik küçük sürüm) ve git'e girmez.
+
 ---
 
 ## 6. Veritabanı şeması
@@ -266,6 +303,7 @@ city ────────┼─< monument >── period         │
              │      ├─< artwork            (hat, çini, oyma, kalem işi, kitâbe, mezar taşı)
              │      ├─< waqf_link >── waqf
              │      ├─< editorial_note
+             │      ├─< image             (kitaplardan çıkarılan / panelden yüklenen fotoğraflar)
              │      └─< chunk (embedding vector(1536), tsv)
              └─ term (sözlük, TR/EN)
 ```
@@ -284,7 +322,15 @@ city ────────┼─< monument >── period         │
 | `chunk` | RAG parçası: metin, `embedding`, `tsv` (türetilmiş, `turkish`), `years`, `period_ids`, `topic`, `is_retrievable` |
 | `term` | Terimler sözlüğü (TR, EN ve yanlış İngilizce karşılıklar) |
 | `editorial_note` | Kaynaktaki bilinen hata ve çelişkiler; modele uyarı olarak iletilir |
-| `answer_cache` | Sohbet cevap önbelleği (çalışma anında otomatik oluşturulur) |
+| `image` | Fotoğraf: eser (ya da yalnızca şehir/kitap), dosya, boyut, kaynak sayfa, alternatif metin, kapak, sıra, `review_status`, `edited` |
+| `answer_cache` | Sohbet cevap önbelleği |
+| `schema_migration` | Uygulanmış göç dosyaları (`migrations/`, `migrate.py`) |
+
+**Yayın durumu:** Herkese açık uçlar yalnızca `review_status = 'published'` olan eser ve fotoğrafları gösterir.
+Envanter kitaplarından yüklenen eserler yayında başlar; yönetim panelinden eklenenler `draft` başlar.
+
+**Göçler:** Mevcut bir veritabanı `python migrate.py --apply` ile güncellenir. Her göç bir kez ve kendi işleminde
+uygulanır. `schema.sql` güncel şemayı içerdiği için yeni kurulumda göçler uygulanmış sayılır.
 
 **Görünümler:** `monument_list` (liste ekranı için), `monument_city_context` (eser ile şehir ve dönem bağlamı).
 
@@ -357,8 +403,12 @@ Sohbetin düşük maliyetli olması öncelikli bir hedef olduğu için **ekonomi
 |---|---|---|
 | GET | `/api/cities` | Şehirler ve eser sayıları |
 | GET | `/api/monuments` | Filtreli ve sayfalı eser listesi |
-| GET | `/api/monuments/{slug}` | Eser kartı ve kaynak metin |
+| GET | `/api/monuments/{slug}` | Eser kartı, kaynak metin ve fotoğraf galerisi |
 | POST | `/api/chat` | Eser hakkında kaynaklı sohbet |
+| GET | `/media/<dosya>` | Fotoğraflar (`/media/thumbs/<dosya>` küçük sürüm) |
+
+Yalnızca yayımlanmış (`published`) eserler listelenir; taslak bir eserin ayrıntısı ve sohbeti `404` döner.
+`/api/cities` yanıtında şehir merkezinin `lat`/`lon` değerleri de bulunur.
 
 ### `GET /api/monuments`
 | Parametre | Tür | Varsayılan | Açıklama |
@@ -382,7 +432,9 @@ Cevap biçimi:
     "period": {"slug": "erken-osmanli", "name": "Erken Osmanlı"},
     "built": {"from": 1425, "to": 1426, "label": "1425–1426", "basis": "inscription", "basis_label": "Kitâbesine göre"},
     "parent": {"slug": "bursa-ii-murad-kulliyesi", "name": "II. Murad Külliyesi"},
-    "children_count": 1, "summary": "…", "status": "standing", "has_artworks": true, "image": null,
+    "children_count": 1, "summary": "…", "status": "standing", "has_artworks": true,
+    "image": {"src": "/media/books/bursa-1/019-….webp", "thumb": "/media/thumbs/books/bursa-1/019-….webp",
+              "alt": "Muradiye Camii – Bursa Vakıf Eserleri I, s. 75", "width": 1300, "height": 890},
     "source": {"book": "Bursa Vakıf Eserleri I. Cilt", "pages": [75, 81]}
   }],
   "facets": {
@@ -393,7 +445,7 @@ Cevap biçimi:
 }
 ```
 - `built.label` tam yüzyıl aralıklarını "15. yüzyıl" / "15th century" olarak yazar; tarih yoksa `null` olur.
-- `period`, `parent` ve `source.pages` bilgi yoksa `null` olur. `image` görsel desteği gelene kadar `null` kalır.
+- `period`, `parent`, `image` ve `source.pages` bilgi yoksa `null` olur. `image` eserin yayımlanmış kapak fotoğrafıdır.
 - `has_artworks` alt eserlerin (ör. haziredeki mezar taşları) sanat eserlerini de sayar.
 - Her facet, kendi filtresi hariç diğer filtreler uygulanarak sayılır. Örneğin `city=bursa` seçiliyken
   `facets.cities` diğer şehirlerin sayılarını da gösterir.
@@ -403,6 +455,7 @@ Cevap biçimi:
 - **`text`:** Kaynak metin; İngilizcede kitap metni ya da özet.
 - **`text_note`:** İngilizce metnin hangi kaynaktan geldiği.
 - **`source`:** Kitap, sayfa aralığı, künye.
+- **`images`:** Yayımlanmış fotoğraflar (önce kapak): `src`, `thumb`, `alt`, `width`, `height`, `caption`, `source{book,page}`.
 - **`status`**, **`review_status`**.
 
 Eser bulunamazsa `404` döner.
@@ -501,6 +554,8 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_CHAT_RATE` | `10/60` | IP başına sohbet sınırı: `istek/saniye` |
 | `VAKIF_CHAT_TRIES` | `2` | Sohbette geçici Gemini hatalarında deneme sayısı (betikler 5 dener) |
 | `VAKIF_LLM_TIMEOUT` | `300` | Gemini isteği zaman aşımı (sn); API için 60 gibi daha kısa bir değer önerilir |
+| `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |
+| `VAKIF_MEDIA_DIR` | `backend/media` | WebP fotoğrafların yazıldığı ve `/media` adresinden sunulduğu klasör |
 | `VAKIF_TEST_DSN` | — | Testlerin kullanacağı veritabanı; adı `_test` ile bitmeli, testler onu **sıfırdan kurar** |
 
 ---

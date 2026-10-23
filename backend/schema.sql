@@ -328,7 +328,47 @@ CREATE TABLE editorial_note (
 CREATE INDEX ON editorial_note USING gin (chunk_ids);
 
 -- ---------------------------------------------------------------------
--- 10. SOHBET CEVAP ÖNBELLEĞİ (rag.py; eski veritabanlarında çalışma anında da oluşturulur)
+-- 10. FOTOĞRAFLAR (envanter kitaplarından çıkarılan ya da yönetim panelinden yüklenen)
+-- Bir fotoğraf ya bir esere (monument_id) ya da yalnızca şehre/kitaba (giriş, şehir tarihi) bağlıdır; ikisi de
+-- boşsa 'bağlanmamış'tır ve yönetim panelinde bekler. Yalnızca 'published' olanlar herkese açık uçlarda görünür.
+-- ---------------------------------------------------------------------
+CREATE TABLE image (
+    id                  serial PRIMARY KEY,
+    monument_id         int REFERENCES monument(id) ON DELETE CASCADE,
+    city_id             int REFERENCES city(id),
+    book_id             int REFERENCES source_book(id),
+    source              text NOT NULL CHECK (source IN ('book','upload')),
+    sha1                text UNIQUE NOT NULL,          -- aynı görselin kopyası iki kez eklenmez
+    file                text NOT NULL,                 -- media/ altındaki göreli yol; küçüğü media/thumbs/<file>
+    width               int,
+    height              int,
+    pdf_page            int,
+    printed_page        int,                           -- kaynak gösterimi: "Bursa Vakıf Eserleri I, s. 77"
+    section_title       text,                          -- esere değil bir bölüme (şehir tarihi vb.) aitse
+    match_method        text,                          -- images.py bağlama yöntemi (denetim izi)
+    sort                int NOT NULL DEFAULT 0,
+    is_cover            boolean NOT NULL DEFAULT false,
+    alt_tr              text,
+    alt_en              text,
+    caption_tr          text,
+    edited              boolean NOT NULL DEFAULT false, -- yönetim panelinde değiştirildiyse yükleyici dokunmaz
+    review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published')),
+    created_at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX image_monument_sort ON image (monument_id, sort);
+CREATE UNIQUE INDEX image_one_cover ON image (monument_id) WHERE is_cover;
+
+-- Uygulanan göç (migration) dosyaları: pipeline/migrate.py
+CREATE TABLE schema_migration (
+    name                text PRIMARY KEY,
+    applied_at          timestamptz NOT NULL DEFAULT now()
+);
+-- Bu şema aşağıdaki göçlerin sonucunu zaten içerir; yeni kurulumda tekrar çalışmasınlar.
+-- (Yeni bir göç eklerken şemayı da güncelle ve adını buraya ekle.)
+INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_image_table.sql');
+
+-- ---------------------------------------------------------------------
+-- 11. SOHBET CEVAP ÖNBELLEĞİ (rag.py; eski veritabanlarında çalışma anında da oluşturulur)
 -- load_db.py ve load_extractions.py veriyi değiştirdiğinde bu tabloyu boşaltır.
 -- ---------------------------------------------------------------------
 CREATE TABLE answer_cache (
@@ -346,7 +386,7 @@ CREATE TABLE answer_cache (
 CREATE INDEX answer_cache_key ON answer_cache (monument_slug, mode, lang);
 
 -- ---------------------------------------------------------------------
--- 11. GÖRÜNÜMLER
+-- 12. GÖRÜNÜMLER
 -- ---------------------------------------------------------------------
 -- Liste ekranı: dönem/şehir/tür filtreli eser listesi
 CREATE VIEW monument_list AS

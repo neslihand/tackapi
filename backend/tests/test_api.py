@@ -1,5 +1,5 @@
 """REST API testleri (geçici test veritabanı + sahte Gemini)."""
-import os, unittest
+import os, shutil, tempfile, unittest
 from unittest import mock
 from _testdb import needs_db, fresh_db
 
@@ -12,10 +12,19 @@ class ApiTest(unittest.TestCase):
     def setUpClass(cls):
         fresh_db()
         os.environ['VAKIF_CHAT_RATE'] = '5/60'
+        cls.media = tempfile.mkdtemp()
+        os.environ['VAKIF_MEDIA_DIR'] = cls.media
+        os.makedirs(os.path.join(cls.media, 'thumbs', 'books', 'bursa-1'))
+        with open(os.path.join(cls.media, 'thumbs', 'books', 'bursa-1', '019-a1.webp'), 'wb') as f:
+            f.write(b'RIFF-ornek')
         from fastapi.testclient import TestClient
         import api, gemini_client
         cls.api, cls.G = api, gemini_client
         cls.c = TestClient(api.app)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.media, ignore_errors=True)
 
     def setUp(self):
         self.api._hits.clear()
@@ -37,7 +46,7 @@ class ApiTest(unittest.TestCase):
                                       'basis_label': 'Kitâbesine göre'})
         self.assertEqual(m['parent'], {'slug': 'bursa-ii-murad-kulliyesi', 'name': 'II. Murad Külliyesi'})
         self.assertEqual(m['city'], {'slug': 'bursa', 'name': 'Bursa'})
-        self.assertEqual((m['children_count'], m['has_artworks'], m['image']), (1, True, None))
+        self.assertEqual((m['children_count'], m['has_artworks']), (1, True))
         self.assertEqual(m['source'], {'book': 'Bursa Vakıf Eserleri I', 'pages': [75, 81]})
         self.assertEqual(m['alt_names'], ['Hüdavendigâr Camii'])
         k = next(i for i in d['items'] if i['kind'] == 'complex')
@@ -89,6 +98,35 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(r.headers.get('access-control-allow-origin'), 'http://localhost:5173')
         r = self.c.get('/api/monuments', headers={'Origin': 'http://baska-site.example'})
         self.assertNotIn('access-control-allow-origin', r.headers)
+
+    # ----------------------------------------------------------------- yayın durumu ve fotoğraflar
+    def test_drafts_are_hidden(self):
+        slug = 'bursa-osmangazi-taslak-cesme'
+        self.assertNotIn(slug, [i['slug'] for i in self.get('?page_size=200')['items']])
+        self.assertEqual(self.c.get(f'/api/monuments/{slug}').status_code, 404)
+        self.assertEqual(self.c.post('/api/chat', json=CHAT | {'slug': slug}).status_code, 404)
+        bursa = next(c for c in self.c.get('/api/cities').json() if c['slug'] == 'bursa')
+        self.assertEqual(bursa['monuments'], 3)   # cami, hazire, türbe (sentetik külliye ve taslak sayılmaz)
+
+    def test_cover_image_in_list(self):
+        items = {i['slug']: i for i in self.get()['items']}
+        img = items['bursa-osmangazi-muradiye-camii']['image']
+        self.assertEqual(img['thumb'], '/media/thumbs/books/bursa-1/019-a1.webp')
+        self.assertEqual(img['src'], '/media/books/bursa-1/019-a1.webp')
+        self.assertEqual(img['alt'], 'Muradiye Camii – Bursa Vakıf Eserleri I, s. 75')
+        self.assertIsNone(items['konya-meram-ornek-camii']['image'])
+        en = {i['slug']: i for i in self.get('?lang=en')['items']}
+        self.assertTrue(en['bursa-osmangazi-muradiye-camii']['image']['alt'].startswith('Muradiye Mosque'))
+
+    def test_detail_gallery_only_published(self):
+        d = self.c.get('/api/monuments/bursa-osmangazi-muradiye-camii').json()
+        self.assertEqual([i['src'].rsplit('/', 1)[1] for i in d['images']], ['019-a1.webp', '020-a2.webp'])
+        self.assertEqual(d['images'][0]['source'], {'book': 'Bursa Vakıf Eserleri I', 'page': 75})
+
+    def test_media_files_served(self):
+        r = self.c.get('/media/thumbs/books/bursa-1/019-a1.webp')
+        self.assertEqual((r.status_code, r.content), (200, b'RIFF-ornek'))
+        self.assertEqual(self.c.get('/media/../schema.sql').status_code, 404)
 
     def test_detail_and_cities(self):
         self.assertEqual(self.c.get('/api/monuments/bursa-osmangazi-muradiye-camii').status_code, 200)

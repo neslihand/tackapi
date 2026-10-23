@@ -20,6 +20,7 @@ from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
@@ -34,11 +35,27 @@ app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST'], allow_headers=
                        'VAKIF_CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if o.strip()])
 db = DB()
 
+# Fotoğraflar: images.py'nin ürettiği WebP dosyaları (media/<file>, küçükleri media/thumbs/<file>)
+MEDIA_DIR = os.environ.get('VAKIF_MEDIA_DIR', os.path.join(os.path.dirname(__file__), '..', 'media'))
+app.mount('/media', StaticFiles(directory=MEDIA_DIR, check_dir=False), name='media')
+PUBLISHED = "m.review_status = 'published'"
+
+
+def image_obj(r, lang, prefix=''):
+    """Görsel satırı → {src, thumb, alt, width, height, source}. prefix: SELECT'teki sütun öneki (ör. 'img_')."""
+    file = r.get(prefix + 'file')
+    if not file:
+        return None
+    return dict(src=f'/media/{file}', thumb=f'/media/thumbs/{file}',
+                alt=(r.get(prefix + 'alt_en') if lang == 'en' else None) or r.get(prefix + 'alt_tr'),
+                width=r.get(prefix + 'width'), height=r.get(prefix + 'height'))
+
 
 @app.get('/api/cities')
 def cities():
-    return db.query("""SELECT c.slug, c.name_tr, c.name_en, count(m.*) FILTER (WHERE NOT m.is_synthetic) AS monuments
-                       FROM city c LEFT JOIN monument m ON m.city_id = c.id GROUP BY c.id ORDER BY c.name_tr""")
+    return db.query(f"""SELECT c.slug, c.name_tr, c.name_en, c.lat::float, c.lon::float,
+                               count(m.*) FILTER (WHERE NOT m.is_synthetic AND {PUBLISHED}) AS monuments
+                        FROM city c LEFT JOIN monument m ON m.city_id = c.id GROUP BY c.id ORDER BY c.name_tr""")
 
 
 KIND_LABELS = {
@@ -106,7 +123,7 @@ def built_label(lo, hi, lang):
 # Filtreler adlandırılmış: her facet kendi boyutunun filtresi hariç diğerleriyle sayılır
 LIST_FROM = "FROM monument m JOIN city c ON c.id = m.city_id LEFT JOIN period p ON p.id = m.period_id"
 LIST_FILTERS = {
-    'base': "(NOT m.is_synthetic OR m.kind = 'complex')",
+    'base': f"(NOT m.is_synthetic OR m.kind = 'complex') AND {PUBLISHED}",
     'city': "(%(city)s::text IS NULL OR c.slug = %(city)s::text)",
     'kind': "(%(kind)s::text IS NULL OR m.kind = %(kind)s::text)",
     'period': "(%(period)s::text IS NULL OR p.slug = %(period)s::text "
@@ -135,8 +152,12 @@ def monuments(city: str | None = None, kind: str | None = None, period: str | No
                upper(m.pages) - 1 AS page_end,
                (SELECT count(*) FROM monument ch WHERE ch.parent_id = m.id) AS children_count,
                EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
-                          OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks
+                          OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
+               cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
+               cov.height AS img_height
         {LIST_FROM} LEFT JOIN monument par ON par.id = m.parent_id LEFT JOIN source_book b ON b.id = m.book_id
+        LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
+                            WHERE monument_id = m.id AND is_cover AND review_status = 'published' LIMIT 1) cov ON true
         {_where()}
         ORDER BY c.slug, m.district, m.name_tr LIMIT %(limit)s OFFSET %(offset)s""", params)
     items = [dict(
@@ -151,7 +172,7 @@ def monuments(city: str | None = None, kind: str | None = None, period: str | No
         parent=dict(slug=r['parent_slug'], name=(r['parent_en'] or r['parent_tr']) if en else r['parent_tr'])
         if r['parent_slug'] else None,
         children_count=r['children_count'], summary=r['summary_en'] if en else r['summary_tr'], status=r['status'],
-        has_artworks=r['has_artworks'], image=None,
+        has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'),
         source=dict(book=r['book'], pages=[r['page_start'], r['page_end']] if r['page_start'] is not None else None))
         for r in rows]
     facets = dict(
@@ -168,16 +189,26 @@ def monuments(city: str | None = None, kind: str | None = None, period: str | No
     return dict(total=total, page=page, page_size=page_size, items=items, facets=facets)
 
 
+def is_published(slug):
+    return bool(db.query(f"SELECT 1 FROM monument m WHERE m.slug = %(s)s AND {PUBLISHED}", dict(s=slug)))
+
+
 @app.get('/api/monuments/{slug}')
 def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
-    try:
-        f = rag.facts(db, slug)
-    except KeyError:
+    if not is_published(slug):
         raise HTTPException(404, 'Eser bulunamadı')
+    f = rag.facts(db, slug)
     sec = db.query("""SELECT s.text_tr, s.text_en, s.page_start, s.page_end, b.title AS book, b.credits, m.en_usable,
                              m.summary_en, m.alt_names, m.status, m.qa_flags, m.review_status
                       FROM monument m LEFT JOIN source_section s ON s.id = m.section_id
                       LEFT JOIN source_book b ON b.id = m.book_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
+    imgs = db.query("""SELECT i.file, i.alt_tr, i.alt_en, i.width, i.height, i.is_cover, i.printed_page, i.caption_tr,
+                              b.title AS book
+                       FROM image i JOIN monument m ON m.id = i.monument_id LEFT JOIN source_book b ON b.id = i.book_id
+                       WHERE m.slug = %(s)s AND i.review_status = 'published'
+                       ORDER BY i.is_cover DESC, i.sort, i.id""", dict(s=slug))
+    images = [dict(image_obj(r, lang), caption=r['caption_tr'],
+                   source=dict(book=r['book'], page=r['printed_page']) if r['book'] else None) for r in imgs]
     text = sec['text_tr']
     text_note = None
     if lang == 'en':
@@ -189,7 +220,7 @@ def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
             text_note = 'Machine-translated summary; the full text is available in Turkish.'
     f.pop('id', None)
     f.pop('city_id', None)
-    return dict(card=f, text=text, text_note=text_note,
+    return dict(card=f, text=text, text_note=text_note, images=images,
                 source=dict(book=sec['book'], pages=[sec['page_start'], sec['page_end']], credits=sec['credits']),
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
@@ -232,6 +263,8 @@ def _rate_limit(ip):
 @app.post('/api/chat')
 def chat(body: ChatIn, request: Request):
     _rate_limit(request.client.host if request.client else '-')
+    if not is_published(body.slug):
+        raise HTTPException(404, 'Eser bulunamadı')
     try:
         r = rag.answer(db, body.question, body.slug, body.mode, body.lang, [t.model_dump() for t in body.history])
     except KeyError:
