@@ -18,7 +18,7 @@ part türleri:
 
 BOOKS = {
     'bursa-1': dict(
-        file='bursa-envanteri-cilt-1.txt', city='bursa', volume=1,
+        file='bursa-envanteri-cilt-1.txt', pdf='bursa-envanteri-cilt-1.pdf', city='bursa', volume=1,
         title='Bursa Vakıf Eserleri I. Cilt', published='2026-04-01', heading_pos='after',
         isbn='978-625-99247-6-2', isbn_set='978-625-99247-5-5',
         en_quality='usable',
@@ -32,14 +32,14 @@ BOOKS = {
             ('entries', 2457, 15677, None),
         ]),
     'bursa-2': dict(
-        file='bursa-envanteri-cilt-2.txt', city='bursa', volume=2,
+        file='bursa-envanteri-cilt-2.txt', pdf='bursa-envanteri-cilt-2.pdf', city='bursa', volume=2,
         title='Bursa Vakıf Eserleri II. Cilt', en_quality='usable',
         parts=[
             ('skip', 1, 772, None),
             ('entries', 773, 16022, None),
         ]),
     'bursa-3': dict(
-        file='bursa-envanteri-cilt-3.txt', city='bursa', volume=3,
+        file='bursa-envanteri-cilt-3.txt', pdf='bursa-envanteri-cilt-3.pdf', city='bursa', volume=3,
         title='Bursa Vakıf Eserleri III. Cilt', en_quality='usable',
         parts=[
             ('skip', 1, 711, None),
@@ -47,7 +47,7 @@ BOOKS = {
             ('bibliography', 10963, 11910, 'Kaynakça'),
         ]),
     'konya-1': dict(
-        file='konya_envanteri_1_cilt.txt', city='konya', volume=1,
+        file='konya_envanteri_1_cilt.txt', pdf='konya-envanteri-1_cilt-web.pdf', city='konya', volume=1,
         title='Konya Vakıf Eserleri I. Cilt', en_quality='unusable', heading_pos='before', toc_lines=(201, 905),
         parts=[
             ('skip', 1, 905, None),
@@ -56,7 +56,7 @@ BOOKS = {
             ('entries', 2852, 15357, None),
         ]),
     'konya-2': dict(
-        file='konya_envanteri_2_cilt.txt', city='konya', volume=2,
+        file='konya_envanteri_2_cilt.txt', pdf='konya-envanteri-2_cilt-web.pdf', city='konya', volume=2,
         title='Konya Vakıf Eserleri II. Cilt', published='2024-11-01',
         isbn='978-625-99247-4-8', isbn_set='978-625-99247-2-4',
         en_quality='unusable',
@@ -71,7 +71,7 @@ BOOKS = {
             ('bibliography', 9403, 10459, 'Kaynakça'),
         ]),
     'hatay-1': dict(
-        file='hatay-vakif-eserleri.txt', city='hatay', volume=1,
+        file='hatay-vakif-eserleri.txt', pdf='hatay-vakif-eserleri.pdf', city='hatay', volume=1,
         title='Hatay İli Vakıf Eserleri', en_quality='needs_review', toc_lines=(205, 305), heading_pos='after', boundary_mode='heading',
         authors=['Halil Agah', 'Prof. Dr. Nusret Çam', 'Berica Nevin Berberoğlu Şen'],
         editor='Özlem Çelik', translator='Zeynep Burçak Tarlan',

@@ -23,3 +23,7 @@ __pycache__/
 venv/
 .vscode/
 .idea/
+
+# Kitaplardan çıkarılan görseller (telifli; yerelde üretilir: python pipeline/images.py --write)
+media/
+data/images.jsonl
