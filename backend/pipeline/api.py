@@ -15,7 +15,7 @@ Uç noktalar
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 """
-import os, sys, re, time, logging, threading
+import os, sys, re, time, logging, threading, mimetypes
 from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -35,7 +35,9 @@ app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST'], allow_headers=
                        'VAKIF_CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if o.strip()])
 db = DB()
 
-# Fotoğraflar: images.py'nin ürettiği WebP dosyaları (media/<file>, küçükleri media/thumbs/<file>)
+# Fotoğraflar: images.py'nin ürettiği WebP dosyaları (media/<file>, küçükleri media/thumbs/<file>).
+# Windows'un tür kayıtlarında .webp olmayabilir; yoksa dosyalar text/plain sunulur ve tarayıcı göstermeyebilir.
+mimetypes.add_type('image/webp', '.webp')
 MEDIA_DIR = os.environ.get('VAKIF_MEDIA_DIR', os.path.join(os.path.dirname(__file__), '..', 'media'))
 app.mount('/media', StaticFiles(directory=MEDIA_DIR, check_dir=False), name='media')
 PUBLISHED = "m.review_status = 'published'"

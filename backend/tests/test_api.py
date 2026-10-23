@@ -126,6 +126,7 @@ class ApiTest(unittest.TestCase):
     def test_media_files_served(self):
         r = self.c.get('/media/thumbs/books/bursa-1/019-a1.webp')
         self.assertEqual((r.status_code, r.content), (200, b'RIFF-ornek'))
+        self.assertEqual(r.headers['content-type'], 'image/webp')
         self.assertEqual(self.c.get('/media/../schema.sql').status_code, 404)
 
     def test_detail_and_cities(self):
