@@ -110,6 +110,12 @@ class ImageBulk(Strict):
     review_status: Literal['draft', 'reviewed', 'published', 'rejected']
 
 
+class NotePatch(Strict):
+    # open: bakılmadı · confirmed: doğru, asistan uyarıyı almaya devam eder · resolved: düzeltildi · wontfix: önemsiz
+    # resolved ve wontfix notlar sohbet asistanına artık gönderilmez.
+    status: Literal['open', 'confirmed', 'resolved', 'wontfix']
+
+
 class CityCreate(Strict):
     slug: str = Field(pattern=r'^[a-z][a-z0-9-]{1,40}$')
     name_tr: str = Field(min_length=2, max_length=60)
@@ -308,7 +314,9 @@ def build_router(db, media_dir, save_webp):
                    built_from=m['built_years'].lower if m['built_years'] else None,
                    built_to=(m['built_years'].upper - 1) if m['built_years'] and m['built_years'].upper else None,
                    book=m['book_title'], from_panel=from_panel(m), text_editable=from_panel(m),
-                   text_tr=m['text_tr'], text_en=m['text_en'], images=images_of(m['id']))
+                   text_tr=m['text_tr'], text_en=m['text_en'], images=images_of(m['id']),
+                   notes=db.query("""SELECT id, kind, note_tr, status FROM editorial_note WHERE monument_id = %(m)s
+                                     ORDER BY status IN ('resolved', 'wontfix'), kind, id""", dict(m=m['id'])))
         return out
 
     @r.post('/monuments', status_code=201)
@@ -524,6 +532,21 @@ def build_router(db, media_dir, save_webp):
                    dict(s=body.slug, t=body.name_tr, e=body.name_en, la=body.lat, lo=body.lon))
         log(user, 'city.create', body.slug, body.model_dump())
         return body.model_dump()
+
+    @r.patch('/notes/{note_id}')
+    def update_note(note_id: int, body: NotePatch, user: str = Depends(admin_user)):
+        """Kalite notunun durumu. Çözülen ya da önemsiz sayılan not sohbet asistanına uyarı olarak gitmez."""
+        rows = db.query("""UPDATE editorial_note n SET status = %(s)s FROM editorial_note old
+                           LEFT JOIN monument m ON m.id = old.monument_id
+                           WHERE n.id = old.id AND n.id = %(i)s RETURNING n.id, old.status AS before, m.slug""",
+                        dict(s=body.status, i=note_id))
+        if not rows:
+            raise HTTPException(404, 'Not bulunamadı')
+        if rows[0]['slug']:
+            forget_answers(rows[0]['slug'])
+        log(user, 'note.update', rows[0]['slug'] or f'note:{note_id}',
+            dict(note=note_id, status=(rows[0]['before'], body.status)))
+        return dict(id=note_id, status=body.status)
 
     @r.get('/books')
     def books(user: str = Depends(admin_user)):

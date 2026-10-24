@@ -86,7 +86,8 @@ def facts(db, slug):
                                 FROM artwork a LEFT JOIN person pe ON pe.id = a.artist_id LEFT JOIN chunk c ON c.id = a.chunk_id
                                 WHERE a.monument_id = %(id)s OR a.monument_id IN (SELECT id FROM monument WHERE parent_id = %(id)s)""", q)
     m['notes'] = db.query("""SELECT kind, note_tr, model_instruction FROM editorial_note
-                             WHERE monument_id = %(id)s AND kind IN ('contradiction','likely_error') AND status <> 'resolved'""", q)
+                             WHERE monument_id = %(id)s AND kind IN ('contradiction','likely_error')
+                               AND status NOT IN ('resolved', 'wontfix')""", q)
     m['children'] = db.query("SELECT name_tr, kind FROM monument WHERE parent_id = %(id)s ORDER BY name_tr", q)
     return m
 

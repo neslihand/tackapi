@@ -219,6 +219,9 @@ def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
 def monument_detail(slug, lang, drafts=False):
     """Eser sayfası verisi. drafts=True yalnızca yönetici önizlemesinde: kontrol bekleyen fotoğraflar da gelir."""
     f = rag.facts(db, slug)
+    # Editör notları (bölümleme, çelişki, OCR uyarıları) iç kalite notlarıdır: sohbet asistanına uyarı olarak gider,
+    # yöneticiler panelde görür; ziyaretçiye gösterilmez.
+    f.pop('notes', None)
     sec = db.query("""SELECT s.text_tr, s.text_en, s.page_start, s.page_end, b.title AS book, b.credits, m.en_usable,
                              m.summary_en, m.alt_names, m.status, m.qa_flags, m.review_status
                       FROM monument m LEFT JOIN source_section s ON s.id = m.section_id
@@ -248,6 +251,9 @@ def monument_detail(slug, lang, drafts=False):
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
 
+QUALITY_KINDS = "'contradiction', 'likely_error', 'ocr'"  # yöneticinin bakması gereken not türleri
+
+
 @app.get('/api/admin/preview/{slug}', tags=['yönetim'])
 def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, user: str = Depends(admin.admin_user)):
     """Ziyaretçinin göreceği liste kartı ve eser sayfası, eser taslakta olsa bile; ayrıca yayın öncesi kontrol listesi.
@@ -255,12 +261,14 @@ def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, u
     rows = db.query(f'{ITEM_SELECT} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
     if not rows:
         raise HTTPException(404, 'Eser bulunamadı')
-    m = db.query("""SELECT m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
+    m = db.query(f"""SELECT m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
                            m.date_basis, m.lat IS NOT NULL AND m.lon IS NOT NULL AS has_coords, m.is_synthetic,
                            coalesce(length(s.text_tr), 0) AS text_len,
                            (SELECT count(*) FROM chunk c WHERE c.monument_id = m.id AND c.embedding IS NOT NULL) AS indexed,
                            (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status = 'published') AS images,
-                           (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status IN ('draft','reviewed')) AS pending
+                           (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status IN ('draft','reviewed')) AS pending,
+                           (SELECT count(*) FROM editorial_note n WHERE n.monument_id = m.id AND n.kind IN ({QUALITY_KINDS})
+                              AND n.status NOT IN ('resolved', 'wontfix')) AS open_notes
                     FROM monument m LEFT JOIN source_section s ON s.id = m.section_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
     checks = [
         dict(key='cover', ok=m['images'] > 0, required=True, label='Yayında en az bir fotoğraf (kapak)',
@@ -279,6 +287,9 @@ def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, u
              hint=f"{m['pending']} fotoğraf onay bekliyor; yayına alınmadıkça sayfada görünmez." if m['pending'] else ''),
         dict(key='english', ok=bool(m['name_en'] and m['summary_en']), required=False, label='İngilizce ad ve özet',
              hint='Eksikse İngilizce arayüzde Türkçe ad gösterilir, özet boş kalır.'),
+        dict(key='quality', ok=m['open_notes'] == 0, required=False, label='Açık kalite uyarısı yok',
+             hint=f"{m['open_notes']} uyarı var (ör. başka esere ait görünen paragraf); eser düzenleme sayfasında inceleyin. "
+                  'Ziyaretçiler bu uyarıları görmez.' if m['open_notes'] else ''),
     ]
     return dict(review_status=m['review_status'], item=list_item(rows[0], lang),
                 detail=monument_detail(slug, lang, drafts), checks=checks)

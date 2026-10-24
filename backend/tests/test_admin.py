@@ -260,6 +260,29 @@ class AdminTest(unittest.TestCase):
         self.assertEqual(len(withd), len(plain) + len(pending))
         self.assertEqual(withd[-1]['review_status'], 'draft')    # bekleyenler sona, durumuyla işaretli
 
+    def test_quality_notes_are_admin_only(self):
+        import rag
+        nid = self.q("""INSERT INTO editorial_note(kind, monument_id, note_tr, status)
+                        SELECT 'likely_error', id, 'Bölümleme kontrolü: şu paragraflar başka esere ait görünüyor: P5, P6', 'open'
+                        FROM monument WHERE slug = %(s)s RETURNING id""", s=CAMI)[0]['id']
+        # ziyaretçi görmez (sayfa verisinde not yok), önizleme de görmez; kontrol listesi uyarır
+        self.assertNotIn('notes', self.c.get(f'/api/monuments/{CAMI}').json()['card'])
+        p = self.c.get(f'/api/admin/preview/{CAMI}', headers=NES).json()
+        self.assertNotIn('notes', p['detail']['card'])
+        self.assertFalse({c['key']: c for c in p['checks']}['quality']['ok'])
+        # yönetici görür; sohbet asistanı uyarı olarak alır
+        notes = self.c.get(f'/api/admin/monuments/{CAMI}', headers=NES).json()['notes']
+        self.assertEqual([(n['id'], n['status']) for n in notes if n['id'] == nid], [(nid, 'open')])
+        self.assertTrue(any('P5' in n['note_tr'] for n in rag.facts(self.api.db, CAMI)['notes']))
+        # "önemsiz" işaretlenince asistana gitmez, kontrol listesi temizlenir, kayda geçer
+        r = self.c.patch(f'/api/admin/notes/{nid}', headers=NES, json={'status': 'wontfix'})
+        self.assertEqual(r.json(), {'id': nid, 'status': 'wontfix'})
+        self.assertFalse(any('P5' in n['note_tr'] for n in rag.facts(self.api.db, CAMI)['notes']))
+        self.assertTrue({c['key']: c for c in self.c.get(f'/api/admin/preview/{CAMI}', headers=NES).json()['checks']}['quality']['ok'])
+        self.assertEqual(self.last_log()['action'], 'note.update')
+        self.assertEqual(self.c.patch(f'/api/admin/notes/{nid}', headers=NES, json={'status': 'sil'}).status_code, 422)
+        self.assertEqual(self.c.patch('/api/admin/notes/999999', headers=NES, json={'status': 'resolved'}).status_code, 404)
+
     def test_books(self):
         rows = {b['slug']: b for b in self.c.get('/api/admin/books', headers=NES).json()}
         self.assertEqual(rows['bursa-1']['title'], 'Bursa Vakıf Eserleri I')
