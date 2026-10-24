@@ -27,7 +27,22 @@ export function methodLabel(method: string | null | undefined): string {
   return method.endsWith('_aralik_disi') ? `${label} · eserin sayfa aralığı dışında` : label;
 }
 
-export const formatDate = (iso: string | null | undefined) =>
+export const DECISION_LABELS: Record<string, string> = {
+  pending: 'Bakılacak', keep: 'Bu esere ait', hide: 'Gizlendi', merge_prev: 'Önceki paragrafla birleştirildi', move: 'Taşındı',
+};
+export const RULE_LABELS: Record<string, string> = {
+  baslik: 'Başka eserin başlığı', bolum: 'Bölüm başlığı', ingilizce: 'İngilizce altyazı/adres artığı',
+  parca: 'Yarım kalmış başlık parçası', kirik: 'Bölünmüş cümlenin devamı', model: 'Yapay zekâ: başka esere ait görünüyor',
+};
+
+/** Karar sonucunu tek cümleyle anlatır: "Gizlendi; 2 parça yenilendi, 3 parça aynen korundu." */
+export function decisionMessage(r: { after: string; added: number; kept: number }): string {
+  const label = DECISION_LABELS[r.after] ?? r.after;
+  if (!r.added && !r.kept) return `${label}. Metin değişmedi.`;
+  return `${label}. Sohbet dizini güncellendi: ${r.added} parça yenilendi, ${r.kept} parça aynen korundu.`;
+}
+
+export const formatDate =(iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 /** Formdaki metin → sayı ya da null (boş). Geçersizse NaN. */

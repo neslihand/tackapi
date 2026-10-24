@@ -9,7 +9,8 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
-export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number };
+export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
+  segmentation_pending: number };
 
 export type MonumentRow = {
   slug: string; name_tr: string; kind: Kind; city: string; district: string | null; review_status: ReviewStatus;
@@ -39,7 +40,18 @@ export type MonumentDetail = Required<Omit<MonumentFields, 'review_status'>> & {
   slug: string; city: string; review_status: ReviewStatus; qa_flags: string[]; is_synthetic: boolean;
   created_by: string | null; updated_at: string | null; book: string | null; from_panel: boolean; text_editable: boolean;
   text_tr: string | null; text_en: string | null; images: AdminImage[]; notes: QualityNote[];
+  paragraphs: { own: Paragraph[]; incoming: { para_no: number; from_slug: string; from_name: string }[] };
 };
+
+// Bölümleme düzeltmeleri: kitap metni değişmez, paragrafın hangi esere ait olduğu kararı tutulur
+export type ParaDecision = 'pending' | 'keep' | 'hide' | 'merge_prev' | 'move';
+export type Paragraph = { no: number; text: string; pages: number[]; id: number | null; decision: ParaDecision | null;
+  source: 'auto' | 'model' | 'admin' | null; rule: string | null; reason: string | null; target_slug: string | null; decided_by: string | null };
+export type SegItem = { id: number; para_no: number; count: number; decision: ParaDecision; source: 'auto' | 'model' | 'admin';
+  rule: string | null; reason: string | null; decided_by: string | null; decided_at: string | null; monument_id: number; slug: string;
+  name_tr: string; review_status: ReviewStatus; book: string | null; target_slug: string | null; target_name: string | null;
+  suggested_slug: string | null; suggested_name: string | null; text: string; pages: number[]; prev: string | null; next: string | null };
+export type DecisionResult = { slug: string; para_no: number; before: ParaDecision | null; after: ParaDecision; added: number; kept: number; embedded: number };
 
 // Çıkarım sırasında üretilen iç kalite notları (bölümleme, çelişki, OCR); ziyaretçi görmez
 export type NoteStatus = 'open' | 'confirmed' | 'resolved' | 'wontfix';

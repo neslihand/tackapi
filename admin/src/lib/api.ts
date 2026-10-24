@@ -1,5 +1,6 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AdminImage, Book, City, ImageStatus, LogRow, MonumentDetail, MonumentFields, MonumentRow, NoteStatus, Page, Period, Stats } from './types';
+import type { AdminImage, Book, City, DecisionResult, ImageStatus, LogRow, MonumentDetail, MonumentFields, MonumentRow, NoteStatus, Page,
+  ParaDecision, Period, SegItem, Stats } from './types';
 import type { ChatReply, Preview } from '../public/model';
 
 export const TOKEN_KEY = 'esik:admin-token';
@@ -92,6 +93,12 @@ export const api = {
     request<City>('/api/admin/cities', json('POST', body)),
   periods: () => request<Period[]>('/api/admin/periods'),
   books: () => request<Book[]>('/api/admin/books'),
+  segmentation: (f: { decision?: string; source?: string; book?: string; page?: number; page_size?: number }) =>
+    request<Page<SegItem> & { counts: { decision: ParaDecision; n: number }[] }>(`/api/admin/segmentation${qs(f)}`),
+  decideFix: (id: number, body: { decision: ParaDecision; target?: string | null }) =>
+    request<DecisionResult>(`/api/admin/segmentation/${id}`, json('POST', body)),
+  decideParagraph: (slug: string, n: number, body: { decision: ParaDecision; target?: string | null }) =>
+    request<DecisionResult>(`/api/admin/monuments/${encodeURIComponent(slug)}/paragraphs/${n}`, json('PUT', body)),
   updateNote: (id: number, status: NoteStatus) => request<{ id: number; status: NoteStatus }>(`/api/admin/notes/${id}`, json('PATCH', { status })),
   preview: (slug: string, lang: 'tr' | 'en', drafts: boolean) =>
     request<Preview>(`/api/admin/preview/${encodeURIComponent(slug)}${qs({ lang, drafts: drafts || null })}`),

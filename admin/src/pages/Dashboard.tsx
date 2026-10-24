@@ -15,6 +15,7 @@ export function Dashboard() {
     {s && <div className="stat-grid">
       <div className="stat alert"><strong>{count(s.images, 'draft')}</strong><span>Kontrol bekleyen fotoğraf</span><Link to="/fotograflar?status=draft">Kuyruğa git →</Link></div>
       <div className="stat"><strong>{s.images_unassigned}</strong><span>Hiçbir esere bağlı olmayan fotoğraf</span><Link to="/fotograflar?status=&unassigned=1">Esere bağla →</Link></div>
+      <div className="stat alert"><strong>{s.segmentation_pending}</strong><span>Başka esere ait görünen, bakılacak paragraf</span><Link to="/bolumleme">Bölümleme kontrolüne git →</Link></div>
       <div className="stat"><strong>{s.monuments_without_image}</strong><span>Yayında fotoğrafı olmayan eser</span><Link to="/eserler?has_image=0">Listele →</Link></div>
       <div className="stat"><strong>{count(s.monuments, 'published')}</strong><span>Yayındaki eser</span><Link to="/eserler?status=published">Listele →</Link></div>
       <div className="stat"><strong>{count(s.monuments, 'draft') + count(s.monuments, 'reviewed')}</strong><span>Taslak eser (sitede görünmez)</span><Link to="/eserler?status=draft">Listele →</Link></div>

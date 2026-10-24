@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { changedFields, fieldsFromForm, formFromDetail, methodLabel, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
+import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, methodLabel, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
 import type { MonumentDetail } from '../src/lib/types.ts';
 
 const detail = {
@@ -39,6 +39,11 @@ test('Adres önizlemesi sunucunun slug kuralıyla aynı', () => {
   assert.equal(slugPreview('bursa', 'Osmangazi', 'Yeni Örnek Çeşmesi'), 'bursa-osmangazi-yeni-ornek-cesmesi');
   assert.equal(slugPreview('Kütahya'), 'kutahya');
   assert.equal(slugPreview('İznik', null, 'Şeyh Kudbeddin'), 'iznik-seyh-kudbeddin');
+});
+
+test('Bölümleme kararının sonucu tek cümleyle anlatılır', () => {
+  assert.equal(decisionMessage({ after: 'hide', added: 2, kept: 3 }), 'Gizlendi. Sohbet dizini güncellendi: 2 parça yenilendi, 3 parça aynen korundu.');
+  assert.equal(decisionMessage({ after: 'keep', added: 0, kept: 0 }), 'Bu esere ait. Metin değişmedi.');
 });
 
 test('Bağlama yöntemleri yöneticiye açıklanır', () => {

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Ban, Check, Eye, ImagePlus, RotateCcw, Save, Star, Trash2, X } from 'lucide-react';
 import { api } from '../lib/api';
-import { BASIS_LABELS, changedFields, fieldsFromForm, formatDate, formFromDetail, KIND_LABELS, methodLabel, monumentIssues, STATE_LABELS, type MonumentForm } from '../lib/format';
+import { BASIS_LABELS, changedFields, DECISION_LABELS, decisionMessage, fieldsFromForm, formatDate, formFromDetail, KIND_LABELS, methodLabel, monumentIssues, RULE_LABELS, STATE_LABELS, type MonumentForm } from '../lib/format';
+import { ParagraphActions } from '../components/ParagraphActions';
 import { Link, navigate } from '../lib/navigation';
-import type { AdminImage, MonumentDetail, NoteStatus, QualityNote } from '../lib/types';
+import type { AdminImage, MonumentDetail, NoteStatus, ParaDecision, QualityNote } from '../lib/types';
 import { Field, Issues, PageHead, Status, useLoad, useToast } from '../components/UI';
 import { MonumentPicker } from '../components/MonumentPicker';
 
@@ -128,6 +129,36 @@ function DetailsForm({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
   </form>;
 }
 
+/** Numaralı kitap metni ve bölümleme kararları. Kitap metni değişmez; karar ziyaretçi metnini ve sohbet parçalarını etkiler. */
+function BookText({ d, onChange }: { d: MonumentDetail; onChange: () => void }) {
+  const notify = useToast();
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<number | null>(null);
+  const flagged = d.paragraphs.own.some(p => p.decision === 'pending') || d.notes.some(n => n.kind === 'likely_error' && n.status === 'open');
+  const changed = d.paragraphs.own.filter(p => p.decision && !['pending', 'keep'].includes(p.decision)).length;
+  async function decide(no: number, decision: ParaDecision, target?: string) {
+    setBusy(true);
+    try { notify(`P${no}: ${decisionMessage(await api.decideParagraph(d.slug, no, { decision, target }))}`); setEditing(null); onChange(); }
+    catch (e) { notify((e as Error).message, true); }
+    finally { setBusy(false); }
+  }
+  return <details style={{ marginTop: 12 }} open={flagged}>
+    <summary>Kitap metnini göster ({d.paragraphs.own.length} paragraf{changed ? `, ${changed} düzeltme` : ''})</summary>
+    <p className="admin-help" style={{ margin: '8px 0' }}>Bir paragraf başka esere aitse (bölümleme hatası) “Düzelt” ile gizleyin, önceki paragrafla birleştirin ya da asıl eserine taşıyın. Kitap metni değişmez; karar her zaman geri alınabilir.</p>
+    <ol className="text-preview numbered">{d.paragraphs.own.map(p => {
+      const off = p.decision === 'hide' || p.decision === 'move';
+      return <li key={p.no} id={`P${p.no}`} className={`${off ? 'para-off' : ''} ${p.decision === 'pending' ? 'para-pending' : ''}`}><b>P{p.no}</b>
+        <div><span className="para-text">{p.text}</span>
+          {p.decision && <div className="para-state"><span className="admin-badge">{DECISION_LABELS[p.decision]}{p.decision === 'move' && p.target_slug ? ` → ${p.target_slug}` : ''}</span>
+            {p.rule && <span className="admin-help"> {RULE_LABELS[p.rule] ?? p.reason}{p.decided_by ? ` · karar: ${p.decided_by}` : p.source === 'auto' ? ' · otomatik' : ''}</span>}</div>}
+          {editing === p.no || p.decision === 'pending'
+            ? <ParagraphActions decision={p.decision} busy={busy} city={d.city} onDecide={(dec, t) => decide(p.no, dec, t)} />
+            : <button className="text-link" style={{ fontSize: 12.5, marginTop: 4 }} onClick={() => setEditing(p.no)}>{p.decision && p.decision !== 'keep' ? 'Değiştir' : 'Düzelt'}</button>}
+        </div></li>;
+    })}</ol>
+  </details>;
+}
+
 function TextSection({ d, onSaved }: { d: MonumentDetail; onSaved: () => void }) {
   const [tr, setTr] = useState(d.text_tr ?? '');
   const [en, setEn] = useState(d.text_en ?? '');
@@ -135,11 +166,9 @@ function TextSection({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
   const notify = useToast();
   if (!d.text_editable) return <section className="admin-form" style={{ marginTop: 26 }}><fieldset><legend>Kaynak metin</legend>
     <p className="admin-note">Bu metin envanter kitabından alınmıştır ve doğruluk kaynağıdır; panelden değiştirilemez.</p>
-    {d.text_tr ? <details style={{ marginTop: 12 }} open={d.notes.some(n => n.kind === 'likely_error' && n.status === 'open')}>
-      <summary>Kitap metnini göster ({d.text_tr.length.toLocaleString('tr-TR')} karakter)</summary>
-      <ol className="text-preview numbered" style={{ marginTop: 10 }}>{d.text_tr.split(/\n\s*\n/).filter(p => p.trim()).map((p, i) =>
-        <li key={i} id={`P${i + 1}`}><b>P{i + 1}</b>{p}</li>)}</ol>
-    </details> : <p className="admin-help">Bu kaydın metni yok (türetilmiş üst kayıt).</p>}
+    {d.text_tr ? <BookText d={d} onChange={onSaved} /> : <p className="admin-help">Bu kaydın metni yok (türetilmiş üst kayıt).</p>}
+    {d.paragraphs.incoming.length > 0 && <p className="admin-note" style={{ marginTop: 12 }}>Başka eserlerden bu esere taşınan paragraflar (ziyaretçi metninin sonunda görünür): {d.paragraphs.incoming.map(i =>
+      <span key={`${i.from_slug}-${i.para_no}`}><Link className="text-link" to={`/eser/${encodeURIComponent(i.from_slug)}#P${i.para_no}`}>{i.from_name} P{i.para_no}</Link> </span>)}</p>}
   </fieldset></section>;
   async function save() {
     if (tr.trim().length < 20) { notify('Türkçe metin en az 20 karakter olmalı.', true); return; }
