@@ -39,7 +39,7 @@ export type MonumentFields = {
 export type MonumentDetail = Required<Omit<MonumentFields, 'review_status'>> & {
   slug: string; city: string; review_status: ReviewStatus; qa_flags: string[]; is_synthetic: boolean;
   created_by: string | null; updated_at: string | null; book: string | null; from_panel: boolean; text_editable: boolean;
-  text_tr: string | null; text_en: string | null; images: AdminImage[]; notes: QualityNote[];
+  text_tr: string | null; text_en: string | null; images: AdminImage[];
   paragraphs: { own: Paragraph[]; incoming: { para_no: number; from_slug: string; from_name: string }[] };
 };
 
@@ -52,10 +52,6 @@ export type SegItem = { id: number; para_no: number; count: number; decision: Pa
   name_tr: string; review_status: ReviewStatus; book: string | null; target_slug: string | null; target_name: string | null;
   suggested_slug: string | null; suggested_name: string | null; text: string; pages: number[]; prev: string | null; next: string | null };
 export type DecisionResult = { slug: string; para_no: number; before: ParaDecision | null; after: ParaDecision; added: number; kept: number; embedded: number };
-
-// Çıkarım sırasında üretilen iç kalite notları (bölümleme, çelişki, OCR); ziyaretçi görmez
-export type NoteStatus = 'open' | 'confirmed' | 'resolved' | 'wontfix';
-export type QualityNote = { id: number; kind: string; note_tr: string; status: NoteStatus };
 
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
 export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };

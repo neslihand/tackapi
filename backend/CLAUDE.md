@@ -94,8 +94,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 8. **Kitap fotoğrafı silinmez, `rejected` olur.** Panelde dokunulan fotoğraf `edited` işaretlenir ve `load_images.py` onu
    bir daha değiştirmez.
 9. **Editör notları ziyaretçiye gösterilmez.** `editorial_note` satırları (bölümleme "P5, P6 başka esere ait", çelişki,
-   OCR) iç kalite notlarıdır: sohbet asistanına uyarı olarak gider (`rag.facts`), yöneticiler panelde görür ve
-   `resolved`/`wontfix` işaretler (bu durumdakiler asistana gitmez). `api.monument_detail` notları herkese açık
+   OCR) iç kalite notlarıdır: sohbet asistanına uyarı olarak gider (`rag.facts`). MVP için panelde gösterilmiyor
+   (geliştirici kararı, 24 Ekim 2026); `PATCH /api/admin/notes/{id}` ile `resolved`/`wontfix` işaretlenebilir (bu
+   durumdakiler asistana gitmez). `api.monument_detail` notları herkese açık
    veriden çıkarır. Çıkarım 101 eserde bölümleme, 66 eserde çelişki notu üretti.
 10. **Bölümleme hataları kitap metninde düzeltilmez.** Kararlar `para_fix` tablosunda (paragraf no → `hide`/`move`/
    `merge_prev`/`keep`/`pending`) tutulur. Ziyaretçi metni ve sohbet parçaları `textfix_db.effective_text` ile üretilir.

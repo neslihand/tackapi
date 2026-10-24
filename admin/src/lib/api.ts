@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AdminImage, Book, City, DecisionResult, ImageStatus, LogRow, MonumentDetail, MonumentFields, MonumentRow, NoteStatus, Page,
+import type { AdminImage, Book, City, DecisionResult, ImageStatus, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   ParaDecision, Period, SegItem, Stats } from './types';
 import type { ChatReply, Preview } from '../public/model';
 
@@ -99,7 +99,6 @@ export const api = {
     request<DecisionResult>(`/api/admin/segmentation/${id}`, json('POST', body)),
   decideParagraph: (slug: string, n: number, body: { decision: ParaDecision; target?: string | null }) =>
     request<DecisionResult>(`/api/admin/monuments/${encodeURIComponent(slug)}/paragraphs/${n}`, json('PUT', body)),
-  updateNote: (id: number, status: NoteStatus) => request<{ id: number; status: NoteStatus }>(`/api/admin/notes/${id}`, json('PATCH', { status })),
   preview: (slug: string, lang: 'tr' | 'en', drafts: boolean) =>
     request<Preview>(`/api/admin/preview/${encodeURIComponent(slug)}${qs({ lang, drafts: drafts || null })}`),
   chat: (body: { slug: string; question: string; mode: 'standard' | 'story' | 'child'; lang: 'tr' | 'en' }) =>
