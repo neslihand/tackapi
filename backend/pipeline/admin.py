@@ -20,6 +20,7 @@ import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
+import textfix_db
 
 KINDS = Literal['complex', 'mosque', 'masjid', 'madrasa', 'tomb', 'imaret', 'bath', 'fountain', 'han', 'bedesten',
                 'zawiya', 'tekke', 'graveyard', 'bridge', 'library', 'church', 'house', 'other']
@@ -108,6 +109,13 @@ class ImagePatch(Strict):
 class ImageBulk(Strict):
     ids: list[int] = Field(min_length=1, max_length=500)
     review_status: Literal['draft', 'reviewed', 'published', 'rejected']
+
+
+class ParagraphDecision(Strict):
+    # keep: bu esere ait (yanlış alarm) · hide: gizle · merge_prev: önceki paragrafla birleştir · move: başka esere taşı
+    # pending: karar geri alınır. Kitap metni hiçbir durumda değişmez.
+    decision: Literal['pending', 'keep', 'hide', 'merge_prev', 'move']
+    target: str | None = Field(None, max_length=200)   # move için hedef eserin slug'ı
 
 
 class NotePatch(Strict):
@@ -278,6 +286,7 @@ def build_router(db, media_dir, save_webp):
             images=db.query('SELECT review_status, count(*) AS n FROM image GROUP BY 1 ORDER BY 1'),
             images_unassigned=db.query("""SELECT count(*) AS n FROM image
                                           WHERE monument_id IS NULL AND review_status <> 'rejected'""")[0]['n'],
+            segmentation_pending=db.query("SELECT count(*) AS n FROM para_fix WHERE decision = 'pending'")[0]['n'],
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'])
@@ -315,6 +324,7 @@ def build_router(db, media_dir, save_webp):
                    built_to=(m['built_years'].upper - 1) if m['built_years'] and m['built_years'].upper else None,
                    book=m['book_title'], from_panel=from_panel(m), text_editable=from_panel(m),
                    text_tr=m['text_tr'], text_en=m['text_en'], images=images_of(m['id']),
+                   paragraphs=paragraphs_of(m['id']),
                    notes=db.query("""SELECT id, kind, note_tr, status FROM editorial_note WHERE monument_id = %(m)s
                                      ORDER BY status IN ('resolved', 'wontfix'), kind, id""", dict(m=m['id'])))
         return out
@@ -532,6 +542,82 @@ def build_router(db, media_dir, save_webp):
                    dict(s=body.slug, t=body.name_tr, e=body.name_en, la=body.lat, lo=body.lon))
         log(user, 'city.create', body.slug, body.model_dump())
         return body.model_dump()
+
+    # ------------------------------------------------------------------------------------------ bölümleme düzeltmeleri
+    def paragraphs_of(monument_id):
+        """Kitap metninin paragrafları ve her biri için karar (yoksa decision=None)."""
+        fixes = textfix_db.fixes_for(db, monument_id)
+        incoming = db.query("""SELECT f.para_no, m.slug, m.name_tr FROM para_fix f JOIN monument m ON m.id = f.monument_id
+                               WHERE f.decision = 'move' AND f.target_monument_id = %(m)s""", dict(m=monument_id))
+        out = [dict(no=p['no'], text=p['text'], pages=p['pages'],
+                    **{k: (fixes.get(p['no']) or {}).get(k) for k in ('id', 'decision', 'source', 'rule', 'reason', 'target_slug',
+                                                                     'decided_by')})
+               for p in textfix_db.own_paragraphs(db, monument_id)]
+        return dict(own=out, incoming=[dict(para_no=i['para_no'], from_slug=i['slug'], from_name=i['name_tr']) for i in incoming])
+
+    @r.get('/segmentation')
+    def segmentation_queue(decision: Literal['pending', 'keep', 'hide', 'merge_prev', 'move', 'decided', 'all'] = 'pending',
+                           source: Literal['auto', 'model', 'admin'] | None = None, book: str | None = None,
+                           page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), user: str = Depends(admin_user)):
+        """Bölümleme kontrol kuyruğu: paragraf, önceki ve sonraki paragrafla birlikte."""
+        where = """WHERE (%(d)s::text = 'all' OR (%(d)s::text = 'decided' AND f.decided_by IS NOT NULL) OR f.decision = %(d)s::text)
+                     AND (%(src)s::text IS NULL OR f.source = %(src)s::text)
+                     AND (%(bk)s::text IS NULL OR b.slug = %(bk)s::text)"""
+        p = dict(d=decision, src=source, bk=book, lim=page_size, off=(page - 1) * page_size)
+        frm = """FROM para_fix f JOIN monument m ON m.id = f.monument_id LEFT JOIN source_book b ON b.id = m.book_id
+                 LEFT JOIN monument t ON t.id = f.target_monument_id LEFT JOIN monument s ON s.id = f.suggested_target_id"""
+        total = db.query(f'SELECT count(*) AS n {frm} {where}', p)[0]['n']
+        rows = db.query(f"""SELECT f.id, f.para_no, f.decision, f.source, f.rule, f.reason, f.decided_by, f.decided_at,
+                                   m.id AS monument_id, m.slug, m.name_tr, m.review_status, b.title AS book,
+                                   t.slug AS target_slug, t.name_tr AS target_name, s.slug AS suggested_slug, s.name_tr AS suggested_name
+                            {frm} {where} ORDER BY b.slug, m.slug, f.para_no LIMIT %(lim)s OFFSET %(off)s""", p)
+        cache, fixes = {}, {}
+        for r in rows:
+            paras = cache.setdefault(r['monument_id'], textfix_db.own_paragraphs(db, r['monument_id']))
+            # Öneri yoksa ve önceki paragraf bir esere taşındıysa aynı eseri öner (birleşmiş iki eserin devam paragrafları)
+            prev_fix = fixes.setdefault(r['monument_id'], textfix_db.fixes_for(db, r['monument_id'])).get(r['para_no'] - 1) or {}
+            if not r['suggested_slug'] and prev_fix.get('decision') == 'move' and prev_fix.get('target_slug'):
+                r['suggested_slug'] = prev_fix['target_slug']
+                r['suggested_name'] = db.query('SELECT name_tr FROM monument WHERE slug = %(s)s',
+                                               dict(s=prev_fix['target_slug']))[0]['name_tr']
+            i = r['para_no'] - 1
+            r['text'] = paras[i]['text'] if i < len(paras) else ''
+            r['pages'] = paras[i]['pages'] if i < len(paras) else []
+            r['prev'] = paras[i - 1]['text'] if 0 < i <= len(paras) else None
+            r['next'] = paras[i + 1]['text'] if i + 1 < len(paras) else None
+            r['count'] = len(paras)
+        counts = db.query('SELECT decision, count(*) AS n FROM para_fix GROUP BY 1 ORDER BY 1')
+        return dict(total=total, page=page, page_size=page_size, items=rows, counts=counts)
+
+    def apply_decision(monument_id, slug, para_no, body, user):
+        target_id = None
+        if body.decision == 'move':
+            if not body.target:
+                raise HTTPException(422, 'Taşıma için hedef eser seçin.')
+            t = db.query('SELECT id FROM monument WHERE slug = %(s)s', dict(s=body.target))
+            if not t or t[0]['id'] == monument_id:
+                raise HTTPException(422, f'Geçersiz hedef eser: {body.target}')
+            target_id = t[0]['id']
+        try:
+            res = textfix_db.decide(db, monument_id, para_no, body.decision, target_id, user)
+        except IndexError:
+            raise HTTPException(404, f'Bu eserin metninde P{para_no} yok.')
+        log(user, 'paragraph.decide', slug, dict(para=para_no, decision=(res['before'], res['after']), target=body.target))
+        return dict(slug=slug, para_no=para_no, **res)
+
+    @r.post('/segmentation/{fix_id}')
+    def decide_fix(fix_id: int, body: ParagraphDecision, user: str = Depends(admin_user)):
+        row = db.query("""SELECT f.monument_id, f.para_no, m.slug FROM para_fix f JOIN monument m ON m.id = f.monument_id
+                          WHERE f.id = %(i)s""", dict(i=fix_id))
+        if not row:
+            raise HTTPException(404, 'Kayıt bulunamadı')
+        return apply_decision(row[0]['monument_id'], row[0]['slug'], row[0]['para_no'], body, user)
+
+    @r.put('/monuments/{slug}/paragraphs/{para_no}')
+    def decide_paragraph(slug: str, para_no: int, body: ParagraphDecision, user: str = Depends(admin_user)):
+        """Eser sayfasındaki numaralı metinden herhangi bir paragraf için karar (kuyrukta olmasa da)."""
+        m = monument_row(slug)
+        return apply_decision(m['id'], slug, para_no, body, user)
 
     @r.patch('/notes/{note_id}')
     def update_note(note_id: int, body: NotePatch, user: str = Depends(admin_user)):

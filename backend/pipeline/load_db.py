@@ -306,7 +306,7 @@ def main():
         schema = open(os.path.join(ROOT, 'schema.sql'), encoding='utf-8').read()
         if a.reset:
             schema = ('DROP VIEW IF EXISTS monument_list, monument_city_context CASCADE;\n'
-                      'DROP TABLE IF EXISTS schema_migration, image, answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
+                      'DROP TABLE IF EXISTS para_fix, admin_log, schema_migration, image, answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
                       'person, monument, period, source_section, source_book, city CASCADE;\n') + schema
         if a.no_vector:
             schema = schema.replace('CREATE EXTENSION IF NOT EXISTS vector;', '')

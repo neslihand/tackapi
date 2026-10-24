@@ -39,3 +39,6 @@ def fresh_db():
         for cid, text in c.execute('SELECT id, content_for_embed FROM chunk').fetchall():
             c.execute('UPDATE chunk SET embedding = %s::vector WHERE id = %s', (vec_literal(G._fake_vec(text, G.EMBED_DIM)), cid))
     os.environ['DATABASE_URL'] = DSN
+    # Şema (ve pgvector türü) yeniden kuruldu: API'nin havuzdaki eski bağlantıları eski tür numaralarını önbellekte tutar
+    if 'api' in sys.modules:
+        sys.modules['api'].db.close()

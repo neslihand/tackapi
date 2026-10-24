@@ -369,7 +369,27 @@ CREATE TABLE schema_migration (
 -- Bu şema aşağıdaki göçlerin sonucunu zaten içerir; yeni kurulumda tekrar çalışmasınlar.
 -- (Yeni bir göç eklerken şemayı da güncelle ve adını buraya ekle.)
 INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_image_table.sql'),
-                                         ('003_admin.sql');
+                                         ('003_admin.sql'), ('004_para_fix.sql');
+
+-- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
+CREATE TABLE para_fix (
+    id                  serial PRIMARY KEY,
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    para_no             int NOT NULL CHECK (para_no >= 1),          -- kitap metnindeki paragraf (1 tabanlı, P1, P2…)
+    decision            text NOT NULL CHECK (decision IN ('pending','keep','hide','merge_prev','move')),
+    target_monument_id  int REFERENCES monument(id) ON DELETE SET NULL,  -- move: paragrafın asıl sahibi
+    source              text NOT NULL CHECK (source IN ('auto','model','admin')),
+    rule                text,                                        -- auto: baslik/bolum/ingilizce/parca/kirik; model
+    reason              text,
+    suggested_target_id int REFERENCES monument(id) ON DELETE SET NULL,  -- model işaretinde önerilen sahip
+    decided_by          text,                                        -- panelde karar veren kişi (otomatikte boş)
+    decided_at          timestamptz,
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (monument_id, para_no),
+    CHECK (decision <> 'move' OR target_monument_id IS NOT NULL)
+);
+CREATE INDEX para_fix_target ON para_fix (target_monument_id) WHERE decision = 'move';
+CREATE INDEX para_fix_pending ON para_fix (decision);
 
 -- Yönetim paneli denetim kaydı: kim, ne zaman, neyi değiştirdi (pipeline/admin.py)
 CREATE TABLE admin_log (

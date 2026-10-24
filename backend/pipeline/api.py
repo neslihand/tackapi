@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images
+import rag, admin, images, textfix_db
 
 log = logging.getLogger('vakif.api')
 
@@ -235,7 +235,8 @@ def monument_detail(slug, lang, drafts=False):
     images = [dict(image_obj(r, lang), caption=r['caption_tr'],
                    source=dict(book=r['book'], page=r['printed_page']) if r['book'] else None,
                    **({'review_status': r['review_status']} if drafts else {})) for r in imgs]
-    text = sec['text_tr']
+    # Bölümleme düzeltmeleri uygulanmış metin (gizlenen kırıntılar yok, taşınan paragraflar doğru eserde)
+    text = textfix_db.effective_text(db, f['id']) or sec['text_tr']
     text_note = None
     if lang == 'en':
         if sec['en_usable'] and sec['text_en']:
