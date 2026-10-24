@@ -29,12 +29,17 @@ UPLOAD_MAX = 15 * 1024 * 1024
 UPLOAD_TYPES = {'JPEG', 'PNG', 'WEBP'}
 
 
-def load_tokens():
+def load_tokens(warn=False):
     out = {}
     for pair in filter(None, (p.strip() for p in os.environ.get('VAKIF_ADMIN_TOKENS', '').split(','))):
         name, _, token = pair.partition(':')
         if name and len(token) >= 16:
             out[token] = name.strip()
+        elif warn:
+            print(f"UYARI: '{name}' yönetici anahtarı yok sayıldı: anahtar en az 16 karakter olmalı "
+                  f"(üretmek için: python -c \"import secrets; print(secrets.token_urlsafe(24))\")", flush=True)
+    if warn and not out:
+        print('UYARI: Geçerli yönetici anahtarı yok; /api/admin uçları kapalı (VAKIF_ADMIN_TOKENS).', flush=True)
     return out
 
 
@@ -119,6 +124,7 @@ def slugify(*parts):
 
 
 def build_router(db, media_dir, save_webp):
+    load_tokens(warn=True)  # başlangıçta kısa ya da eksik anahtarları bildir
     r = APIRouter(prefix='/api/admin', tags=['yönetim'])
 
     def log(actor, action, target, detail=None):

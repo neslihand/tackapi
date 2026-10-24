@@ -25,6 +25,9 @@ class DB:
 
     def __init__(self, dsn=None):
         self.dsn = dsn or os.environ.get('DATABASE_URL')
+        if not self.dsn:
+            raise SystemExit('DATABASE_URL tanımlı değil. Bu pencerede önce şunu çalıştır:\n'
+                             '  $env:DATABASE_URL = "postgresql://kullanici:sifre@localhost:5432/vakif"')
         self._idle = []
         self._lock = threading.Lock()
         try:
