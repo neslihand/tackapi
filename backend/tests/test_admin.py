@@ -232,6 +232,34 @@ class AdminTest(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.dirname(os.path.join(MEDIA, d['file']))))  # boş klasör de gider
         self.assertEqual(self.q('SELECT count(*) AS n FROM image WHERE id = %(i)s', i=d['id'])[0]['n'], 0)
 
+    def test_preview_matches_public_page_and_works_for_drafts(self):
+        pub_item = next(i for i in self.c.get('/api/monuments').json()['items'] if i['slug'] == CAMI)
+        pub_detail = self.c.get(f'/api/monuments/{CAMI}').json()
+        p = self.c.get(f'/api/admin/preview/{CAMI}', headers=NES).json()
+        self.assertEqual(p['item'], pub_item)                # ziyaretçinin gördüğü kart ile aynı
+        self.assertEqual(p['detail'], pub_detail)            # ziyaretçinin gördüğü sayfa ile aynı
+        self.assertEqual(p['review_status'], 'published')
+        checks = {c['key']: c for c in p['checks']}
+        self.assertTrue(checks['cover']['ok'] and checks['summary']['ok'] and checks['text']['ok'])
+        self.assertFalse(checks['coords']['ok'])
+        # taslak eser: herkese açık uçta 404, önizlemede görünür ve eksikleri listelenir
+        draft = 'bursa-osmangazi-taslak-cesme'
+        self.assertEqual(self.c.get(f'/api/monuments/{draft}').status_code, 404)
+        p = self.c.get(f'/api/admin/preview/{draft}?lang=en', headers=NES).json()
+        self.assertEqual((p['review_status'], p['item']['kind_label']), ('draft', 'Fountain'))
+        self.assertFalse({c['key']: c for c in p['checks']}['cover']['ok'])
+        self.assertEqual(self.c.get('/api/admin/preview/yok-boyle', headers=NES).status_code, 404)
+        self.assertEqual(self.c.get(f'/api/admin/preview/{CAMI}').status_code, 401)
+
+    def test_preview_can_include_pending_photos(self):
+        self.api.db.execute("UPDATE image SET review_status = 'draft', is_cover = false WHERE sha1 = 'a3'")
+        imgs = self.c.get(f'/api/admin/monuments/{CAMI}', headers=NES).json()['images']
+        pending = [i for i in imgs if i['review_status'] == 'draft']
+        plain = self.c.get(f'/api/admin/preview/{CAMI}', headers=NES).json()['detail']['images']
+        withd = self.c.get(f'/api/admin/preview/{CAMI}?drafts=true', headers=NES).json()['detail']['images']
+        self.assertEqual(len(withd), len(plain) + len(pending))
+        self.assertEqual(withd[-1]['review_status'], 'draft')    # bekleyenler sona, durumuyla işaretli
+
     def test_books(self):
         rows = {b['slug']: b for b in self.c.get('/api/admin/books', headers=NES).json()}
         self.assertEqual(rows['bursa-1']['title'], 'Bursa Vakıf Eserleri I')

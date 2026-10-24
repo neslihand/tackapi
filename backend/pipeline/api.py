@@ -19,7 +19,7 @@ VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 1
 import os, sys, re, time, logging, threading, mimetypes
 from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -143,31 +143,30 @@ def _where(skip=None):
     return 'WHERE ' + ' AND '.join(v for k, v in LIST_FILTERS.items() if k != skip)
 
 
-@app.get('/api/monuments')
-def monuments(city: str | None = None, kind: str | None = None, period: str | None = None, q: str | None = None,
-              lang: Literal['tr', 'en'] = 'tr', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)):
-    params = dict(city=city, kind=kind, period=period, q=q or None, lang=lang,
-                  limit=page_size, offset=(page - 1) * page_size)
+# Liste kartı: herkese açık liste ve yönetici önizlemesi aynı sorguyu ve aynı biçimi kullanır.
+# %(drafts)s: önizlemede yayımlanmamış fotoğraflar da kapak adayı olur (herkese açık uçta her zaman false).
+ITEM_SELECT = f"""
+    SELECT m.slug, m.name_tr, m.name_en, m.alt_names, m.kind, c.slug AS city_slug, c.name_tr AS city_tr,
+           c.name_en AS city_en, m.district, m.neighborhood, p.slug AS period_slug, p.name_tr AS period_tr,
+           p.name_en AS period_en, lower(m.built_years) AS built_from, upper(m.built_years) - 1 AS built_to,
+           m.date_basis, par.slug AS parent_slug, par.name_tr AS parent_tr, par.name_en AS parent_en,
+           m.summary_tr, m.summary_en, m.status, b.title AS book, lower(m.pages) AS page_start,
+           upper(m.pages) - 1 AS page_end,
+           (SELECT count(*) FROM monument ch WHERE ch.parent_id = m.id) AS children_count,
+           EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
+                      OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
+           cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
+           cov.height AS img_height
+    {LIST_FROM} LEFT JOIN monument par ON par.id = m.parent_id LEFT JOIN source_book b ON b.id = m.book_id
+    LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
+                        WHERE monument_id = m.id AND (review_status = 'published'
+                              OR (%(drafts)s::boolean AND review_status IN ('draft', 'reviewed')))
+                        ORDER BY is_cover DESC, review_status = 'published' DESC, sort, id LIMIT 1) cov ON true"""
+
+
+def list_item(r, lang):
     en = lang == 'en'
-    total = db.query(f"SELECT count(*) AS n {LIST_FROM} {_where()}", params)[0]['n']
-    rows = db.query(f"""
-        SELECT m.slug, m.name_tr, m.name_en, m.alt_names, m.kind, c.slug AS city_slug, c.name_tr AS city_tr,
-               c.name_en AS city_en, m.district, m.neighborhood, p.slug AS period_slug, p.name_tr AS period_tr,
-               p.name_en AS period_en, lower(m.built_years) AS built_from, upper(m.built_years) - 1 AS built_to,
-               m.date_basis, par.slug AS parent_slug, par.name_tr AS parent_tr, par.name_en AS parent_en,
-               m.summary_tr, m.summary_en, m.status, b.title AS book, lower(m.pages) AS page_start,
-               upper(m.pages) - 1 AS page_end,
-               (SELECT count(*) FROM monument ch WHERE ch.parent_id = m.id) AS children_count,
-               EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
-                          OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
-               cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
-               cov.height AS img_height
-        {LIST_FROM} LEFT JOIN monument par ON par.id = m.parent_id LEFT JOIN source_book b ON b.id = m.book_id
-        LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
-                            WHERE monument_id = m.id AND is_cover AND review_status = 'published' LIMIT 1) cov ON true
-        {_where()}
-        ORDER BY c.slug, m.district, m.name_tr LIMIT %(limit)s OFFSET %(offset)s""", params)
-    items = [dict(
+    return dict(
         slug=r['slug'], name=(r['name_en'] or r['name_tr']) if en else r['name_tr'], alt_names=r['alt_names'] or [],
         kind=r['kind'], kind_label=_label(KIND_LABELS, r['kind'], lang),
         city=dict(slug=r['city_slug'], name=r['city_en'] if en else r['city_tr']),
@@ -181,7 +180,17 @@ def monuments(city: str | None = None, kind: str | None = None, period: str | No
         children_count=r['children_count'], summary=r['summary_en'] if en else r['summary_tr'], status=r['status'],
         has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'),
         source=dict(book=r['book'], pages=[r['page_start'], r['page_end']] if r['page_start'] is not None else None))
-        for r in rows]
+
+
+@app.get('/api/monuments')
+def monuments(city: str | None = None, kind: str | None = None, period: str | None = None, q: str | None = None,
+              lang: Literal['tr', 'en'] = 'tr', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)):
+    params = dict(city=city, kind=kind, period=period, q=q or None, lang=lang, drafts=False,
+                  limit=page_size, offset=(page - 1) * page_size)
+    total = db.query(f"SELECT count(*) AS n {LIST_FROM} {_where()}", params)[0]['n']
+    rows = db.query(f"""{ITEM_SELECT} {_where()}
+                        ORDER BY c.slug, m.district, m.name_tr LIMIT %(limit)s OFFSET %(offset)s""", params)
+    items = [list_item(r, lang) for r in rows]
     facets = dict(
         cities=db.query(f"""SELECT c.slug, CASE WHEN %(lang)s::text = 'en' THEN c.name_en ELSE c.name_tr END AS name,
                                    count(*) AS count {LIST_FROM} {_where('city')}
@@ -204,18 +213,25 @@ def is_published(slug):
 def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
     if not is_published(slug):
         raise HTTPException(404, 'Eser bulunamadı')
+    return monument_detail(slug, lang)
+
+
+def monument_detail(slug, lang, drafts=False):
+    """Eser sayfası verisi. drafts=True yalnızca yönetici önizlemesinde: kontrol bekleyen fotoğraflar da gelir."""
     f = rag.facts(db, slug)
     sec = db.query("""SELECT s.text_tr, s.text_en, s.page_start, s.page_end, b.title AS book, b.credits, m.en_usable,
                              m.summary_en, m.alt_names, m.status, m.qa_flags, m.review_status
                       FROM monument m LEFT JOIN source_section s ON s.id = m.section_id
                       LEFT JOIN source_book b ON b.id = m.book_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
     imgs = db.query("""SELECT i.file, i.alt_tr, i.alt_en, i.width, i.height, i.is_cover, i.printed_page, i.caption_tr,
-                              b.title AS book
+                              i.review_status, b.title AS book
                        FROM image i JOIN monument m ON m.id = i.monument_id LEFT JOIN source_book b ON b.id = i.book_id
-                       WHERE m.slug = %(s)s AND i.review_status = 'published'
-                       ORDER BY i.is_cover DESC, i.sort, i.id""", dict(s=slug))
+                       WHERE m.slug = %(s)s AND (i.review_status = 'published'
+                             OR (%(d)s::boolean AND i.review_status IN ('draft', 'reviewed')))
+                       ORDER BY i.is_cover DESC, i.review_status = 'published' DESC, i.sort, i.id""", dict(s=slug, d=drafts))
     images = [dict(image_obj(r, lang), caption=r['caption_tr'],
-                   source=dict(book=r['book'], page=r['printed_page']) if r['book'] else None) for r in imgs]
+                   source=dict(book=r['book'], page=r['printed_page']) if r['book'] else None,
+                   **({'review_status': r['review_status']} if drafts else {})) for r in imgs]
     text = sec['text_tr']
     text_note = None
     if lang == 'en':
@@ -230,6 +246,42 @@ def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
     return dict(card=f, text=text, text_note=text_note, images=images,
                 source=dict(book=sec['book'], pages=[sec['page_start'], sec['page_end']], credits=sec['credits']),
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
+
+
+@app.get('/api/admin/preview/{slug}', tags=['yönetim'])
+def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, user: str = Depends(admin.admin_user)):
+    """Ziyaretçinin göreceği liste kartı ve eser sayfası, eser taslakta olsa bile; ayrıca yayın öncesi kontrol listesi.
+    drafts=true: kontrol bekleyen fotoğraflar da gösterilir (yayına alınırsa sayfa nasıl görünür)."""
+    rows = db.query(f'{ITEM_SELECT} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
+    if not rows:
+        raise HTTPException(404, 'Eser bulunamadı')
+    m = db.query("""SELECT m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
+                           m.date_basis, m.lat IS NOT NULL AND m.lon IS NOT NULL AS has_coords, m.is_synthetic,
+                           coalesce(length(s.text_tr), 0) AS text_len,
+                           (SELECT count(*) FROM chunk c WHERE c.monument_id = m.id AND c.embedding IS NOT NULL) AS indexed,
+                           (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status = 'published') AS images,
+                           (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status IN ('draft','reviewed')) AS pending
+                    FROM monument m LEFT JOIN source_section s ON s.id = m.section_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
+    checks = [
+        dict(key='cover', ok=m['images'] > 0, required=True, label='Yayında en az bir fotoğraf (kapak)',
+             hint='Listede ve sayfanın başında kapak fotoğrafı görünür.'),
+        dict(key='summary', ok=bool(m['summary_tr']), required=True, label='Türkçe kısa özet',
+             hint='Liste kartında ve sayfanın başında gösterilir.'),
+        dict(key='text', ok=m['text_len'] > 0 or m['is_synthetic'], required=True, label='Kaynak metin',
+             hint='Sohbet asistanı yalnızca bu metne dayanarak cevap verir.'),
+        dict(key='indexed', ok=m['indexed'] > 0 or m['is_synthetic'], required=False, label='Sohbet için dizinlenmiş metin',
+             hint='Dizin yoksa sohbet bu eser hakkında kaynak bulamaz; embed_gemini.py eksikleri tamamlar.'),
+        dict(key='date', ok=m['has_date'], required=False, label='Yapım tarihi',
+             hint='Tarih yoksa kartta tarih alanı boş kalır.'),
+        dict(key='coords', ok=m['has_coords'], required=False, label='Koordinat (harita ve “Yakınımdakiler”)',
+             hint='Koordinatı olmayan eser haritada görünmez.'),
+        dict(key='pending', ok=m['pending'] == 0, required=False, label='Kontrol bekleyen fotoğraf kalmadı',
+             hint=f"{m['pending']} fotoğraf onay bekliyor; yayına alınmadıkça sayfada görünmez." if m['pending'] else ''),
+        dict(key='english', ok=bool(m['name_en'] and m['summary_en']), required=False, label='İngilizce ad ve özet',
+             hint='Eksikse İngilizce arayüzde Türkçe ad gösterilir, özet boş kalır.'),
+    ]
+    return dict(review_status=m['review_status'], item=list_item(rows[0], lang),
+                detail=monument_detail(slug, lang, drafts), checks=checks)
 
 
 class Turn(BaseModel):
