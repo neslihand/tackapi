@@ -11,6 +11,7 @@ import { MonumentEdit } from './pages/MonumentEdit';
 import { MonumentNew } from './pages/MonumentNew';
 import { Cities } from './pages/Cities';
 import { AuditLog } from './pages/AuditLog';
+import { PreviewPage } from './pages/Preview';
 
 const NAV: [string, string, ReactNode][] = [
   ['/', 'Pano', <LayoutDashboard size={17} />], ['/fotograflar', 'Fotoğraflar', <Images size={17} />],
@@ -45,7 +46,7 @@ export function App() {
   const [user, setUser] = useState<string | null>(null);
   const [checking, setChecking] = useState(Boolean(getToken()));
   const [pending, setPending] = useState<number | null>(null);
-  const { path } = useRoute();
+  const { path, params } = useRoute();
   useEffect(() => {
     handleUnauthorized(() => setUser(null));
     if (!getToken()) return;
@@ -58,7 +59,9 @@ export function App() {
   }, [user, path]);
   useEffect(() => { document.title = 'EŞİK — Yönetim Paneli'; }, []);
   if (checking) return <div className="login" role="status"><p style={{ color: '#f4efe5' }}>Oturum denetleniyor…</p></div>;
-  return <ToastProvider>{user
-    ? <Shell user={user} pending={pending} onLogout={() => { setToken(null); setUser(null); }} />
-    : <Login onLogin={setUser} />}</ToastProvider>;
+  // Önizleme panel kabuğu olmadan, ziyaretçinin göreceği gibi tam genişlikte açılır
+  const preview = path.startsWith('/onizleme/');
+  return <ToastProvider>{!user ? <Login onLogin={setUser} />
+    : preview ? <main id="main" tabIndex={-1}><PreviewPage key={path} slug={decodeURIComponent(path.slice(10))} params={params} /></main>
+    : <Shell user={user} pending={pending} onLogout={() => { setToken(null); setUser(null); }} />}</ToastProvider>;
 }

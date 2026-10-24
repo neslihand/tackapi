@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Ban, Check, ImagePlus, RotateCcw, Save, Star, Trash2, X } from 'lucide-react';
+import { Ban, Check, Eye, ImagePlus, RotateCcw, Save, Star, Trash2, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { BASIS_LABELS, changedFields, fieldsFromForm, formatDate, formFromDetail, KIND_LABELS, methodLabel, monumentIssues, STATE_LABELS, type MonumentForm } from '../lib/format';
 import { Link, navigate } from '../lib/navigation';
@@ -14,7 +14,7 @@ export function MonumentEdit({ slug }: { slug: string }) {
   if (!d) return <p role="status">Eser yükleniyor…</p>;
   return <>
     <PageHead kicker={`${d.city}${d.district ? ' / ' + d.district : ''} · ${KIND_LABELS[d.kind]}`} title={d.name_tr}
-      actions={<Status value={d.review_status} />}>
+      actions={<><Status value={d.review_status} /><Link className="button line small" to={`/onizleme/${encodeURIComponent(d.slug)}`}><Eye size={15} /> Sitede nasıl görünür?</Link></>}>
       {d.from_panel ? `Panelden eklendi${d.created_by ? ` (${d.created_by})` : ''}.` : `Kaynak: ${d.book ?? '—'}.`} Slug: <code>{d.slug}</code>{d.updated_at && ` · Son değişiklik: ${formatDate(d.updated_at)}`}
       {d.qa_flags?.length ? ` · Kalite işaretleri: ${d.qa_flags.join(', ')}` : ''}
     </PageHead>

@@ -42,6 +42,7 @@ adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS
 | Fotoğraflar | `#/fotograflar` | Kontrol kuyruğu: onayla, esere bağla, kapak yap, at; kitaba göre süzme ve toplu işlem |
 | Eserler | `#/eserler` | Taslaklar dahil liste; şehir, durum ve fotoğrafa göre süzme |
 | Eser | `#/eser/<slug>` | Künye, tarih, konum, özet, kaynak notu, yayın durumu; panel eserlerinde metin; galeri ve yükleme |
+| Önizleme | `#/onizleme/<slug>` | Eserin sitede nasıl görüneceği, taslakken de (ayrıntı aşağıda) |
 | Yeni eser | `#/yeni-eser` | Taslak olarak eklenir; metin girilirse sohbet asistanı için dizinlenir |
 | Şehirler | `#/sehirler` | Şehir listesi ve yeni şehir |
 | Değişiklik kaydı | `#/kayit` | Kim, ne zaman, neyi değiştirdi (önce/sonra) |
@@ -51,6 +52,25 @@ Kurallar arka uçta uygulanır, panel aynı denetimleri önceden gösterir:
 - Kitap eserleri silinemez, taslağa alınarak yayından kaldırılır.
 - Kitap fotoğrafları silinmez, "atılır".
 - Yüklenen fotoğrafta alternatif metin zorunludur.
+
+## Önizleme: "Sitede nasıl görünür?"
+Eser düzenleme sayfasındaki düğmeyle ya da eser listesindeki "Önizle" bağlantısıyla açılır. Panel kabuğu olmadan,
+ziyaretçinin göreceği gibi tam genişlikte gösterilir.
+- **Aynı veri:** Önizleme ucu (`GET /api/admin/preview/{slug}`), herkese açık liste kartı ve eser sayfasıyla birebir
+  aynı veriyi döndürür (arka uçta testle güvence altında). Tek fark, taslak eserlerde de çalışmasıdır.
+- **Görünüm seçenekleri:** Masaüstü ya da mobil; mobil, 390 piksellik gerçek bir çerçevede çizildiği için sayfanın mobil
+  kuralları gerçekten devreye girer. Türkçe ya da İngilizce. "Onay bekleyen fotoğrafları da göster" seçeneği açılınca,
+  fotoğraflar onaylanırsa sayfanın nasıl görüneceği gösterilir; bu fotoğraflar "onay bekliyor" etiketi taşır.
+- **Yayın öncesi kontrol:** Kapak fotoğrafı, Türkçe özet ve kaynak metin zorunlu olarak işaretlenir. Sohbet dizini,
+  tarih, koordinat, bekleyen fotoğraf ve İngilizce ad/özet isteğe bağlıdır. Eksik varsa "Yayına al" önce uyarır.
+- **Keşfet listesindeki kart:** Kontrol listesinin yanında, eserin listede nasıl görüneceği gösterilir.
+- **Anlatım:** Yayındaki eserde "Kısa ve Öz / Hikâyeleştirerek / Çocuklar İçin" düğmeleri gerçek sohbet ucunu çağırır.
+  Cevapta yalnızca atıf yapılan kaynaklar listelenir. Taslak eserde sohbet kapalıdır, çünkü herkese açık sohbet ucu
+  taslak eserlere cevap vermez.
+
+`src/public/` klasöründeki `MonumentView` (eser sayfası) ve `MonumentCard` (liste kartı) bileşenleri yalnızca API
+verisine bağlıdır ve ön yüzün görsel dilini (`.story-*`, `.artifact-*`) izler. Birleştirmede ön yüzün API'den beslenen
+eser sayfası olarak doğrudan taşınabilirler. Sohbet bileşene dışarıdan fonksiyon olarak verilir.
 
 ## Erişilebilirlik
 - Bütün işlemler klavyeyle yapılabilir. "İçeriğe geç" bağlantısı ve görünür odak halkası vardır.
@@ -66,6 +86,7 @@ src/
   lib/format.ts      Saf yardımcılar: etiketler, form ↔ alan dönüşümü, doğrulama (testli)
   lib/navigation.tsx Hash tabanlı yönlendirme (ön yüzle aynı)
   components/        Ortak bileşenler, eser seçme kutusu
-  pages/             Sayfalar
+  pages/             Sayfalar (Preview.tsx: önizleme)
+  public/            Ziyaretçi görünümü: eser sayfası, liste kartı, TR/EN metinler (ön yüze taşınabilir)
 tests/               node:test birim testleri
 ```

@@ -1,5 +1,6 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
 import type { AdminImage, Book, City, ImageStatus, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page, Period, Stats } from './types';
+import type { ChatReply, Preview } from '../public/model';
 
 export const TOKEN_KEY = 'esik:admin-token';
 
@@ -91,5 +92,9 @@ export const api = {
     request<City>('/api/admin/cities', json('POST', body)),
   periods: () => request<Period[]>('/api/admin/periods'),
   books: () => request<Book[]>('/api/admin/books'),
+  preview: (slug: string, lang: 'tr' | 'en', drafts: boolean) =>
+    request<Preview>(`/api/admin/preview/${encodeURIComponent(slug)}${qs({ lang, drafts: drafts || null })}`),
+  chat: (body: { slug: string; question: string; mode: 'standard' | 'story' | 'child'; lang: 'tr' | 'en' }) =>
+    request<ChatReply>('/api/chat', json('POST', body)),
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };

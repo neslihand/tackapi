@@ -34,12 +34,13 @@ export function Monuments({ params }: { params: URLSearchParams }) {
     {list.error && <p className="form-error" role="alert">{list.error}</p>}
     {list.data && (list.data.items.length ? <div style={{ overflowX: 'auto' }}><table className="admin-table" aria-busy={list.loading}>
       <caption className="sr-only">Eser listesi</caption>
-      <thead><tr><th scope="col">Eser</th><th scope="col">Tür</th><th scope="col">Şehir / ilçe</th><th scope="col">Durum</th><th scope="col">Fotoğraf</th><th scope="col">Son değişiklik</th></tr></thead>
+      <thead><tr><th scope="col">Eser</th><th scope="col">Tür</th><th scope="col">Şehir / ilçe</th><th scope="col">Durum</th><th scope="col">Fotoğraf</th><th scope="col">Son değişiklik</th><th scope="col"><span className="sr-only">Önizleme</span></th></tr></thead>
       <tbody>{list.data.items.map(m => <tr key={m.slug}>
         <th scope="row"><Link to={`/eser/${encodeURIComponent(m.slug)}`}>{m.name_tr}</Link>{m.from_panel && <> <span className="admin-badge">panel</span></>}{m.qa_flags?.includes('duplicate_title') && <> <span className="admin-badge" title="Aynı adda başka bir kayıt var">yinelenen ad?</span></>}</th>
         <td>{KIND_LABELS[m.kind]}</td><td>{m.city}{m.district ? ` / ${m.district}` : ''}</td><td><Status value={m.review_status} /></td>
         <td>{m.images}{m.images_pending ? <> · <Link className="text-link" to={`/eser/${encodeURIComponent(m.slug)}#fotograflar`}>{m.images_pending} bekliyor</Link></> : null}</td>
         <td>{formatDate(m.updated_at)}</td>
+        <td><Link className="text-link" to={`/onizleme/${encodeURIComponent(m.slug)}`} aria-label={`${m.name_tr}: sitede nasıl görünür`}>Önizle</Link></td>
       </tr>)}</tbody></table></div> : <div className="empty">Bu filtrelere uyan eser yok.</div>)}
     {list.data && <Pager page={page} pageSize={PAGE} total={list.data.total} onPage={setPage} />}
   </>;
