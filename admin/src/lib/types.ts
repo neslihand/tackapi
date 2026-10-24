@@ -38,10 +38,14 @@ export type MonumentFields = {
 export type MonumentDetail = Required<Omit<MonumentFields, 'review_status'>> & {
   slug: string; city: string; review_status: ReviewStatus; qa_flags: string[]; is_synthetic: boolean;
   created_by: string | null; updated_at: string | null; book: string | null; from_panel: boolean; text_editable: boolean;
-  text_tr: string | null; text_en: string | null; images: AdminImage[];
+  text_tr: string | null; text_en: string | null; images: AdminImage[]; notes: QualityNote[];
 };
+
+// Çıkarım sırasında üretilen iç kalite notları (bölümleme, çelişki, OCR); ziyaretçi görmez
+export type NoteStatus = 'open' | 'confirmed' | 'resolved' | 'wontfix';
+export type QualityNote = { id: number; kind: string; note_tr: string; status: NoteStatus };
 
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
 export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };
-export type Period ={ slug: string; name_tr: string; parent: string | null; city: string | null; start: number; end: number };
+export type Period = { slug: string; name_tr: string; parent: string | null; city: string | null; start: number; end: number };
 export type LogRow = { at: string; actor: string; action: string; target: string; detail: Record<string, unknown> };

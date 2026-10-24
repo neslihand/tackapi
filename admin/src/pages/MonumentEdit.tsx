@@ -3,7 +3,7 @@ import { Ban, Check, Eye, ImagePlus, RotateCcw, Save, Star, Trash2, X } from 'lu
 import { api } from '../lib/api';
 import { BASIS_LABELS, changedFields, fieldsFromForm, formatDate, formFromDetail, KIND_LABELS, methodLabel, monumentIssues, STATE_LABELS, type MonumentForm } from '../lib/format';
 import { Link, navigate } from '../lib/navigation';
-import type { AdminImage, MonumentDetail } from '../lib/types';
+import type { AdminImage, MonumentDetail, NoteStatus, QualityNote } from '../lib/types';
 import { Field, Issues, PageHead, Status, useLoad, useToast } from '../components/UI';
 import { MonumentPicker } from '../components/MonumentPicker';
 
@@ -18,11 +18,46 @@ export function MonumentEdit({ slug }: { slug: string }) {
       {d.from_panel ? `Panelden eklendi${d.created_by ? ` (${d.created_by})` : ''}.` : `Kaynak: ${d.book ?? '—'}.`} Slug: <code>{d.slug}</code>{d.updated_at && ` · Son değişiklik: ${formatDate(d.updated_at)}`}
       {d.qa_flags?.length ? ` · Kalite işaretleri: ${d.qa_flags.join(', ')}` : ''}
     </PageHead>
+    <QualityNotes notes={d.notes} onChange={detail.reload} />
     <DetailsForm d={d} onSaved={detail.reload} />
     <TextSection d={d} onSaved={detail.reload} />
     <Gallery d={d} onChange={detail.reload} />
     {d.from_panel && <DangerZone slug={d.slug} />}
   </>;
+}
+
+const NOTE_KINDS: Record<string, string> = {
+  likely_error: 'Bölümleme', contradiction: 'Çelişki', ocr: 'Metin (OCR) hatası', uncertain: 'Atılan çıkarım',
+  translation: 'Çeviri', toc_mismatch: 'İçindekiler farkı',
+};
+const NOTE_STATUS: Record<NoteStatus, string> = { open: 'Bakılmadı', confirmed: 'Doğrulandı', resolved: 'Çözüldü', wontfix: 'Önemsiz' };
+
+/** Çıkarım sırasında üretilen iç kalite notları. Ziyaretçi görmez; açık olanlar sohbet asistanına uyarı olarak gider. */
+function QualityNotes({ notes, onChange }: { notes: QualityNote[]; onChange: () => void }) {
+  const notify = useToast();
+  const [busy, setBusy] = useState(false);
+  if (!notes.length) return null;
+  const open = notes.filter(n => n.status === 'open' || n.status === 'confirmed').length;
+  async function set(n: QualityNote, status: NoteStatus) {
+    setBusy(true);
+    try { await api.updateNote(n.id, status); notify(`Not “${NOTE_STATUS[status]}” olarak işaretlendi`); onChange(); }
+    catch (e) { notify((e as Error).message, true); }
+    finally { setBusy(false); }
+  }
+  // Notlardaki P5, P6 gibi paragraf işaretleri aşağıdaki numaralı kitap metnine bağlantı olur
+  const linked = (text: string) => text.split(/(\bP\d+\b)/).map((part, i) => /^P\d+$/.test(part) ? <a key={i} className="text-link" href={`#${part}`} onClick={e => { e.preventDefault(); document.getElementById(part)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>{part}</a> : part);
+  return <details className="admin-form quality-notes" open={open > 0} style={{ marginBottom: 22 }}>
+    <summary><strong>Kalite uyarıları</strong> · {open ? `${open} açık` : 'hepsine bakıldı'} <span className="admin-help">(yalnızca yöneticiler görür)</span></summary>
+    <p className="admin-help" style={{ margin: '10px 0' }}>Bu notlar kitap metinleri yapay zekâyla işlenirken otomatik üretildi; ziyaretçilere gösterilmez. Açık notlar sohbet asistanına “dikkat” uyarısı olarak gider. “Çözüldü” ya da “Önemsiz” işaretlenen not artık asistana gönderilmez.</p>
+    <table className="admin-table"><thead><tr><th scope="col">Tür</th><th scope="col">Not</th><th scope="col">Durum</th><th scope="col"><span className="sr-only">İşlem</span></th></tr></thead>
+      <tbody>{notes.map(n => <tr key={n.id} style={n.status === 'resolved' || n.status === 'wontfix' ? { opacity: .6 } : undefined}>
+        <td style={{ whiteSpace: 'nowrap' }}>{NOTE_KINDS[n.kind] ?? n.kind}</td><td>{linked(n.note_tr)}</td><td>{NOTE_STATUS[n.status]}</td>
+        <td><div className="admin-actions" style={{ gap: 6, padding: 0 }}>
+          {n.status !== 'resolved' && <button className="button line small" disabled={busy} onClick={() => set(n, 'resolved')}>Çözüldü</button>}
+          {n.status !== 'wontfix' && <button className="button line small" disabled={busy} onClick={() => set(n, 'wontfix')}>Önemsiz</button>}
+          {(n.status === 'resolved' || n.status === 'wontfix') && <button className="button line small" disabled={busy} onClick={() => set(n, 'open')}>Yeniden aç</button>}
+        </div></td></tr>)}</tbody></table>
+  </details>;
 }
 
 function DetailsForm({ d, onSaved }: { d: MonumentDetail; onSaved: () => void }) {
@@ -100,7 +135,11 @@ function TextSection({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
   const notify = useToast();
   if (!d.text_editable) return <section className="admin-form" style={{ marginTop: 26 }}><fieldset><legend>Kaynak metin</legend>
     <p className="admin-note">Bu metin envanter kitabından alınmıştır ve doğruluk kaynağıdır; panelden değiştirilemez.</p>
-    {d.text_tr ? <details style={{ marginTop: 12 }}><summary>Kitap metnini göster ({d.text_tr.length.toLocaleString('tr-TR')} karakter)</summary><div className="text-preview" style={{ marginTop: 10 }}>{d.text_tr}</div></details> : <p className="admin-help">Bu kaydın metni yok (türetilmiş üst kayıt).</p>}
+    {d.text_tr ? <details style={{ marginTop: 12 }} open={d.notes.some(n => n.kind === 'likely_error' && n.status === 'open')}>
+      <summary>Kitap metnini göster ({d.text_tr.length.toLocaleString('tr-TR')} karakter)</summary>
+      <ol className="text-preview numbered" style={{ marginTop: 10 }}>{d.text_tr.split(/\n\s*\n/).filter(p => p.trim()).map((p, i) =>
+        <li key={i} id={`P${i + 1}`}><b>P{i + 1}</b>{p}</li>)}</ol>
+    </details> : <p className="admin-help">Bu kaydın metni yok (türetilmiş üst kayıt).</p>}
   </fieldset></section>;
   async function save() {
     if (tr.trim().length < 20) { notify('Türkçe metin en az 20 karakter olmalı.', true); return; }

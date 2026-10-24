@@ -10,6 +10,7 @@ const ACTIONS: Record<string, string> = {
   'monument.delete': 'eseri sildi', 'image.update': 'fotoğrafı düzenledi', 'image.upload': 'fotoğraf yükledi',
   'image.delete': 'fotoğrafı sildi', 'image.reject': 'fotoğrafı attı', 'image.bulk_published': 'fotoğrafları toplu onayladı',
   'image.bulk_rejected': 'fotoğrafları toplu attı', 'image.bulk_draft': 'fotoğrafları taslağa aldı', 'city.create': 'şehir ekledi',
+  'note.update': 'kalite notunun durumunu değiştirdi',
 };
 
 /** Kayıt satırını okunur bir cümleye çevirir (pano da kullanır). */

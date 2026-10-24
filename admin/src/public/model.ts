@@ -22,7 +22,6 @@ export type Card = {
   persons: { name: string; role: string; detail: string | null; page_start: number | null }[];
   artworks: { kind: string; element: string | null; technique: string | null; script: string | null; artist: string | null;
     date_text: string | null; text_translation_tr: string | null; page_start: number | null }[];
-  notes: { kind: string; note_tr: string; model_instruction: string | null }[];
   children: { name_tr: string; kind: string }[];
 };
 
@@ -44,7 +43,7 @@ const T = {
     ask: 'Bu eseri anlat', askHint: 'Yapay zekâ rehber, yalnızca envanter kitabındaki bilgilere dayanarak anlatır.',
     draftChat: 'Sohbet, eser yayına alındıktan sonra çalışır.', storyNote: 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler kaynaklara dayanır.',
     sources: 'Kaynaklar', gallery: 'Fotoğraflar', timeline: 'Tarihçe', artworks: 'Süsleme ve sanat', text: 'Kitaptaki metin',
-    readText: 'Envanter kitabındaki metni oku', notes: 'Kaynak uyarısı', children: 'Bu yapının parçaları', partOf: 'Bağlı olduğu yapı',
+    readText: 'Envanter kitabındaki metni oku', children: 'Bu yapının parçaları', partOf: 'Bağlı olduğu yapı',
     sourceBook: 'Kaynak kitap', pages: 'sayfa', authors: 'Yazarlar', photoSource: 'Fotoğraf', today: 'Bugünkü durumu',
     loading: 'Anlatım hazırlanıyor…', card: 'ESER', discover: 'Hikâyeyi keşfet', pending: 'onay bekliyor', noImage: 'GÖRSEL HAZIRLANIYOR',
     close: 'Kapat', prev: 'Önceki', next: 'Sonraki',
@@ -55,7 +54,7 @@ const T = {
     ask: 'Tell me about this monument', askHint: 'The AI guide only uses information from the inventory book.',
     draftChat: 'Chat becomes available once the monument is published.', storyNote: 'The atmosphere is a creative interpretation; historical facts come from the sources.',
     sources: 'Sources', gallery: 'Photographs', timeline: 'History', artworks: 'Decoration and art', text: 'Text from the book',
-    readText: 'Read the inventory book text', notes: 'Source note', children: 'Parts of this complex', partOf: 'Part of',
+    readText: 'Read the inventory book text', children: 'Parts of this complex', partOf: 'Part of',
     sourceBook: 'Source book', pages: 'pages', authors: 'Authors', photoSource: 'Photo', today: 'Current state',
     loading: 'Preparing the narration…', card: 'MONUMENT', discover: 'Explore the story', pending: 'awaiting review', noImage: 'IMAGE IN PREPARATION',
     close: 'Close', prev: 'Previous', next: 'Next',

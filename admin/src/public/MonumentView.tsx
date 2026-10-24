@@ -66,8 +66,6 @@ export function MonumentView({ item, detail, lang, chat, backHref }: {
 
       {c.current_state && <section className="pv-section pv-visit"><MapPin size={20} /><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
 
-      {c.notes.length > 0 && <section className="pv-section pv-note" role="note"><strong>{s.notes}</strong>{c.notes.map((n, i) => <p key={i}>{n.note_tr}</p>)}</section>}
-
       {paragraphs.length > 0 && <section className="pv-section"><details className="pv-text"><summary><BookOpen size={17} /> {s.readText}</summary>
         {detail.text_note && <p className="pv-muted">{detail.text_note}</p>}{paragraphs.map((p, i) => <p key={i}>{p}</p>)}</details></section>}
 

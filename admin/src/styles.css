@@ -167,3 +167,11 @@ select{border:1px solid var(--line);padding:11px 30px 11px 12px;border-radius:0;
 .preview-device{display:flex;justify-content:center;padding:10px 0 50px}
 .preview-device iframe{width:390px;height:844px;border:12px solid #172b2b;border-radius:34px;background:var(--paper);box-shadow:0 20px 60px #0004}
 @media(max-width:1000px){.preview-panel{grid-template-columns:1fr}.preview-checks{grid-template-columns:1fr}}
+
+/* Kalite uyarıları ve numaralı kitap metni (MonumentEdit) */
+.quality-notes{border:1px solid #d7b98a;background:#f6ecd8;padding:14px 18px}
+.quality-notes summary{cursor:pointer;font-size:14.5px}
+.text-preview.numbered{list-style:none;margin:0;padding:14px 16px;white-space:normal}
+.text-preview.numbered li{display:grid;grid-template-columns:38px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid #ece7da;scroll-margin:120px}
+.text-preview.numbered li:target,.text-preview.numbered li:focus-within{background:#f6ecd8}
+.text-preview.numbered b{font-size:11.5px;color:#8a6a2f;font-weight:500;padding-top:3px}
