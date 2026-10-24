@@ -53,9 +53,12 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **API:** Herkese açık uçlar (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`, `/media`) yalnızca
   `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
   `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).
+- **Bölümleme düzeltmeleri:** `text_fixes.py --report` 59 eserde 60 güvenli otomatik karar ve 88 eserde 367 model
+  işareti (10'unda taşıma önerisi) buldu. Gerçek veritabanında henüz uygulanmadı: önce `migrate.py --apply` (004),
+  sonra `text_fixes.py --apply` (yaklaşık 58 yeni parça için Gemini embedding). Model işaretleri panelde karar bekler.
 - **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
   `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
-- **Testler:** `python -m unittest discover -s tests` (54 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (63 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -94,6 +97,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
    OCR) iç kalite notlarıdır: sohbet asistanına uyarı olarak gider (`rag.facts`), yöneticiler panelde görür ve
    `resolved`/`wontfix` işaretler (bu durumdakiler asistana gitmez). `api.monument_detail` notları herkese açık
    veriden çıkarır. Çıkarım 101 eserde bölümleme, 66 eserde çelişki notu üretti.
+10. **Bölümleme hataları kitap metninde düzeltilmez.** Kararlar `para_fix` tablosunda (paragraf no → `hide`/`move`/
+   `merge_prev`/`keep`/`pending`) tutulur. Ziyaretçi metni ve sohbet parçaları `textfix_db.effective_text` ile üretilir.
+   Güvenli kurallar `text_fixes.py`'de; Gemini işaretleri panelde (`#/bolumleme`) yöneticinin kararını bekler.
 
 ## Tuzaklar (daha önce yaşandı)
 - ⚠️ **`load_db.py` tüm tabloları TRUNCATE eder.** Embedding'ler ve çıkarımlar silinir. İlk kurulumdan sonra çalıştırma.

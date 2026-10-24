@@ -234,6 +234,23 @@ Kitaba özgü farklar (başlığın metinden önce mi sonra mı geldiği, içind
 - Her parça şu üst verileri taşır: eser, şehir, kitap, **sayfa aralığı**, başlık yolu, konu, metindeki **Miladi yıllar**, **dönemler**.
 - Embedding metni şu biçimdedir: `title: <başlık yolu (dönemler)> | text: <metin>`.
 
+### 5.4.1 Bölümleme düzeltmeleri: `text_fixes.py`, `textfix_db.py`
+Bölümleme bazen bir eserin metnine başka bir eserin başlığını, İngilizce kırıntıları ya da bölüm adlarını katar.
+**Kitap metni (`source_section.text_tr`) hiç değiştirilmez.** Kararlar paragraf numarasıyla `para_fix` tablosunda tutulur:
+`hide` (gizle), `move` (başka esere taşı), `merge_prev` (önceki paragrafa ekle), `keep` (bu esere ait), `pending` (bakılacak).
+Ziyaretçi metni ve sohbet parçaları bu kararlar uygulanmış "etkin metinden" üretilir.
+```powershell
+python text_fixes.py --report   # data/review/metin_duzeltme.csv: güvenli otomatik kararlar + model işaretleri
+python text_fixes.py --apply    # kararları yazar, değişen eserlerin parçalarını yeniler (yeni parçalar için embedding)
+```
+- Güvenli kurallar: başka eserin başlığı (`baslik`), bölüm adı (`bolum`), Türkçe ipucu olmayan İngilizce satır
+  (`ingilizce`), kısa başlık parçası (`parca`), satır kırılması (`kirik`). Kitâbe ve alıntılar, 80 karakterden uzun
+  paragraflar ve virgüllü listeler hiç işaretlenmez. Taşıma önerisi yalnızca aynı şehirdeki eserlere yapılır.
+- Gemini çıkarımının "başka esere ait" işaretleri `pending` olarak panele düşer; karar yöneticinindir.
+- Parça yenilemede içeriği değişmeyen parçalar embedding'iyle korunur. Kanıt bağları (olay, kişi, sanat eseri, vakıf,
+  editör notu) alıntılarına göre yeni parçalara taşınır. Etkilenen eserlerin sohbet önbelleği temizlenir.
+- `--apply` yeniden çalıştırılabilir. Panelde verilmiş kararları ezmez.
+
 ### 5.5 Yapılandırılmış çıkarım: `extract_gemini.py`
 Her eser metni bir JSON şemasıyla Gemini'ye gönderilir. Çıkarılan bilgiler:
 - **Kişiler:** bânî, mimar, hattat, nakkaş ve rolleri
@@ -334,6 +351,7 @@ city ────────┼─< monument >── period         │
 | `answer_cache` | Sohbet cevap önbelleği |
 | `schema_migration` | Uygulanmış göç dosyaları (`migrations/`, `migrate.py`) |
 | `admin_log` | Yönetim paneli denetim kaydı: kim, ne zaman, neyi değiştirdi (önce/sonra) |
+| `para_fix` | Bölümleme düzeltmesi: eser + paragraf no → karar (`hide`, `move`, `merge_prev`, `keep`, `pending`), kaynak (`auto`, `model`, `admin`), öneri, karar veren |
 
 **Yayın durumu:** Herkese açık uçlar yalnızca `review_status = 'published'` olan eser ve fotoğrafları gösterir.
 Envanter kitaplarından yüklenen eserler yayında başlar; yönetim panelinden eklenenler `draft` başlar.
@@ -524,6 +542,9 @@ Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablos
 | DELETE | `/api/admin/images/{id}` | Yüklenen fotoğraf dosyasıyla silinir; kitap fotoğrafı `rejected` olur |
 | POST | `/api/admin/cities` | Yeni şehir |
 | GET | `/api/admin/preview/{slug}?lang&drafts` | Ziyaretçinin göreceği liste kartı (`item`) ve eser sayfası (`detail`), taslak eserde de; yayın öncesi kontrol listesi (`checks`). `drafts=true` onay bekleyen fotoğrafları da ekler |
+| GET | `/api/admin/segmentation?decision&book&page` | Bölümleme kuyruğu: bakılacak (varsayılan), karar verilmiş (`decided`) ya da otomatik (`auto`) paragraflar; önceki/sonraki paragraf bağlamı ve taşıma önerisi |
+| POST | `/api/admin/segmentation/{id}` | Kuyruktaki paragraf için karar (`{decision, target}`) |
+| PUT | `/api/admin/monuments/{slug}/paragraphs/{n}` | Eser sayfasından paragraf kararı; `pending` kararı geri alır |
 | PATCH | `/api/admin/notes/{id}` | Kalite notunun durumu: `open`, `confirmed`, `resolved` (çözüldü), `wontfix` (önemsiz) |
 | GET | `/api/admin/books` | Kaynak kitaplar ve fotoğraf sayıları |
 | GET | `/api/admin/periods` | Dönemler (düzenleme formu için) |
@@ -541,6 +562,8 @@ Kurallar:
 - Kapak yalnızca bir esere bağlı ve yayımlanmış bir fotoğraf olabilir. Kapak yayından kalkarsa bir sonraki
   yayımlanmış fotoğraf kapak olur.
 - Eserle ilgili her değişiklik o eserin sohbet önbelleğini temizler.
+- Paragraf kararı kitap metnini değiştirmez (bkz. §5.4.1). Kararın sonucu yenilenen ve korunan parça sayısıyla döner.
+  Yöneticinin kendi başlattığı kararı geri almak kaydı siler; otomatik ya da model işareti ise kuyruğa geri döner.
 
 ---
 
@@ -620,6 +643,7 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 - **Hazire, caminin alt eseridir.** Mezar taşları hazireye sanat eseri olarak bağlanır.
 - **Tek veritabanı.** İlişkisel veri, tam metin ve vektör arama PostgreSQL'de birlikte tutulur. Bu sayede filtreli arama (şehir, dönem, eser) tek sorguyla yapılır.
 - **Tarih dayanağı açıkça tutulur** (`date_basis`): kitâbe, vakfiye, üslup, rivayet ya da üst yapıdan alınma. Çocuk modunda bile "kesin" ile "tahmin" ayrımı korunur.
+- **Kitap metni değişmez, düzeltmeler katman olarak tutulur.** Bölümleme hataları `para_fix` kararlarıyla gizlenir ya da taşınır; her karar geri alınabilir.
 - **Her adım tekrar çalıştırılabilir** ve kaldığı yerden devam eder. Kota dolması ya da bağlantı kesilmesi veri kaybına yol açmaz.
 
 ---

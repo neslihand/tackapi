@@ -42,6 +42,7 @@ adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS
 | Fotoğraflar | `#/fotograflar` | Kontrol kuyruğu: onayla, esere bağla, kapak yap, at; kitaba göre süzme ve toplu işlem |
 | Eserler | `#/eserler` | Taslaklar dahil liste; şehir, durum ve fotoğrafa göre süzme |
 | Eser | `#/eser/<slug>` | Künye, tarih, konum, özet, kaynak notu, yayın durumu; panel eserlerinde metin; galeri ve yükleme |
+| Bölümleme | `#/bolumleme` | Başka esere ait görünen paragraflar: bu esere ait, gizle, önceki paragrafa ekle, başka esere taşı (ayrıntı aşağıda) |
 | Önizleme | `#/onizleme/<slug>` | Eserin sitede nasıl görüneceği, taslakken de (ayrıntı aşağıda) |
 | Yeni eser | `#/yeni-eser` | Taslak olarak eklenir; metin girilirse sohbet asistanı için dizinlenir |
 | Şehirler | `#/sehirler` | Şehir listesi ve yeni şehir |
@@ -52,6 +53,16 @@ Kurallar arka uçta uygulanır, panel aynı denetimleri önceden gösterir:
 - Kitap eserleri silinemez, taslağa alınarak yayından kaldırılır.
 - Kitap fotoğrafları silinmez, "atılır".
 - Yüklenen fotoğrafta alternatif metin zorunludur.
+
+## Bölümleme kontrolü
+Kitap metni değişmez; kararlar paragraf numarasıyla ayrı tutulur ve her an geri alınabilir.
+- **Kuyruk** (`#/bolumleme`): Gemini'nin "başka esere ait" dediği paragraflar, önceki ve sonraki paragrafla birlikte
+  gösterilir. Kitaba göre süzülür; "Karar verilenler" ve "Otomatik" sekmeleri yapılan işi gösterir.
+- **Öneri:** Aynı şehirde başlığı geçen eser önerilir. Bir paragraf taşındıysa, ardından gelen işaretli paragraf için
+  aynı eser önerilir.
+- **Eser sayfası:** "Kitap metni" bölümünde paragraflar numaralıdır; her birinde "Düzelt"/"Değiştir" ile karar verilir.
+  Başka eserlerden taşınan paragraflar ayrıca listelenir.
+- Her karardan sonra sohbet dizini yenilenir; bildirimde kaç parçanın yenilendiği yazar.
 
 ## Önizleme: "Sitede nasıl görünür?"
 Eser düzenleme sayfasındaki düğmeyle ya da eser listesindeki "Önizle" bağlantısıyla açılır. Panel kabuğu olmadan,
