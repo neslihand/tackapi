@@ -25,6 +25,9 @@ SELECT m.id, b.city_id, b.id, 'book', %(sha1)s, %(file)s, %(width)s, %(height)s,
 FROM source_book b LEFT JOIN monument m ON m.slug = %(monument_slug)s::text
 WHERE b.slug = %(book)s
 ON CONFLICT (sha1) DO UPDATE SET
+       -- başka esere taşınan ya da yayından düşen fotoğraf kapak olarak kalamaz (eser başına tek kapak)
+       is_cover = image.is_cover AND image.monument_id IS NOT DISTINCT FROM EXCLUDED.monument_id
+                  AND EXCLUDED.review_status = 'published',
        monument_id = EXCLUDED.monument_id, file = EXCLUDED.file, width = EXCLUDED.width, height = EXCLUDED.height,
        pdf_page = EXCLUDED.pdf_page, printed_page = EXCLUDED.printed_page, section_title = EXCLUDED.section_title,
        match_method = EXCLUDED.match_method, sort = EXCLUDED.sort, alt_tr = EXCLUDED.alt_tr, alt_en = EXCLUDED.alt_en,

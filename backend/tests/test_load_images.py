@@ -57,6 +57,17 @@ class LoadImagesTest(unittest.TestCase):
         self.assertFalse(self.img('k2')['is_cover'])
         self.assertEqual(self.db.query("SELECT count(*) AS n FROM image WHERE sha1 LIKE 'k%%'")[0]['n'], 2)
 
+    def test_reassigned_cover_does_not_collide(self):
+        """Eşleştirme kuralı değişip kapak fotoğrafı başka (kapağı olan) esere taşınınca yükleme durmamalı."""
+        self.load([row('k1', 'konya-meram-ornek-camii'), row('b1', 'bursa-yildirim-ornek-turbesi', book='bursa-1')])
+        self.assertTrue(self.img('k1')['is_cover'] and self.img('b1')['is_cover'])
+        self.load([row('k1', 'bursa-yildirim-ornek-turbesi', sort=2), row('b1', 'bursa-yildirim-ornek-turbesi', book='bursa-1')])
+        self.assertEqual((self.img('k1')['slug'], self.img('k1')['is_cover']), ('bursa-yildirim-ornek-turbesi', False))
+        self.assertTrue(self.img('b1')['is_cover'])
+        # eski eser kapaksız kalmaz mı? yayımlanmış fotoğrafı kalmadığı için kalır; kapak yalnızca yayımlanmış fotoğraftan seçilir
+        self.assertEqual(self.db.query("""SELECT count(*) AS n FROM image i JOIN monument m ON m.id = i.monument_id
+                                          WHERE m.slug = 'konya-meram-ornek-camii' AND i.is_cover""")[0]['n'], 0)
+
     def migrate(self):
         out = io.StringIO()
         with mock.patch.object(sys, 'argv', ['migrate.py', '--dsn', DSN, '--apply']), contextlib.redirect_stdout(out):
