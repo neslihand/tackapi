@@ -524,6 +524,7 @@ Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablos
 | DELETE | `/api/admin/images/{id}` | Yüklenen fotoğraf dosyasıyla silinir; kitap fotoğrafı `rejected` olur |
 | POST | `/api/admin/cities` | Yeni şehir |
 | GET | `/api/admin/preview/{slug}?lang&drafts` | Ziyaretçinin göreceği liste kartı (`item`) ve eser sayfası (`detail`), taslak eserde de; yayın öncesi kontrol listesi (`checks`). `drafts=true` onay bekleyen fotoğrafları da ekler |
+| PATCH | `/api/admin/notes/{id}` | Kalite notunun durumu: `open`, `confirmed`, `resolved` (çözüldü), `wontfix` (önemsiz) |
 | GET | `/api/admin/books` | Kaynak kitaplar ve fotoğraf sayıları |
 | GET | `/api/admin/periods` | Dönemler (düzenleme formu için) |
 | GET | `/api/admin/log?target` | Denetim kaydı |

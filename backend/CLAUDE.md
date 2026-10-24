@@ -90,6 +90,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
    yayından kaldırılır. Panelden eklenen eserler `draft` başlar ve kaynağı `source_note` alanında yazılır.
 8. **Kitap fotoğrafı silinmez, `rejected` olur.** Panelde dokunulan fotoğraf `edited` işaretlenir ve `load_images.py` onu
    bir daha değiştirmez.
+9. **Editör notları ziyaretçiye gösterilmez.** `editorial_note` satırları (bölümleme "P5, P6 başka esere ait", çelişki,
+   OCR) iç kalite notlarıdır: sohbet asistanına uyarı olarak gider (`rag.facts`), yöneticiler panelde görür ve
+   `resolved`/`wontfix` işaretler (bu durumdakiler asistana gitmez). `api.monument_detail` notları herkese açık
+   veriden çıkarır. Çıkarım 101 eserde bölümleme, 66 eserde çelişki notu üretti.
 
 ## Tuzaklar (daha önce yaşandı)
 - ⚠️ **`load_db.py` tüm tabloları TRUNCATE eder.** Embedding'ler ve çıkarımlar silinir. İlk kurulumdan sonra çalıştırma.
