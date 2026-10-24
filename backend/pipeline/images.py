@@ -132,11 +132,13 @@ def find_titles(doc, pps, mons):
                 j += 1
         for y0, half, t in found:
             printed = pps[i][0] if half == 'L' else pps[i][1]
-            cands = by_title[t]
-            inside = [m for m in cands if printed is not None and m['pages'][0] - 2 <= printed <= m['pages'][-1] + 2]
+            # Ad, eserin metinden çıkarılan sayfa aralığına yakın değilse başlık değildir: içindekiler listesi ya da
+            # metin içinde anılması. (Aralıklar bazı eserlerde birkaç sayfa kayık olduğu için pay bırakılır.)
+            near = [m for m in by_title[t] if printed is not None and m['pages'][0] - 4 <= printed <= m['pages'][-1] + 6]
+            if not near:
+                continue
             # yinelenen kayıtlarda (ör. hatalı kısa 'Ulucami' parçası) sayfayı kapsayan en uzun kayıt asıl kayıttır
-            m = (max(inside, key=lambda m: m['pages'][-1] - m['pages'][0]) if inside
-                 else min(cands, key=lambda m: abs(m['pages'][0] - (printed or 0))))
+            m = max(near, key=lambda m: m['pages'][-1] - m['pages'][0])
             if all(x[1] is not m for x in out[(i, half)]):
                 out[(i, half)].append((y0, m))
     return out
@@ -163,10 +165,15 @@ def resolve(i, half, bbox, pps, titles, state, mons, secs):
         else:  # aynı yarımda iki başlık: fotoğrafın hemen altındaki başlık (fotoğraf eseri açar)
             below = [t for t in here if t[0] >= bbox[1]]
             m, method, review = (min(below, key=lambda t: t[0]) if below else max(here, key=lambda t: t[0]))[1], 'baslik_coklu', True
-    elif state.get('current'):
-        m, method, review = state['current'], 'onceki_baslik', False
     else:
-        m = None
+        m, method, review = state.get('current'), 'onceki_baslik', False
+        # Açılış fotoğrafı: sol sayfada başlık yok ama karşıdaki sağ sayfada yeni bir eser başlıyor ve bu sayfa
+        # önceki eserin metninin dışında kalıyorsa, fotoğraf yeni eseri açar (ör. Bursa Ulucami, PDF 19).
+        # Hazireler caminin hemen ardından gelen alt kayıtlardır; caminin son fotoğrafları (mihrap vb.) hazireye geçmesin.
+        right = [t for t in titles.get((i, 'R'), []) if t[1]['kind'] != 'graveyard']
+        past_current = m is None or (printed is not None and m['pages'][-1] + 1 < printed)
+        if half in ('L', 'both') and right and past_current:
+            m, method = min(right, key=lambda t: t[0])[1], 'acilis'
     if m is not None:
         # çapraz kontrol: metinden çıkarılan sayfa aralığından çok uzaksa kontrol iste
         if printed is not None and not (m['pages'][0] - 4 <= printed <= m['pages'][-1] + 6):
