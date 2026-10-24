@@ -46,7 +46,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   yinelenen kayıt (`qa_flags: duplicate_title`) nedeniyle taslakta; panelden onaylanmalı.
 - **Yönetim paneli:** `../admin` (ayrı React + Vite uygulaması, ön yüzle aynı teknoloji ve görsel dil; 5174 portu, `/api` ve
   `/media` için 8000'e vekil). Ön yüzle birleştirme, ön yüz geliştiricisi (Fatmanur) izin verince yapılacak; o zamana
-  kadar `../frontend` dosyalarına dokunma.
+  kadar `../frontend` dosyalarına dokunma. Panelde "Sitede nasıl görünür?" önizlemesi var (`/api/admin/preview/{slug}`);
+  `admin/src/public/` içindeki eser sayfası ve kart bileşenleri yalnızca API'ye bağlı, birleştirmede ön yüze taşınabilir.
+  Herkese açık liste kartı ve eser sayfası verisi `api.py`'de tek yerde üretilir (`ITEM_SELECT`/`list_item`,
+  `monument_detail`); önizleme ile site aynı veriyi gösterir, bu eşitlik testle korunur.
 - **API:** Herkese açık uçlar (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`, `/media`) yalnızca
   `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
   `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).

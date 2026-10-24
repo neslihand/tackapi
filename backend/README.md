@@ -523,6 +523,7 @@ Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablos
 | POST | `/api/admin/monuments/{slug}/images` | Fotoğraf yükleme (multipart: `file`, `alt_tr` zorunlu); JPEG/PNG/WebP, en çok 15 MB |
 | DELETE | `/api/admin/images/{id}` | Yüklenen fotoğraf dosyasıyla silinir; kitap fotoğrafı `rejected` olur |
 | POST | `/api/admin/cities` | Yeni şehir |
+| GET | `/api/admin/preview/{slug}?lang&drafts` | Ziyaretçinin göreceği liste kartı (`item`) ve eser sayfası (`detail`), taslak eserde de; yayın öncesi kontrol listesi (`checks`). `drafts=true` onay bekleyen fotoğrafları da ekler |
 | GET | `/api/admin/books` | Kaynak kitaplar ve fotoğraf sayıları |
 | GET | `/api/admin/periods` | Dönemler (düzenleme formu için) |
 | GET | `/api/admin/log?target` | Denetim kaydı |
