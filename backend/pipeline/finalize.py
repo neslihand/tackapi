@@ -115,6 +115,117 @@ def strip_title_from_para(paras, title):
     return paras
 
 
+CAT_PREFIX = re.compile(r'^([^/]{3,45}) / ((?:[A-Za-z]+ ?){1,4})\s+(?=[A-ZÇĞİÖŞÜ])')
+TYPE_END = (r'(?:Camii|Mescidi|Türbesi|Hanı|Hamamı|Medresesi|Çeşmesi|Kümbeti|Zaviyesi|Tekkesi|Haziresi|Köprüsü|'
+            r'Bedesteni|Kilisesi|Konağı|Evi|Surları|Şadırvanı)')
+
+
+def frag_text(m):
+    return ' '.join(m['paras_tr'])
+
+
+def is_fragment(m):
+    """Kısa, tek paragraflı kayıt: sayfa düzeninden doğan kırıntı (adres satırı, İngilizce satır parçası)."""
+    return not m.get('synthetic') and len(m['paras_tr']) <= 1 and len(frag_text(m)) < 160
+
+
+def join_records(a, b):
+    """b'nin paragraflarını a'nın sonuna ekle (a kalır)."""
+    for k in ('paras_tr', 'ppages_tr', 'paras_en', 'ppages_en'):
+        a[k] = (a.get(k) or []) + (b.get(k) or [])
+    pg = [p for x in (a, b) for p in (x.get('pages') or [])]
+    a['pages'] = [min(pg), max(pg)] if pg else a.get('pages')
+    a.setdefault('merged_from', []).append(b.get('heading_line'))
+
+
+def retitle_from_first_line(m, city):
+    """İlk satırı başka bir eserin adıyla başlayan kayıt o eserdir: 'Su Yapıları / Water Structures Gölyazı Hamamı Yapı, ...'
+    ya da 'Babadağ Camii Yıldırım, Yeni Mahalle, ...'. Başlığı ilk satırdan alır; aldıysa True."""
+    p0 = (m['paras_tr'] or [''])[0]
+    mm = CAT_PREFIX.match(p0)
+    rest = p0[mm.end():] if mm else p0
+    t = re.match(rf'^((?:\S+\s+){{0,5}}?{TYPE_END})\s+(?=[A-ZÇĞİÖŞÜ])', rest)
+    if not t or norm_title(t.group(1)) in norm_title(m['title_tr']):
+        return False
+    if not mm and not is_opener(rest[t.end():], 'tr', city):
+        return False
+    m['title_tr'], m['title_source'] = t.group(1), 'first_line'
+    m['paras_tr'] = [rest[t.end():]] + m['paras_tr'][1:]
+    m['kind'] = kind_of(m['title_tr'])
+    return True
+
+
+def rename_part(prev, m, city, stats):
+    """Aynı adlı ikinci kayıt ayrı bir yapıysa adını düzelt: hazire ya da ilk satırındaki eser adı. Düzelttiyse True."""
+    head = ascii_fold((m['paras_tr'] or [''])[0][:160])
+    if re.search(r'haziresi|ve hazire', ascii_fold(m['title_tr'])) and re.search(r'\bhazire\b', head) \
+            and not re.search(r'\bhazire\b', ascii_fold((prev['paras_tr'] or [''])[0][:160])):
+        base = re.sub(r'(\s*,\s*[^,]+?)?\s+ve\s+Haziresi$|\s+Haziresi$', '', m['title_tr'])
+        m['title_tr'], m['title_source'], m['kind'] = base + ' Haziresi', 'graveyard_part', 'graveyard'
+        stats['graveyard_part'] += 1
+        return True
+    if retitle_from_first_line(m, city):
+        stats['retitled'] += 1
+        return True
+    return False
+
+
+def same_title(a, b):
+    ta, tb = norm_title(a['title_tr']), norm_title(b['title_tr'])
+    if ta == tb:
+        return True
+    # parantezi kapanmamış (yarım kalmış) başlık, tam hâlinin başıdır: 'Cami-i Atik (Eski Hacı Ali Mağribî Halil'
+    short, long_ = sorted((a['title_tr'], b['title_tr']), key=len)
+    return short.count('(') > short.count(')') and norm_title(long_).startswith(norm_title(short))
+
+
+def resolve_duplicates(mons, city):
+    """Aynı başlıklı kayıtları düzelt. Sayfa üst bilgisinin tekrarı ve dikey ilçe harfleri bir eseri ikiye böler ya da
+    birkaç satırlık 'kırıntı' kayıt üretir:
+      - kırıntı bir sonraki eserin adres satırıysa ona, değilse önceki esere katılır (önceki eserde zaten geçiyorsa atılır);
+      - ilk satırı başka bir eserin adıyla başlayan kayıt o adı alır ('Babadağ Camii ...', 'Su Yapıları / ... Gölyazı Hamamı');
+      - ikinci kayıt hazireyi anlatıyorsa '<cami> Haziresi' adını alır;
+      - aksi hâlde art arda gelen iki kayıt tek esere birleştirilir.
+    Araya başka kayıt girmişse birleştirme yapılmaz, yalnızca yeniden adlandırma kuralları uygulanır."""
+    out, stats = [], collections.Counter()
+    i = 0
+    while i < len(mons):
+        m = mons[i]
+        prev = out[-1] if out else None
+        if m.get('synthetic') or prev is None or not same_title(prev, m):
+            near = None if m.get('synthetic') else next((x for x in reversed(out[-3:-1]) if same_title(x, m)), None)
+            if near is not None and not is_fragment(m):
+                rename_part(near, m, city, stats)
+            out.append(m)
+            i += 1
+            continue
+        nxt = mons[i + 1] if i + 1 < len(mons) else None
+        if is_fragment(m):
+            t = frag_text(m)
+            if t and ascii_fold(t) in ascii_fold(' '.join(prev['paras_tr'] + prev['paras_en'])):
+                stats['fragment_dropped'] += 1
+            elif t and nxt is not None and is_opener(t, 'tr', city) and not is_opener((nxt['paras_tr'] or [''])[0], 'tr', city):
+                for k in ('paras_tr', 'ppages_tr'):
+                    nxt[k] = (m.get(k) or []) + (nxt.get(k) or [])
+                nxt.setdefault('merged_from', []).append(m.get('heading_line'))
+                stats['fragment_to_next'] += 1
+            else:
+                join_records(prev, m)
+                stats['fragment_to_prev'] += 1
+            i += 1
+            continue
+        if not is_fragment(prev) and retitle_from_first_line(prev, city):
+            stats['retitled'] += 1
+        elif not rename_part(prev, m, city, stats):
+            join_records(prev, m)
+            stats['merged'] += 1
+            i += 1
+            continue
+        out.append(m)
+        i += 1
+    return out, stats
+
+
 def run(book):
     cfg = BOOKS[book]
     city = cfg['city']
@@ -142,7 +253,7 @@ def run(book):
             if tm:
                 title_tr, m['title_source'] = tm['title'], 'toc'
             elif re.search(r'GRAVEYARD|GRAVE AREA', (m.get('title_en') or '').upper()) and mons:
-                base = re.sub(r'\s+(ve\s+)?Haziresi$', '', mons[-1]['title_tr'])
+                base = re.sub(r'(\s*,\s*[^,]+?)?\s+ve\s+Haziresi$|\s+Haziresi$', '', mons[-1]['title_tr'])
                 title_tr, m['title_source'] = base + ' Haziresi', 'inferred_from_previous'
             else:
                 # ilk paragrafın başında başlık olabilir: 'Koza Hanı Bursa ili, ...'
@@ -188,6 +299,7 @@ def run(book):
         if re.search(r'Camii ve Külliyesi|CAMİİ VE KÜLLİYESİ', title_tr):
             m['kind'] = 'complex'
         mons.append(m)
+    mons, dup_stats = resolve_duplicates(mons, city)
 
     # ---------------------------------------------------------------- hiyerarşi
     for m in mons:
@@ -298,7 +410,7 @@ def run(book):
         out_m.append({k: m.get(k) for k in ('slug', 'parent_slug', 'kind', 'title_tr', 'title_en', 'district', 'pages',
                                             'heading_line', 'lines_tr', 'paras_tr', 'ppages_tr', 'paras_en', 'ppages_en',
                                             'title_source', 'synthetic', 'note', 'parcel', 'qa_flags', 'en_usable',
-                                            'rule_tr', 'rule_en')} | {'toc_title': (m.get('toc') or {}).get('title'),
+                                            'rule_tr', 'rule_en', 'merged_from')} | {'toc_title': (m.get('toc') or {}).get('title'),
                                                                      'toc_page': (m.get('toc') or {}).get('page')})
     with open(os.path.join(DATA, book, 'monuments.json'), 'w', encoding='utf-8') as f:
         json.dump(out_m, f, ensure_ascii=False, indent=1)
@@ -311,7 +423,7 @@ def run(book):
                 toc_entries=len(tocs), toc_unmatched=[(t['title'], t['page']) for t in toc_missing],
                 body_not_in_toc=[m['title_tr'] for m in out_m if 'not_in_toc' in m['qa_flags']],
                 flags=dict(flags), kinds=dict(collections.Counter(m['kind'] for m in out_m)),
-                glyph_fixes=seg.get('glyph_fixes'), seg_stats=seg.get('stats'))
+                glyph_fixes=seg.get('glyph_fixes'), seg_stats=seg.get('stats'), duplicates=dict(dup_stats))
 
 
 if __name__ == '__main__':

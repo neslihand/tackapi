@@ -70,6 +70,25 @@ def part_map(book_cfg, n):
 # Başlık kümeleri
 # ----------------------------------------------------------------------------
 
+PAREN_PART = re.compile(r'^\([A-ZÇĞİÖŞÜÂÎÛ0-9]')
+
+
+def open_parens(s):
+    return s.count('(') - s.count(')')
+
+
+def is_paren_title_line(recs, x, lo):
+    """Sarılmış başlığın parantezle başlayan ara satırı: 'Hançerli Fatma Sultan / (Yıldırım-Yukarı / İmaret) Camii',
+    'Tahir Paşa / (Tursunoğlu / Dursun Fakih) / Camii'. Üstünde başlık benzeri bir satır olmalı."""
+    s = recs[x]['s'].strip()
+    return (recs[x]['k'] == 'text' and bool(PAREN_PART.match(s)) and len(s) <= 45 and not re.search(r'[.:;,]$', s)
+            and x - 1 >= lo and recs[x - 1]['k'] == 'text' and is_title_like(recs[x - 1]['s'].strip()))
+
+
+def has_slash_outside_parens(s):
+    return ' / ' in re.sub(r'\([^)]*\)?', '', s)
+
+
 def find_clusters(recs, lo, hi, city):
     """[lo,hi) satır indeksleri (0 tabanlı) içinde başlık kümelerini bul."""
     districts = {ascii_fold(d).replace(' ', ''): d for d in DISTRICTS[city]}
@@ -108,7 +127,8 @@ def find_clusters(recs, lo, hi, city):
         # ileri: küme hemen ardından gelen başlık benzeri satır (ör. Bursa III 'Ayasofya (Orhan) / Camii' ilçeden sonra)
         fwd = []
         k = j
-        while not stop_fwd and k < hi and len(fwd) < 2 and recs[k]['k'] == 'text' and is_title_like(recs[k]['s']) \
+        # parantezi kapanmamış başlık bir satır daha sürer (ör. 'Cami-i Atik (Eski Hacı / Ali Mağribî Halil Ağa / Camii)')
+        while not stop_fwd and k < hi and (len(fwd) < 2 or (len(fwd) < 3 and open_parens(' '.join(recs[f]['s'] for f in fwd)) > 0))                 and recs[k]['k'] == 'text' and (is_title_like(recs[k]['s']) or is_paren_title_line(recs, k, lo)) \
                 and k + 1 < hi and recs[k + 1]['k'] in ('caps', 'vletter', 'spaced', 'text'):
             # yalnızca ardından gövde metni geliyorsa ve satır kısa ise başlık say
             if len(recs[k]['s']) <= 40 and not recs[k]['s'].endswith('.'):
@@ -156,13 +176,24 @@ def find_clusters(recs, lo, hi, city):
         tr_caps = [c['s'] for c in caps if TR_KW.search(c['s'])]
         other_caps = [c['s'] for c in caps if c['s'] not in en_caps and c['s'] not in tr_caps]
         cat = [c['s'] for c in caps if CATEGORY.match(c['s'].strip())]
-        cat += [recs[x]['s'] for x in back + fwd if ' / ' in recs[x]['s'] or CATEGORY.match(tr_upper(recs[x]['s']).strip())]
+        cat += [recs[x]['s'] for x in back + fwd if has_slash_outside_parens(recs[x]['s']) or CATEGORY.match(tr_upper(recs[x]['s']).strip())]
         tl = [recs[x]['s'] for x in back + fwd if not AUTHOR.match(recs[x]['s'])]
-        tl = [t for t in tl if ' / ' not in t and not CATEGORY.match(tr_upper(t).strip())]
+        tl = [t for t in tl if not has_slash_outside_parens(t) and not CATEGORY.match(tr_upper(t).strip())]
         tr_text_title = ' '.join(tl)
+        # Yalnızca ad için: parantezli satırlarla sarılmış başlığın üst satırları ('Tahir Paşa / (Tursunoğlu / Dursun
+        # Fakih) / Camii'). Küme sınırı (start) değişmez; başlık sözcükleri metin hizalamasını etkilemesin diye ayrı tutulur.
+        ext, t = [], (back[0] if back else b)
+        while t - 1 >= lo and len(back) + len(ext) < 3 and recs[t - 1]['k'] == 'text'                 and (is_paren_title_line(recs, t - 1, lo) or ((ext or back) and is_title_like(recs[t - 1]['s'])))                 and not AUTHOR.match(recs[t - 1]['s']):
+            ext.insert(0, t - 1)
+            t -= 1
+        full = [recs[x]['s'] for x in ext + back + fwd if not AUTHOR.match(recs[x]['s'])]
+        full = [x for x in full if not has_slash_outside_parens(x) and not CATEGORY.match(tr_upper(x).strip())]
+        tr_title_full = re.sub(r'\s+', ' ', ' '.join(full)).strip() if ext else None
+        if tr_title_full and open_parens(tr_title_full) != 0:
+            tr_title_full = None
         clusters.append(dict(start=b, head_start=i, end=max(j, (fwd[-1] + 1) if fwd else j), district=district,
                              en_caps=en_caps, tr_caps=tr_caps, other_caps=other_caps, category=cat,
-                             tr_text_title=tr_text_title, pages=pages,
+                             tr_text_title=tr_text_title, tr_title_full=tr_title_full, pages=pages,
                              caps_lines=[c['s'] for c in caps]))
         i = max(j, (fwd[-1] + 1) if fwd else j)
     return clusters
@@ -198,7 +229,8 @@ def group_caps(lines):
             groups[-1] = groups[-1] + ' ' + s
             continue
         cur.append(s)
-        if TR_KW.search(s) or EN_KW.search(s) or s.endswith(')'):
+        # 'DEMİRTAŞ (TİMURTAŞ) CAMİİ VE / ŞADIRVANI': VE/AND ile biten satır başlığı kapatmaz
+        if (TR_KW.search(s) or EN_KW.search(s) or s.endswith(')')) and not re.search(r' (VE|AND)$', s):
             groups.append(' '.join(cur).replace('- ', '-'))
             cur = []
     if cur:
@@ -638,7 +670,8 @@ def run_book(book, recs, toc_entries=None):
         # metin ata: her dilde başlangıçlara göre sırala, bir sonrakine kadar al
         secs = []
         for e in entries:
-            sec = dict(kind='monument', title_tr=e['title_tr'], title_en=e['title_en'], district=e['district'],
+            full_title = next((c['tr_title_full'] for c in (e['tr'], e['en']) if c and c.get('tr_title_full')), None)
+            sec = dict(kind='monument', title_tr=full_title or e['title_tr'], title_en=e['title_en'], district=e['district'],
                        complex_ctx=e['complex_ctx'], heading_line=e['ref']['head_start'] + 1,
                        rule_tr=e['rule_tr'], rule_en=e['rule_en'])
             secs.append(sec)

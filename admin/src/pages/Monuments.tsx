@@ -36,7 +36,7 @@ export function Monuments({ params }: { params: URLSearchParams }) {
       <caption className="sr-only">Eser listesi</caption>
       <thead><tr><th scope="col">Eser</th><th scope="col">Tür</th><th scope="col">Şehir / ilçe</th><th scope="col">Durum</th><th scope="col">Fotoğraf</th><th scope="col">Son değişiklik</th><th scope="col"><span className="sr-only">Önizleme</span></th></tr></thead>
       <tbody>{list.data.items.map(m => <tr key={m.slug}>
-        <th scope="row"><Link to={`/eser/${encodeURIComponent(m.slug)}`}>{m.name_tr}</Link>{m.from_panel && <> <span className="admin-badge">panel</span></>}{m.qa_flags?.includes('duplicate_title') && <> <span className="admin-badge" title="Aynı adda başka bir kayıt var">yinelenen ad?</span></>}</th>
+        <th scope="row"><Link to={`/eser/${encodeURIComponent(m.slug)}`}>{m.name_tr}</Link>{m.from_panel && <> <span className="admin-badge">panel</span></>}{m.qa_flags?.includes('duplicate_title') && <> <span className="admin-badge" title="Aynı adda başka bir kayıt var">yinelenen ad?</span></>}{m.qa_flags?.includes('merged') && <> <span className="admin-badge" title="Bölümleme hatasıyla ayrılmış parça; metni, fotoğrafları ve sohbet parçaları asıl kayda taşındı">birleştirildi</span></>}</th>
         <td>{KIND_LABELS[m.kind]}</td><td>{m.city}{m.district ? ` / ${m.district}` : ''}</td><td><Status value={m.review_status} /></td>
         <td>{m.images}{m.images_pending ? <> · <Link className="text-link" to={`/eser/${encodeURIComponent(m.slug)}#fotograflar`}>{m.images_pending} bekliyor</Link></> : null}</td>
         <td>{formatDate(m.updated_at)}</td>

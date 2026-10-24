@@ -35,15 +35,16 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - Geliştirici Türkçe konuşuyor. Açıklamaları Türkçe ve sade yap. Düşük maliyet önemli bir öncelik.
 
 ## Mevcut durum (Ekim 2026)
-- **Eserler:** 753 eser ve 8 türetilmiş üst kayıt (külliye/hazire) yüklü.
+- **Eserler:** 753 eser ve 8 türetilmiş üst kayıt (külliye/hazire) yüklü; ad onarımından sonra 744'ü yayında, 9'u
+  birleştirilmiş taslak (`merged`).
 - **Çıkarım:** Gemini çıkarımı yapıldı ve `load_extractions.py` ile yüklendi. `monument_person` tablosunda yaklaşık 2.000 satır var.
 - **Embedding:** 3.248 parçanın yaklaşık 3.230'u gömüldü. Kalanlar kota nedeniyle eksik; `python embed_gemini.py` tamamlar.
   12 sözlük parçası `is_retrievable=false` olduğu için kasıtlı olarak boştur.
 - **RAG değerlendirmesi** (ekonomik mod, gerçek API, 15 soru): `route_ok 12/12`, `mention_ok 6/6`, `refuse_ok 1/1`,
   `grounded 14/15`. Bu ölçüm verify() sıkılaştırılmadan ve q04 talimatı değişmeden önceydi; yeniden ölçülmedi.
 - **Fotoğraflar:** `images.py` 6 kitap PDF'inden 1.547 fotoğraf çıkardı (556/753 eser fotoğraflı, 118'i kontrol bekliyor).
-  WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin fotoğrafları
-  yinelenen kayıt (`qa_flags: duplicate_title`) nedeniyle taslakta; panelden onaylanmalı.
+  WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin 23
+  fotoğrafı yinelenen kayıt nedeniyle taslakta; panelden onaylanmalı.
 - **Yönetim paneli:** `../admin` (ayrı React + Vite uygulaması, ön yüzle aynı teknoloji ve görsel dil; 5174 portu, `/api` ve
   `/media` için 8000'e vekil). Ön yüzle birleştirme, ön yüz geliştiricisi (Fatmanur) izin verince yapılacak; o zamana
   kadar `../frontend` dosyalarına dokunma. Panelde "Sitede nasıl görünür?" önizlemesi var (`/api/admin/preview/{slug}`);
@@ -54,11 +55,17 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
   `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).
 - **Bölümleme düzeltmeleri:** `text_fixes.py --report` 59 eserde 60 güvenli otomatik karar ve 88 eserde 367 model
-  işareti (10'unda taşıma önerisi) buldu. Gerçek veritabanında henüz uygulanmadı: önce `migrate.py --apply` (004),
-  sonra `text_fixes.py --apply` (yaklaşık 58 yeni parça için Gemini embedding). Model işaretleri panelde karar bekler.
+  işareti (10'unda taşıma önerisi) buldu. **Geliştirici şimdilik uygulanmasını istemiyor (24 Ekim 2026):
+  `text_fixes.py --apply` çalıştırma, önerme.** `para_fix` tablosu yoksa ya da boşsa site kitap metnini aynen gösterir,
+  panelin bölümleme kuyruğu boş kalır (`textfix_db.enabled`).
+- **Eser adları (24 Ekim 2026):** Sarılmış başlıklar yarım okunuyordu ('İmaret) Camii', yalnızca 'Camii') ve sayfa
+  düzeni bazı eserleri ikiye bölüyordu ('yinelenen ad?'). `segment.py`/`finalize.py` düzeltildi; mevcut veritabanı
+  `fix_titles.py --report/--apply` ile onarıldı; gerçek veritabanında 24 Ekim 2026'da uygulandı (14 ad, 7 birleştirme,
+  2 kırıntı; yayındaki eser 753 → 744, `duplicate_title` 27 → 7). Mevcut kitaplar için segment/finalize çıktısını
+  `data/`'ya yeniden yazma (slug'lar değişir).
 - **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
   `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
-- **Testler:** `python -m unittest discover -s tests` (63 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (73 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -121,7 +128,7 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
 2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
    ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
 3. Harita ve "Yakınımdakiler" için eser koordinatları (adres ve mahalle bilgisinden toplu coğrafi kodlama ve kontrol).
-4. Veri temizliği: yinelenen Bursa "Ulucami" kaydı; Hatay'da başlığı İngilizceyle karışmış kayıtlar ("Workplace and
+4. Veri temizliği: Hz. Üftâde Türbesi metni (Üç Kozlar kaydına karışmış); Hatay'da başlığı İngilizceyle karışmış kayıtlar ("Workplace and
    Others"); Konya II'deki Karapınar ve Ilgın başlıkları; `en_misaligned` kayıtları.
 5. Gerçek API ile `eval_rag.py` ölçümü (verify ve q04 değişiklikleri sonrası).
 6. Çocuk ve hikâye anlatımlarını demo eserleri için önceden üretip önbelleğe almak (maliyet ve sahnede güvenilirlik).

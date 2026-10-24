@@ -215,6 +215,9 @@ Kitaplarda eser başlıkları tutarlı biçimde işaretlenmemiştir. Bölümleme
 3. **Konum paragrafı çapaları:** "… ilçesi … mahallesinde yer alan …" kalıbındaki açılış cümleleri.
 4. **Dinamik programlama ile hizalama:** Başlıklar ve çapalar en tutarlı sırayla eşleştirilir. İçindekilerdeki sayfa numaraları ipucu olarak kullanılır.
 5. **Sınır onarımı:** Bir eserin açılış paragrafı öncekine taşmışsa geri alınır.
+6. **Sarılmış başlıklar:** Parantezli ara satırlar başlığa katılır ('Hançerli Fatma Sultan / (Yıldırım-Yukarı / İmaret)
+   Camii'); 'VE' ile biten büyük harfli satır alttakiyle birleşir ('… CAMİİ VE / ŞADIRVANI'). Tamamlanan ad yalnızca
+   eser adı olarak kullanılır; metin sınırlarını belirleyen hizalama değişmez.
 
 Kitaba özgü farklar (başlığın metinden önce mi sonra mı geldiği, içindekilerin yeri, Hatay'daki başlık modu) yalnızca `books.py` içinde tanımlıdır.
 
@@ -228,6 +231,27 @@ Kitaba özgü farklar (başlığın metinden önce mi sonra mı geldiği, içind
 - İlçe ve mahalle bilgisi çıkarılır.
 - **Hiyerarşi:** Külliye → cami → hazire. Hazire, caminin alt eseridir. Mezar taşları hazireye sanat eseri olarak bağlanır. Metni olmayan külliyeler için türetilmiş üst kayıt (`is_synthetic`) oluşturulur.
 - **Kalite bayrakları (`qa_flags`):** Örneğin `duplicate_title`, `en_misaligned`, `toc_mismatch`. Bayraklı kayıtlar `data/review/eserler.csv` dosyasında riske göre sıralanır.
+- **Yinelenen kayıtlar (`resolve_duplicates`):** Sayfa üst bilgisinin tekrarı ve dikey ilçe harfleri bir eseri ikiye
+  böler ya da birkaç satırlık kırıntı kayıt üretir. Kırıntı, sonraki eserin adres satırıysa ona, değilse öncekine katılır
+  (öncekinde zaten geçiyorsa atılır). İlk satırı başka bir eser adıyla başlayan kayıt o adı alır ('Babadağ Camii …'),
+  hazireyi anlatan ikinci kayıt '<cami> Haziresi' olur, kalan art arda iki parça birleştirilir.
+
+### 5.3.1 Mevcut veritabanında ad onarımı: `fix_titles.py`
+Yüklü veritabanını silmeden ve Gemini çağırmadan düzeltir. Düzeltilmiş bölümlemeyi geçici klasörde üretir (`data/`
+klasörüne yazmaz), veritabanının yüklendiği `data/<kitap>/monuments.json` ile karşılaştırır:
+```powershell
+python fix_titles.py --report   # data/review/ad_duzeltme.csv
+python fix_titles.py --apply    # tek işlemde uygular; hata olursa hiçbir şey değişmez. Tekrar çalıştırılabilir.
+```
+- `ad`: yalnızca adı düzelir; slug değişmez. Ad çıkarımda ya da panelde zaten düzeltilmişse dokunulmaz.
+- `birlestir`: kitap metni kitaptaki sırasıyla asıl kayda eklenir; sohbet parçaları (embedding'leriyle), kanıtlar,
+  notlar, fotoğraflar ve `para_fix` kararları (yeni numaralarıyla) taşınır. Boşalan kayıt silinmez, taslağa alınır
+  (`merged` bayrağı, panelde "birleştirildi").
+- `kaldir`: sayfa düzeni artığı; taslağa alınır ve sohbet dizininden çıkar.
+- Her işlem `admin_log` tablosuna `fix_titles` adıyla yazılır.
+
+⚠️ Mevcut kitaplar için `segment.py`/`finalize.py` çıktısını `data/` klasörüne yeniden yazmayın: düzelen adlar yeni
+slug'lar üretir ve veritabanındaki kayıtlarla (fotoğraf eşleştirmesi, çıkarımlar) uyuşmaz.
 
 ### 5.4 Parçalama: `chunk.py`
 - Paragraf sınırlarına saygı gösteren anlamsal parçalama: hedef 1.400, en çok 2.400, en az 500 karakter.
@@ -652,6 +676,8 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 
 **Bilinen sorunlar**
 - Konya II'deki Karapınar ve Ilgın külliyelerinde başlıklar karışık (`duplicate_title`). Elle kontrol gerekiyor.
+- Bursa II'de Hz. Üftâde Türbesi'nin başlığı bulunamadığı için metninin çoğu önceki kayda (Üç Kozlar Türbe ve Haziresi)
+  karışmış; ayrı bir "Hz. Üftâde Tekkesi" kırıntı kaydı var. Paragraf düzeyinde (`para_fix`) düzeltilmeli.
 - `en_misaligned` bayraklı kayıtlarda İngilizce arayüzde kitap metni yerine özet gösterilir.
 - Birkaç parçanın embedding'i kota nedeniyle eksik kalmış olabilir; `embed_gemini.py` yeniden çalıştırılınca tamamlanır.
 - Bazı betikler dosyaları sistem kodlamasıyla yazıyor. `eval_rag.py` UTF-8'e geçirildi; diğerleri ileride topluca geçirilecek.
