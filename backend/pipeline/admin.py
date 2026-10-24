@@ -365,6 +365,10 @@ def build_router(db, media_dir, save_webp):
         for path in (os.path.join(media_dir, rel), os.path.join(media_dir, 'thumbs', rel)):
             if os.path.isfile(path):
                 os.remove(path)
+            try:  # eserin yükleme klasörü boş kaldıysa onu da kaldır
+                os.rmdir(os.path.dirname(path))
+            except OSError:
+                pass
 
     @r.get('/images')
     def list_images(status: Literal['draft', 'reviewed', 'published', 'rejected'] | None = None,
@@ -514,6 +518,23 @@ def build_router(db, media_dir, save_webp):
                    dict(s=body.slug, t=body.name_tr, e=body.name_en, la=body.lat, lo=body.lon))
         log(user, 'city.create', body.slug, body.model_dump())
         return body.model_dump()
+
+    @r.get('/books')
+    def books(user: str = Depends(admin_user)):
+        """Kaynak kitaplar ve fotoğraf sayıları (kuyruk filtresi için)."""
+        return db.query("""SELECT b.slug, b.title, c.slug AS city,
+                                  count(i.*) FILTER (WHERE i.review_status = 'draft') AS images_draft,
+                                  count(i.*) AS images
+                           FROM source_book b LEFT JOIN city c ON c.id = b.city_id LEFT JOIN image i ON i.book_id = b.id
+                           GROUP BY b.id, c.slug ORDER BY b.slug""")
+
+    @r.get('/periods')
+    def periods(user: str = Depends(admin_user)):
+        """Düzenleme formundaki dönem seçimi için: genel dönemler ve şehre özgü dönemler, yıla göre sıralı."""
+        return db.query("""SELECT p.slug, p.name_tr, pp.slug AS parent, c.slug AS city, lower(p.years) AS start,
+                                  upper(p.years) - 1 AS "end"
+                           FROM period p LEFT JOIN period pp ON pp.id = p.parent_id LEFT JOIN city c ON c.id = p.city_id
+                           ORDER BY lower(p.years), p.slug""")
 
     @r.get('/log')
     def admin_log(target: str | None = None, limit: int = Query(100, ge=1, le=500), user: str = Depends(admin_user)):

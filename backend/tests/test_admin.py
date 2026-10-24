@@ -229,7 +229,20 @@ class AdminTest(unittest.TestCase):
         # yüklenen fotoğraf silinince dosyası da gider
         self.assertEqual(self.c.delete(f"/api/admin/images/{d['id']}", headers=NES).status_code, 204)
         self.assertFalse(os.path.exists(os.path.join(MEDIA, d['file'])))
+        self.assertFalse(os.path.exists(os.path.dirname(os.path.join(MEDIA, d['file']))))  # boş klasör de gider
         self.assertEqual(self.q('SELECT count(*) AS n FROM image WHERE id = %(i)s', i=d['id'])[0]['n'], 0)
+
+    def test_books(self):
+        rows = {b['slug']: b for b in self.c.get('/api/admin/books', headers=NES).json()}
+        self.assertEqual(rows['bursa-1']['title'], 'Bursa Vakıf Eserleri I')
+        self.assertEqual(rows['bursa-1']['images'], self.q(
+            "SELECT count(*) AS n FROM image i JOIN source_book b ON b.id = i.book_id WHERE b.slug = 'bursa-1'")[0]['n'])
+
+    def test_periods(self):
+        rows = self.c.get('/api/admin/periods', headers=NES).json()
+        early = next(p for p in rows if p['slug'] == 'erken-osmanli')
+        self.assertEqual((early['parent'], early['start'], early['end']), ('osmanli', 1299, 1452))
+        self.assertEqual(self.c.get('/api/admin/periods').status_code, 401)
 
     def test_log_endpoint(self):
         self.c.patch(f'/api/admin/monuments/{CAMI}', headers=NES, json={'summary_tr': 'Günlük testi özeti.'})
