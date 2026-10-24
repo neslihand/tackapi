@@ -265,10 +265,14 @@ Fotoğraflar yalnızca envanter kitaplarının PDF'lerinden alınır (`books.py`
 
 **Fotoğraf hangi esere ait?** Okuma sırasıyla (sol yarım, sonra sağ yarım) ilerlenir:
 1. Eser başlıkları PDF'te bulunur. Başlık birden çok satıra ya da bloğa bölünmüş olabilir (`SOKULLU MEHMET PAŞA` +
-   `CAMİİ VE KÜLLİYESİ`). Aynı adlı kayıtlar varsa sayfayı kapsayan en uzun kayıt seçilir.
-2. Kitapta her eser büyük bir fotoğrafla açılır ve başlık fotoğrafın altındadır. Bu yüzden başlığın bulunduğu yarım
-   sayfadaki fotoğraflar yeni esere, başlıksız sayfalardaki fotoğraflar en son başlayan esere bağlanır
-   (yöntem: `baslik`, `onceki_baslik`).
+   `CAMİİ VE KÜLLİYESİ`). Bir eser adı ancak o eserin metinden çıkarılan sayfa aralığına yakın bir sayfada geçiyorsa
+   başlık sayılır. Bu kural içindekiler listesini ve metin içindeki anmaları dışarıda bırakır. Aynı adlı kayıtlar
+   varsa sayfayı kapsayan en uzun kayıt seçilir.
+2. Kitapta eserler büyük bir fotoğrafla açılır. Başlığın bulunduğu yarım sayfadaki fotoğraflar yeni esere,
+   başlıksız sayfalardaki fotoğraflar en son başlayan esere bağlanır (yöntem: `baslik`, `onceki_baslik`).
+   **Açılış fotoğrafı** (`acilis`): sol sayfada başlık yok ama karşıdaki sağ sayfada yeni bir eser başlıyorsa ve
+   bu sayfa önceki eserin metninin dışında kalıyorsa, fotoğraf yeni eseri açar (ör. Bursa Ulucami). Hazireler bu
+   kurala girmez, çünkü caminin hemen ardından gelirler ve caminin son fotoğrafları (mihrap vb.) hazireye geçmemelidir.
 3. Bölüm ayracından sonra ("Külliyeler / COMPLEXES") yeni bir başlık gelene kadar fotoğraflar hiçbir esere bağlanmaz.
 4. İlk eserden önceki fotoğraflar (kitabın tematik girişi, açılış fotoğrafları) `giris`; şehir tarihi gibi bir bölüme
    düşenler `bolum`; hiçbir yere düşmeyenler `baglanmamis` olarak işaretlenir. Bunlar hiçbir eserin galerisinde
@@ -281,10 +285,14 @@ ya da sayfanın %3'ünden azını kaplayan görseller, 4'ten fazla sayfada tekra
 ve aynı görselin kopyaları. Her eserin ilk yayımlanmış fotoğrafı kapak olur. Alternatif metin şablonla yazılır:
 "Muradiye Camii – Bursa Vakıf Eserleri I, s. 77".
 
-Ekim 2026 sonucu: 6 kitaptan 1.547 fotoğraf; %90'ı kesin eşleşme; 753 eserin 552'si en az bir fotoğrafa sahip.
-Kontrol listesi: `data/review/gorseller.csv` (kontrol gerektirenler en üstte).
+Ekim 2026 sonucu: 6 kitaptan 1.547 fotoğraf; 118'i (%8) kontrol bekliyor; 753 eserin 556'sı en az bir fotoğrafa
+sahip. Kesin eşleşmelerden rastgele seçilen örneklerde fotoğrafların eserlerle tutarlı olduğu gözle kontrol edildi.
+Kontrol listesi: `data/review/gorseller.csv` (kontrol gerektirenler en üstte). Kontrol, yönetim panelinin
+(`../admin`) "Fotoğraflar" sayfasından yapılır.
 
 `load_images.py` sha1 ile eşler ve tekrar çalıştırılabilir. Yönetim panelinde değiştirilmiş (`edited`) satırlara dokunmaz.
+Kurallar değişip bir fotoğraf başka esere taşınırsa ya da yayından düşerse kapak işareti kalkar, kapağı kalmayan esere
+yeni kapak seçilir.
 WebP dosyaları `media/` altına yazılır (1.600 px ve 480 px'lik küçük sürüm) ve git'e girmez.
 
 ---
@@ -515,7 +523,11 @@ Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablos
 | POST | `/api/admin/monuments/{slug}/images` | Fotoğraf yükleme (multipart: `file`, `alt_tr` zorunlu); JPEG/PNG/WebP, en çok 15 MB |
 | DELETE | `/api/admin/images/{id}` | Yüklenen fotoğraf dosyasıyla silinir; kitap fotoğrafı `rejected` olur |
 | POST | `/api/admin/cities` | Yeni şehir |
+| GET | `/api/admin/books` | Kaynak kitaplar ve fotoğraf sayıları |
+| GET | `/api/admin/periods` | Dönemler (düzenleme formu için) |
 | GET | `/api/admin/log?target` | Denetim kaydı |
+
+Bu uçları kullanan arayüz `../admin` klasöründeki yönetim panelidir (ayrı bir React + Vite uygulaması; bkz. `admin/README.md`).
 
 Kurallar:
 - **Kitap metni panelden değiştirilemez** (`409`), çünkü doğruluk kaynağıdır. Kitap eserlerinin künye alanları

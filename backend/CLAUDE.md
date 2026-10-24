@@ -41,15 +41,18 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   12 sözlük parçası `is_retrievable=false` olduğu için kasıtlı olarak boştur.
 - **RAG değerlendirmesi** (ekonomik mod, gerçek API, 15 soru): `route_ok 12/12`, `mention_ok 6/6`, `refuse_ok 1/1`,
   `grounded 14/15`. Bu ölçüm verify() sıkılaştırılmadan ve q04 talimatı değişmeden önceydi; yeniden ölçülmedi.
-- **Fotoğraflar:** `images.py` 6 kitap PDF'inden 1.547 fotoğraf çıkardı (552/753 eser fotoğraflı, %90 kesin eşleşme).
-  WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin 22 fotoğrafı
-  yinelenen kayıt nedeniyle taslakta.
+- **Fotoğraflar:** `images.py` 6 kitap PDF'inden 1.547 fotoğraf çıkardı (556/753 eser fotoğraflı, 118'i kontrol bekliyor).
+  WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin fotoğrafları
+  yinelenen kayıt (`qa_flags: duplicate_title`) nedeniyle taslakta; panelden onaylanmalı.
+- **Yönetim paneli:** `../admin` (ayrı React + Vite uygulaması, ön yüzle aynı teknoloji ve görsel dil; 5174 portu, `/api` ve
+  `/media` için 8000'e vekil). Ön yüzle birleştirme, ön yüz geliştiricisi (Fatmanur) izin verince yapılacak; o zamana
+  kadar `../frontend` dosyalarına dokunma.
 - **API:** Herkese açık uçlar (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`, `/media`) yalnızca
   `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
   `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).
 - **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
   `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
-- **Testler:** `python -m unittest discover -s tests` (51 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (54 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -98,8 +101,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 
 ## Bekleyen işler (öncelik sırasıyla öneri)
 Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında canlı demo olarak yapılacak.
-1. **Ön yüzü arka uca bağlamak** (`../frontend`, React + Vite). Statik 6 örnek eser kaldırılacak; liste, eser sayfası,
-   galeri, sohbet (3 anlatım modu), harita ve yönetim sayfası API'den beslenecek.
+1. **Ön yüzü arka uca bağlamak** (`../frontend`, React + Vite) — **ön yüz geliştiricisinin iznini bekliyor.** Statik 6
+   örnek eser kaldırılacak; liste, eser sayfası, galeri, sohbet (3 anlatım modu) ve harita API'den beslenecek; ön yüzdeki
+   `/yonetim` bağlantısı `../admin` paneline yönlendirilecek.
 2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
    ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
 3. Harita ve "Yakınımdakiler" için eser koordinatları (adres ve mahalle bilgisinden toplu coğrafi kodlama ve kontrol).
@@ -112,4 +116,5 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
 - Değişiklikten sonra mümkünse önce `VAKIF_FAKE_LLM=1` ile, sonra `python eval_rag.py` ile doğrula. Değerlendirme skorları
   ve `ort_prompt_token` geriye gitmemeli.
 - Veritabanını silen ya da toplu değiştiren bir komut çalıştırmadan önce geliştiriciye sor.
-- Commit mesajları Conventional Commits biçiminde ve Türkçe olsun (`feat(api): …`, `fix(rag): …`).
+- Commit mesajları Conventional Commits biçiminde ve **İngilizce** olsun (`feat(api): …`, `fix(rag): …`). 24 Ekim 2026'dan
+  önceki commit'ler Türkçedir; geliştirici bundan sonrası için İngilizce istedi. Açıklamalar ve belgeler Türkçe kalır.
