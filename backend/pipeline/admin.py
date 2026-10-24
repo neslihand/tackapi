@@ -286,7 +286,8 @@ def build_router(db, media_dir, save_webp):
             images=db.query('SELECT review_status, count(*) AS n FROM image GROUP BY 1 ORDER BY 1'),
             images_unassigned=db.query("""SELECT count(*) AS n FROM image
                                           WHERE monument_id IS NULL AND review_status <> 'rejected'""")[0]['n'],
-            segmentation_pending=db.query("SELECT count(*) AS n FROM para_fix WHERE decision = 'pending'")[0]['n'],
+            segmentation_pending=db.query("SELECT count(*) AS n FROM para_fix WHERE decision = 'pending'")[0]['n']
+                                 if textfix_db.enabled(db) else 0,
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'])
@@ -547,7 +548,7 @@ def build_router(db, media_dir, save_webp):
     def paragraphs_of(monument_id):
         """Kitap metninin paragrafları ve her biri için karar (yoksa decision=None)."""
         fixes = textfix_db.fixes_for(db, monument_id)
-        incoming = db.query("""SELECT f.para_no, m.slug, m.name_tr FROM para_fix f JOIN monument m ON m.id = f.monument_id
+        incoming = [] if not textfix_db.enabled(db) else db.query("""SELECT f.para_no, m.slug, m.name_tr FROM para_fix f JOIN monument m ON m.id = f.monument_id
                                WHERE f.decision = 'move' AND f.target_monument_id = %(m)s""", dict(m=monument_id))
         out = [dict(no=p['no'], text=p['text'], pages=p['pages'],
                     **{k: (fixes.get(p['no']) or {}).get(k) for k in ('id', 'decision', 'source', 'rule', 'reason', 'target_slug',
@@ -560,6 +561,8 @@ def build_router(db, media_dir, save_webp):
                            source: Literal['auto', 'model', 'admin'] | None = None, book: str | None = None,
                            page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), user: str = Depends(admin_user)):
         """Bölümleme kontrol kuyruğu: paragraf, önceki ve sonraki paragrafla birlikte."""
+        if not textfix_db.enabled(db):
+            return dict(total=0, page=page, page_size=page_size, items=[], counts=[])
         where = """WHERE (%(d)s::text = 'all' OR (%(d)s::text = 'decided' AND f.decided_by IS NOT NULL) OR f.decision = %(d)s::text)
                      AND (%(src)s::text IS NULL OR f.source = %(src)s::text)
                      AND (%(bk)s::text IS NULL OR b.slug = %(bk)s::text)"""
@@ -590,6 +593,8 @@ def build_router(db, media_dir, save_webp):
         return dict(total=total, page=page, page_size=page_size, items=rows, counts=counts)
 
     def apply_decision(monument_id, slug, para_no, body, user):
+        if not textfix_db.enabled(db):
+            raise HTTPException(503, 'Bölümleme düzeltmeleri için önce veritabanı göçü gerekli: python migrate.py --apply')
         target_id = None
         if body.decision == 'move':
             if not body.target:
@@ -607,6 +612,8 @@ def build_router(db, media_dir, save_webp):
 
     @r.post('/segmentation/{fix_id}')
     def decide_fix(fix_id: int, body: ParagraphDecision, user: str = Depends(admin_user)):
+        if not textfix_db.enabled(db):
+            raise HTTPException(404, 'Kayıt bulunamadı')
         row = db.query("""SELECT f.monument_id, f.para_no, m.slug FROM para_fix f JOIN monument m ON m.id = f.monument_id
                           WHERE f.id = %(i)s""", dict(i=fix_id))
         if not row:

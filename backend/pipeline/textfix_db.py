@@ -20,6 +20,15 @@ from chunk import chunk_paras, miladi_years, span
 from periods import periods_for
 
 DECISIONS = ('pending', 'keep', 'hide', 'merge_prev', 'move')
+_ready = False
+
+
+def enabled(db):
+    """para_fix tablosu var mı (004 göçü)? Yoksa düzeltme yoktur ve etkin metin kitap metninin kendisidir."""
+    global _ready
+    if not _ready:   # yalnızca olumlu sonuç saklanır: göç sunucu çalışırken uygulanırsa da fark edilir
+        _ready = db.query("SELECT to_regclass('para_fix') IS NOT NULL AS ok")[0]['ok']
+    return _ready
 
 
 def split_paras(text):
@@ -45,6 +54,8 @@ def own_paragraphs(db, monument_id):
 
 
 def fixes_for(db, monument_id):
+    if not enabled(db):
+        return {}
     return {r['para_no']: r for r in db.query(
         """SELECT f.*, t.slug AS target_slug FROM para_fix f LEFT JOIN monument t ON t.id = f.target_monument_id
            WHERE f.monument_id = %(m)s""", dict(m=monument_id))}
@@ -62,6 +73,8 @@ def effective_paragraphs(db, monument_id):
             out[-1] = dict(out[-1], text=f"{out[-1]['text']} {p['text']}", pages=sorted(set(out[-1]['pages']) | set(p['pages'])))
             continue
         out.append(dict(text=p['text'], pages=p['pages'], origin=None, section_id=p['section_id'], book_id=p['book_id']))
+    if not enabled(db):
+        return out
     # başka eserlerden bu esere taşınan paragraflar
     for f in db.query("""SELECT f.monument_id, f.para_no, m.slug FROM para_fix f JOIN monument m ON m.id = f.monument_id
                          WHERE f.decision = 'move' AND f.target_monument_id = %(m)s ORDER BY m.slug, f.para_no""",

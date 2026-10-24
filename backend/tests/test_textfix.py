@@ -134,6 +134,16 @@ class LayerTest(unittest.TestCase):
         detail = self.c.get(f'/api/admin/monuments/{CAMI}', headers=NES).json()['paragraphs']['own']
         self.assertEqual([(p['no'], p['decision']) for p in detail], [(1, None), (2, None), (3, 'hide'), (4, None), (5, 'keep')])
 
+    def test_without_migration_book_text_is_shown(self):
+        # 004 göçü uygulanmamış veritabanı: site kitap metnini aynen gösterir, panel boş kuyruk görür
+        self.api.db.execute('DROP TABLE para_fix')
+        self.T._ready = False
+        self.assertEqual(self.text(CAMI), '\n\n'.join(PARAS))
+        self.assertEqual(self.c.get('/api/admin/stats', headers=NES).json()['segmentation_pending'], 0)
+        self.assertEqual(self.c.get('/api/admin/segmentation', headers=NES).json()['total'], 0)
+        self.assertEqual(len(self.c.get(f'/api/admin/monuments/{CAMI}', headers=NES).json()['paragraphs']['own']), 5)
+        self.assertEqual(self.c.put(f'/api/admin/monuments/{CAMI}/paragraphs/3', headers=NES, json={'decision': 'hide'}).status_code, 503)
+
     def test_validation(self):
         self.assertEqual(self.c.put(f'/api/admin/monuments/{CAMI}/paragraphs/99', headers=NES, json={'decision': 'hide'}).status_code, 404)
         self.assertEqual(self.c.put(f'/api/admin/monuments/{CAMI}/paragraphs/5', headers=NES, json={'decision': 'move'}).status_code, 422)
