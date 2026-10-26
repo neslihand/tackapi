@@ -7,7 +7,7 @@
 
 Uç noktalar
   GET  /api/cities
-  GET  /api/monuments?city=bursa&kind=mosque&period=erken-osmanli&q=muradiye&lang=tr&page=1&page_size=50
+  GET  /api/monuments?city=bursa&kind=mosque&period=erken-osmanli&q=muradiye&pilot=true&lang=tr&page=1&page_size=50
        → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
   GET  /api/monuments/{slug}?lang=tr|en
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search
+import rag, admin, images, textfix_db, narrations, visual_search, geocode
 
 log = logging.getLogger('vakif.api')
 
@@ -149,7 +149,8 @@ LIST_FILTERS = {
     'period': "(%(period)s::text IS NULL OR p.slug = %(period)s::text "
               "OR p.parent_id = (SELECT id FROM period WHERE slug = %(period)s::text))",
     'q': "(%(q)s::text IS NULL OR m.name_tr %% %(q)s::text OR m.name_tr ILIKE '%%' || %(q)s::text || '%%' "
-         "OR EXISTS (SELECT 1 FROM unnest(m.alt_names) a WHERE a ILIKE '%%' || %(q)s::text || '%%'))"}
+         "OR EXISTS (SELECT 1 FROM unnest(m.alt_names) a WHERE a ILIKE '%%' || %(q)s::text || '%%'))",
+    'pilot': "(%(pilot)s::boolean IS NULL OR m.pilot = %(pilot)s::boolean)"}
 
 
 def _where(skip=None):
@@ -169,12 +170,17 @@ ITEM_SELECT = f"""
            EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
                       OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
            cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
-           cov.height AS img_height
+           cov.height AS img_height, m.lat, m.lon{{geo}}
     {LIST_FROM} LEFT JOIN monument par ON par.id = m.parent_id LEFT JOIN source_book b ON b.id = m.book_id
     LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
                         WHERE monument_id = m.id AND (review_status = 'published'
                               OR (%(drafts)s::boolean AND review_status IN ('draft', 'reviewed')))
                         ORDER BY is_cover DESC, review_status = 'published' DESC, sort, id LIMIT 1) cov ON true"""
+
+
+def item_select():
+    """ITEM_SELECT; konumun doğrulanma bilgisi yalnızca 012 göçü uygulanmışsa seçilir."""
+    return ITEM_SELECT.replace('{geo}', ', m.geo_precision, m.geo_checked' if geocode.enabled(db) else '')
 
 
 def list_item(r, lang):
@@ -191,17 +197,17 @@ def list_item(r, lang):
         parent=dict(slug=r['parent_slug'], name=(r['parent_en'] or r['parent_tr']) if en else r['parent_tr'])
         if r['parent_slug'] else None,
         children_count=r['children_count'], summary=r['summary_en'] if en else r['summary_tr'], status=r['status'],
-        has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'),
+        has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'), location=geocode.public_location(r),
         source=dict(book=r['book'], pages=[r['page_start'], r['page_end']] if r['page_start'] is not None else None))
 
 
 @app.get('/api/monuments')
 def monuments(city: str | None = None, kind: str | None = None, period: str | None = None, q: str | None = None,
-              lang: Literal['tr', 'en'] = 'tr', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)):
-    params = dict(city=city, kind=kind, period=period, q=q or None, lang=lang, drafts=False,
+              pilot: bool | None = None, lang: Literal['tr', 'en'] = 'tr', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)):
+    params = dict(city=city, kind=kind, period=period, q=q or None, pilot=pilot, lang=lang, drafts=False,
                   limit=page_size, offset=(page - 1) * page_size)
     total = db.query(f"SELECT count(*) AS n {LIST_FROM} {_where()}", params)[0]['n']
-    rows = db.query(f"""{ITEM_SELECT} {_where()}
+    rows = db.query(f"""{item_select()} {_where()}
                         ORDER BY c.slug, m.district, m.name_tr LIMIT %(limit)s OFFSET %(offset)s""", params)
     items = [list_item(r, lang) for r in rows]
     facets = dict(
@@ -289,9 +295,13 @@ def monument_detail(slug, lang, drafts=False):
         a['images'] = art_imgs.get(a.pop('id'), [])
     # Hikâye ve çocuk anlatımları önceden üretilip kaydedilir; sayfa açılınca yapay zekâ çağrılmaz
     stored = narrations.public(db, f['id'], lang)
+    # Harita: doğrulanmamış otomatik konum "yaklaşık" gelir (belirsizlik dairesiyle); konum yoksa None, bölüm görünmez
+    geo = ', m.geo_precision, m.geo_checked' if geocode.enabled(db) else ''
+    location = geocode.public_location(db.query(f'SELECT m.lat, m.lon{geo} FROM monument m WHERE m.id = %(i)s',
+                                                dict(i=f['id']))[0])
     f.pop('id', None)
     f.pop('city_id', None)
-    return dict(card=f, text=text, text_note=text_note, narrations=stored, images=images,
+    return dict(card=f, text=text, text_note=text_note, narrations=stored, images=images, location=location,
                 source=dict(book=sec['book'], pages=[sec['page_start'], sec['page_end']], credits=sec['credits']),
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
@@ -300,11 +310,12 @@ def monument_detail(slug, lang, drafts=False):
 def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, user: str = Depends(admin.admin_user)):
     """Ziyaretçinin göreceği liste kartı ve eser sayfası, eser taslakta olsa bile; ayrıca yayın öncesi kontrol listesi.
     drafts=true: kontrol bekleyen fotoğraflar da gösterilir (yayına alınırsa sayfa nasıl görünür)."""
-    rows = db.query(f'{ITEM_SELECT} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
+    rows = db.query(f'{item_select()} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
     if not rows:
         raise HTTPException(404, 'Eser bulunamadı')
-    m = db.query("""SELECT m.id, m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
+    m = db.query(f"""SELECT m.id, m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
                            m.date_basis, m.lat IS NOT NULL AND m.lon IS NOT NULL AS has_coords, m.is_synthetic,
+                           {'m.geo_checked' if geocode.enabled(db) else 'true'} AS geo_checked,
                            coalesce(length(s.text_tr), 0) AS text_len,
                            (SELECT count(*) FROM chunk c WHERE c.monument_id = m.id AND c.embedding IS NOT NULL) AS indexed,
                            (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status = 'published') AS images,
@@ -323,8 +334,11 @@ def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, u
              hint='Dizin yoksa sohbet bu eser hakkında kaynak bulamaz; embed_gemini.py eksikleri tamamlar.'),
         dict(key='date', ok=m['has_date'], required=False, label='Yapım tarihi',
              hint='Tarih yoksa kartta tarih alanı boş kalır.'),
-        dict(key='coords', ok=m['has_coords'], required=False, label='Koordinat (harita ve “Yakınımdakiler”)',
-             hint='Koordinatı olmayan eser haritada görünmez.'),
+        dict(key='coords', ok=m['has_coords'] and m['geo_checked'], required=False,
+             label='Doğrulanmış konum (harita ve “Yakınımdakiler”)',
+             hint=('Konum otomatik bulundu, henüz doğrulanmadı: sitede “yaklaşık konum” olarak gösterilir. Eser düzenleme '
+                   'sayfasındaki haritadan onaylayın ya da düzeltin.') if m['has_coords'] else
+                  'Konumu olmayan eserde harita bölümü görünmez; geocode.py --pilot ya da eser düzenleme sayfasındaki harita.'),
         dict(key='pending', ok=m['pending'] == 0, required=False, label='Kontrol bekleyen fotoğraf kalmadı',
              hint=f"{m['pending']} fotoğraf onay bekliyor; yayına alınmadıkça sayfada görünmez." if m['pending'] else ''),
         dict(key='english', ok=bool(m['name_en'] and m['summary_en']), required=False, label='İngilizce ad ve özet',
@@ -416,7 +430,7 @@ async def visual_search_endpoint(request: Request, file: UploadFile = File(...),
                             headers={'Retry-After': '30'})
     slugs = [c['slug'] for c in r['candidates']]
     items = {row['slug']: list_item(row, lang) for row in db.query(
-        f'{ITEM_SELECT} WHERE m.slug = ANY(%(slugs)s::text[])', dict(slugs=slugs, drafts=False))} if slugs else {}
+        f'{item_select()} WHERE m.slug = ANY(%(slugs)s::text[])', dict(slugs=slugs, drafts=False))} if slugs else {}
     candidates = [dict(item=items[c['slug']], score=c['score'],
                        photo=dict(src=f"/media/{c['file']}", thumb=f"/media/thumbs/{c['file']}"))
                   for c in r['candidates'] if c['slug'] in items]

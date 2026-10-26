@@ -10,6 +10,8 @@ export type Artifact = {
   description: string;
   coordinates: [number, number];
   image: string;
+  // Text equivalent of what the illustration shows; used as alt text and as a visible image description.
+  imageAlt?: string;
   sourceReferences: { title: string; url: string }[];
   chapters: { title: string; short: string; story: string; child: string }[];
   // focus: the detail's position on the illustration, in percent [x, y]; the story stage zooms there.
@@ -32,6 +34,7 @@ export const artifacts: Artifact[] = [
     description: "Bir tepenin üzerinde, ibadeti, öğrenmeyi ve dayanışmayı aynı şehir hikâyesinde buluşturan Sinan eseri.",
     coordinates: [41.0162, 28.9642],
     image: "/images/suleymaniye.svg",
+    imageAlt: "Ay ışığında bir cami silueti: ortada yüksek bir ana kubbe ve onu kademeli olarak saran yarım kubbeler, köşelerde şerefeli dört ince minare. Önde küçük kubbelerle örtülü, sivri kemerli bir revak ve geniş basamaklar; iki yanda servi ağaçları.",
     sourceReferences: [
       { title: "TDV İslâm Ansiklopedisi — Süleymaniye Camii ve Külliyesi", url: "https://islamansiklopedisi.org.tr/suleymaniye-camii-ve-kulliyesi" },
       { title: "Kültür Portalı — İstanbul'un Tarihi Alanları", url: "https://kulturportali.gov.tr/portal/istanbuluntarihialanlari-1" },
@@ -76,6 +79,7 @@ export const artifacts: Artifact[] = [
     description: "Edirne'nin ufkunu biçimlendiren dört minare ve tek büyük kubbe: Sinan'ın mekân arayışında bir doruk.",
     coordinates: [41.678, 26.5593],
     image: "/images/selimiye.svg",
+    imageAlt: "Gece gökyüzü önünde tek ve geniş bir ana kubbe; yapının dört köşesinde birden fazla şerefeli, çok yüksek ve ince dört minare. Ön cephede yan kubbeler, küçük kubbeli sivri kemerli bir revak ve basamaklar; iki yanda serviler.",
     sourceReferences: [
       { title: "UNESCO — Selimiye Mosque and its Social Complex", url: "https://whc.unesco.org/en/list/1366/" },
       { title: "Kültür Portalı — Selimiye Camii", url: "https://kulturportali.gov.tr/turkiye/edirne/gezilecekyer/selimiye-camii" },
@@ -120,6 +124,7 @@ export const artifacts: Artifact[] = [
     description: "Taşın bir bahçeye dönüştüğü kapılar; ibadet ve şifayı yan yana getiren bir Anadolu mirası.",
     coordinates: [39.3711, 38.1215],
     image: "/images/divrigi.svg",
+    imageAlt: "Kesme taş bir yapının ortasında yükselen, yoğun bezemeli taç kapı: sivri kemerli girişin üzerinde sarkıt biçimli taş bezemeler, iki yanında kalp biçimli ve yıldız motifli kabartmalar. Sağda konik külahlı bir kubbe ve tek minare; arkada dağlar ve dolunay.",
     sourceReferences: [
       { title: "UNESCO — Great Mosque and Hospital of Divriği", url: "https://whc.unesco.org/en/list/358/" },
       { title: "Divriği Kaymakamlığı — Divriği Ulu Camii", url: "https://www.divrigi.gov.tr/divrigi-ulu-camii" },
@@ -164,6 +169,7 @@ export const artifacts: Artifact[] = [
     description: "Bursa'nın yamaçlarında, çininin rengiyle ve erken Osmanlı mimarisinin katmanlarıyla açılan bir keşif.",
     coordinates: [40.1818, 29.0753],
     image: "/images/yesil-kulliye.svg",
+    imageAlt: "Solda iki kubbeli ve iki minareli bir taş cami; giriş kapısının üstünde mavi-yeşil çini bir pano. Sağda yüzeyi yeşil-turkuaz çinilerle kaplı, kubbeli, çokgen planlı bir türbe; aralarında servi ağaçları, arkada dağlar.",
     sourceReferences: [
       { title: "Kültür Portalı — Yeşil Külliyesi", url: "https://www.kulturportali.gov.tr/turkiye/bursa/gezilecekyer/yesil-kulliyesi" },
       { title: "Kültür Portalı — Yeşil Türbe", url: "https://kulturportali.gov.tr/turkiye/bursa/gezilecekyer/yesil-turbe" },
@@ -210,6 +216,7 @@ export const artifacts: Artifact[] = [
     description: "Eminönü'nün ticaret dokusu üzerinde yükselen, çini desenleriyle yakından bakmayı ödüllendiren bir Sinan eseri.",
     coordinates: [41.0176, 28.9689],
     image: "/images/rustem-pasa.svg",
+    imageAlt: "Yüksek bir taş kaide üzerinde tek kubbeli, tek minareli bir cami. Kaidenin alt katında sıra sıra sivri kemerli açıklıklar ve yana doğru yükselen bir merdiven; üst katta beş küçük kubbeli, kemerleri mavi çini desenleriyle çevrili bir revak.",
     sourceReferences: [
       { title: "İBB Kültürel Miras — Rüstem Paşa Külliyesi", url: "https://kulturelmiras.ibb.istanbul/rustem-pasa-kulliyesi/" },
     ],
@@ -253,6 +260,7 @@ export const artifacts: Artifact[] = [
     description: "Hürrem Sultan'ın adıyla anılan; eğitim, paylaşım ve şifayı bir mahallede buluşturan yapı topluluğu.",
     coordinates: [41.0076, 28.941],
     image: "/images/haseki.svg",
+    imageAlt: "Yan yana iki kubbesi ve tek minaresi olan taş bir cami; ortadaki sivri kemerli girişin üstünde küçük mavi bir çini pano. İki yanında küçük kubbelerle örtülü, sivri kemerli alçak yapı kanatları; çevrede servi ağaçları.",
     sourceReferences: [
       { title: "TDV İslâm Ansiklopedisi — Haseki Külliyesi", url: "https://islamansiklopedisi.org.tr/haseki-kulliyesi" },
     ],

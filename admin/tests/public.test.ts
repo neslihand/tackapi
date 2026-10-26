@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { citedRefs, eventLabel, rangeText, roleLabel, splitCitations, strings } from '../src/public/model.ts';
+import { citedRefs, eventLabel, mapZoom, osmLink, rangeText, roleLabel, splitCitations, strings } from '../src/public/model.ts';
 
 test('Sohbet cevabındaki kaynak işaretleri ayrılır', () => {
   assert.deepEqual(splitCitations('Cami 1426’da tamamlandı [S1, F0]. Mihrabı çinilidir [S2].'), [
@@ -28,4 +28,13 @@ test('Etiketler iki dilde de var; bilinmeyen değerler boş ya da genel etikete 
   assert.equal(eventLabel('restoration', 'tr'), 'Restorasyon');
   assert.equal(eventLabel('yok', 'en'), 'Event');
   assert.deepEqual(Object.keys(strings('tr')).sort(), Object.keys(strings('en')).sort());
+});
+
+test('Doğrulanmamış konumda haritaya işaretçi konmaz, daire sığacak kadar uzaklaşılır', () => {
+  const exact = { lat: 40.191063, lon: 29.046501, approximate: false, radius_m: null };
+  assert.equal(mapZoom(exact), 17);
+  assert.equal(osmLink(exact), 'https://www.openstreetmap.org/?mlat=40.191063&mlon=29.046501#map=17/40.191063/29.046501');
+  const approx = { ...exact, approximate: true, radius_m: 700 };
+  assert.equal(mapZoom(approx), 14);
+  assert.ok(!osmLink(approx).includes('mlat'));
 });

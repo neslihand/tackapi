@@ -39,13 +39,20 @@ export type MonumentFields = {
   page_from?: number | null; page_to?: number | null;
   status?: MonumentState | null; summary_tr?: string | null; summary_en?: string | null; current_state?: string | null;
   source_note?: string | null; review_status?: ReviewStatus; pilot?: boolean;
+  geo_checked?: boolean;   // konumu onayla (geocode.py'nin otomatik bulduğu konum)
 };
+
+// Konumun kaynağı ve doğrulanması (göç 012; uygulanmamışsa geo = null)
+export type GeoPrecision = 'exact' | 'building' | 'street' | 'neighborhood';
+export type GeoInfo = { source: 'nominatim' | 'manual' | null; precision: GeoPrecision | null; checked: boolean;
+  detail: { status?: 'found' | 'not_found'; query?: string; found?: string; warnings?: string[]; tried?: string[] } | null };
 
 // Süsleme ve sanat kaydı (çıkarımdan); fotoğrafları panelden elle bağlanır
 export type AdminArtwork = { id: number; kind: string; element: string | null; technique: string | null; script: string | null;
   date_text: string | null; description_tr: string; image_ids: number[] };
 
-export type MonumentDetail = Required<Omit<MonumentFields, 'review_status'>> & {
+export type MonumentDetail = Required<Omit<MonumentFields, 'review_status' | 'geo_checked'>> & {
+  geo: GeoInfo | null;
   slug: string; city: string; review_status: MonumentStatus; deletable: boolean; qa_flags: string[]; is_synthetic: boolean;
   created_by: string | null; updated_at: string | null; book: string | null; from_panel: boolean; text_editable: boolean;
   pages_auto: [number, number] | null;   // düzeltilmiş paragrafların sayfaları (otomatik hesap)

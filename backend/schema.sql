@@ -120,7 +120,13 @@ CREATE TABLE monument (
     source_note         text,                          -- panelden eklenen eserin kaynağı (kitap dışı)
     created_by          text,                          -- panelden ekleyen kişi (kitap kayıtlarında boş)
     updated_at          timestamptz,                   -- son panel değişikliği
-    pilot               boolean NOT NULL DEFAULT false -- MVP pilot seçkisi (pilot.py): embedding ve anlatımlar önce bunlara
+    pilot               boolean NOT NULL DEFAULT false, -- MVP pilot seçkisi (pilot.py): embedding ve anlatımlar önce bunlara
+    -- konumun kaynağı ve doğrulanması (geocode.py, panel). Doğrulanmamış konum sitede "yaklaşık" gösterilir.
+    geo_source          text CONSTRAINT monument_geo_source_check CHECK (geo_source IN ('nominatim','manual')),
+    geo_precision       text CONSTRAINT monument_geo_precision_check
+                          CHECK (geo_precision IN ('exact','building','street','neighborhood')),
+    geo_checked         boolean NOT NULL DEFAULT false,
+    geo_detail          jsonb                          -- sorgu, OSM'de bulunan yer, uyarılar (denetim izi)
 );
 CREATE INDEX ON monument USING gin (qa_flags);
 CREATE INDEX monument_pilot ON monument (city_id) WHERE pilot;
@@ -389,7 +395,7 @@ INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_im
                                          ('003_admin.sql'), ('004_para_fix.sql'), ('005_narration.sql'),
                                          ('006_narration_edit.sql'), ('007_artwork_image.sql'),
                                          ('008_image_embedding.sql'), ('009_pilot.sql'),
-                                         ('010_monument_removed.sql'), ('011_para_split.sql');
+                                         ('010_monument_removed.sql'), ('011_para_split.sql'), ('012_geo.sql');
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (

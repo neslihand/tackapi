@@ -27,6 +27,7 @@ export function artifactIssues(artifact: Artifact, others: Artifact[] = []): str
   const [lat, lng] = Array.isArray(artifact.coordinates) ? artifact.coordinates : [NaN, NaN];
   if (!(Number.isFinite(lat) && Number.isFinite(lng) && lat >= 35 && lat <= 43 && lng >= 25 && lng <= 45)) issues.push('Koordinatlar Türkiye sınırları içinde olmalı (enlem 35–43, boylam 25–45).');
   if (typeof artifact.image !== 'string' || !artifact.image.startsWith('/images/')) issues.push('Görsel yerel bir dosya olmalı.');
+  if (artifact.imageAlt !== undefined && !filled(artifact.imageAlt, 600)) issues.push('Görsel betimlemesi boş olamaz (en fazla 600 karakter).');
   if (!Array.isArray(artifact.chapters) || artifact.chapters.length !== 4) issues.push('Hikâye dört bölümden oluşmalı.');
   else artifact.chapters.forEach((chapter, i) => { if (!isObject(chapter) || !filled(chapter.title, 120) || !filled(chapter.short) || !filled(chapter.story) || !filled(chapter.child)) issues.push(`Bölüm ${i + 1}: başlık ve üç anlatım biçimi gerekli.`); });
   if (!isObject(artifact.detail) || !filled(artifact.detail.title, 120) || !filled(artifact.detail.text, 600)) issues.push('Mimari ayrıntı başlığı ve metni gerekli.');
@@ -94,6 +95,9 @@ export function pickRound<T>(pool: T[], size = 5, random = Math.random): T[] {
   for (let i = copy.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [copy[i], copy[j]] = [copy[j], copy[i]]; }
   return pool.length <= size ? pool : copy.slice(0, size);
 }
+// Alt text for an artifact image. Without a description the name is used so the image is never unlabeled.
+export const imageAlt = (artifact: { name: string; image: string; imageAlt?: string }) =>
+  artifact.image === PLACEHOLDER_IMAGE ? 'Görsel hazırlanıyor' : artifact.imageAlt ?? `${artifact.name} görseli`;
 export const roundScore = (correct: number, total: number) => total ? Math.round(correct / total * 100) : 0;
 
 export function blankArtifact(name: string): Artifact {

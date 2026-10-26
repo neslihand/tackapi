@@ -1,5 +1,5 @@
 // Saf yardımcılar: etiketler, form doğrulama, değişen alanları bulma. React'e bağlı değildir (node:test ile sınanır).
-import type { DateBasis, ImageStatus, Kind, MonumentDetail, MonumentFields, MonumentState } from './types';
+import type { DateBasis, GeoInfo, GeoPrecision, ImageStatus, Kind, MonumentDetail, MonumentFields, MonumentState } from './types';
 
 export const KIND_LABELS: Record<Kind, string> = {
   complex: 'Külliye', mosque: 'Cami', masjid: 'Mescit', madrasa: 'Medrese', tomb: 'Türbe', imaret: 'İmaret', bath: 'Hamam',
@@ -87,6 +87,24 @@ export function changedFields(original: MonumentDetail, draft: MonumentFields): 
     if (JSON.stringify(a) !== JSON.stringify(b)) out[key] = b;
   }
   return out as MonumentFields;
+}
+
+export const PRECISION_LABELS: Record<GeoPrecision, string> = {
+  exact: 'elle yerleştirildi', building: 'yapının kendisi', street: 'sokak düzeyinde', neighborhood: 'yalnızca mahalle',
+};
+
+/** Konum durumu: panelde haritanın üstünde gösterilen tek cümle ve onay düğmesinin görünüp görünmeyeceği. */
+export function geoStatus(geo: GeoInfo | null, hasCoords: boolean): { text: string; tone: 'ok' | 'warn' | 'none'; canConfirm: boolean } {
+  if (!geo) return hasCoords ? { text: 'Konum girilmiş.', tone: 'ok', canConfirm: false }
+    : { text: 'Konum yok. Haritaya tıklayarak yerleştirin.', tone: 'none', canConfirm: false };
+  if (!hasCoords) {
+    const tried = geo.detail?.status === 'not_found' && geo.detail.tried?.length ? ` (denenen: ${geo.detail.tried.join(' · ')})` : '';
+    return { text: `${geo.detail?.status === 'not_found' ? 'OpenStreetMap’te bulunamadı' + tried : 'Konum yok'}. Haritaya tıklayarak yerleştirin; konumu olmayan eserde sitede harita görünmez.`, tone: 'none', canConfirm: false };
+  }
+  if (geo.checked) return { text: geo.source === 'manual' ? 'Konum doğrulandı (elle yerleştirildi).' : 'Konum doğrulandı (OpenStreetMap’ten bulundu, yönetici onayladı).', tone: 'ok', canConfirm: false };
+  const prec = geo.precision ? PRECISION_LABELS[geo.precision] : 'incelik bilinmiyor';
+  const warn = geo.detail?.warnings?.length ? ` Uyarı: ${geo.detail.warnings.join(', ')}.` : '';
+  return { text: `Otomatik bulundu (OpenStreetMap, ${prec}), henüz doğrulanmadı: sitede “yaklaşık konum” olarak görünür.${geo.detail?.found ? ` Bulunan yer: ${geo.detail.found}.` : ''}${warn} Doğruysa onaylayın, değilse işaretçiyi sürükleyin.`, tone: 'warn', canConfirm: true };
 }
 
 // Düzenleme formu: bütün alanlar metin olarak tutulur (boş = null), kaydederken tiplerine çevrilir.

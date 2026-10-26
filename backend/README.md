@@ -138,6 +138,7 @@ backend/
     ├── narrations.py          # Kayıtlı hikâye ve çocuk anlatımları: toplu üretim ve okuma
     ├── visual_search.py       # Görselle arama: fotoğraf embedding'leri, arama, doğruluk ölçümü
     ├── pilot.py               # MVP pilot seçkisi: öneri listesi, seçim, hazırlık durumu
+    ├── geocode.py             # Eser koordinatları: OpenStreetMap Nominatim, kontrol listesi (konumlar.csv)
     ├── eval_rag.py            # RAG kalite ve maliyet ölçümü
     ├── api.py                 # REST API (herkese açık uçlar, önizleme)
     └── admin.py               # Yönetim API'si (/api/admin/*)
@@ -610,6 +611,37 @@ dizini de yanlış metinden üretilmiştir. Paragraflar panelde düzeltildikten 
    `python embed_gemini.py` tamamlar.
 5. Ardından fotoğraf vektörleri (`visual_search.py --pilot`) ve anlatımlar (`narrations.py --pilot`).
 
+### 7.10 Eser konumları ve harita: `geocode.py`
+Eser sayfasında "Haritada" bölümü ve ileride "Yakınımdakiler" için. Ücretli API yok: koordinatlar OpenStreetMap
+Nominatim'den (anahtarsız) alınır, harita Leaflet + OpenStreetMap karolarıyla çizilir. Şimdilik yalnızca pilot eserler.
+
+```powershell
+python migrate.py --apply              # 012: monument.geo_source, geo_precision, geo_checked, geo_detail
+python geocode.py --pilot              # arar ve data/review/konumlar.csv yazar; veritabanı DEĞİŞMEZ
+python geocode.py --pilot --write      # aynı sonuçları (önbellekten, ağa çıkmadan) veritabanına yazar
+python geocode.py --pilot --retry      # bulunamayanları ve doğrulanmamış otomatik konumları yeniden dener
+python geocode.py --pilot --csv-only   # veritabanındaki konumlardan (panel düzeltmeleri dahil) CSV
+```
+- **Sorgu merdiveni:** önce eser adı + mahalle + ilçe + şehir (`Muradiye Camii, Osmangazi, Bursa`); bulunamazsa ad
+  varyantları (parantez içi atılır, "… ve Külliyesi" atılır, ilk ad + yapı türü), diğer adlar, adres, en son mahalle.
+  Kitaplarda adres ve mahalle çoğu eserde boş olduğu için ad sorguları asıl yoldur.
+- **Denetim:** sonuç başka ildeyse reddedilir; ilçe adresle ya da bulunan yerin adı eserin adıyla uyuşmuyorsa
+  kaydedilir ama uyarı yazılır (`geo_detail.warnings`, CSV'de `uyari`). Yalnızca ilçe/şehir düzeyinde bulunan yer
+  kaydedilmez. İncelik `place_rank`'tan gelir: `building` (yapının kendisi), `street`, `neighborhood`.
+- **Uydurma yok:** otomatik konum `geo_checked = false` girer ve sitede **kesin gibi gösterilmez**: nokta yerine
+  belirsizlik dairesi (yapı 150 m, sokak 300 m, mahalle 700 m) ve "Yaklaşık konum: otomatik bulundu, henüz
+  doğrulanmadı" notu çıkar. Yönetici panelde eser düzenleme sayfasındaki haritadan "Konum doğru, onayla" der ya da
+  işaretçiyi sürükler / haritaya tıklar (kaydedilince `geo_source = 'manual'`, doğrulanmış). Doğrulanmış ya da elle
+  girilmiş konuma betik hiçbir zaman dokunmaz. Önizlemedeki yayın listesinde "Doğrulanmış konum" maddesi vardır.
+- **Kaldığı yerden devam:** Nominatim cevapları `data/geocode_cache.json`'da (git dışı) tutulur, aynı sorgu ikinci kez
+  gönderilmez; konumu ya da "bulunamadı" kaydı olan eser `--retry` olmadan atlanır. Her yazım `admin_log`'a
+  (`monument.geocode`) düşer.
+- **Nominatim kuralları:** saniyede en fazla 1 istek (betik 1,1 sn bekler), uygulamayı tanıtan User-Agent
+  (`VAKIF_GEOCODE_UA` ile iletişim bilgisi eklenebilir), sonuçların önbellekte tutulması. Karolar ve veriler için
+  "© OpenStreetMap katkıcıları" atfı haritada görünür; kaldırılmamalı.
+- Denemede (26 Ekim 2026) Muradiye Camii, Ördekli Hamam, Beyşehir Eşrefoğlu Camii ve Habib-i Neccar Camii doğru
+  yapıda bulundu.
+
 ---
 
 ## 8. Ekonomik mod ve maliyet
@@ -657,6 +689,7 @@ Yalnızca yayımlanmış (`published`) eserler listelenir; taslak bir eserin ayr
 | `kind` | metin | — | Tür: `mosque`, `tomb`, `madrasa`, `bath`, `complex`… |
 | `period` | metin | — | Dönem slug'ı; üst dönem verilirse alt dönemler de gelir |
 | `q` | metin | — | Ad araması (bulanık, alternatif adlarda da) |
+| `pilot` | `true`/`false` | — | Yalnızca MVP pilot seçkisi (ya da dışındakiler); ön yüz şimdilik `pilot=true` kullanır |
 | `lang` | `tr`/`en` | `tr` | Ad, etiket, özet ve dönem adının dili |
 | `page` | tam sayı | 1 | 1'den başlar |
 | `page_size` | tam sayı | 50 | En çok 200 |
@@ -699,6 +732,10 @@ Cevap biçimi:
   ya da hazırlanmamışsa `null` (bkz. §7.6).
 - **`source`:** Kitap, sayfa aralığı, künye.
 - **`images`:** Yayımlanmış fotoğraflar (önce kapak): `src`, `thumb`, `alt`, `width`, `height`, `caption`, `source{book,page}`.
+- **`location`:** `{lat, lon, approximate, radius_m}` ya da `null` (konum yoksa; ön yüz harita bölümünü göstermez).
+  Aynı alan liste öğelerinde (`GET /api/monuments`) de vardır.
+  `approximate: true` ise konum otomatik bulunmuş, doğrulanmamıştır: işaretçi değil `radius_m` yarıçaplı daire
+  çizilmeli ve "yaklaşık" denmeli (bkz. §7.10).
 - **`status`**, **`review_status`**.
 
 Eser bulunamazsa `404` döner.
@@ -748,7 +785,7 @@ Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablos
 | GET | `/api/admin/monuments?q&city&status&has_image&page` | Taslaklar dahil eser listesi, yayımlanmış ve bekleyen fotoğraf sayısı |
 | GET | `/api/admin/monuments/{slug}` | Düzenlenebilir tüm alanlar, metin ve tüm fotoğraflar |
 | POST | `/api/admin/monuments` | Yeni eser (`draft` başlar); isteğe bağlı `text_tr`/`text_en` |
-| PATCH | `/api/admin/monuments/{slug}` | Künye alanları, dönem, üst eser, tarih, koordinat, özet, kaynak notu, `review_status` |
+| PATCH | `/api/admin/monuments/{slug}` | Künye alanları, dönem, üst eser, tarih, koordinat, özet, kaynak notu, `review_status`. Değişen `lat`/`lon` konumu elle girilmiş ve doğrulanmış yapar; `{geo_checked: true}` otomatik konumu onaylar (§7.10) |
 | PUT | `/api/admin/monuments/{slug}/text` | Panel eserinin metni: parçalanır ve embedding'i üretilir |
 | DELETE | `/api/admin/monuments/{slug}` | Panelden eklenmiş ya da paragraflarından ayrılmış (`split`), alt eseri olmayan eser; ayrılmış eserin paragrafları asıl kaydına döner, kitap fotoğrafları esersiz fotoğraflara geçer |
 | POST | `/api/admin/monuments/{slug}/remove` | Kitap eserini kaldırır (`{reason?}`): sitede, panel listelerinde, aramada, sohbette ve pilotta görünmez; veri silinmez |
@@ -864,6 +901,8 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_NARRATE_MODEL` | (cevap modeli) | Kayıtlı anlatımların modeli (`narrations.py` ve paneldeki "Anlatımı üret") |
 | `VAKIF_VISUAL_BACKEND` | `local` | Görselle arama modeli: `local` (DINOv2, bilgisayarda) ya da `gemini` (`gemini-embedding-2`) |
 | `VAKIF_LOCAL_VISION_MODEL` | `facebook/dinov2-base` | Yerel görsel model (daha hızlısı `facebook/dinov2-small`; değişirse fotoğraflar yeniden gömülür) |
+| `VAKIF_GEOCODE_UA` | `vakif-eserleri-hackathon/0.1 (…)` | `geocode.py`'nin Nominatim'e gönderdiği User-Agent (iletişim bilgisi eklenebilir) |
+| `VAKIF_GEOCODE_URL` | `https://nominatim.openstreetmap.org/search` | Başka bir Nominatim sunucusu |
 | `VAKIF_VISUAL_MIN` | `0.70` (yerel), `0.75` (Gemini) | Görselle aramada eser önermek için en düşük benzerlik (`visual_search.py --eval` önerisine göre ayarlanmalı) |
 | `VAKIF_VISUAL_MARGIN` | `0.03` | En iyi aday ikinciden en az bu kadar önde olmalı |
 | `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |

@@ -20,7 +20,7 @@ import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract
+import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode
 
 log_warn = logging.getLogger('vakif.admin').warning
 pilot_targets = pilot.TARGETS
@@ -87,6 +87,7 @@ class MonumentFields(Strict):
     source_note: str | None = Field(None, max_length=500)
     review_status: REVIEW | None = None
     pilot: bool | None = None                            # MVP pilot seçkisi (pilot.py)
+    geo_checked: bool | None = None                      # konum doğrulandı (geocode.py'nin bulduğu konumu onaylamak için)
 
 
 class MonumentCreate(MonumentFields):
@@ -238,6 +239,8 @@ def build_router(db, media_dir, save_webp):
                 sets.append(f'{k} = %({k})s')
                 params[k] = data[k]
                 changed[k] = (m.get(k), data[k])
+        if data.get('geo_checked') is not None or 'lat' in changed or 'lon' in changed:
+            geo_fields(m, data, changed, sets, params)
         if 'period' in data:
             pid = None
             if data['period']:
@@ -290,6 +293,26 @@ def build_router(db, media_dir, save_webp):
             log(actor, 'monument.update', m['slug'], changed)
             forget_answers(m['slug'])
         return changed
+
+    def geo_fields(m, data, changed, sets, params):
+        """Konumun kaynağı ve doğrulanması: elle girilen ya da haritada taşınan konum 'manual' ve doğrulanmış olur;
+        silinen konumun kaynağı da silinir; geo_checked yalnızca konum varken değiştirilebilir."""
+        if not geocode.enabled(db):
+            if data.get('geo_checked') is not None:
+                raise HTTPException(503, 'Konum doğrulama kapalı: önce python migrate.py --apply')
+            return
+        if 'lat' in changed or 'lon' in changed:
+            lat, lon = data.get('lat', m['lat']), data.get('lon', m['lon'])
+            if lat is None or lon is None:
+                sets.append("geo_source = NULL, geo_precision = NULL, geo_checked = false")
+            else:
+                sets.append("geo_source = 'manual', geo_precision = 'exact', geo_checked = true")
+            changed['geo_source'] = (m['geo_source'], None if lat is None or lon is None else 'manual')
+        elif data['geo_checked'] != m['geo_checked']:
+            if m['lat'] is None or m['lon'] is None:
+                raise HTTPException(422, 'Onaylanacak konum yok: önce enlem ve boylamı girin.')
+            sets.append('geo_checked = %(geo_checked)s'); params['geo_checked'] = data['geo_checked']
+            changed['geo_checked'] = (m['geo_checked'], data['geo_checked'])
 
     def panel_book(city_id, city_slug):
         slug = f'panel-{city_slug}'
@@ -411,6 +434,8 @@ def build_router(db, media_dir, save_webp):
                    pages_auto=textfix_db.effective_pages(db, m['id']),
                    book=m['book_title'], from_panel=from_panel(m), text_editable=from_panel(m),
                    pilot=bool(m.get('pilot')), deletable=deletable(m),
+                   geo=dict(source=m['geo_source'], precision=m['geo_precision'], checked=m['geo_checked'],
+                            detail=m['geo_detail']) if 'geo_checked' in m else None,
                    text_tr=m['text_tr'], text_en=m['text_en'], images=images_of(m['id']),
                    paragraphs=paragraphs_of(m['id']), artworks=artworks_of(m['id']),
                    artwork_photos=artwork_photos_of(m['id'], m['parent_id']),

@@ -72,6 +72,7 @@ test('Koleksiyon ve quiz verileri eksiksiz; görsel dosyaları yerel', () => {
   assert.equal(new Set(artifacts.map(a => a.city)).size, 4);
   for (const a of artifacts) {
     assert.ok(existsSync(`public${a.image}`), a.image);
+    assert.ok(a.imageAlt && a.imageAlt.length > 60, `${a.id}: görsel betimlemesi`);
     assert.equal(a.chapters.length, 4);
     assert.ok(a.sourceReferences.length > 0);
     assert.ok(a.coordinates[0] >= 35 && a.coordinates[0] <= 43);

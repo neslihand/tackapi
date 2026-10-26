@@ -1,0 +1,31 @@
+# Telifli kaynak metinler ve bunlardan türeyen veriler
+raw/
+data/*/segments.json
+data/*/monuments.json
+data/*/sections.json
+data/monuments_all.json
+data/sections_all.json
+data/chunks.jsonl
+data/extractions/
+data/load/
+data/review/
+data/eval_*.json
+data/eval_results.json
+
+# Gizli bilgiler
+.env
+*.env
+./claude
+**/node_modules/
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/
+
+# Kitaplardan çıkarılan görseller (telifli; yerelde üretilir: python pipeline/images.py --write)
+media/
+data/images.jsonl
+data/geocode_cache.json

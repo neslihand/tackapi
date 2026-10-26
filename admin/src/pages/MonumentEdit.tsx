@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowRightLeft, Ban, Check, Eye, EyeOff, ImagePlus, Rocket, RotateCcw, Save, Scissors, Star, Trash2, X } from 'lucide-react';
 import { api } from '../lib/api';
-import { BASIS_LABELS, changedFields, DECISION_LABELS, decisionMessage, fieldsFromForm, formatDate, formFromDetail, KIND_LABELS, methodLabel, monumentIssues, RULE_LABELS, STATE_LABELS, type MonumentForm } from '../lib/format';
+import { BASIS_LABELS, changedFields, DECISION_LABELS, decisionMessage, fieldsFromForm, formatDate, formFromDetail, geoStatus, KIND_LABELS, methodLabel, monumentIssues, RULE_LABELS, STATE_LABELS, toNumber, type MonumentForm } from '../lib/format';
 import { ParagraphActions, SplitForm, type Split } from '../components/ParagraphActions';
 import { ParagraphText } from '../components/ParagraphText';
 import { Link, navigate } from '../lib/navigation';
@@ -10,6 +10,7 @@ import { artworkLabel } from '../public/model';
 import { Field, Issues, PageHead, Status, useLoad, useToast } from '../components/UI';
 import { MonumentPicker } from '../components/MonumentPicker';
 import { PagePhotos } from '../components/PagePhotos';
+import { LocationPicker } from '../components/LocationPicker';
 
 export function MonumentEdit({ slug }: { slug: string }) {
   const detail = useLoad(() => api.monument(slug), [slug]);
@@ -96,6 +97,8 @@ function DetailsForm({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
       <Field label="Adres" wide><input maxLength={300} value={form.address} onChange={set('address')} /></Field>
       <Field label="Enlem" hint="Örn. 40.1835 — harita ve “Yakınımdakiler” için."><input inputMode="decimal" value={form.lat} onChange={set('lat')} /></Field>
       <Field label="Boylam" hint="Örn. 29.0612"><input inputMode="decimal" value={form.lon} onChange={set('lon')} /></Field>
+      <GeoSection d={d} form={form} moved={'lat' in diff || 'lon' in diff}
+        onPick={(lat, lon) => setForm(f => ({ ...f, lat: String(lat), lon: String(lon) }))} onConfirmed={onSaved} />
     </div></fieldset>
     <fieldset><legend>Tanıtım</legend><div className="admin-grid">
       <Field label="Kısa özet (Türkçe)" wide hint="Kartlarda görünür. Yalnızca kaynakta yazanları özetleyin."><textarea rows={4} maxLength={2000} value={form.summary_tr} onChange={set('summary_tr')} /></Field>
@@ -118,6 +121,32 @@ function DetailsForm({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
       {dirty ? <span className="admin-help">Kaydedilmemiş değişiklik: {Object.keys(diff).join(', ')}</span> : <span className="admin-help">Kaydedilmemiş değişiklik yok.</span>}
       {dirty && <button type="button" className="text-link" onClick={() => { setForm(formFromDetail(d)); setIssues([]); }}>Vazgeç</button>}</div>
   </form>;
+}
+
+/** Konum: durum (otomatik/doğrulanmış), onay düğmesi ve haritada seçme. Haritada taşınan konum kaydedilince doğrulanmış olur. */
+function GeoSection({ d, form, moved, onPick, onConfirmed }: {
+  d: MonumentDetail; form: MonumentForm; moved: boolean; onPick: (lat: number, lon: number) => void; onConfirmed: () => void;
+}) {
+  const notify = useToast();
+  const cities = useLoad(() => api.cities(), []);
+  const [busy, setBusy] = useState(false);
+  const city = cities.data?.find(c => c.slug === d.city);
+  const fallback = useMemo<[number, number] | null>(() => (city?.lat != null && city?.lon != null ? [city.lat, city.lon] : null), [city?.lat, city?.lon]);
+  const status = geoStatus(d.geo, d.lat != null && d.lon != null);
+  async function confirm() {
+    setBusy(true);
+    try { await api.updateMonument(d.slug, { geo_checked: true }); notify('Konum doğrulandı'); onConfirmed(); }
+    catch (e) { notify((e as Error).message, true); }
+    finally { setBusy(false); }
+  }
+  return <div className="admin-field wide">
+    <p className={`geo-status ${moved ? 'warn' : status.tone}`} role="status">{moved
+      ? 'Konum değişti. “Değişiklikleri kaydet” ile kaydedince elle yerleştirilmiş ve doğrulanmış sayılır.'
+      : status.text}</p>
+    {status.canConfirm && !moved && <button type="button" className="button line small" style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={confirm}><Check size={15} /> {busy ? 'Onaylanıyor…' : 'Konum doğru, onayla'}</button>}
+    <LocationPicker lat={toNumber(form.lat)} lon={toNumber(form.lon)} fallback={fallback} onPick={onPick} />
+    <small>Haritaya tıklayın ya da işaretçiyi sürükleyin; enlem ve boylam alanları kendiliğinden dolar. Harita: OpenStreetMap.</small>
+  </div>;
 }
 
 /** Numaralı kitap metni ve bölümleme kararları. Kitap metni değişmez; karar ziyaretçi metnini ve sohbet parçalarını etkiler. */

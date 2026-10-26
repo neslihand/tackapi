@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, methodLabel, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
-import type { MonumentDetail } from '../src/lib/types.ts';
+import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, geoStatus, methodLabel, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
+import type { GeoInfo, MonumentDetail } from '../src/lib/types.ts';
 
 const detail = {
   slug: 'bursa-osmangazi-muradiye-camii', city: 'bursa', name_tr: 'Muradiye Camii', name_en: null, alt_names: null, kind: 'mosque',
@@ -59,4 +59,18 @@ test('Kaynak sayfaları: değişen aralık gönderilir, ters aralık reddedilir'
   assert.ok(monumentIssues({ page_from: 130, page_to: 120 }).length > 0);
   assert.ok(monumentIssues({ page_from: 0 }).length > 0);
   assert.deepEqual(monumentIssues({ page_from: 120, page_to: null }), []);
+});
+
+test('Konum durumu: otomatik konum onay bekler, doğrulanmış ve elle girilmiş konum onaylanmaz', () => {
+  const auto = { source: 'nominatim', precision: 'building', checked: false,
+    detail: { status: 'found', found: 'Muradiye Camii, Osmangazi', warnings: ['ilçe adresle uyuşmuyor'] } } satisfies GeoInfo;
+  const a = geoStatus(auto, true);
+  assert.equal(a.tone, 'warn');
+  assert.ok(a.canConfirm);
+  assert.ok(a.text.includes('yapının kendisi') && a.text.includes('yaklaşık') && a.text.includes('ilçe adresle uyuşmuyor'));
+  assert.deepEqual(geoStatus({ ...auto, checked: true }, true).canConfirm, false);
+  assert.ok(geoStatus({ source: 'manual', precision: 'exact', checked: true, detail: null }, true).text.includes('elle'));
+  const missing = geoStatus({ source: 'nominatim', precision: null, checked: false, detail: { status: 'not_found', tried: ['A, Bursa'] } }, false);
+  assert.ok(missing.text.includes('bulunamadı') && missing.text.includes('A, Bursa') && !missing.canConfirm);
+  assert.equal(geoStatus(null, false).tone, 'none');   // göç 012 uygulanmamış
 });

@@ -20,8 +20,8 @@ export const eras: Era[] = [
     span: "13. yüzyıl",
     title: "Taşın bahçeye dönüştüğü çağ",
     text: "Erzincan, Kemah ve Divriği çevresinde hüküm süren Mengücekliler döneminden kalan Divriği'de cami ile darüşşifa aynı yapı kütlesinde buluşur. UNESCO, taç kapılardaki zengin taş oymacılığını eserin öne çıkan özelliği olarak anar.",
-    tone: "#2a2b25",
-    accent: "#d0a967",
+    tone: "#f6efe0",
+    accent: "#7a5a24",
   },
   {
     id: "erken-osmanli",
@@ -30,8 +30,8 @@ export const eras: Era[] = [
     span: "15. yüzyıl",
     title: "Çininin rengiyle açılan kapılar",
     text: "Osmanlı'nın ilk merkezlerinden Bursa'da Yeşil Külliye, renkli çini yüzeylerin ve işlemeli ayrıntıların mimariyle buluştuğu erken dönemin izlerini taşır.",
-    tone: "#0f3638",
-    accent: "#7cc3b3",
+    tone: "#efe6d1",
+    accent: "#1f5847",
   },
   {
     id: "klasik-osmanli",
@@ -40,8 +40,8 @@ export const eras: Era[] = [
     span: "16. yüzyıl",
     title: "Kubbenin, avlunun ve külliyenin ustalığı",
     text: "Mimar Sinan'ın İstanbul ve Edirne'deki yapılarında kubbe, avlu ve külliye düzeni; ibadeti, eğitimi, sağlığı ve yardımlaşmayı aynı kent dokusunda bir araya getirir.",
-    tone: "#33261b",
-    accent: "#e2bd7c",
+    tone: "#f3e9d6",
+    accent: "#6e4f1f",
   },
 ];
 

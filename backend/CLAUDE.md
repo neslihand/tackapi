@@ -117,7 +117,16 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   **Düzeltmelerden sonra `load_extractions.py` çalıştırma** (tüm eserleri eski metinden yükler). Sıra: `migrate.py
   --apply` → `reextract.py --pilot --pages-only` → `embed_gemini.py` → `reextract.py --pilot` → panelde fotoğraflar →
   `visual_search.py --pilot` → `narrations.py --pilot` (geliştirici çalıştırır). README §7.9.
-- **Testler:** `python -m unittest discover -s tests` (122 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Eser konumları (26 Ekim 2026):** Yalnızca pilot eserler. `geocode.py --pilot` OpenStreetMap Nominatim'den (ücretsiz,
+  anahtarsız; 1 sn/istek, önbellek `data/geocode_cache.json`) ad + mahalle + ilçe + şehirle konum arar, kontrol listesi
+  `data/review/konumlar.csv`; `--write` olmadan veritabanı değişmez. Göç `012_geo.sql` (`geo_source`, `geo_precision`,
+  `geo_checked`, `geo_detail`) gerçek veritabanında henüz uygulanmadı; betik gerçek veritabanında çalıştırılmadı.
+  **Doğrulanmamış otomatik konum sitede kesin gibi gösterilmez:** `api.monument_detail` → `location.approximate` ve
+  belirsizlik dairesi (`geocode.public_location`). Panelde eser düzenleme sayfasında harita (işaretçi sürükleme/tıklama,
+  "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
+  yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
+  README §7.10.
+- **Testler:** `python -m unittest discover -s tests` (132 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -176,12 +185,15 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 
 ## Bekleyen işler (öncelik sırasıyla öneri)
 Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında canlı demo olarak yapılacak.
-1. **Ön yüzü arka uca bağlamak** (`../frontend`, React + Vite) — **ön yüz geliştiricisinin iznini bekliyor.** Statik 6
-   örnek eser kaldırılacak; liste, eser sayfası, galeri, sohbet (3 anlatım modu) ve harita API'den beslenecek; ön yüzdeki
-   `/yonetim` bağlantısı `../admin` paneline yönlendirilecek.
+1. **Ön yüz bağlantısı (27 Ekim 2026, pilot eserler):** `VITE_VAKIF_API=1` ile koleksiyon, eser sayfası, "Esere Sor",
+   kamera ve harita API'den gelir (`frontend/src/lib/vakifApi.ts`, `frontend/src/vakif/`; eser sayfası panel
+   önizlemesindeki `MonumentView`'un kopyası). Kalan işler ve arka uç planı: `docs/on-yuz-baglanti-plani.md`
+   (tek adresten sunma, mimar/bânî alanı, keşif rotaları, …).
 2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
    ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
-3. Harita ve "Yakınımdakiler" için eser koordinatları (adres ve mahalle bilgisinden toplu coğrafi kodlama ve kontrol).
+3. Harita ve "Yakınımdakiler": pilot eserler için `geocode.py` ve eser sayfası haritası hazır (göç 012 ve
+   `geocode.py --pilot --write` geliştiricinin onayını bekliyor; sonra konumlar panelden onaylanmalı). Kalan:
+   "Yakınımdakiler" ucu ve liste haritası, pilot dışı eserler.
 4. Veri temizliği: Hz. Üftâde Türbesi metni (Bursa II, "Şair (Gedik) Ahmet Paşa Türbesi Haziresi" kaydına karışmış;
    panelde "yeni esere ayır" ile ayrılacak) ve Hz. Üftâde Tekkesi'nin sonundaki Abdal Mehmed Türbesi paragrafları
    (panelde aralık taşıma); Hatay'da başlığı İngilizceyle karışmış kayıtlar ("Workplace and

@@ -3,11 +3,12 @@ import { ArrowDown, ArrowUp, ArrowUpRight, Download, FileUp, Plus, RotateCcw, Sa
 import type { Artifact, QuizQuestion } from '../data/artifacts';
 import type { Season } from '../data/collections';
 import { artifactIssues, blankArtifact, parseOverrides, PLACEHOLDER_IMAGE, questionIssues, seasonIssues, serializeOverrides, slugify, type Content } from '../lib/content';
-import { baseContent, useContent } from '../lib/contentStore';
+import { baseContent, useContent, useLocalContent } from '../lib/contentStore';
 import { achievements, emptyProgress } from '../lib/progress';
 import { useProgress } from '../lib/store';
 import { Link } from '../lib/navigation';
-import { PageHeading } from '../components/UI';
+import { vakifApiEnabled } from '../lib/vakifApi';
+import { PageHeading, Scene } from '../components/UI';
 
 type Tab = 'artifacts' | 'quiz' | 'seasons' | 'achievements' | 'data';
 const tabs: [Tab, string][] = [['artifacts', 'Eserler ve hikâyeler'], ['quiz', 'Quiz soruları'], ['seasons', 'Keşif sezonları'], ['achievements', 'Başarımlar'], ['data', 'Veri']];
@@ -24,7 +25,7 @@ function Issues({ list }: { list: string[] }) {
 function Actions({ children }: { children: ReactNode }) { return <div className="admin-actions">{children}</div>; }
 
 function ArtifactsPanel() {
-  const { artifacts, quizQuestions, seasons, save } = useContent();
+  const { artifacts, quizQuestions, seasons, save } = useLocalContent();
   const { notify } = useProgress();
   const [draft, setDraft] = useState<Artifact>(() => clone(artifacts[0]));
   const [isNew, setIsNew] = useState(false);
@@ -62,9 +63,9 @@ function ArtifactsPanel() {
     save(next); pick(next.artifacts![0]); notify('Eser kaldırıldı.');
   }
   return <div className="admin-split">
-    <div className="admin-list" role="listbox" aria-label="Eser seç">
-      {artifacts.map(a => <button key={a.id} role="option" aria-selected={!isNew && draft.id === a.id} className={!isNew && draft.id === a.id ? 'active' : ''} onClick={() => pick(a)}><img src={a.image} alt="" /><span><strong>{a.name}</strong><small>{a.city} · {baseContent.artifacts.some(b => b.id === a.id) ? 'İlk koleksiyon' : 'Yerel eklenen'}</small></span></button>)}
-      {isNew && <button role="option" aria-selected="true" className="active"><img src={PLACEHOLDER_IMAGE} alt="" /><span><strong>{draft.name || 'Yeni eser'}</strong><small>Kaydedilmedi</small></span></button>}
+    <div className="admin-list" role="group" aria-label="Düzenlenecek eser">
+      {artifacts.map(a => <button key={a.id} aria-current={!isNew && draft.id === a.id ? 'true' : undefined} className={!isNew && draft.id === a.id ? 'active' : ''} onClick={() => pick(a)}><img src={a.image} alt="" /><span><strong>{a.name}</strong><small>{a.city} · {baseContent.artifacts.some(b => b.id === a.id) ? 'İlk koleksiyon' : 'Yerel eklenen'}</small></span></button>)}
+      {isNew && <button aria-current="true" className="active"><img src={PLACEHOLDER_IMAGE} alt="" /><span><strong>{draft.name || 'Yeni eser'}</strong><small>Kaydedilmedi</small></span></button>}
       <button className="admin-add" onClick={create}><Plus size={17} /> Yeni eser ekle</button>
     </div>
     <form className="admin-form" ref={form} onSubmit={submit} noValidate>
@@ -111,7 +112,7 @@ function ArtifactsPanel() {
 }
 
 function QuizPanel() {
-  const { quizQuestions, artifacts, save, reset, overrides } = useContent();
+  const { quizQuestions, artifacts, save, reset, overrides } = useLocalContent();
   const { notify } = useProgress();
   const [drafts, setDrafts] = useState<QuizQuestion[]>(() => clone(quizQuestions));
   const [open, setOpen] = useState(drafts[0]?.id ?? '');
@@ -130,7 +131,7 @@ function QuizPanel() {
     if (save({ quizQuestions: drafts })) notify('Quiz soruları kaydedildi.');
   }
   return <div className="admin-stack">
-    <p className="admin-help">Her tur havuzdan en fazla beş soru seçer. Soruları eser hikâyelerindeki doğrulanmış bilgilere dayandır.</p>
+    <p className="admin-help">Her tur havuzdan en fazla dört soru seçer. Havuzda bu soruların yanında eser verisinden otomatik üretilen sorular (şehir, usta, yüzyıl, dönem, mimari ayrıntı) da bulunur. Soruları eser hikâyelerindeki doğrulanmış bilgilere dayandır.</p>
     <Issues list={summary} />
     {drafts.map((q, n) => <section className={`admin-card ${open === q.id ? 'open' : ''}`} key={q.id}>
       <button className="admin-card-head" onClick={() => setOpen(open === q.id ? '' : q.id)} aria-expanded={open === q.id}><i>{String(n + 1).padStart(2, '0')}</i><span>{q.question || 'Yeni soru'}</span>{issues[q.id] && <b>{issues[q.id].length} sorun</b>}<ArrowDown size={16} /></button>
@@ -146,7 +147,7 @@ function QuizPanel() {
 }
 
 function SeasonsPanel() {
-  const { seasons, artifacts, save, reset, overrides } = useContent();
+  const { seasons, artifacts, save, reset, overrides } = useLocalContent();
   const { notify } = useProgress();
   const [drafts, setDrafts] = useState<Season[]>(() => clone(seasons));
   const [issues, setIssues] = useState<Record<string, string[]>>({});
@@ -175,14 +176,14 @@ function SeasonsPanel() {
 }
 
 function AchievementsPanel() {
-  const { artifacts } = useContent();
+  const { artifacts } = useLocalContent();
   return <div className="admin-stack"><p className="admin-help">Madalyon kuralları kullanıcı ilerlemesini doğrudan etkilediği için bu sürümde koddan yönetilir (<code>src/lib/progress.ts</code>). Burada yalnızca güncel kurallar listelenir.</p>
     <table className="admin-table"><thead><tr><th scope="col">Madalyon</th><th scope="col">Materyal</th><th scope="col">Koşul</th><th scope="col">Eşik</th></tr></thead><tbody>{achievements(emptyProgress(), artifacts).map(a => <tr key={a.id}><th scope="row">{a.name}</th><td>{metals[a.metal]}</td><td>{a.description}</td><td>{a.required}</td></tr>)}</tbody></table>
     <Link className="text-link" to="/basarimlar">Madalyon odasını aç <ArrowUpRight size={15} /></Link></div>;
 }
 
 function DataPanel({ onReplaced }: { onReplaced: () => void }) {
-  const content = useContent();
+  const content = useLocalContent();
   const { notify } = useProgress();
   const [error, setError] = useState('');
   const rows: [keyof Content, string, number][] = [['artifacts', 'Eserler ve hikâyeler', content.artifacts.length], ['quizQuestions', 'Quiz soruları', content.quizQuestions.length], ['seasons', 'Keşif sezonları', content.seasons.length]];
@@ -208,6 +209,16 @@ function DataPanel({ onReplaced }: { onReplaced: () => void }) {
 }
 
 export function Admin() {
+  const { readOnly } = useContent();
+  if (readOnly && vakifApiEnabled()) {
+    // The backend's works are managed in the admin panel (../admin), a separate app with its own sign-in.
+    const panel = String(import.meta.env.VITE_ADMIN_URL ?? '').trim() || 'http://127.0.0.1:5174';
+    return <Scene><div className="page-shell empty-state"><h1>Eserler yönetim panelinden düzenlenir.</h1><p>Bu koleksiyon arka uçtan gelir. Eserleri, fotoğrafları, anlatımları ve konumları yönetim panelinde düzenleyebilirsin; panel yönetici anahtarı ister.</p><a className="button dark" href={panel}>Yönetim paneline git</a></div></Scene>;
+  }
+  return readOnly ? <Scene><div className="page-shell empty-state"><h1>Bu koleksiyon salt okunur.</h1><p>Bu koleksiyondaki eserler yerel yönetim panelinden düzenlenemez.</p><Link className="button dark" to="/kesfet">Eserleri keşfet</Link></div></Scene> : <LocalAdmin />;
+}
+
+function LocalAdmin() {
   const [tab, setTab] = useState<Tab>('artifacts');
   const [epoch, setEpoch] = useState(0);
   const tabList = useRef<HTMLDivElement>(null);
@@ -219,10 +230,10 @@ export function Admin() {
     tabList.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
   }
   const panel = { artifacts: <ArtifactsPanel />, quiz: <QuizPanel />, seasons: <SeasonsPanel />, achievements: <AchievementsPanel />, data: <DataPanel onReplaced={() => setEpoch(e => e + 1)} /> }[tab];
-  return <div className="page-shell admin-page">
+  return <Scene><div className="page-shell admin-page">
     <PageHeading kicker="YEREL DEMO YÖNETİM PANELİ" title={<>Koleksiyonu <em>düzenle.</em></>}>Eserleri, hikâye metinlerini, quiz sorularını ve keşif sezonlarını bu tarayıcıda dene.</PageHeading>
     <div className="demo-notice admin-notice"><ShieldAlert size={22} /><div><strong>Sunucu, hesap veya yetkilendirme yok</strong><p>Bu panel bir prototiptir. Değişiklikler yalnızca bu tarayıcının yerel deposuna kaydedilir ve başka ziyaretçilere ulaşmaz. Gerçek kullanım için sunucu, veritabanı ve yetkili kullanıcı girişi gerekir.</p></div></div>
     <div className="admin-tabs" role="tablist" aria-label="Yönetim bölümleri" ref={tabList} onKeyDown={keys}>{tabs.map(([id, label]) => <button key={id} role="tab" id={`tab-${id}`} aria-selected={tab === id} aria-controls={`panel-${id}`} tabIndex={tab === id ? 0 : -1} onClick={() => setTab(id)}>{label}</button>)}</div>
     <div className="admin-panel" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} key={`${tab}-${epoch}`}>{panel}</div>
-  </div>;
+  </div></Scene>;
 }

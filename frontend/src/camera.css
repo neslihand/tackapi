@@ -1,0 +1,183 @@
+/* Kamera ile Keşfet (pages/Camera.tsx) in the entrance's language: a numbered heading, the demo note as a hairline
+   strip, a viewfinder with an arch to frame the building in, and the flow as three numbered steps ending in an ivory
+   museum label. The buttons are the entrance's key plate and drawn link (entrance.css). Scoped to .camera-scene;
+   loaded last. */
+
+.camera-scene {
+  --en-ivory: #f3ecdf; --en-gold: #c7a96b; --en-gold-light: #e6d5ae; --en-gold-deep: #8a6a36; --cm-ink: #17201c;
+  --cm-line: #e6d5ae2e;
+  --cm-inset: clamp(16px, 2vw, 28px);
+  --pl-left: clamp(22px, 6vw, 112px);
+  --pl-ease: cubic-bezier(.16, 1, .3, 1);
+  position: relative;
+  overflow: clip;
+  /* A parchment gap keeps the dark page apart from the dark footer, as on the map. */
+  margin-bottom: 76px;
+  border-radius: 0 0 32px 32px;
+  color: var(--en-ivory);
+  background: radial-gradient(ellipse 70% 620px at 18% 0, #173a31, transparent 72%), linear-gradient(180deg, #0b1f19, #061410 720px, #030a08);
+}
+.cm-girih { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .05; color: var(--en-gold-light); -webkit-mask-image: linear-gradient(180deg, #000, transparent 70%); mask-image: linear-gradient(180deg, #000, transparent 70%); }
+.camera-scene .cm-page { position: relative; max-width: none; padding: clamp(132px, 13vw, 176px) var(--pl-left) clamp(56px, 6vw, 96px); }
+.camera-scene :focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; box-shadow: none; }
+
+/* ——— N° 01: the heading ——— */
+.cm-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 380px); align-items: end; gap: 24px clamp(30px, 5vw, 90px); }
+.cm-index { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; }
+.cm-index > span { font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.cm-index > i { width: 40px; height: 1px; background: currentColor; opacity: .5; }
+.cm-title { margin: 0; font-size: clamp(46px, 7vw, 120px); font-weight: 300; line-height: .9; letter-spacing: -.035em; color: var(--en-ivory); }
+.cm-line { display: block; overflow: hidden; padding: 0 .04em .1em; margin-bottom: -.1em; }
+.cm-line > * { display: inline-block; }
+.cm-title em { padding-left: 1.6em; font-weight: 300; color: var(--en-gold-light); }
+.cm-lede { margin: 0 0 .9em; font-size: 15px; line-height: 1.7; color: #c9cfc8; }
+
+/* ——— The demo note: one hairline strip, plain about what the demo does ——— */
+.cm-notice { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 12px clamp(18px, 2.4vw, 40px); margin: clamp(44px, 5vw, 72px) 0 0; padding: 18px 0; border-top: 1px solid var(--cm-line); border-bottom: 1px solid var(--cm-line); }
+.cm-notice > svg { color: var(--en-gold-light); }
+.cm-notice strong { font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; color: #d9c9a5; }
+.cm-notice p { max-width: 78ch; margin: 0; padding-left: clamp(18px, 2.4vw, 40px); font-size: 14px; line-height: 1.7; color: #c9cfc8; border-left: 1px solid var(--cm-line); }
+
+.cm-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; gap: clamp(32px, 5vw, 96px); margin-top: clamp(30px, 3.4vw, 48px); }
+
+/* ——— The viewfinder ——— */
+.cm-finder { position: relative; min-height: clamp(520px, 66svh, 700px); overflow: hidden; border-radius: 3px; background: radial-gradient(ellipse 60% 55% at 50% 56%, #12352b, #061410 70%, #030a08); box-shadow: 0 0 0 1px var(--cm-line), 0 50px 90px -50px #000; }
+.cm-finder > img, .cm-finder > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.cm-finder.live > video { object-fit: cover; }
+/* A shade under the readout and the controls, so they stay legible over any photo. */
+.cm-finder::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, #030a0899, transparent 22%, transparent 74%, #030a08aa); }
+.cm-guide { position: absolute; inset: var(--cm-inset); z-index: 2; pointer-events: none; }
+.cm-guide > i { position: absolute; width: 26px; height: 26px; border: 0 solid var(--en-gold-light); opacity: .7; transition: width .7s var(--pl-ease), height .7s var(--pl-ease), opacity .5s; }
+.cm-guide > i:nth-child(1) { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+.cm-guide > i:nth-child(2) { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+.cm-guide > i:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+.cm-guide > i:nth-child(4) { right: 0; bottom: 0; border-right-width: 1px; border-bottom-width: 1px; }
+.cm-thirds { position: absolute; inset: 0; opacity: 0; transition: opacity .5s; background: linear-gradient(90deg, transparent calc(33.33% - .5px), #e6d5ae33 calc(33.33% - .5px) calc(33.33% + .5px), transparent calc(33.33% + .5px) calc(66.66% - .5px), #e6d5ae33 calc(66.66% - .5px) calc(66.66% + .5px), transparent calc(66.66% + .5px)), linear-gradient(180deg, transparent calc(33.33% - .5px), #e6d5ae33 calc(33.33% - .5px) calc(33.33% + .5px), transparent calc(33.33% + .5px) calc(66.66% - .5px), #e6d5ae33 calc(66.66% - .5px) calc(66.66% + .5px), transparent calc(66.66% + .5px)); }
+.cm-arch { position: absolute; inset: 6% 0 4%; width: 100%; height: 90%; overflow: visible; transition: opacity .5s; }
+.cm-arch path { fill: none; stroke: var(--en-gold-light); stroke-width: 1; stroke-dasharray: 1; vector-effect: non-scaling-stroke; }
+.cm-arch .a0 { stroke-opacity: .5; }
+.cm-arch .a1 { stroke-opacity: .2; }
+.cm-arch .base { stroke-opacity: .3; }
+.cm-empty { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16% 20% 0; text-align: center; }
+.cm-empty-title { margin: 0; font-family: var(--serif); font-size: clamp(24px, 2.3vw, 33px); font-weight: 300; line-height: 1.08; letter-spacing: -.01em; color: var(--en-ivory); }
+.cm-empty-title em { color: var(--en-gold-light); }
+.cm-empty-note { margin: 0; font-size: 13.5px; color: #c9cfc8; }
+.cm-readout { position: absolute; top: calc(var(--cm-inset) + 4px); left: calc(var(--cm-inset) + 40px); z-index: 3; display: flex; align-items: center; gap: 10px; margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #d9c9a5; pointer-events: none; }
+.cm-readout > i { width: 6px; height: 6px; border-radius: 50%; background: #e6d5ae66; transition: background .4s, box-shadow .4s; }
+/* Live: the thirds come in and the arch stays as a guide. A photo: the corners alone. A result: the corners close in gold. */
+.cm-finder.live .cm-thirds { opacity: 1; }
+.cm-finder.live .cm-arch { opacity: .7; }
+.cm-finder.live .cm-readout > i { background: var(--en-gold-light); box-shadow: 0 0 10px #e6d5aeb3; }
+.cm-finder.framed .cm-arch { opacity: 0; }
+.cm-finder.matched .cm-guide > i { width: 46px; height: 46px; opacity: 1; border-color: var(--en-gold); }
+.cm-finder.matched .cm-readout { color: var(--en-gold-light); }
+.cm-finder.matched .cm-readout > i { background: var(--en-gold); }
+.cm-close { position: absolute; top: var(--cm-inset); right: var(--cm-inset); z-index: 4; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #e6d5ae66; border-radius: 50%; color: var(--en-ivory); background: #030a08b3; transition: color .3s, background .3s, border-color .3s; }
+.cm-close:hover { color: var(--cm-ink); border-color: transparent; background: var(--en-gold-light); }
+.cm-shutter { position: absolute; bottom: clamp(22px, 3vw, 36px); left: 50%; z-index: 4; width: 72px; height: 72px; padding: 0; translate: -50% 0; border: 1px solid var(--en-gold-light); border-radius: 50%; background: #030a0866; }
+.cm-shutter::before { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: linear-gradient(180deg, #f1e5c6, #d6bc89); transition: inset .35s var(--pl-ease); }
+.cm-shutter:hover::before { inset: 9px; }
+.cm-shutter:active::before { inset: 12px; }
+
+/* ——— The steps: numbered rows between hairlines ——— */
+.cm-steps { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--cm-line); }
+.cm-step { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: center; column-gap: 20px; padding: 26px 0 30px; border-bottom: 1px solid var(--cm-line); }
+.cm-no { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid #e6d5ae4d; border-radius: 50%; font-family: var(--serif); font-size: 18px; font-style: italic; color: #d9c9a5; transition: color .4s, background .4s, border-color .4s; }
+.cm-step.now .cm-no { border-color: var(--en-gold-light); color: var(--en-gold-light); }
+.cm-step.done .cm-no { border-color: transparent; color: var(--cm-ink); background: var(--en-gold-light); }
+.cm-step h2 { margin: 0; font-size: clamp(26px, 2.3vw, 34px); font-weight: 400; line-height: 1.1; letter-spacing: -.01em; color: var(--en-ivory); }
+.cm-body { grid-column: 2; display: flex; flex-direction: column; align-items: stretch; gap: 14px; margin-top: 18px; }
+.cm-body > small { font-size: 12px; color: #b4bcb5; }
+.cm-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 30px; }
+.camera-scene .cm-key .en-key-label { white-space: nowrap; }
+/* Not ready yet: the plate becomes an empty outline, so it reads as waiting rather than as a dimmed button. */
+.camera-scene .cm-steps .cm-key.en-key:disabled { cursor: not-allowed; opacity: 1; color: #e6d5aeb3; background: none; box-shadow: inset 0 0 0 1px #e6d5ae59; translate: none; scale: 1; }
+.camera-scene .cm-steps .cm-key.en-key:disabled::before { display: none; }
+.camera-scene .cm-steps .cm-key.en-key:disabled .en-key-arrow { border-left-color: #e6d5ae33; }
+.camera-scene .cm-show { justify-content: space-between; width: 100%; }
+/* The upload is the drawn link with the file input laid over it. */
+.cm-upload { position: relative; cursor: pointer; }
+.cm-upload input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.cm-upload:focus-within { outline: 2px solid var(--en-gold-light); outline-offset: 6px; }
+.camera-scene .cm-upload:hover .en-link-arrow { rotate: none; }
+.cm-error { margin: 0; padding-left: 16px; font-size: 14px; line-height: 1.6; color: #f0c4b2; border-left: 1px solid #e8a58e; }
+.cm-select { position: relative; display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid #e6d5ae59; transition: border-color .3s; }
+.cm-select:focus-within { border-bottom-color: var(--en-gold-light); }
+.cm-label { font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #d9c9a5; }
+.camera-scene .cm-select select { width: 100%; min-height: 48px; padding: 4px 36px 4px 0; border: 0; font-family: var(--serif); font-size: 24px; color: var(--en-ivory); background: none; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.camera-scene .cm-select select:focus-visible { outline: 0; }
+.camera-scene .cm-select option { font-family: Inter, sans-serif; font-size: 15px; color: var(--en-ivory); background: #0b1f19; }
+.cm-select > svg { position: absolute; right: 2px; bottom: 22px; color: var(--en-gold); pointer-events: none; }
+.cm-hint { margin: 0; font-family: var(--serif); font-size: 18px; font-style: italic; line-height: 1.4; color: #d9c9a5; }
+
+/* ——— The result: an ivory museum label for the chosen work ——— */
+.cm-result { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 22px; padding: 16px 22px 16px 16px; border-radius: 3px; color: var(--cm-ink); background: var(--en-ivory); box-shadow: 0 0 0 1px #8a6a3666, 0 40px 70px -40px #000; }
+.cm-result::before { content: ''; position: absolute; inset: 6px; border: 1px solid #8a6a3640; border-radius: 2px; pointer-events: none; }
+.cm-result-media { width: 96px; height: 124px; overflow: hidden; border-radius: 999px 999px 2px 2px; background: #0b1f19; }
+.cm-result-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cm-result-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.cm-result small { font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #765b38; }
+.cm-result h3 { margin: 6px 0 4px; font-size: clamp(24px, 2vw, 30px); font-weight: 400; line-height: 1.05; color: var(--cm-ink); }
+.cm-result p { margin: 0; font-size: 13.5px; color: #4b5448; }
+.cm-result-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 4px; font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--cm-ink); background: linear-gradient(currentColor, currentColor) 0 calc(100% - 10px) / 30% 1px no-repeat; transition: background-size .55s var(--pl-ease); }
+.cm-result-link:hover { background-size: 100% 1px; }
+.camera-scene .cm-result-link:focus-visible { outline-color: var(--en-gold-deep); }
+
+/* ——— Motion ——— */
+@media (prefers-reduced-motion: no-preference) {
+  .cm-index { animation: en-fade-up .9s var(--pl-ease) .1s both; }
+  .cm-line > * { animation: en-rise 1.25s var(--pl-ease) .15s both; }
+  .cm-line + .cm-line > * { animation-delay: .27s; }
+  .cm-lede { animation: en-fade-up .9s var(--pl-ease) .45s both; }
+  .cm-notice { animation: en-fade-up .9s var(--pl-ease) .55s both; }
+  .cm-finder { animation: cm-open 1.3s var(--pl-ease) .5s both; }
+  .cm-arch path { animation: en-draw 2.2s cubic-bezier(.6, 0, .2, 1) .8s backwards; }
+  .cm-arch .a1 { animation-delay: .95s; }
+  .cm-empty { animation: en-fade-up 1s var(--pl-ease) 1.2s both; }
+  .cm-step { animation: en-fade-up .9s var(--pl-ease) .7s both; }
+  .cm-step:nth-child(2) { animation-delay: .8s; }
+  .cm-step:nth-child(3) { animation-delay: .9s; }
+  .cm-result { animation: en-fade-up .8s var(--pl-ease) both; }
+}
+@keyframes cm-open { from { opacity: 0; clip-path: inset(8% 8% 8% 8% round 3px); } to { clip-path: inset(0 round 3px); } }
+
+/* ——— Smaller screens ——— */
+@media (max-width: 1100px) {
+  .cm-head { grid-template-columns: 1fr; gap: 20px; }
+  .cm-lede { max-width: 520px; margin: 0; }
+}
+@media (max-width: 900px) {
+  .cm-layout { grid-template-columns: 1fr; }
+  .cm-finder { min-height: 0; aspect-ratio: 4 / 5; max-height: 72svh; }
+}
+@media (max-width: 760px) {
+  .camera-scene { --pl-left: 22px; margin-bottom: 56px; border-radius: 0 0 22px 22px; }
+  .camera-scene .cm-page { padding: 104px var(--pl-left) 48px; }
+  .cm-index { font-size: 10px; letter-spacing: .18em; }
+  .cm-index > span { font-size: 17px; }
+  .cm-index > i { width: 24px; }
+  .cm-title { font-size: clamp(42px, 12vw, 60px); }
+  .cm-title em { padding-left: .9em; }
+  .cm-lede { font-size: 14.5px; }
+  .cm-notice { grid-template-columns: auto minmax(0, 1fr); margin-top: 28px; }
+  .cm-notice p { grid-column: 1 / -1; padding-left: 0; border-left: 0; font-size: 13.5px; }
+  .cm-empty { padding-inline: 14%; }
+  .cm-step { grid-template-columns: 40px minmax(0, 1fr); column-gap: 16px; padding: 22px 0 26px; }
+  .cm-no { width: 40px; height: 40px; font-size: 16px; }
+  .cm-body { grid-column: 1 / -1; }
+  .cm-result { grid-template-columns: 72px minmax(0, 1fr); gap: 16px; }
+  .cm-result-media { width: 72px; height: 94px; }
+}
+@media (max-width: 400px) {
+  .camera-scene { --pl-left: 16px; }
+  .cm-actions { flex-direction: column; align-items: flex-start; }
+  .camera-scene .cm-key .en-key-label { padding-inline: 16px; letter-spacing: .12em; white-space: normal; }
+  .camera-scene .cm-select select { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-guide > i, .cm-thirds, .cm-arch, .cm-shutter::before { transition: none; }
+}
+@media (forced-colors: active) {
+  .cm-finder, .cm-result, .cm-no { border: 1px solid CanvasText; }
+  .cm-readout > i { forced-color-adjust: none; }
+}

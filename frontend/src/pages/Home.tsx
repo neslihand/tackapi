@@ -1,15 +1,42 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { ArrowRight, ArrowUpRight, Compass, MapPin, Sparkles, Stamp } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Stamp } from 'lucide-react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { HeroGate } from '../components/HeroGate';
-import { ArtifactCard } from '../components/ArtifactCard';
-import { PeriodTimeline } from '../components/PeriodTimeline';
-import { ArrowLink, Eyebrow } from '../components/UI';
+import { Manifesto, PanoramaScene, PassportVisual, SeasonStack, Statement } from '../components/HomeScenes';
+import { Chapter } from '../components/PlayScenes';
+import { QuizMark } from '../components/PlayArt';
+import { StoryRing } from '../components/StoryRing';
 import { Link } from '../lib/navigation';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
+import { quizPool } from '../lib/quiz';
 
+// The home page after the entrance: numbered chapters in the entrance's language, ivory and night in turn, each with
+// its own scene — the story ring, Divriği's pinned picture, a second threshold, the routes, the passport and the day's
+// discovery.
 const pad = (n: number) => String(n).padStart(2, '0');
+const TOTAL = 6;
+
+// A second threshold: the next door to open, seen through a drawn arch, with the line set around it.
+function Threshold({ artifact, done }: { artifact: { name: string; city: string; slug: string; image: string; year: string }; done: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  const shown = useInView(ref, { once: true, amount: 0.35 });
+  const still = Boolean(useReducedMotion());
+  const rise = (delay: number) => still ? {} : { initial: { y: '108%' }, animate: shown ? { y: '0%' } : undefined, transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const } };
+  return <section ref={ref} className="hp-threshold" data-nav-theme="dark" aria-labelledby="final-gate-title">
+    <p className="pl-index"><span>03</span><i aria-hidden="true" /><span>{pad(TOTAL)}</span><b>YENİ BİR EŞİK</b></p>
+    <div className="hp-arch" aria-hidden="true">
+      <div className="hp-arch-window"><span className="hp-arch-reveal"><img src={artifact.image} alt="" loading="lazy" /></span></div>
+      <svg className="final-gate-arch" viewBox="0 0 300 380"><path pathLength="1" d="M20 380V170C20 92 80 38 150 12C220 38 280 92 280 170V380" /><path pathLength="1" d="M4 380V166C4 82 70 24 150 -4C230 24 296 82 296 166V380" /></svg>
+    </div>
+    <h2 id="final-gate-title" className="hp-threshold-title"><span className="hp-tw a"><motion.span {...rise(0)}>Her kapı,</motion.span></span> <span className="hp-tw b"><motion.span {...rise(0.15)}><em>bir başkasına açılır.</em></motion.span></span></h2>
+    <div className="hp-threshold-foot">
+      <p>{done ? 'Koleksiyonun tamamlandı. Günün eserine yeniden bakmaya ne dersin?' : <>Sıradaki kapı seni bekliyor: <b>{artifact.name}</b> · {artifact.city}</>}</p>
+      <div className="hp-actions"><Link className="hp-cta en-key" to={`/eser/${artifact.slug}`}><span className="en-key-label">Sıradaki kapıyı aç</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hp-link en-link" to="/harita"><span>Haritada bir iz seç</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
+    </div>
+  </section>;
+}
 
 export function Home() {
   const ref = useRef<HTMLDivElement>(null);
@@ -18,31 +45,53 @@ export function Home() {
   const today = artifacts[Math.floor(Date.now() / 86400000) % artifacts.length];
   const nextDoor = artifacts.find(a => !progress.discovered[a.id]) ?? today;
   const divrigi = artifacts.find(a => a.id === 'divrigi');
+  const found = artifacts.filter(a => progress.discovered[a.id]).length;
   useEffect(() => {
     const match = gsap.matchMedia();
     match.add('(prefers-reduced-motion: no-preference)', () => {
       const context = gsap.context(() => {
-        gsap.utils.toArray<HTMLElement>('.reveal').forEach(element => gsap.from(element, { y: 45, opacity: 0, duration: 0.9, ease: 'power2.out', scrollTrigger: { trigger: element, start: 'top 91%', once: true } }));
-        gsap.to('.story-panorama img', { yPercent: 13, ease: 'none', scrollTrigger: { trigger: '.story-panorama', start: 'top bottom', end: 'bottom top', scrub: true } });
-        // Closing threshold: the arch draws itself as the visitor arrives.
-        gsap.fromTo('.final-gate-arch path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: '.final-gate', start: 'top 85%', end: 'center 55%', scrub: true } });
-        gsap.fromTo('.final-gate-glow', { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, ease: 'none', scrollTrigger: { trigger: '.final-gate', start: 'top 60%', end: 'center 50%', scrub: true } });
+        // The second threshold: the arch draws itself and the next door comes into view.
+        gsap.fromTo('.hp-threshold .final-gate-arch path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, ease: 'none', stagger: 0.1, scrollTrigger: { trigger: '.hp-threshold', start: 'top 80%', end: 'center 55%', scrub: true } });
+        gsap.fromTo('.hp-arch-reveal', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', ease: 'none', scrollTrigger: { trigger: '.hp-threshold', start: 'top 60%', end: 'center 50%', scrub: true } });
+        gsap.fromTo('.hp-arch-window img', { scale: 1.3 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: '.hp-threshold', start: 'top bottom', end: 'bottom top', scrub: true } });
       }, ref);
       return () => context.revert();
     });
     return () => match.revert();
   }, []);
-  return <div ref={ref}><HeroGate />
-    <section className="manifesto"><span>FARK ET</span><i>✧</i><span>MERAK ET</span><i>✧</i><span>ÖĞREN</span><i>✧</i><span>KEŞFET</span><i>✧</i><span>DENEYİMLE</span></section>
-    <section className="section featured" id="featured"><div className="section-heading reveal"><div><Eyebrow>TAŞA İŞLENEN HİKÂYELER</Eyebrow><h2 id="featured-title" tabIndex={-1}>Bazı kapılar, <em>yüzyıllara açılır.</em></h2></div><ArrowLink to="/kesfet">Tüm eserleri keşfet</ArrowLink></div><div className="artifact-grid featured-grid">{artifacts.slice(0, 3).map((artifact, i) => <div className="reveal" key={artifact.id}><ArtifactCard artifact={artifact} index={i} /></div>)}</div><p className="collection-note">{pad(artifacts.length)} eser <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} şehir <span>·</span> Sayısız keşif <i>Birlikte koruduğumuz miras.</i></p></section>
-    {divrigi && <section className="story-panorama" data-nav-theme="dark"><img src={divrigi.image} alt="Divriği'nin taş kapısından esinlenen özgün mimari illüstrasyon" loading="lazy" /><div className="panorama-shade" /><div className="panorama-copy reveal"><Eyebrow light>TAŞIN HAFIZASI</Eyebrow><h2>Bir kapıya<br />kaç hikâye <em>sığar?</em></h2><p>Divriği’de taş, yalnızca bir yapı malzemesi değil.<br />Bir ustanın sabrı, bir çağın hayali.</p><Link className="button gold" to={`/eser/${divrigi.slug}`}>Hikâyenin içine gir <ArrowUpRight size={18} /></Link></div><div className="panorama-foot"><span>{divrigi.name.toLocaleUpperCase('tr-TR')}</span><span>{divrigi.city.toLocaleUpperCase('tr-TR')} · {divrigi.year}</span></div></section>}
-    <PeriodTimeline />
-    <section className="section routes-section"><div className="section-heading reveal"><div><Eyebrow>KEŞİF SEZONLARI</Eyebrow><h2>Kendi izini <em>bul.</em></h2></div><p>Bir şehir, bir dönem, bir ustanın dokunuşu.<br />Bu kez hangi rotanın peşindesin?</p></div><div className="route-layout"><Link to="/harita" className="map-teaser reveal"><div className="map-lines" /><div className="map-teaser-pin p1"><MapPin /></div><div className="map-teaser-pin p2"><MapPin /></div><div className="map-teaser-pin p3"><MapPin /></div><div className="route-copy"><span className="eyebrow">MİRAS HARİTASI</span><h3>Yakınında bir<br /><em>hikâye var.</em></h3><span>Haritada keşfet <ArrowUpRight size={20} /></span></div></Link><div className="route-list">{seasons.map((season, i) => { const found = season.artifactIds.filter(id => progress.discovered[id]).length; return <Link to={`/kesfet?season=${season.id}`} className="route-item reveal" key={season.id}><span className="route-number">{pad(i + 1)}</span><div><small>{season.kicker} · {season.artifactIds.length} DURAK{found ? ` · ${found} MÜHÜR` : ''}</small><h3>{season.title}</h3><p>{season.description}</p></div><ArrowUpRight /></Link>; })}</div></div></section>
-    <section className="passport-banner"><div className="passport-illustration" aria-hidden="true"><div className="mini-passport"><span>TÜRKİYE KÜLTÜREL MİRASI</span><Compass size={72} strokeWidth={0.8} /><h3>MİRAS<br />PASAPORTU</h3><span>EŞİK · KEŞİF GÜNLÜĞÜ</span></div><div className="floating-stamp"><Stamp size={26} /><span>İLK ADIM</span><i>YOLCULUK BAŞLIYOR</i></div></div><div className="passport-pitch reveal"><Eyebrow>BAKMAKLA BAŞLAR, KEŞFETMEKLE DEĞİŞİR</Eyebrow><h2>Her keşif bir iz.<br />Her iz <em>senin hikâyen.</em></h2><p>Eserlerin hikâyelerini keşfet, madalyonlarını kazan.<br />Kendi miras pasaportunu, kendi merakınla doldur.</p><div className="passport-actions"><Link className="button dark" to="/pasaport">Pasaportumu aç <ArrowRight size={17} /></Link><Link className="text-link" to="/basarimlar">Madalyonları gör <ArrowUpRight size={17} /></Link></div><small>{artifacts.filter(a => progress.discovered[a.id]).length} / {artifacts.length} keşif <span>·</span> Yolculuğun bu tarayıcıda saklanır.</small></div></section>
-    <section className="section final-discover"><div className="daily-discovery reveal"><Eyebrow>GÜNÜN KEŞFİ</Eyebrow><h3>{today.name}</h3><p>{today.description}</p><ArrowLink to={`/eser/${today.slug}`}>Bugünün hikâyesini oku</ArrowLink></div><div className="quiz-teaser reveal"><Sparkles size={27} /><div><small>MERAKINI BİLGİYE DÖNÜŞTÜR</small><h3>Tarihin izini sürebilir misin?</h3><p>{Math.min(5, quizQuestions.length)} soru, yepyeni bilgiler ve kazanılacak bir madalyon.</p></div><Link className="circle-link" to="/oyun" aria-label="Bilgi yarışmasına başla"><ArrowUpRight /></Link></div></section>
-    <section className="final-gate" data-nav-theme="dark" aria-labelledby="final-gate-title">
-      <div className="final-gate-visual" aria-hidden="true"><span className="final-gate-glow" /><svg className="final-gate-arch" viewBox="0 0 300 380"><path pathLength="1" d="M20 380V170C20 92 80 38 150 12C220 38 280 92 280 170V380" /><path pathLength="1" d="M52 380V176C52 112 98 70 150 48C202 70 248 112 248 176V380" /><path pathLength="1" d="M150 48V380" /></svg></div>
-      <div className="final-gate-copy"><p className="eyebrow light"><span />YENİ BİR EŞİK</p><h2 id="final-gate-title">Her kapı,<br /><em>bir başkasına açılır.</em></h2><p>{progress.discovered[nextDoor.id] ? 'Koleksiyonun tamamlandı. Günün eserine yeniden bakmaya ne dersin?' : `Sıradaki kapı seni bekliyor: ${nextDoor.name} · ${nextDoor.city}.`}</p><div className="final-gate-actions"><Link className="button gold" to={`/eser/${nextDoor.slug}`}>Sıradaki kapıyı aç <ArrowUpRight size={18} /></Link><Link className="hero-secondary" to="/harita">Haritada bir iz seç <ArrowRight size={17} /></Link></div></div>
-    </section>
+  return <div ref={ref} className="home-page"><HeroGate />
+    <Chapter id="featured" tone="ivory" n={1} total={TOTAL} kicker="TAŞA İŞLENEN HİKÂYELER" titleId="featured-title" className="hp-featured" title={<>Bazı kapılar, <em>yüzyıllara açılır.</em></>} lede={<Statement />}>
+      <StoryRing artifacts={artifacts} label="Öne çıkan hikâyeler" />
+      <div className="hp-collection"><p>{pad(artifacts.length)} eser <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} şehir <span>·</span> <i>Birlikte koruduğumuz miras.</i></p><Link className="hp-link en-link" to="/kesfet"><span>Tüm eserleri keşfet</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
+    </Chapter>
+    {divrigi && <PanoramaScene artifact={divrigi} />}
+    <Manifesto />
+    <Threshold artifact={nextDoor} done={Boolean(progress.discovered[nextDoor.id])} />
+    <Chapter id="rotalar" tone="ivory" n={4} total={TOTAL} kicker="KEŞİF SEZONLARI" titleId="routes-title" className="hp-routes" title={<>Kendi izini <em>bul.</em></>} lede={<p>Bir şehir, bir dönem, bir ustanın dokunuşu. Bu kez hangi rotanın peşindesin? Her rota bir avuç eserden kurulur; haritada da yürüyebilirsin.</p>}>
+      <SeasonStack seasons={seasons} artifacts={artifacts} discovered={progress.discovered} />
+    </Chapter>
+    <Chapter id="pasaport" tone="night" n={5} total={TOTAL} kicker="BAKMAKLA BAŞLAR, KEŞFETMEKLE DEĞİŞİR" titleId="passport-title" className="hp-passport" title={<>Her keşif bir iz. <em>Her iz senin hikâyen.</em></>} lede={<p>Eserlerin hikâyelerini keşfet, madalyonlarını kazan. Kendi miras pasaportunu, kendi merakınla doldur.</p>}>
+      <div className="hp-passport-body">
+        <PassportVisual artifacts={artifacts} />
+        <div className="hp-passport-card">
+          <p className="hp-passport-count"><strong>{pad(found)}</strong><span>/ {pad(artifacts.length)}</span><small>Pasaportundaki mühür</small></p>
+          <ol className="hp-passport-ticks" aria-hidden="true">{artifacts.map(a => <li key={a.id} className={progress.discovered[a.id] ? 'on' : ''}><Stamp size={14} /></li>)}</ol>
+          <div className="hp-actions"><Link className="hp-cta en-key" to="/pasaport"><span className="en-key-label">Pasaportumu aç</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></Link><Link className="hp-link en-link" to="/basarimlar"><span>Madalyonları gör</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
+          <small className="hp-passport-note">Yolculuğun bu tarayıcıda saklanır.</small>
+        </div>
+      </div>
+    </Chapter>
+    <Chapter id="gunun-kesfi" tone="ivory" n={6} total={TOTAL} kicker="GÜNÜN KEŞFİ" titleId="today-title" className="hp-today" title={<>Bugün bir kapı, <em>yarın bir başkası.</em></>} lede={<p>Her gün koleksiyondan bir eser öne çıkar. Hikâyesini oku, sonra bildiklerini dört soruluk yarışmada sına.</p>}>
+      <div className="hp-exhibits">
+        <Link className="hp-exhibit today" to={`/eser/${today.slug}`}>
+          <span className="hp-exhibit-art" aria-hidden="true"><img src={today.image} alt="" loading="lazy" /></span>
+          <span className="hp-exhibit-body"><small>GÜNÜN ESERİ · {today.city.toLocaleUpperCase('tr-TR')} · {today.year}</small><b>{today.name}</b><span>{today.description}</span><em>Bugünün hikâyesini oku <ArrowUpRight size={16} aria-hidden="true" /></em></span>
+        </Link>
+        <Link className="hp-exhibit quiz" to="/oyun/quiz">
+          <span className="hp-exhibit-art" aria-hidden="true"><QuizMark n={1} total={4} /></span>
+          <span className="hp-exhibit-body"><small>MERAKINI BİLGİYE DÖNÜŞTÜR</small><b>Tarihin izini sürebilir misin?</b><span>{Math.min(4, quizPool(quizQuestions, artifacts).length)} soru, yepyeni bilgiler ve kazanılacak bir madalyon.</span><em>Yarışmaya başla <ArrowUpRight size={16} aria-hidden="true" /></em></span>
+        </Link>
+      </div>
+    </Chapter>
   </div>;
 }

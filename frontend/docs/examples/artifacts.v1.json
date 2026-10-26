@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "test-record:001",
+      "slug": "deneme-eseri",
+      "name": "Deneme Eseri — Kurmaca Test Kaydı",
+      "city": "Kayseri",
+      "period": "Test dönemi",
+      "category": "Test kategorisi",
+      "description": "Bu kayıt yalnızca veri okuma akışını denemek için hazırlanmıştır. Gerçek bir tarihî eser veya doğrulanmış tarihsel bilgi içermez.",
+      "sourceReferences": [
+        { "title": "Örnek bağlantı — tarihsel kaynak değildir", "url": "https://example.org/esik-test" }
+      ]
+    }
+  ]
+}

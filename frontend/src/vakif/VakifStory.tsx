@@ -1,0 +1,46 @@
+import { useEffect, useState } from 'react';
+import { Check, Heart, Stamp } from 'lucide-react';
+import type { DiscoveryArtifact } from '../lib/artifactContract';
+import { useContent } from '../lib/contentStore';
+import { useProgress } from '../lib/store';
+import { Link } from '../lib/navigation';
+import { fetchMonument, vakifItem } from '../lib/vakifApi';
+import { AskArtifact } from '../components/AskArtifact';
+import { NextDoor } from '../components/ArtifactCard';
+import { MonumentView } from './MonumentView';
+import type { PublicDetail, PublicItem } from './model';
+import './public.css';
+
+/**
+ * Arka uçtaki bir eserin sayfası: künye, kitaptaki metin ("Detaylı Anlatım"), kayıtlı hikâye ve çocuk anlatımları,
+ * fotoğraflar, tarihçe, süsleme, harita ve kaynakça GET /api/monuments/{slug}'tan gelir (yapay zekâ sayfa açılınca
+ * çağrılmaz). Favori, pasaport mührü ve "Esere Sor" sitenin kendi araçlarıdır.
+ */
+export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
+  const { artifacts } = useContent();
+  const { progress, markDiscovered, toggleFavorite, notify } = useProgress();
+  const [detail, setDetail] = useState<PublicDetail | null>(null);
+  const [error, setError] = useState('');
+  const item = vakifItem(artifact.slug) as PublicItem | undefined;
+  useEffect(() => {
+    let alive = true;
+    setDetail(null); setError('');
+    fetchMonument<PublicDetail>(artifact.slug).then(d => { if (alive) setDetail(d); }, e => { if (alive) setError((e as Error).message); });
+    return () => { alive = false; };
+  }, [artifact.slug]);
+  const stamped = Boolean(progress.discovered[artifact.id]);
+  const favorite = progress.favorites.includes(artifact.id);
+  const next = artifacts[(artifacts.findIndex(a => a.id === artifact.id) + 1) % artifacts.length];
+  if (error || !item) return <div className="page-shell empty-state" role="alert"><h1>Eser açılamadı.</h1><p>{error || 'Bu eserin bilgisi bulunamadı.'}</p><Link className="button dark" to="/kesfet">Eserlere dön</Link></div>;
+  if (!detail) return <div className="page-shell loading-state" role="status">{artifact.name} hazırlanıyor…</div>;
+  const actions = <>
+    <AskArtifact artifact={artifact} mode="short" />
+    <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>Favori</span></button>
+    <button className={`button ${stamped ? 'stamped' : 'gold'}`} disabled={stamped} onClick={() => { markDiscovered(artifact.id); notify('Keşfin miras pasaportuna mühürlendi.'); }}>
+      {stamped ? <><Check size={17} /> Pasaportuna mühürlendi</> : <><Stamp size={17} /> Pasaportuma mühürle</>}</button>
+  </>;
+  return <div className="vakif-story">
+    <MonumentView item={item} detail={detail} lang="tr" backHref="#/kesfet" actions={actions} />
+    {next && next.id !== artifact.id && <NextDoor artifact={next} />}
+  </div>;
+}
