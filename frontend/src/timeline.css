@@ -1,0 +1,59 @@
+/* Walk through the periods (src/components/PeriodTimeline.tsx). Eras follow one another down the page; on wide
+   screens with motion (the same query as the script) the stage pins and the eras take it over in turn. */
+.tl-section { position: relative; color: #232c29; background-image: radial-gradient(ellipse 60% 40% at 74% 0, #fdfaf4, transparent 70%); }
+.tl-stage { position: relative; padding: clamp(80px, 9vw, 120px) max(6.2vw, 24px) 40px; }
+.tl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding-bottom: 22px; border-bottom: 1px solid #96949159; }
+.tl-head h2 { margin: 14px 0 0; font-size: clamp(40px, 4.6vw, 72px); line-height: 1.02; }
+.tl-head h2 em { color: #7a5a24; }
+.tl-count, .tl-index { display: none; }
+.tl-count { margin: 0; font-family: var(--serif); font-size: 22px; color: #6a664a; }
+.tl-count b { font-size: 46px; font-weight: 400; color: #232c29; }
+.tl-eras { position: relative; }
+.tl-era { position: relative; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 80px); align-items: center; padding: clamp(40px, 6vw, 80px) 0; border-bottom: 1px solid #96949140; }
+.tl-numeral { position: absolute; right: -2%; bottom: -6%; z-index: 0; font-family: var(--serif); font-size: clamp(200px, 30vw, 540px); line-height: .8; color: transparent; -webkit-text-stroke: 1.2px color-mix(in srgb, var(--accent) 38%, transparent); pointer-events: none; user-select: none; }
+.tl-figure { position: relative; z-index: 1; margin: 0; aspect-ratio: 4 / 5; max-height: 70svh; overflow: hidden; border-radius: 22px; box-shadow: 0 0 0 1px #96949166, 0 40px 80px -46px #242321cc; }
+.tl-figure img { width: 100%; height: 100%; max-width: none; object-fit: cover; transform-origin: 50% 60%; }
+.tl-figure figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 44px 22px 18px; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #f3eee5; background: linear-gradient(transparent, #0a1f18d9); }
+.tl-copy { position: relative; z-index: 1; max-width: 560px; }
+.tl-copy > small { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.tl-copy > small i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.tl-copy h3 { margin: 16px 0; font-size: clamp(34px, 3.4vw, 56px); line-height: 1.06; }
+.tl-copy > p { margin: 0; font-size: 15px; line-height: 1.8; color: #3c4639; }
+.tl-works { display: grid; gap: 10px; margin: 26px 0 22px; padding: 0; list-style: none; }
+.tl-works a { display: flex; align-items: center; gap: 14px; padding: 10px 16px 10px 10px; border: 1px solid #96949159; border-radius: 14px; background: #fbf8f1; transition: border-color .3s, background .3s, transform .3s; }
+.tl-works a:hover { border-color: var(--accent); background: #fdfaf4; transform: translateX(4px); }
+.tl-works img { width: 52px; height: 52px; flex-shrink: 0; object-fit: cover; border-radius: 10px; }
+.tl-works span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tl-works strong { font-family: var(--serif); font-size: 19px; font-weight: 500; line-height: 1.2; }
+.tl-works small { font-size: 12px; color: #4b5448; }
+.tl-more { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 20px; border: 1px solid var(--accent); border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--accent); background: #fbf8f1; transition: background .3s, color .3s; }
+.tl-more:hover { color: #fdfaf4; background: var(--accent); }
+
+@media (min-width: 1000px) and (prefers-reduced-motion: no-preference) {
+  .tl-section { height: calc((var(--eras) + .5) * 100svh); }
+  .tl-stage { position: sticky; top: 0; display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); column-gap: 4vw; height: 100svh; min-height: 680px; padding: 112px max(5vw, 32px) 36px; overflow: hidden; }
+  .tl-head { grid-column: 1 / -1; padding-bottom: 18px; }
+  .tl-head h2 { font-size: clamp(40px, 3.8vw, 60px); }
+  .tl-count { display: block; }
+  /* Shopify Editions: an index of numerals that marks the era on stage and takes the page to any other. */
+  .tl-index { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding-left: 24px; }
+  .tl-index button { display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border: 0; text-align: left; font: inherit; color: #6a664a; background: none; cursor: pointer; transition: color .4s; }
+  .tl-index button i { min-width: 58px; font-family: var(--serif); font-size: 30px; font-style: normal; line-height: 1; }
+  .tl-index button span { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .tl-index button small { font-size: 11px; font-weight: 400; letter-spacing: .04em; text-transform: none; }
+  .tl-index button.current { color: #232c29; }
+  .tl-index button.current i { color: #7a5a24; }
+  .tl-progress { position: absolute; top: 50%; left: 0; width: 2px; height: 72%; translate: 0 -50%; background: #a8916e40; }
+  .tl-progress i { position: absolute; inset: 0; background: #7a5a24; transform-origin: 50% 0; }
+  .tl-eras { min-height: 0; }
+  .tl-era { position: absolute; inset: 0; align-items: stretch; padding: 24px 0 0; border: 0; pointer-events: none; }
+  .tl-figure, .tl-copy { pointer-events: auto; }
+  .tl-figure { height: 100%; max-height: none; aspect-ratio: auto; }
+  .tl-copy { align-self: center; }
+  .tl-numeral { right: -1%; bottom: -8%; }
+}
+@media (max-width: 999px) {
+  .tl-era { grid-template-columns: 1fr; }
+  .tl-figure { aspect-ratio: 5 / 4; }
+  .tl-numeral { top: 4%; bottom: auto; font-size: 44vw; }
+}
