@@ -1,0 +1,91 @@
+/* Site-wide harmony with the redesigned pages: pill buttons with gold light, a shared dark emerald scene for pages that
+   had no reference of their own, and parchment surfaces where reading or forms happen. Loaded last, so it retunes the
+   light-surface colours from accessibility.css for elements that now sit on dark ground. Focus, motion and forced-colour
+   rules stay in accessibility.css. */
+
+/* Buttons and links */
+.button { position: relative; overflow: hidden; gap: 14px; min-height: 50px; padding: 0 26px; border-radius: 999px; letter-spacing: .01em; transition: transform .5s ease-in-out, box-shadow .5s ease-in-out, background .5s ease-in-out, color .5s ease-in-out, border-color .5s ease-in-out; }
+.button.gold { color: #1c1a12; background: linear-gradient(180deg, #e7dcb9, #c8b08b 48%, #a78f6e); box-shadow: inset 0 1px 0 #fff9, inset 0 -2px 0 #785b3833, 0 12px 30px -14px #acaba8aa; }
+.button.gold:hover:not(:disabled) { background: linear-gradient(180deg, #f4eed6, #d2bb98 48%, #b29975); box-shadow: inset 0 1px 0 #fff9, 0 0 0 5px #acaba826, 0 16px 34px -12px #acaba8cc; }
+.button.dark { color: #e7dcb9; border-color: #acaba8b3; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 3px #acaba81a, 0 12px 26px -14px #0b261d; }
+.button.dark:hover:not(:disabled) { background: linear-gradient(180deg, #2a6250, #12342b); box-shadow: 0 0 0 4px #acaba833, 0 0 24px -6px #acaba8a6; }
+.button:not(.gold):not(.dark):not(.stamped) { border-color: #977749; background: #ffffff59; }
+.button:not(.gold):not(.dark):not(.stamped):hover { border-color: #765b38; background: #fdfaf4; }
+.button.stamped { color: #d4bf9d; border-color: #acaba8; background: #c3a86914; }
+.circle-link { color: #765b38; border-color: #969491; transition: all .5s ease-in-out; }
+.circle-link:hover { color: #e7dcb9; border-color: #acaba8; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 20px -4px #acaba8a6; }
+.text-link { border-bottom-color: #96949199; }
+@media (prefers-reduced-motion: no-preference) {
+  .button.gold::after, .button.dark::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 30%, #ffffff40 50%, transparent 70%); transform: translateX(-120%); transition: transform .8s ease-in-out; }
+  .button.gold:hover::after, .button.dark:hover::after { transform: translateX(120%); }
+}
+
+/* The parchment hall: light parchment with a faint gold girih for the pages without a reference of their own.
+   Emerald and gold stay as accents: buttons, the passport cover, the camera viewfinder and the medal showcases. */
+.theme-scene { --sc-ink: #192f28; --sc-soft: #50594d; --sc-gold: #a8916e; --sc-gold-text: #765b38; position: relative; overflow: hidden; min-height: 100vh; color: var(--sc-ink); background: radial-gradient(ellipse 60% 45% at 74% 0, #fdfaf4 0, transparent 70%), radial-gradient(ellipse 55% 50% at 0 100%, #e6dec9 0, transparent 70%), linear-gradient(180deg, #f7f3eb, #eee8db); }
+.theme-girih { position: absolute; inset: 0; width: 100%; height: 100%; color: #a8916e; opacity: .14; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, #000, transparent 13%, transparent 87%, #000); mask-image: linear-gradient(90deg, #000, transparent 13%, transparent 87%, #000); }
+.theme-scene > .page-shell { position: relative; z-index: 1; }
+.theme-scene .page-heading .eyebrow, .theme-scene .page-shell > .eyebrow, .theme-scene .empty-state > .eyebrow { color: var(--sc-gold-text); }
+.theme-scene .eyebrow > span:first-child:not(:only-child) { background: var(--sc-gold); }
+.theme-scene .page-heading h1, .theme-scene .page-shell > h1, .theme-scene .empty-state h1, .theme-scene .empty-state h2 { color: var(--sc-ink); }
+.theme-scene .page-heading h1 em, .theme-scene .page-shell > h1 em { color: #85653a; }
+.theme-scene .intro-copy, .theme-scene .empty-state > p { color: var(--sc-soft); }
+.theme-scene .demo-notice { border: 1px solid #bbbab6; border-left: 3px solid var(--sc-gold); border-radius: 12px; background: linear-gradient(180deg, #fcfaf4, #f3eee3); box-shadow: inset 0 1px 0 #fff, 0 20px 40px -30px #3e3d3a66; }
+.theme-scene .demo-notice > svg { color: var(--sc-gold-text); }
+.theme-scene .admin-panel .text-link.danger { color: #8d3a30; border-bottom-color: #c99a90; }
+
+/* Passport: the green-and-gold book lies open on the parchment. */
+.theme-scene .passport-book { border-radius: 8px; box-shadow: 0 0 0 1px #acaba866, 0 0 70px -24px #acaba866, 0 44px 70px -40px #3e3d3a99; }
+.theme-scene .passport-cover { box-shadow: inset -12px 0 30px #061812aa, inset 0 0 0 9px #163930, inset 0 0 0 10px #c3a86955; }
+
+/* Camera: an emerald viewfinder framed in gold; the form and the result are parchment. */
+
+/* About */
+.theme-scene .about-grid section > h2 { padding-top: 22px; border-top: 1px solid #bbbab6; }
+.theme-scene .about-grid section > h2:first-child { padding-top: 0; border-top: 0; }
+
+/* Admin: the working area on a parchment sheet. */
+.theme-scene .admin-tabs { border-bottom-color: #bbbab6; }
+.theme-scene .admin-tabs button { transition: color .5s ease-in-out, border-color .5s ease-in-out; }
+.theme-scene .admin-tabs button[aria-selected="true"] { border-bottom-color: var(--sc-gold); }
+.theme-scene .admin-panel { position: relative; padding: clamp(18px, 3vw, 34px); border-radius: 18px; border: 1px solid #a4a29f; background: linear-gradient(180deg, #fcfaf4, #f3eee3); box-shadow: 0 0 0 6px #acaba812, 0 40px 70px -44px #3e3d3a99; }
+.theme-scene .admin-list, .theme-scene .admin-form fieldset, .theme-scene .admin-card, .theme-scene .admin-table { border-color: #bbbab6; border-radius: 10px; background: #fdfaf4; }
+.theme-scene .admin-list { overflow: hidden auto; }
+.theme-scene .admin-list button.active { color: #e7dcb9; background: linear-gradient(180deg, #255747, #0f2f26); }
+
+/* Home: the parchment sections between the dark stages. */
+.manifesto { color: #e6e2d8; border-bottom: 0; border-block: 1px solid #acaba840; background: linear-gradient(180deg, #082119, #0b261d); }
+.manifesto i { color: #c3a869; }
+.passport-banner { border-block: 1px solid #acaba866; background: radial-gradient(ellipse at 22% 50%, #fdfaf4, transparent 60%), linear-gradient(180deg, #f1ebde, #e6decc); }
+.route-item { border-bottom-color: #aaa9a580; transition: background .5s ease-in-out; }
+.route-item:hover { background: linear-gradient(90deg, #c3a86914, transparent 70%); }
+.map-teaser { border-radius: 14px; box-shadow: 0 0 0 1px #a4a29f, 0 0 0 5px #a4a29f1a, 0 30px 56px -30px #2f2d2b88; }
+.daily-discovery, .quiz-teaser { position: relative; padding: 30px; border: 1px solid #bbbab6; border-radius: 16px; background: linear-gradient(180deg, #fcfaf4, #f0eade); box-shadow: inset 0 1px 0 #fff, 0 30px 50px -34px #3e3d3a66; }
+.daily-discovery::before, .quiz-teaser::before { content: ''; position: absolute; inset: 7px; border: 1px solid #d7d6d2; border-radius: 11px; pointer-events: none; }
+.quiz-teaser { border-top: 1px solid #bbbab6; border-bottom: 1px solid #bbbab6; }
+
+/* Narration switch: an oval capsule; the chosen style fills deep green with a gold edge. */
+.segmented { border-color: #969491; border-radius: 999px; }
+.segmented button { border-radius: 999px; transition: background .5s ease-in-out, color .5s ease-in-out, box-shadow .5s ease-in-out; }
+.segmented button:hover:not(.active) { color: #232c29; background: #c3a8691f; }
+.segmented button.active { color: #e7dcb9; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 1px #acaba8, 0 0 16px -4px #acaba899; }
+
+/* Dialogs share the parchment sheet and double gold frame of the game dialogs. */
+/* The dialog scrolls, which would clip a box-shadow at its edge, so the depth comes from a drop-shadow on the dialog itself. */
+.modal { filter: drop-shadow(0 24px 40px #000b); }
+.modal-content { border-radius: 18px; background: linear-gradient(180deg, #fcfaf4, #f1ebdf); box-shadow: 0 0 0 1px #b3b2ae; }
+.modal-content::before { content: ''; position: absolute; inset: 8px; border: 1px solid #cac8c5; border-radius: 12px; pointer-events: none; }
+.modal-close { z-index: 1; border-radius: 50%; }
+
+@media (max-width: 540px) {
+  .daily-discovery, .quiz-teaser { padding: 22px 20px; }
+}
+@media (forced-colors: active) {
+  .daily-discovery, .quiz-teaser, .theme-scene .admin-panel, .theme-scene .demo-notice { border: 1px solid CanvasText; }
+}
+
+/* Footer: a darker sheet that rides over the end of every page, rounded at the top with a brass edge and a soft shadow,
+   so it reads as its own block after dark pages (Keşfet, Oyna & Öğren) as well as light ones (Madalyonlar). */
+.footer { position: relative; z-index: 2; margin-top: -28px; border-top: 0; border-radius: 28px 28px 0 0; background: radial-gradient(ellipse 55% 140px at 50% 0, #123227, transparent), #04110c; box-shadow: inset 0 1px 0 #c3a86966, 0 -20px 44px -24px #000d; }
+@media (max-width: 800px) { .footer { margin-top: -20px; border-radius: 20px 20px 0 0; } }
+@media (forced-colors: active) { .footer { border-top: 1px solid CanvasText; } }

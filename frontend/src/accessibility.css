@@ -1,0 +1,63 @@
+/* Shared fixes retain the cinematic layouts and work without preference controls. */
+:root { --muted: #596252; }
+em { color: #806240; }
+:focus-visible { outline: 3px solid #0c241c; outline-offset: 4px; box-shadow: 0 0 0 4px #f4f1eb; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 4px; }
+[tabindex='-1']:focus { scroll-margin-block: 115px 35px; }
+.text-link { white-space: normal; min-height: 44px; }
+.button { text-align: center; }
+.icon-button { min-width: 44px; min-height: 44px; }
+input, select, textarea { border-color: #7c8174; }
+input::placeholder, textarea::placeholder { color: #61685b; opacity: 1; }
+summary { min-height: 44px; }
+.modal { max-width: min(540px, calc(100vw - 16px)); padding: 10px; }
+.modal-content { min-width: 0; padding: 55px 28px 32px; }
+.modal-content h2 { overflow-wrap: anywhere; }
+.mobile-menu { max-height: calc(100dvh - 78px); overflow-y: auto; }
+.dust i { animation-duration: 4s; animation-iteration-count: 1; }
+.cy-lamp circle { animation-iteration-count: 1; }
+.stage-hotspot { animation-iteration-count: 2; }
+.page-note, .about-grid p, .passport-pitch > p:not(.eyebrow), .passport-pitch > small, .quiz-teaser p { color: #596252; }
+.quiz-teaser small { color: #655d44; }
+.passport-stats strong, .achievement-modal-progress { color: #776141; }
+.passport-empty, .passport-pagination, .passport-bottom p { color: #5c624b; }
+.passport-pagination button { min-width: 44px; min-height: 44px; }
+.passport-stamp.stamp-1, .passport-stamp.stamp-3 { color: #326055; }
+.footer-bottom { color: #a2b09d; }
+/* Small text on paper tones: darker shades of the same olive and gold reach 4.5:1 on every light panel. */
+.eyebrow { color: #6a664a; }
+.manifesto, .result-count, .route-item small, .route-item p, .collection-note, .collection-note > i,
+.story-index > span, .chapter-number, .story-facts small, .narrative-note, .story-sources p, .paper-heading, .passport-pitch > small,
+.flip-hint, .visit-note, .map-result-count, .map-artifact-list small, .selected-map-artifact small, .demo-notice p,
+.admin-tabs button, .admin-field small, .admin-form-head small, .admin-table thead th, .admin-field input[readonly] { color: #596252; }
+.next-story > span, .route-number, .filter-favorite > span { color: #71603e; }
+.story-index > button { color: #606559; }
+.story-index > button i { color: #71603e; }
+.story-index > button.current { font-weight: 600; }
+.story-index > button.current, .story-index > button.current i { color: #232c29; }
+.image-description { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; font-size: 13.5px; line-height: 1.8; color: #596252; }
+.image-description summary { display: flex; align-items: center; cursor: pointer; font-size: 11px; letter-spacing: .14em; color: #6a664a; }
+.image-description summary::after { content: '+'; content: '+' / ''; margin-left: 10px; font-size: 15px; letter-spacing: 0; }
+.image-description[open] summary::after { content: '−'; content: '−' / ''; }
+.image-description p { margin-top: 8px; }
+@media (max-width: 540px) {
+  .section-heading { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .page-heading h1, .about-page > h1 { overflow-wrap: anywhere; }
+  .passport-stats { flex-wrap: wrap; gap: 20px; }
+  .passport-paper { padding: 26px 24px 85px; }
+  .passport-pagination { left: 24px; right: 24px; }
+  .passport-cover-frame h2 { font-size: 33px; }
+  .modal-content { padding-inline: 22px; }
+}
+@media (max-width: 360px) {
+  /* Keeps the 44px menu button fully on screen at 320px. */
+  .navigation { padding: 0 16px; gap: 12px; }
+  .brand small { letter-spacing: .1em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+@media (forced-colors: active) {
+  :focus-visible { outline: 3px solid Highlight; }
+  .button { border: 1px solid ButtonText; }
+}
