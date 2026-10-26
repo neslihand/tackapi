@@ -1,0 +1,109 @@
+.hero-sticky { --hero-cream: #f6f2e9; --hero-soft: #d9d7d0; --hero-gold: #c8b08b; --hero-gold-light: #e1cfac; --hero-gold-dark: #937557; color: var(--hero-cream); background: radial-gradient(ellipse 52% 48% at 29% 5%, #20554442, transparent 75%), radial-gradient(ellipse 48% 58% at 73% 45%, #32473a38, transparent 78%), linear-gradient(118deg, #0f2927 0%, #0b2526 57%, #081c1f 100%); }
+.gate-scene::before { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(ellipse 80% 82% at 54% 36%, transparent 30%, #00090d47 100%); }
+.gate-scene::after { background: linear-gradient(0deg, #091f21 0%, transparent 13%); }
+.hero-geometry { position: absolute; left: 73%; top: 52%; width: 132svh; height: 132svh; color: #a9967c; opacity: .2; pointer-events: none; transform: translate(-50%, -50%) translate(calc(var(--mouse-x, 0) * -6px), calc(var(--mouse-y, 0) * -4px)); transition: transform .8s ease-out; }
+
+.hero-copy { left: 9.8%; top: 25.5%; max-width: min(780px, 60vw); }
+.hero-eyebrow { gap: 14px; font-size: 10.5px; font-weight: 500; letter-spacing: .18em; color: #d6c7aa; }
+.hero-eyebrow > span { width: 22px; background: var(--hero-gold); }
+.hero-copy h1 { margin: 22px 0 30px; font-size: clamp(64px, 7.2vw, 132px); white-space: nowrap; line-height: .98; letter-spacing: -.02em; color: var(--hero-cream); text-shadow: 0 6px 40px #04101280; }
+.hero-copy h1 em { padding-right: .06em; font-style: italic; color: var(--hero-gold); background: linear-gradient(100deg, #e1cfac, #c2a882 50%, #a78d6e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-description { max-width: 370px; font-size: 14.5px; font-weight: 400; line-height: 1.62; color: var(--hero-soft); }
+.hero-actions { gap: 14px; margin-top: 34px; }
+.hero-actions .button.gold { gap: 12px; min-height: 48px; padding: 0 22px 0 20px; border-radius: 999px; font-size: 14px; font-weight: 600; letter-spacing: 0; color: #1c1a12; background: linear-gradient(180deg, #e4d3b2, #c8b08b 48%, #a78f6e); box-shadow: inset 0 1px 0 #fff9, inset 0 -2px 0 #785b3833, 0 12px 30px -12px #b5b3b0aa; transition: transform .2s ease-out, box-shadow .2s ease-out, filter .2s ease-out; }
+.hero-actions .button.gold:hover { filter: brightness(1.06); box-shadow: inset 0 1px 0 #fff9, inset 0 -2px 0 #785b3833, 0 0 0 5px #b5b3b024, 0 14px 34px -10px #b5b3b0cc; }
+.hero-actions .button.gold:active { transform: translateY(0); filter: brightness(.97); }
+.hero-actions .hero-secondary { gap: 10px; min-height: 48px; padding: 0 22px; border: 1px solid #b5b3b0a6; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--hero-gold-light); background: #0b252633; transition: background .2s ease-out, border-color .2s ease-out, transform .2s ease-out; }
+.hero-actions .hero-secondary:hover { border-color: var(--hero-gold-light); background: #c8b08b1f; transform: translateY(-2px); }
+.hero-actions .hero-secondary:active { transform: none; }
+.hero-sticky :focus-visible { outline-color: var(--hero-gold-light); box-shadow: 0 0 0 4px #0b2526; }
+.cy-copy h2:focus-visible { box-shadow: none; }
+.vertical-note { top: 40%; left: 2.8%; font-size: 9.5px; letter-spacing: .24em; color: #aab2a5; }
+
+.gate-visual { right: 4%; top: 9%; height: 82%; width: 46%; }
+.gate-stage { width: auto; height: 100%; max-width: 100%; aspect-ratio: 2 / 3; }
+/* The courtyard seen through the door (Interior in HeroGate.tsx). The far layers are oversized so they still cover
+   the doorway when they are scaled down for depth as the camera passes through. */
+.gi-sky, .gi-architecture, .gi-arcade { position: absolute; transform-origin: 50% 60%; }
+.gi-sky { inset: -50%; background: radial-gradient(circle at 62% 42%, #fcf5e0 0, #e1ccaa 8%, transparent 24%), linear-gradient(180deg, #dac8a9 30%, #b9a386 55%, #8c7b62 70%); }
+.gi-architecture { inset: -30% -60%; width: 220%; height: 160%; max-width: none; object-fit: cover; object-position: 50% 40%; filter: sepia(.25) saturate(.9) brightness(1.08); }
+/* Light falls through in a few soft shafts, not hard stripes: the camera magnifies them five times on its way through,
+   and a hard edge grows into a shard. Plain alpha instead of a blend mode, which flickers on scaled layers. The
+   courtyard's rays match them. */
+.gi-rays { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(112deg, transparent 18%, #fcf3db1f 28%, transparent 38%, transparent 46%, #fcf3db29 56%, transparent 66%, transparent 72%, #fcf3db17 80%, transparent 88%), radial-gradient(ellipse at 66% 18%, #fcf4de55, transparent 60%); }
+.cy-rays { mix-blend-mode: normal; background: linear-gradient(112deg, transparent 16%, #fcf3db1c 27%, transparent 38%, transparent 47%, #fcf3db24 57%, transparent 67%, transparent 73%, #fcf3db14 81%, transparent 89%), radial-gradient(ellipse at 72% 20%, #fcf4de4d, transparent 55%); }
+/* Taller than the doorway and anchored to the floor, so the wall above the arches falls outside the view. */
+.gi-arcade { left: -20%; bottom: 0; width: 140%; height: 135%; transform-origin: 50% 100%; }
+.gate-interior-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(#0a1f1866, transparent 32%, transparent 72%, #0a1f1873); }
+/* Candlelight leaking under the closed door, and the light the opening door lays on the steps. */
+.gate-underglow { position: absolute; left: 23%; width: 54%; top: 88.7%; height: .5%; z-index: 4; pointer-events: none; background: #f2b950; filter: blur(2px); opacity: .6; }
+.gate-spill { position: absolute; left: 0; width: 100%; top: 89%; height: 18%; z-index: 4; pointer-events: none; clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); background: radial-gradient(ellipse 45% 100% at 50% 0, #f2b950, #f2b95000 80%); opacity: 0; }
+.gate-halo { background: radial-gradient(ellipse 40% 48% at 50% 50%, #d1a87466, #bfa67b2e 50%, transparent 72%); }
+/* The flash of light in the doorway gets its layer up front, so its first frames do not stall the scroll. */
+.gate-bloom { will-change: opacity; }
+
+.hero-bottom { left: 4.1%; right: 4%; bottom: 20px; align-items: flex-end; }
+.hero-hint { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; }
+.hero-hint .scroll-invite { display: contents; font-size: 10px; letter-spacing: .14em; color: var(--hero-soft); }
+.hero-hint .scroll-invite > span { grid-row: 1 / span 2; width: 26px; height: 40px; border: 1px solid #b5b3b073; border-radius: 20px; color: var(--hero-gold-light); transition: border-color .2s ease-out, background .2s ease-out; }
+.hero-hint .scroll-invite:hover > span { border-color: var(--hero-gold-light); background: #c8b08b1a; }
+.hero-hint .scroll-invite:focus-visible { outline: none; box-shadow: none; }
+.hero-hint .scroll-invite:focus-visible > span { outline: 3px solid var(--hero-gold-light); outline-offset: 3px; }
+.hero-hint .hero-caption { display: flex; align-items: center; gap: 10px; margin: 6px 0 0 30px; font-size: 10px; line-height: 1.6; color: #c9ccbf; }
+.hero-hint .mini-star { font-size: 18px; color: var(--hero-gold); }
+.hero-edition { padding-bottom: 6px; font-size: 10px; letter-spacing: .16em; color: #c9ccbf; }
+.hero-edition b { margin: 0 8px; font-weight: 400; color: var(--hero-gold); }
+.hero-edition i { margin-left: 0; color: #cbb99a; }
+.hero-controls { gap: 18px; }
+.hero-controls button { font-size: 10.5px; color: #c9ccbf; transition: color .2s ease-out; }
+.hero-controls button:hover { color: var(--hero-gold-light); }
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-eyebrow, .hero-copy h1, .hero-description, .hero-actions { animation: hero-rise .9s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .hero-copy h1 { animation-delay: .12s; }
+  .hero-description { animation-delay: .26s; }
+  .hero-actions { animation-delay: .38s; }
+  .gate-frame, .gate-doors, .gate-interior { animation: hero-door-in 1.3s .25s ease-out backwards; }
+}
+@keyframes hero-rise { from { opacity: 0; translate: 0 14px; } }
+@keyframes hero-door-in { from { opacity: 0; filter: blur(6px); } }
+
+@media (max-width: 999px) {
+  .nav-camera { display: none; }
+}
+@media (min-width: 1600px) {
+  .hero-copy { left: 10.5%; top: 26%; }
+  .gate-visual { right: 6%; width: 44%; }
+}
+@media (max-width: 1100px) {
+  .hero-copy { left: 9.8%; top: 25.5%; }
+  .hero-copy h1 { font-size: 8vw; }
+  .gate-visual { right: 4%; width: 46%; }
+  .hero-caption { margin-top: 6px; }
+}
+
+@media (max-width: 800px), (max-width: 1100px) and (orientation: portrait) {
+  .gate-scene { display: flex; flex-direction: column; padding: calc(96px + 3svh) 7% 76px; }
+  .hero-copy { position: relative; inset: auto; flex: none; max-width: 620px; }
+  .hero-copy h1 { margin: 18px 0 22px; font-size: clamp(44px, 11.5vw, 96px); white-space: normal; }
+  .hero-copy h1 em { display: inline; }
+  .hero-description { max-width: 420px; font-size: 14px; text-shadow: none; }
+  .hero-actions { margin-top: 26px; flex-wrap: wrap; }
+  .gate-visual { position: relative; inset: auto; flex: 1 1 0; width: 100%; height: auto; min-height: 220px; margin-top: 18px; opacity: 1; }
+  .hero-veil { display: none; }
+  .hero-geometry { left: 50%; top: 66%; width: 120svh; height: 120svh; }
+  .hero-bottom { left: 7%; right: 7%; bottom: 18px; }
+  .hero-hint .hero-caption, .hero-edition, .vertical-note { display: none; }
+  .hero-hint .scroll-invite { font-size: 9.5px; letter-spacing: .08em; }
+  .hero-controls { gap: 10px; }
+  .hero-controls button { white-space: nowrap; }
+}
+@media (max-width: 800px) {
+  .gate-scene { padding-top: calc(78px + 3svh); }
+}
+@media (max-width: 380px) {
+  .hero-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+  .hero-actions .button.gold, .hero-actions .hero-secondary { justify-content: center; }
+  .hero-hint .scroll-invite { letter-spacing: .08em; }
+}

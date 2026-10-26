@@ -1,0 +1,365 @@
+/* The entrance of the home page (HeroGate.tsx) and the site-wide navigation bar. Loaded last.
+   The door, its opening, the courtyard and the scroll timeline keep their own rules in hero.css and styles.css. */
+
+/* ——— Colour system: deep emerald and petrol, warm ivory, antique gold ——— */
+.hero-scroll {
+  --en-ink: #050f0c; --en-petrol: #0b2321; --en-emerald: #163a31;
+  --en-ivory: #f3ecdf; --en-ivory-soft: #cfcabd; --en-gold: #c7a96b; --en-gold-light: #e6d5ae; --en-gold-deep: #8a6a36;
+  --en-left: clamp(24px, 7.4vw, 140px);
+  /* The title scales with the width and, on short screens, with the height, so the copy always fits under the bar. */
+  --en-title: clamp(52px, min(8.4vw, 13.2svh), 162px);
+  background: var(--en-ink);
+}
+.hero-scroll .hero-sticky { background: radial-gradient(ellipse 44% 62% at 73% 55%, #1c3d35 0, #12302a40 50%, transparent 74%), radial-gradient(ellipse 50% 45% at 12% 8%, #0f2a2470, transparent 70%), linear-gradient(115deg, #040d0a 0%, #07181a 48%, #0b2321 100%); }
+.hero-scroll .gate-scene::before { background: radial-gradient(ellipse 90% 90% at 62% 46%, transparent 38%, #020806a6 100%); }
+.hero-scroll .gate-scene::after { background: linear-gradient(0deg, #040d0a 0%, #040d0a99 6%, transparent 22%); }
+
+/* ——— Atmosphere ——— */
+.en-atmos { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.en-layer { position: absolute; inset: 0; translate: calc(var(--mouse-x, 0) * var(--depth) * 1px) calc(var(--mouse-y, 0) * var(--depth) * .6px); transition: translate 1.1s cubic-bezier(.2, .7, .2, 1); }
+.en-arches-layer { transform-origin: 73% 82%; }
+/* Nested arches around the door, standing on the same threshold (82% of the screen) as the door. */
+.en-arches { --size: min(118svh, 96vw); position: absolute; top: calc(82% - var(--size) * .9); left: 73%; width: var(--size); height: var(--size); overflow: visible; translate: -50% 0; stroke: var(--en-gold-light); stroke-width: 1; stroke-dasharray: 1; vector-effect: non-scaling-stroke; }
+.en-arches path { vector-effect: non-scaling-stroke; }
+.en-arches .a0 { stroke-opacity: .34; }
+.en-arches .a1 { stroke-opacity: .22; }
+.en-arches .a2 { stroke-opacity: .14; }
+.en-arches .a3 { stroke-opacity: .08; }
+.en-arches .axis { stroke-opacity: .1; stroke-dasharray: .004 .01; }
+.en-arches .base { stroke-opacity: 0; }
+.en-arches .tick { stroke-opacity: .28; }
+/* A shaft of light falling across the scene onto the door; masked away from the copy. */
+.en-beam { position: absolute; inset: -20% -10%; opacity: .55; mix-blend-mode: screen; background: linear-gradient(118deg, transparent 40%, #f1e2bc0a 47%, #f1e2bc1c 53%, #f1e2bc08 59%, transparent 66%); -webkit-mask-image: linear-gradient(90deg, transparent 34%, #000 62%); mask-image: linear-gradient(90deg, transparent 34%, #000 62%); }
+.en-fog { position: absolute; right: -30%; bottom: -8%; left: -30%; height: 36%; opacity: .7; background: radial-gradient(ellipse 46% 64% at 50% 100%, #a8c4b81f, transparent 72%); }
+.en-fog.f2 { left: -60%; right: 0; height: 26%; opacity: .5; background: radial-gradient(ellipse 40% 70% at 40% 100%, #e6d5ae14, transparent 70%); }
+.en-motes i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #f3e3bd; box-shadow: 0 0 6px #f3e3bd99; opacity: 0; }
+.en-grain { position: absolute; inset: 0; opacity: .08; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+/* No blur filter on the glow behind the door: its gradient is soft already, and a blur is redrawn on every frame it scales. */
+.hero-scroll .gate-halo { filter: none; background: radial-gradient(ellipse 42% 50% at 50% 56%, #d9b97a3d, #bfa67b1a 52%, transparent 74%); }
+
+/* ——— Copy ——— */
+/* The copy fills the band between the navigation bar and the threshold line, centred in it. */
+.hero-scroll .en-copy { top: 88px; bottom: 18%; left: var(--en-left); z-index: 5; display: flex; flex-direction: column; justify-content: center; width: min(58vw, 900px); max-width: none; translate: none; }
+.en-index { display: flex; align-items: center; gap: 14px; margin: 0 0 clamp(12px, 3svh, 34px); font-size: 11px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--en-ivory-soft); }
+.en-index > span:first-child { font-family: var(--serif); font-size: 17px; font-style: italic; letter-spacing: .02em; text-transform: none; color: var(--en-gold-light); }
+.en-index > i { width: 56px; height: 1px; background: linear-gradient(90deg, var(--en-gold), transparent); }
+.hero-scroll .en-copy .en-title { margin: 0; font-family: var(--serif); font-size: var(--en-title); font-weight: 300; line-height: .88; letter-spacing: -.028em; white-space: normal; color: var(--en-ivory); text-shadow: 0 12px 60px #020806cc; }
+/* Each line is a mask the words rise through; the lines step towards the door like stairs to a threshold. */
+.en-line { display: block; overflow: hidden; margin-bottom: -.1em; padding: .06em .14em .12em 0; }
+.en-line > span { display: inline-block; }
+.en-line.l2 { padding-left: .92em; font-weight: 400; }
+.en-line.l3 { padding-left: 1.84em; }
+.hero-scroll .en-copy .en-title em { padding-right: .08em; font-style: italic; font-weight: 400; color: var(--en-gold); background: linear-gradient(100deg, #f2e6c6 0%, #d5b981 42%, #a07d45 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.en-lede { display: flex; align-items: flex-start; gap: 18px; margin-top: clamp(16px, 3.4svh, 42px); padding-left: calc(var(--en-title) * .92); }
+.en-rule { flex: none; width: 44px; height: 1px; margin-top: .9em; background: var(--en-gold); transform-origin: left; }
+.hero-scroll .en-lede .hero-description { max-width: 34ch; margin: 0; font-size: clamp(14.5px, 1.06vw, 16.5px); font-weight: 400; line-height: 1.72; color: var(--en-ivory-soft); text-shadow: none; }
+.hero-scroll .en-copy .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 30px; margin-top: clamp(20px, 4svh, 46px); padding-left: calc(var(--en-title) * .92); }
+
+/* Primary: an ivory-gold plate in a fine frame that tightens on hover; a sheen crosses it and the key turns. */
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key { position: relative; display: inline-flex; align-items: stretch; gap: 0; min-height: 56px; padding: 0; overflow: visible; border: 0; border-radius: 2px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #15130d; background: linear-gradient(105deg, transparent 38%, #fff8 50%, transparent 62%) no-repeat, linear-gradient(180deg, #f1e5c6, #d6bc89); background-size: 260% 100%, 100% 100%; background-position: 170% 0, 0 0; box-shadow: 0 22px 44px -24px #e6d5ae80; transition: translate .35s cubic-bezier(.2, .7, .2, 1), background-position 1s cubic-bezier(.2, .7, .2, 1), box-shadow .4s; filter: none; }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key::before { content: ''; position: absolute; inset: -6px; border: 1px solid #e6d5ae55; border-radius: 4px; pointer-events: none; transition: inset .45s cubic-bezier(.2, .7, .2, 1), border-color .45s; }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:hover { background-position: -70% 0, 0 0; box-shadow: 0 26px 50px -22px #e6d5aeb3; filter: none; }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:hover::before { inset: -3px; border-color: var(--en-gold-light); }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key::after { display: none; }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:active { scale: .98; }
+.en-key-icon { display: grid; place-items: center; width: 56px; border-right: 1px solid #15130d24; }
+.en-key-icon svg { transition: rotate .5s cubic-bezier(.2, .7, .2, 1); }
+.en-key:hover .en-key-icon svg { rotate: -35deg; }
+.en-key-label { display: flex; align-items: center; padding: 0 24px 0 22px; }
+.en-key-arrow { display: grid; place-items: center; width: 50px; overflow: hidden; border-left: 1px solid #15130d24; }
+.en-key:hover .en-key-arrow svg { animation: en-arrow .55s cubic-bezier(.6, 0, .2, 1); }
+/* Secondary: a text link whose underline draws out and whose arrow ring fills. */
+:is(.hero-scroll .hero-actions .hero-secondary, .hero-scroll .cy-actions .hero-secondary, .play-page .pl-link, .home-page .hp-link, .camera-scene .cm-link).en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 56px; padding: 0; border: 0; border-radius: 0; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--en-ivory); background: none; transition: translate .35s cubic-bezier(.2, .7, .2, 1); }
+:is(.hero-scroll .hero-actions .hero-secondary, .hero-scroll .cy-actions .hero-secondary, .play-page .pl-link, .home-page .hp-link, .camera-scene .cm-link).en-link:hover { transform: none; border: 0; background: none; }
+.en-link > span:first-child { position: relative; padding: 6px 0; }
+.en-link > span:first-child::after { content: ''; position: absolute; right: 0; bottom: 0; left: 0; height: 1px; background: var(--en-gold-light); transform: scaleX(.3); transform-origin: left; transition: transform .55s cubic-bezier(.2, .7, .2, 1); }
+.en-link:hover > span:first-child::after { transform: scaleX(1); }
+.en-link-arrow { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #e6d5ae59; border-radius: 50%; transition: background .4s, border-color .4s, color .4s, rotate .45s cubic-bezier(.2, .7, .2, 1); }
+.en-link:hover .en-link-arrow { color: #15130d; border-color: transparent; background: var(--en-gold-light); rotate: 45deg; }
+.hero-scroll .en-copy :focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 10px; box-shadow: none; }
+
+/* The threshold: one fine line at the door's sill, running from the copy to the door. */
+.en-threshold { position: absolute; top: 82%; right: 0; left: var(--en-left); z-index: 0; height: 1px; pointer-events: none; transform-origin: left; background: linear-gradient(90deg, #e6d5ae66, #e6d5ae26 40%, #e6d5ae55 66%, #e6d5ae1a 86%, transparent); }
+.en-threshold b { position: absolute; bottom: 10px; left: 0; font-size: 10px; font-weight: 600; letter-spacing: .34em; color: #d9c9a5; }
+.en-threshold i { position: absolute; top: 0; left: calc(73vw - var(--en-left)); width: 7px; height: 7px; border: 1px solid var(--en-gold-light); background: var(--en-ink); rotate: 45deg; translate: -50% -50%; }
+
+/* ——— One bar of small controls ——— */
+.hero-scroll .hero-bottom.en-bar { right: clamp(20px, 4vw, 64px); bottom: clamp(16px, 3.2svh, 32px); left: var(--en-left); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px; }
+.hero-scroll .en-bar .scroll-invite.en-scroll { display: flex; align-items: center; gap: 16px; justify-self: start; padding: 0; font-size: inherit; letter-spacing: 0; color: var(--en-ivory); }
+.hero-scroll .en-bar .en-scroll > span { width: auto; height: auto; border: 0; border-radius: 0; background: none; }
+.hero-scroll .en-bar .en-scroll > .en-scroll-track { position: relative; display: block; width: 1px; height: 54px; overflow: hidden; background: #e6d5ae33; }
+.en-scroll-track i { position: absolute; top: 0; left: 0; width: 1px; height: 40%; background: linear-gradient(transparent, var(--en-gold-light)); }
+.en-scroll-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+.en-scroll-text b { font-size: 11px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; }
+.en-scroll-text small { font-family: var(--serif); font-size: 16px; font-style: italic; color: var(--en-ivory-soft); }
+.hero-scroll .en-bar .en-scroll:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 6px; box-shadow: none; }
+.hero-scroll .en-bar .hero-edition.en-count { display: flex; align-items: center; gap: 16px; justify-self: center; margin: 0; padding: 0; font-size: 10.5px; letter-spacing: .24em; color: var(--en-ivory-soft); }
+.en-count b { font-weight: 500; letter-spacing: .14em; color: var(--en-gold-light); }
+.en-ticks { display: flex; gap: 5px; }
+.en-ticks i { width: 16px; height: 2px; background: #e6d5ae66; }
+.hero-scroll .en-bar .hero-controls { display: flex; align-items: center; gap: 4px; justify-self: end; }
+.hero-scroll .en-bar .hero-controls button { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; white-space: nowrap; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--en-ivory-soft); border: 1px solid transparent; border-radius: 999px; transition: color .3s, border-color .3s; }
+.hero-scroll .en-bar .hero-controls button:hover { color: var(--en-ivory); border-color: #e6d5ae40; }
+.hero-scroll .en-bar .hero-controls button:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 2px; box-shadow: none; }
+.hero-scroll .en-bar .en-sound > .en-eq { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+.hero-scroll .en-bar .en-sound > span:last-child { display: inline; }
+.en-eq i { width: 2px; height: 3px; border-radius: 1px; background: var(--en-gold-light); transition: height .3s; }
+.en-sound.on .en-eq i:nth-child(1) { height: 9px; }
+.en-sound.on .en-eq i:nth-child(2) { height: 14px; }
+.en-sound.on .en-eq i:nth-child(3) { height: 6px; }
+.en-sound.on .en-eq i:nth-child(4) { height: 11px; }
+
+/* The scene rail of the scroll timeline, as fine hairlines. */
+.hero-scroll .scene-rail li { color: #f3ecdf80; }
+.hero-scroll .scene-rail li.current { color: var(--en-gold-light); }
+
+/* ——— Motion ——— */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-scroll .en-copy h1, .hero-scroll .hero-description, .hero-scroll .hero-actions { animation: none; }
+  /* Entrance: the dark lifts, the arches draw around the door, the title rises line by line, then the rest. */
+  .hero-scroll .hero-sticky::after { content: ''; position: absolute; inset: 0; z-index: 30; pointer-events: none; background: #020806; animation: en-lift 1.1s cubic-bezier(.4, 0, .2, 1) forwards; }
+  .en-arches path:not(.axis):not(.tick) { animation: en-draw 2.4s .35s cubic-bezier(.6, 0, .2, 1) backwards; }
+  .en-arches .a1 { animation-delay: .45s; }
+  .en-arches .a2 { animation-delay: .55s; }
+  .en-arches .a3 { animation-delay: .65s; }
+  .en-arches .tick { animation: en-fade .8s 1.2s backwards; }
+  .en-index { animation: en-fade 1s .55s backwards; }
+  .en-line > span { animation: en-rise 1.15s .6s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .en-line.l2 > span { animation-delay: .72s; }
+  .en-line.l3 > span { animation-delay: .84s; }
+  .en-rule { animation: en-grow .9s 1s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .hero-scroll .en-lede .hero-description { animation: en-fade-up .9s 1.05s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .hero-scroll .en-copy .hero-actions > * { animation: en-fade-up .9s 1.15s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .hero-scroll .en-copy .hero-actions > :nth-child(2) { animation-delay: 1.25s; }
+  .en-threshold { animation: en-grow 1.8s .7s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .en-bar > * { animation: en-fade 1s 1.35s backwards; }
+  .navigation.nav-intro { animation: en-nav 1s 1.3s cubic-bezier(.16, 1, .3, 1) backwards; }
+  /* Ambient life: breathing light, drifting fog, rising dust, the scroll cue, a wave along the collection ticks. */
+  .en-beam { animation: en-breathe 9s ease-in-out infinite; }
+  .en-fog { animation: en-drift 28s ease-in-out infinite alternate; }
+  .en-fog.f2 { animation-duration: 36s; animation-direction: alternate-reverse; }
+  .en-motes i { animation: en-mote linear infinite; }
+  .en-scroll-track i { animation: en-cue 2.4s cubic-bezier(.6, 0, .3, 1) infinite; }
+  .en-ticks i { animation: en-tick 4.8s ease-in-out infinite; }
+  .en-ticks i:nth-child(2) { animation-delay: .25s; }
+  .en-ticks i:nth-child(3) { animation-delay: .5s; }
+  .en-ticks i:nth-child(4) { animation-delay: .75s; }
+  .en-ticks i:nth-child(5) { animation-delay: 1s; }
+  .en-ticks i:nth-child(6) { animation-delay: 1.25s; }
+  .en-sound.on .en-eq i { animation: en-eq .9s ease-in-out infinite alternate; }
+  .en-sound.on .en-eq i:nth-child(2) { animation-delay: -.3s; }
+  .en-sound.on .en-eq i:nth-child(3) { animation-delay: -.6s; }
+  .en-sound.on .en-eq i:nth-child(4) { animation-delay: -.15s; }
+}
+@keyframes en-lift { to { opacity: 0; } }
+@keyframes en-draw { from { stroke-dashoffset: 1; } }
+@keyframes en-fade { from { opacity: 0; } }
+@keyframes en-fade-up { from { opacity: 0; translate: 0 18px; } }
+@keyframes en-rise { from { transform: translateY(110%) rotate(3deg); } }
+@keyframes en-grow { from { transform: scaleX(0); } }
+@keyframes en-nav { from { opacity: 0; translate: 0 -18px; } }
+@keyframes en-breathe { 50% { opacity: .9; } }
+/* The fog drifts with `translate`, leaving `transform` to the scroll timeline that lifts it. */
+@keyframes en-drift { to { translate: 14% 0; } }
+@keyframes en-mote { 0% { opacity: 0; transform: translate(0, 0); } 18% { opacity: .75; } 100% { opacity: 0; transform: translate(22px, -110px); } }
+@keyframes en-cue { from { transform: translateY(-110%); } to { transform: translateY(260%); } }
+@keyframes en-tick { 0%, 40%, 100% { background: #e6d5ae66; } 20% { background: #e6d5ae; } }
+@keyframes en-eq { to { height: 3px; } }
+@keyframes en-arrow { 49% { transform: translateX(140%); } 50% { transform: translateX(-140%); } }
+
+/* ——— Smaller screens: the copy above, the door below as the centre of the scene ——— */
+@media (max-width: 1100px) and (min-width: 801px) and (orientation: landscape) {
+  .hero-scroll { --en-title: clamp(42px, min(8vw, 11svh), 100px); }
+  .en-threshold b, .hero-scroll .en-bar .hero-edition.en-count > span:first-child { display: none; }
+  .hero-scroll .en-bar .hero-controls button { padding: 0 10px; }
+  .en-lede, .hero-scroll .en-copy .hero-actions { padding-left: 0; }
+}
+@media (max-width: 800px), (max-width: 1100px) and (orientation: portrait) {
+  .hero-scroll { --en-left: 7%; }
+  .hero-scroll .en-copy { position: relative; top: auto; bottom: auto; left: auto; display: block; width: auto; max-width: 640px; translate: none; }
+  .hero-scroll .en-copy .en-title { font-size: clamp(44px, 12vw, 104px); line-height: .9; }
+  .en-line.l2 { padding-left: .5em; }
+  .en-line.l3 { padding-left: 1em; }
+  .en-index { margin-bottom: 16px; font-size: 10px; letter-spacing: .2em; }
+  .en-lede, .hero-scroll .en-copy .hero-actions { padding-left: 0; }
+  .en-lede { margin-top: 16px; gap: 12px; }
+  .hero-scroll .en-lede .hero-description { font-size: 14px; line-height: 1.6; }
+  .en-rule { width: 28px; }
+  .hero-scroll .en-copy .hero-actions { gap: 10px 22px; margin-top: 20px; }
+  :is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key { min-height: 52px; }
+  .en-key-icon { width: 50px; }
+  .en-key-label { padding: 0 18px; }
+  .en-key-arrow { width: 44px; }
+  .en-threshold, .hero-scroll .en-bar .hero-edition.en-count { display: none; }
+  .en-arches { --size: min(150vw, 88svh); top: calc(97% - var(--size) * .9); left: 50%; }
+  .en-arches-layer { transform-origin: 50% 90%; }
+  .hero-scroll .hero-bottom.en-bar { right: 7%; bottom: 14px; left: 7%; grid-template-columns: 1fr auto; }
+  .hero-scroll .en-bar .en-scroll > .en-scroll-track { height: 40px; }
+  .en-scroll-text small { display: none; }
+  .hero-scroll .en-bar .hero-controls button { padding: 0 8px; letter-spacing: .14em; }
+  .hero-scroll .en-bar .en-sound { min-width: 44px; justify-content: center; }
+  .hero-scroll .en-bar .en-sound > span:last-child { display: none; }
+}
+@media (max-width: 800px) {
+  .en-index { display: none; }
+  :is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key { min-height: 48px; }
+  .en-key-icon { width: 44px; }
+  .en-key-arrow { width: 40px; }
+  :is(.hero-scroll .hero-actions .hero-secondary, .hero-scroll .cy-actions .hero-secondary, .play-page .pl-link, .home-page .hp-link, .camera-scene .cm-link).en-link { min-height: 48px; }
+  .en-link-arrow { width: 36px; height: 36px; }
+}
+@media (max-width: 380px) {
+  .hero-scroll .en-copy .hero-actions { flex-direction: column; align-items: flex-start; }
+}
+
+/* ——— Navigation bar (all pages): thinner, editorial, numbered links ——— */
+.navigation { height: 88px; padding: 0 clamp(20px, 4vw, 64px); display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; border-bottom: 0; }
+.navigation::after { content: ''; position: absolute; right: clamp(20px, 4vw, 64px); bottom: 0; left: clamp(20px, 4vw, 64px); height: 1px; background: linear-gradient(90deg, transparent, #a8916e59 12%, #a8916e59 88%, transparent); pointer-events: none; }
+.navigation.scrolled { height: 76px; }
+.navigation.nav-dark { background: linear-gradient(180deg, #030a08b3, transparent); }
+.navigation.nav-dark.scrolled { background: #06120ee6; }
+.navigation.nav-dark::after { background: linear-gradient(90deg, transparent, #e6d5ae2e 12%, #e6d5ae2e 88%, transparent); }
+.navigation > .brand { justify-self: start; }
+.navigation .desktop-nav { gap: clamp(22px, 2.8vw, 44px); padding: 0; border: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.navigation .desktop-nav::before, .navigation .desktop-nav::after { display: none; }
+.navigation .desktop-nav a { display: flex; align-items: baseline; gap: 7px; padding: 14px 0; font-size: 13.5px; letter-spacing: .01em; transition: color .3s; }
+.nav-num { font-family: var(--serif); font-size: 12.5px; font-style: italic; color: #765b38; transition: color .3s; }
+.nav-dark .nav-num { color: #cdb68c; }
+.navigation .desktop-nav a::after { bottom: 6px; left: 0; height: 1px; background: currentColor; box-shadow: none; transform: scaleX(0); transform-origin: right; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+.navigation .desktop-nav a:hover::after, .navigation .desktop-nav a.active::after { transform: scaleX(1); transform-origin: left; }
+.navigation .desktop-nav a.active .nav-num { color: #8a6a36; }
+.nav-dark .desktop-nav a.active, .nav-dark .desktop-nav a:hover { color: #f3ecdf; }
+.nav-dark .desktop-nav a.active .nav-num { color: #e6d5ae; }
+.navigation .nav-actions { justify-self: end; gap: 12px; }
+.navigation .nav-camera { width: 42px; height: 42px; border: 1px solid #a8916e80; background: transparent; transition: border-color .3s, background .3s; }
+.navigation .nav-camera svg { transition: scale .4s cubic-bezier(.2, .7, .2, 1); }
+.navigation .nav-camera:hover { border-color: currentColor; background: #c3a8691a; }
+.navigation .nav-camera:hover svg { scale: 1.12; }
+.nav-dark .nav-camera { border-color: #e6d5ae59; }
+.navigation .nav-passport { gap: 10px; height: 42px; padding: 0 6px 0 16px; border: 1px solid #a8916e99; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: inherit; background: transparent; box-shadow: none; transition: background .3s, border-color .3s; }
+.navigation .nav-passport svg { color: currentColor; }
+.navigation .nav-passport small { display: grid; place-items: center; min-width: 30px; height: 30px; margin-left: 2px; padding: 0 8px; border: 0; border-radius: 999px; font-size: 12px; font-weight: 700; color: #15130d; background: linear-gradient(180deg, #ecdcb6, #cdb07a); }
+.navigation .nav-passport:hover { border-color: #8a6a36; background: #c3a8691f; filter: none; box-shadow: none; }
+.nav-dark .nav-passport { border-color: #e6d5ae66; }
+.nav-dark .nav-passport:hover { border-color: #e6d5ae; background: #e6d5ae1a; }
+@media (max-width: 960px) { .navigation .nav-passport { padding: 0 6px; } }
+@media (max-width: 800px) {
+  .navigation { height: 78px; grid-template-columns: 1fr auto; }
+  .navigation.scrolled { height: 68px; }
+}
+
+
+/* ——— Portal composition (HeroGate.tsx, .portal-copy): the door in the centre, the title set around it ———
+   "Tarihin" and "Kapısını" stand on either side of the door, "Arala." on the threshold in front of it. The pointer carries a lantern that lights the door. */
+@property --mouse-x { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --mouse-y { syntax: '<number>'; inherits: true; initial-value: 0; }
+.hero-scroll .hero-sticky { transition: --mouse-x .6s ease-out, --mouse-y .6s ease-out; }
+.hero-scroll { --door-h: min(74svh, 760px); --door-w: calc(var(--door-h) * .667); --pt-size: clamp(60px, min(8.2vw, 13.5svh), 168px); }
+/* The lantern lies over the door only and fades out at its edges, so the words beside the door keep their light. */
+.en-lantern { position: absolute; inset: -2% 4%; z-index: 4; pointer-events: none; opacity: .78; background: radial-gradient(circle min(22vmax, 330px) at calc(50% + var(--mouse-x, 0) * 100vw) calc(46% + var(--mouse-y, 0) * 100svh), transparent 0, transparent 30%, #020806 100%); -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%); }
+.hero-scroll .portal-copy { position: absolute; inset: 0; z-index: auto; max-width: none; pointer-events: none; }
+.portal-copy > *, .portal-title > * { pointer-events: auto; }
+.portal-copy .en-index { position: absolute; top: calc(88px + 4svh); left: var(--en-left); z-index: 6; margin: 0; }
+.portal-title { margin: 0; font-family: var(--serif); font-size: var(--pt-size); font-weight: 300; line-height: .9; letter-spacing: -.03em; color: var(--en-ivory); }
+.pt-word { position: absolute; z-index: 0; display: block; overflow: hidden; padding: .06em .12em .16em; white-space: nowrap; }
+.pt-word > span { display: block; }
+/* Beside the door, with clear air between the words and its frame. */
+.pt-a { top: 25%; right: calc(50% + var(--door-w) * .5 + clamp(18px, 2vw, 36px)); text-align: right; }
+.pt-b { top: 41%; left: calc(50% + var(--door-w) * .5 + clamp(18px, 2vw, 36px)); }
+.pt-c { top: auto; bottom: 15%; left: 50%; z-index: 6; translate: -50% 0; font-size: 1.24em; }
+.pt-c em { font-style: italic; font-weight: 400; color: var(--en-gold); background: linear-gradient(100deg, #f6ecd0 0%, #ddc28a 40%, #b08a4e 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 10px 30px #020806) drop-shadow(0 2px 6px #020806); }
+.portal-left { position: absolute; top: auto; bottom: calc(16% + 30px); left: var(--en-left); z-index: 6; width: max(250px, calc(50% - var(--door-w) * .5 - var(--en-left) - 36px)); }
+.portal-left .en-lede { margin: 0; padding: 0; }
+.portal-left .hero-actions { flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 26px; padding: 0; }
+.portal-note { position: absolute; top: auto; bottom: calc(22% + 20px); right: var(--en-left); z-index: 6; display: flex; flex-direction: column; gap: 10px; width: max(220px, calc(50% - var(--door-w) * .5 - var(--en-left) - 60px)); margin: 0; font-family: var(--serif); font-size: clamp(20px, 1.7vw, 28px); line-height: 1.2; color: var(--en-ivory-soft); }
+.portal-note > span { color: var(--en-gold); font-size: 16px; }
+.portal-note em { color: var(--en-gold-light); }
+.portal-copy :focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 10px; box-shadow: none; }
+@media (min-width: 801px) and (orientation: landscape), (min-width: 1101px) {
+  .hero-scroll .gate-visual { top: auto; right: auto; bottom: 10%; left: 50%; width: calc(var(--door-w) * 1.3); height: var(--door-h); margin-left: calc(var(--door-w) * -.65); }
+  .hero-scroll .en-arches { --size: min(126svh, 100vw); top: calc(90% - var(--size) * .9); left: 50%; }
+  .hero-scroll .en-arches-layer { transform-origin: 50% 90%; }
+  .hero-scroll .en-beam { -webkit-mask-image: radial-gradient(ellipse 40% 70% at 50% 50%, #000, transparent); mask-image: radial-gradient(ellipse 40% 70% at 50% 50%, #000, transparent); }
+  .hero-scroll .en-bar .hero-edition.en-count { display: none; }
+  .hero-scroll .en-bar .hero-controls { grid-column: 3; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pt-word > span { animation: en-rise 1.2s .6s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .pt-b > span { animation-delay: .75s; }
+  .pt-c > span { animation: pt-arrive 1.5s .95s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .portal-copy .en-index { animation: en-fade 1s .5s backwards; }
+  .portal-left > * { animation: en-fade-up .9s 1.15s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .portal-left > :nth-child(2) { animation-delay: 1.25s; }
+  .portal-note { animation: en-fade-up 1s 1.35s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .en-lantern { animation: en-fade 2s .2s backwards; }
+}
+/* Short landscape screens: the two buttons side by side, the copy a little smaller. */
+@media (max-height: 760px) and (min-width: 801px) and (orientation: landscape) {
+  .portal-left { bottom: calc(14% + 20px); width: max(300px, calc(50% - var(--door-w) * .5 - var(--en-left) - 24px)); }
+  .portal-left .en-lede p { font-size: 14px; line-height: 1.6; }
+  .portal-left .hero-actions { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 18px; }
+  .portal-copy .en-index { top: calc(88px + 2svh); }
+}
+@keyframes pt-arrive { from { opacity: 0; transform: translateY(40%); filter: blur(12px); letter-spacing: .06em; } }
+@media (max-width: 800px), (max-width: 1100px) and (orientation: portrait) {
+  .hero-scroll .portal-copy { position: relative; inset: auto; flex: none; }
+  .portal-copy .en-index { position: static; margin-bottom: 14px; }
+  .portal-title { font-size: clamp(46px, 12.4vw, 100px); }
+  .pt-word { position: static; translate: none; padding-left: 0; }
+  .pt-a { text-align: left; }
+  .pt-b { padding-left: .5em; }
+  .pt-c { padding-left: 1em; font-size: 1em; }
+  .portal-left { position: static; width: auto; margin-top: 16px; }
+  .portal-left .hero-actions { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 20px; }
+  .portal-note { display: none; }
+  .en-lantern { display: none; }
+}
+
+
+/* ——— Courtyard (HeroGate.tsx, .courtyard-scene) ———
+   The name is an inscription panel (kitabe) over the arches, framed by two gold rules that draw out as the courtyard
+   appears; the building is lit through the middle arch while the side bays sink into the dark; the description, the
+   facts and the ways on share one label along the floor. */
+@property --rule { syntax: '<number>'; inherits: true; initial-value: 1; }
+.hero-scroll .courtyard-scene { --cy-title: clamp(52px, min(6.8vw, 11.2svh), 132px); background: #061410; }
+.hero-scroll .cy-shade { background: radial-gradient(ellipse 22% 46% at 50% 62%, transparent 0, transparent 40%, #020806b3 100%), linear-gradient(180deg, #020806e6 0%, #02080699 24%, transparent 36%, transparent 58%, #020806cc 82%, #020806f2 100%); }
+.cy-trace { stroke: var(--en-gold-light, #e6d5ae); stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 0; filter: drop-shadow(0 0 6px #e6d5ae99); }
+.hero-scroll .cy-copy { position: absolute; inset: 0; left: 0; right: 0; bottom: 0; z-index: 2; max-width: none; pointer-events: none; }
+.hero-scroll .cy-copy > * { pointer-events: auto; }
+.cy-kitabe { position: absolute; top: calc(88px + 2.5svh); left: 50%; display: flex; flex-direction: column; align-items: center; width: max-content; max-width: 92vw; padding: 14px clamp(28px, 4vw, 64px) 18px; translate: -50% 0; text-align: center; }
+.cy-kitabe::before, .cy-kitabe::after { content: ''; position: absolute; right: 0; left: 0; height: 1px; transform: scaleX(var(--rule)); background: linear-gradient(90deg, transparent, #e6d5ae 18%, #e6d5ae 82%, transparent); opacity: .7; }
+.cy-kitabe::before { top: 0; }
+.cy-kitabe::after { bottom: 0; }
+.cy-index { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; color: #d9c9a5; }
+.cy-index > span { font-family: var(--serif); font-size: 16px; font-style: italic; font-weight: 400; letter-spacing: .02em; text-transform: none; color: var(--en-gold-light, #e6d5ae); }
+.cy-index > i { width: 30px; height: 1px; background: currentColor; opacity: .6; }
+.hero-scroll .cy-copy h2 { display: flex; flex-wrap: wrap; justify-content: center; column-gap: .24em; margin: 0; font-size: var(--cy-title); font-weight: 300; line-height: 1; letter-spacing: -.026em; color: #fbf7ee; text-shadow: 0 10px 50px #020806; }
+.hero-scroll .cy-copy h2 .reveal-line { padding-bottom: .1em; }
+.hero-scroll .cy-copy h2 em { font-style: italic; font-weight: 400; color: #e6d5ae; background: linear-gradient(100deg, #f6ecd0 0%, #ddc28a 45%, #b08a4e 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.cy-label { position: absolute; right: clamp(22px, 5vw, 96px); bottom: clamp(18px, 4svh, 40px); left: clamp(22px, 5vw, 96px); display: grid; grid-template-columns: minmax(0, 1.25fr) auto auto; align-items: center; gap: 18px clamp(24px, 3.4vw, 60px); padding-top: 22px; border-top: 1px solid #e6d5ae33; }
+.hero-scroll .cy-text { max-width: 46ch; margin: 0; font-size: 15px; line-height: 1.7; color: #e2ded4; }
+.hero-scroll .cy-facts { display: flex; gap: 30px; margin: 0; padding: 0; border: 0; }
+.hero-scroll .cy-facts dt { color: #cdb68c; }
+.hero-scroll .cy-facts dd { font-size: 21px; white-space: nowrap; color: #fbf7ee; }
+.hero-scroll .cy-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; }
+/* The note runs up the left edge, clear of the inscription. */
+.hero-scroll .cy-note { top: 50%; right: auto; bottom: auto; left: clamp(10px, 1.6vw, 26px); font-size: 9.5px; color: #f1e9db8c; writing-mode: vertical-rl; rotate: 180deg; translate: 0 50%; }
+.hero-scroll .courtyard-scene :focus-visible { outline: 2px solid var(--en-gold-light, #e6d5ae); outline-offset: 8px; box-shadow: none; }
+@media (max-width: 1100px) {
+  .cy-label { grid-template-columns: minmax(0, 1fr) auto; }
+  .hero-scroll .cy-text { grid-column: 1 / -1; max-width: 60ch; }
+}
+@media (max-width: 800px), (max-width: 1100px) and (orientation: portrait) {
+  .hero-scroll .courtyard-scene { --cy-title: clamp(42px, 13vw, 76px); }
+  .hero-scroll .cy-shade { background: radial-gradient(ellipse 50% 40% at 50% 46%, transparent 0, transparent 40%, #020806b3 100%), linear-gradient(180deg, #020806f2 0%, #02080699 30%, transparent 40%, transparent 46%, #020806e6 64%, #020806 100%); }
+  .cy-kitabe { top: calc(78px + 2svh); padding: 10px 18px 14px; }
+  .cy-index { gap: 8px; font-size: 9.5px; letter-spacing: .16em; white-space: nowrap; }
+  .cy-index > i { width: 14px; }
+  .hero-scroll .cy-copy h2 { flex-direction: column; }
+  .cy-label { right: 7%; left: 7%; grid-template-columns: 1fr; gap: 14px; padding-top: 16px; }
+  .hero-scroll .cy-text { font-size: 14px; }
+  .hero-scroll .cy-facts { gap: 20px; }
+  .hero-scroll .cy-facts dd { font-size: 16px; }
+  .hero-scroll .cy-note { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .cy-kitabe { --rule: 1; } }
