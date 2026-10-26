@@ -86,6 +86,39 @@ def _embed(texts, dim, tries=5):
     return out
 
 
+def embed_images(images, dim=EMBED_DIM, tries=5):
+    """images: [(bayt, mime)] → [[float]]. Görseller metinle aynı modelle (gemini-embedding-2, çok kipli) gömülür.
+    Metin gibi her görsel ayrı bir Content olarak gönderilir ve dönen sayı kontrol edilir."""
+    if FAKE:
+        return [_fake_image_vec(data, dim) for data, _ in images]
+    from google.genai import types
+    out = []
+    for i in range(0, len(images), 16):   # istek boyutu: 16 × ~100 KB
+        batch = images[i:i + 16]
+        contents = [types.Content(parts=[types.Part.from_bytes(data=d, mime_type=m)]) for d, m in batch]
+        res = _retry(lambda: client().models.embed_content(
+            model=EMBED_MODEL, contents=contents,
+            config=types.EmbedContentConfig(output_dimensionality=dim)), tries)
+        if len(res.embeddings) != len(batch):
+            raise RuntimeError(f'{len(batch)} görsel gönderildi, {len(res.embeddings)} embedding döndü')
+        out += [e.values for e in res.embeddings]
+    return out
+
+
+def _fake_image_vec(data, dim):
+    """Test modu: görselin 16×16 küçük hâlinden deterministik vektör. Aynı görsel aynı vektörü, kırpılmış ya da yeniden
+    sıkıştırılmış hâli yakın bir vektörü verir; farklı görseller uzak düşer."""
+    import io
+    from PIL import Image
+    im = Image.open(io.BytesIO(data)).convert('RGB').resize((16, 16))
+    px = [c / 255.0 for p in im.getdata() for c in p]
+    mean = sum(px) / len(px)
+    v = [(x - mean) for x in px] + [0.0] * max(0, dim - len(px))
+    v = v[:dim]
+    n = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / n for x in v]
+
+
 # ---------------------------------------------------------------------------- üretim
 def generate(prompt, system=None, schema=None, model=None, thinking='low', tries=5):
     """Metin ya da (schema verilirse) JSON döndürür. tries: geçici hatalarda en çok deneme sayısı."""

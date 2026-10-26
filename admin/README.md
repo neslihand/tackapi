@@ -40,13 +40,15 @@ adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS
 | Giriş | — | Kişisel yönetici anahtarı; yalnızca o sekmenin oturumunda tutulur |
 | Pano | `#/` | Kontrol bekleyen ve esere bağlanmamış fotoğraflar, fotoğrafsız eserler, son değişiklikler |
 | Fotoğraflar | `#/fotograflar` | Kontrol kuyruğu: onayla, esere bağla, kapak yap, at; kitaba göre süzme ve toplu işlem |
-| Eserler | `#/eserler` | Taslaklar dahil liste; şehir, durum ve fotoğrafa göre süzme |
-| Eser | `#/eser/<slug>` | Künye, tarih, konum, özet, kaynak notu, yayın durumu; panel eserlerinde metin; galeri ve yükleme |
+| Eserler | `#/eserler` | Taslaklar dahil liste; şehir, durum, fotoğraf ve MVP pilot seçkisine göre süzme. Eser sayfasındaki "Pilot seçkide" kutusu eseri seçkiye ekler; panoda şehir başına sayaç ve hedef görünür |
+| Eser | `#/eser/<slug>` | Künye, tarih, konum, özet, kaynak notu, yayın durumu; panel eserlerinde metin; galeri ve yükleme; süsleme ve sanat kayıtlarına fotoğraf bağlama (eserin, üst ve alt yapılarının fotoğraflarından seçilir; seçim sırası sayfadaki sıradır); üstte tek tıkla "Yayından kaldır / Yayına al"; altta kitap eserleri için "Eseri kaldır" (geri getirilebilir, eser listesinde "Kaldırılanlar" filtresi), panelden eklenen ve paragraflarından ayrılmış eserler için "Kalıcı olarak sil" |
+| Eser: kitap sayfaları | `#/eser/<slug>` | "Kaynak sayfası (ilk/son)" alanları (paragraflara göre otomatik hesaplanır; elle girilen korunur), "Kitap sayfalarındaki fotoğraflar" (eserin sayfalarındaki bütün fotoğraflar, hangi esere bağlı oldukları, "Bu esere bağla"/"Başka esere taşı"; "Kitap sayfasını gör" ile PDF açılımı) ve kitap metninin altında "Künyeyi düzeltilmiş metinden yeniden çıkar" |
 | Bölümleme | `#/bolumleme` | Başka esere ait görünen paragraflar: bu esere ait, gizle, önceki paragrafa ekle, başka esere taşı (ayrıntı aşağıda) |
 | Önizleme | `#/onizleme/<slug>` | Eserin sitede nasıl görüneceği, taslakken de (ayrıntı aşağıda) |
 | Yeni eser | `#/yeni-eser` | Taslak olarak eklenir; metin girilirse sohbet asistanı için dizinlenir |
 | Şehirler | `#/sehirler` | Şehir listesi ve yeni şehir |
 | Değişiklik kaydı | `#/kayit` | Kim, ne zaman, neyi değiştirdi (önce/sonra) |
+| Görselle arama | `#/gorsel-arama` | Ziyaretçinin fotoğrafla eser bulma özelliğini dener; benzerlik puanı ve eşleşen kitap fotoğrafıyla. Bileşen `src/public/VisualSearch.tsx` ön yüze taşınabilir |
 
 Kurallar arka uçta uygulanır, panel aynı denetimleri önceden gösterir:
 - Envanter kitabından gelen eserin metni değiştirilemez.
@@ -61,7 +63,14 @@ Kitap metni değişmez; kararlar paragraf numarasıyla ayrı tutulur ve her an g
 - **Öneri:** Aynı şehirde başlığı geçen eser önerilir. Bir paragraf taşındıysa, ardından gelen işaretli paragraf için
   aynı eser önerilir.
 - **Eser sayfası:** "Kitap metni" bölümünde paragraflar numaralıdır; her birinde "Düzelt"/"Değiştir" ile karar verilir.
-  Başka eserlerden taşınan paragraflar ayrıca listelenir.
+  Başka eserlerden taşınan paragraflar ayrıca listelenir; hedef eserin metninde kitaptaki sıralarına göre yerleşirler.
+- **Paragrafın bir kısmı:** Paragraf metninde fareyle bir kısmı seçince "Seçili kısmı gizle" (metne karışmış başlık,
+  kırıntı) ve "Seçimin başından böl"; bir yere yalnızca tıklayınca "Buradan böl" çıkar. Bölünce sondaki ya da baştaki
+  kısım asıl eserine taşınır veya gizlenir. Gizlenen kısımlar kırmızı, bölünüp çıkan kısım gri çizili görünür.
+- **Aralık taşıma ve yeni esere ayırma:** "Birden çok paragrafı taşı ya da yeni esere ayır" ile P{n}–P{m} tek seferde
+  mevcut bir esere ya da bu paragraflardan oluşacak yeni bir esere taşınır. Yeni eser, listede hiç olmayan (başlığı
+  bölümlemede okunamamış) eserler içindir: aynı kitaba ve sayfalara bağlı, taslak başlar; fotoğrafları bağlanıp
+  yayına alınır. Örnek: Hz. Üftâde Türbesi'nin metni "Şair (Gedik) Ahmet Paşa Türbesi Haziresi" kaydının içindedir.
 - Her karardan sonra sohbet dizini yenilenir; bildirimde kaç parçanın yenilendiği yazar.
 
 ## Önizleme: "Sitede nasıl görünür?"
@@ -75,9 +84,14 @@ ziyaretçinin göreceği gibi tam genişlikte gösterilir.
 - **Yayın öncesi kontrol:** Kapak fotoğrafı, Türkçe özet ve kaynak metin zorunlu olarak işaretlenir. Sohbet dizini,
   tarih, koordinat, bekleyen fotoğraf ve İngilizce ad/özet isteğe bağlıdır. Eksik varsa "Yayına al" önce uyarır.
 - **Keşfet listesindeki kart:** Kontrol listesinin yanında, eserin listede nasıl görüneceği gösterilir.
-- **Anlatım:** Yayındaki eserde "Kısa ve Öz / Hikâyeleştirerek / Çocuklar İçin" düğmeleri gerçek sohbet ucunu çağırır.
-  Cevapta yalnızca atıf yapılan kaynaklar listelenir. Taslak eserde sohbet kapalıdır, çünkü herkese açık sohbet ucu
-  taslak eserlere cevap vermez.
+- **Anlatım:** "Detaylı Anlatım" kitaptaki paragrafların tamamını gösterir; yapay zekâ kullanılmaz.
+  "Hikâyeleştirerek" ve "Çocuklar İçin" önceden üretilip kaydedilmiş metinlerdir (`narration` tablosu). Ziyaretçi
+  tıkladığında yeni cevap üretilmez. Önizlemede hazırlanmamış anlatım için "Anlatımı üret", hazır olan için "Yeniden
+  üret" düğmesi çıkar (her basış tek bir Gemini çağrısıdır; taslak eserde de çalışır). Doğrulanamayan yıl ya da ad
+  varsa ya da eserin metni anlatımdan sonra değiştiyse kontrol panelinde uyarı görünür. Yazım hatası gibi küçük
+  düzeltmeler için "Metni düzenle" metni elle değiştirmeyi sağlar (yapay zekâ çağrılmaz); elle düzeltilmiş anlatımda
+  "Yeniden üret" önce onay ister. Anlatım düz metindir (kaynak
+  işareti yok); yararlanılan kaynaklar metnin altında kitap ve sayfa olarak listelenir.
 
 `src/public/` klasöründeki `MonumentView` (eser sayfası) ve `MonumentCard` (liste kartı) bileşenleri yalnızca API
 verisine bağlıdır ve ön yüzün görsel dilini (`.story-*`, `.artifact-*`) izler. Birleştirmede ön yüzün API'den beslenen

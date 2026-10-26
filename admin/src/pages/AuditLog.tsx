@@ -10,7 +10,10 @@ const ACTIONS: Record<string, string> = {
   'monument.delete': 'eseri sildi', 'image.update': 'fotoğrafı düzenledi', 'image.upload': 'fotoğraf yükledi',
   'image.delete': 'fotoğrafı sildi', 'image.reject': 'fotoğrafı attı', 'image.bulk_published': 'fotoğrafları toplu onayladı',
   'image.bulk_rejected': 'fotoğrafları toplu attı', 'image.bulk_draft': 'fotoğrafları taslağa aldı', 'city.create': 'şehir ekledi',
-  'note.update': 'kalite notunun durumunu değiştirdi',
+  'note.update': 'kalite notunun durumunu değiştirdi', 'monument.remove': 'eseri kaldırdı', 'monument.restore': 'eseri geri getirdi',
+  'monument.split': 'paragraflardan yeni eser ayırdı', 'monument.pilot': 'pilot seçkiyi değiştirdi',
+  'paragraph.decide': 'paragraf kararı verdi', 'paragraph.move_range': 'paragrafları taşıdı', 'artwork.images': 'süsleme fotoğraflarını değiştirdi',
+  'narration.generate': 'anlatım üretti', 'narration.edit': 'anlatımı düzeltti',
 };
 
 /** Kayıt satırını okunur bir cümleye çevirir (pano da kullanır). */

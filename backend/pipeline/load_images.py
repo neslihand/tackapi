@@ -6,7 +6,11 @@
 - Kapağı olmayan her eserin ilk yayımlanmış fotoğrafı kapak yapılır.
 - Alternatif metin şablonla yazılır: "<eser adı> – <kitap>, s. <sayfa>" (görme engelli kullanıcılar ve kaynak gösterimi).
 
-Kullanım: python load_images.py [--dsn ...]
+- --new-only: yalnızca veritabanında olmayan görseller eklenir (taslak olarak, panelde onaylanmak üzere); var olan
+  fotoğraflara hiç dokunulmaz. İlk yüklemeden sonra (ad onarımı, panel düzeltmeleri) bunu kullanın: tam yükleme panelde
+  dokunulmamış fotoğrafları kitap dosyasındaki eski eser eşleşmesine geri döndürür.
+
+Kullanım: python load_images.py [--dsn ...] [--new-only]
 """
 import os, sys, json, argparse
 sys.path.insert(0, os.path.dirname(__file__))
@@ -49,16 +53,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dsn', default=os.environ.get('DATABASE_URL'))
     ap.add_argument('--src', default=os.path.join(DATA, 'images.jsonl'))
+    ap.add_argument('--new-only', action='store_true', help='yalnızca yeni görselleri taslak olarak ekle')
     a = ap.parse_args()
     db = DB(a.dsn)
     with open(a.src, encoding='utf-8') as f:
         rows = [json.loads(l) for l in f if l.strip()]
     missing = 0
+    if a.new_only:
+        known = {r['sha1'] for r in db.query('SELECT sha1 FROM image')}
+        rows = [r for r in rows if r['sha1'] not in known]
+        print(f'{len(rows)} yeni görsel eklenecek (taslak); var olan fotoğraflara dokunulmaz.')
     for r in rows:
         if r['monument_slug'] and not db.query('SELECT 1 FROM monument WHERE slug = %(s)s', dict(s=r['monument_slug'])):
             missing += 1  # eser veritabanında yoksa fotoğraf bağlanmamış olarak girer
             r['monument_slug'], r['needs_review'] = None, True
-        r['status'] = 'draft' if r['needs_review'] else 'published'
+        r['status'] = 'draft' if r['needs_review'] or a.new_only else 'published'
         db.execute(UPSERT, r)
     db.execute(COVERS)
     stats = db.query("""SELECT count(*) AS toplam,

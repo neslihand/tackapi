@@ -19,8 +19,10 @@ Bağlama kuralları (sırayla):
      yönetim panelinde bir esere, şehre bağlanır ya da atılır.
 Kontrol gerektiren her fotoğraf 'draft' olarak kalır; yalnızca kesin eşleşmeler doğrudan 'published' olur.
 
-Elenenler: kısa kenarı 400 px'ten küçük ya da sayfanın %3'ünden azını kaplayan görseller, 4'ten fazla sayfada
-tekrarlanan süsler/logolar, neredeyse tek renkli dokular ve aynı görselin kopyaları.
+Elenenler: kısa kenarı 150 px'ten küçük ya da sayfanın %0,8'inden azını kaplayan görseller (simgeler, kırıntılar),
+4'ten fazla sayfada tekrarlanan süsler/logolar, neredeyse tek renkli dokular ve aynı görselin kopyaları. Eşik ilk
+sürümde 400 px / %3'tü; kitaplardaki küçük fotoğraflar (süsleme ayrıntıları, kitâbeler, mezar taşları; ~1.700 görsel)
+bu yüzden alınmamıştı (Ekim 2026). Mevcut veritabanına yalnızca yeniler eklenir: load_images.py --new-only.
 
 Kullanım:
   python images.py --report            # yalnızca rapor: data/review/gorseller.csv (hiçbir şey yazmaz)
@@ -35,7 +37,7 @@ ROOT = os.path.join(os.path.dirname(__file__), '..')
 DATA = os.path.join(ROOT, 'data')
 MEDIA = os.environ.get('VAKIF_MEDIA_DIR', os.path.join(ROOT, 'media'))
 PDF_DIR = os.environ.get('VAKIF_PDF_DIR', os.path.join(os.path.expanduser('~'), 'OneDrive', 'Belgeler', 'Kok&Kod', 'kaynak_pdfs'))
-MIN_SIDE, MIN_COVER, MAX_REPEAT = 400, 0.03, 4
+MIN_SIDE, MIN_COVER, MAX_REPEAT = 150, 0.008, 4
 FULL_W, THUMB_W = 1600, 480
 SECTION_KINDS = ('intro', 'city_history', 'chapter_intro', 'complex_intro')
 

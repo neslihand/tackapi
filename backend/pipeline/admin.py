@@ -12,15 +12,18 @@ Kurallar:
 - Panelde değiştirilen fotoğraf 'edited' işaretlenir; load_images.py onu bir daha değiştirmez.
 - Eserle ilgili her değişiklik o eserin sohbet önbelleğini temizler.
 """
-import os, re, io, json, hmac, hashlib
+import os, re, io, json, hmac, hashlib, logging
 from typing import Literal
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, UploadFile, File, Form, Response
 from pydantic import BaseModel, Field, ConfigDict
 import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-import textfix_db
+import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract
+
+log_warn = logging.getLogger('vakif.admin').warning
+pilot_targets = pilot.TARGETS
 
 KINDS = Literal['complex', 'mosque', 'masjid', 'madrasa', 'tomb', 'imaret', 'bath', 'fountain', 'han', 'bedesten',
                 'zawiya', 'tekke', 'graveyard', 'bridge', 'library', 'church', 'house', 'other']
@@ -74,6 +77,8 @@ class MonumentFields(Strict):
     parent: str | None = Field(None, max_length=200)     # üst eser slug'ı
     built_from: int | None = Field(None, ge=500, le=2100)
     built_to: int | None = Field(None, ge=500, le=2100)
+    page_from: int | None = Field(None, ge=1, le=2000)   # kaynakçadaki kitap sayfaları (elle düzeltme)
+    page_to: int | None = Field(None, ge=1, le=2000)
     date_basis: BASES | None = None
     status: Literal['standing', 'ruined', 'lost', 'rebuilt'] | None = None
     summary_tr: str | None = Field(None, max_length=2000)
@@ -81,6 +86,7 @@ class MonumentFields(Strict):
     current_state: str | None = Field(None, max_length=1000)
     source_note: str | None = Field(None, max_length=500)
     review_status: REVIEW | None = None
+    pilot: bool | None = None                            # MVP pilot seçkisi (pilot.py)
 
 
 class MonumentCreate(MonumentFields):
@@ -116,12 +122,52 @@ class ParagraphDecision(Strict):
     # pending: karar geri alınır. Kitap metni hiçbir durumda değişmez.
     decision: Literal['pending', 'keep', 'hide', 'merge_prev', 'move']
     target: str | None = Field(None, max_length=200)   # move için hedef eserin slug'ı
+    # Bölünmüş paragraf: iki eserin metni tek paragrafta birleşmişse paragraf split_at karakterinden bölünür; karar
+    # (move/hide) yalnızca split_part kısmına uygulanır ('tail' = bölme noktasından sonrası, 'head' = öncesi).
+    split_at: int | None = Field(None, ge=1)
+    split_part: Literal['head', 'tail'] | None = None
+
+
+class HiddenSpans(Strict):
+    # paragrafın içinde gizlenen kısımlar: [[başlangıç, bitiş], …] (kitap metnindeki karakter konumları); [] hepsini geri getirir
+    hidden_spans: list[tuple[int, int]] = Field(max_length=50)
+
+
+class SplitNew(Strict):
+    name_tr: str = Field(min_length=2, max_length=200)
+    kind: KINDS
+    district: str | None = Field(None, max_length=100)
+    neighborhood: str | None = Field(None, max_length=100)
+
+
+class ParagraphRange(Strict):
+    # Bir eserin kitap metnindeki P{from_para}…P{to_para} paragraflarını başka bir esere (target) ya da bu paragraflardan
+    # oluşacak yeni bir esere (new) taşır. Kitap metni değişmez; her paragraf ayrı ayrı geri alınabilir.
+    from_para: int = Field(ge=1)
+    to_para: int = Field(ge=1)
+    target: str | None = Field(None, max_length=200)
+    new: SplitNew | None = None
+    first_split_at: int | None = Field(None, ge=1)   # ilk paragraf ortadan başlıyorsa: yalnızca bu noktadan sonrası taşınır
 
 
 class NotePatch(Strict):
     # open: bakılmadı · confirmed: doğru, asistan uyarıyı almaya devam eder · resolved: düzeltildi · wontfix: önemsiz
     # resolved ve wontfix notlar sohbet asistanına artık gönderilmez.
     status: Literal['open', 'confirmed', 'resolved', 'wontfix']
+
+
+class NarrationIn(Strict):
+    mode: Literal['story', 'child']
+    lang: Literal['tr', 'en'] = 'tr'
+
+
+class ArtworkImages(Strict):
+    image_ids: list[int] = Field(max_length=30)   # sıralı; boş liste bağları kaldırır
+
+
+class NarrationEdit(Strict):
+    lang: Literal['tr', 'en'] = 'tr'
+    answer: str = Field(min_length=50, max_length=20000)
 
 
 class CityCreate(Strict):
@@ -149,6 +195,16 @@ def build_router(db, media_dir, save_webp):
         if db.query("SELECT to_regclass('public.answer_cache') IS NOT NULL AS ok")[0]['ok']:
             db.execute('DELETE FROM answer_cache WHERE monument_slug = %(s)s', dict(s=slug))
 
+    pilot_ready = []
+
+    def has_pilot():
+        """monument.pilot sütunu var mı (009 göçü)? Yalnızca olumlu sonuç saklanır."""
+        if not pilot_ready:
+            if db.query("""SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema()
+                           AND table_name = 'monument' AND column_name = 'pilot') AS ok""")[0]['ok']:
+                pilot_ready.append(True)
+        return bool(pilot_ready)
+
     def monument_row(slug):
         rows = db.query("""SELECT m.*, c.slug AS city_slug, p.slug AS period_slug, par.slug AS parent_slug,
                                   b.slug AS book_slug, b.title AS book_title, s.text_tr, s.text_en
@@ -173,6 +229,10 @@ def build_router(db, media_dir, save_webp):
         sets, params, changed = [], dict(id=m['id']), {}
         simple = ('name_tr', 'name_en', 'alt_names', 'kind', 'district', 'neighborhood', 'address', 'lat', 'lon',
                   'date_basis', 'status', 'summary_tr', 'summary_en', 'current_state', 'source_note', 'review_status')
+        if 'pilot' in data and data['pilot'] is not None:
+            if not has_pilot():
+                raise HTTPException(503, 'Pilot seçkisi kapalı: önce python migrate.py --apply')
+            simple += ('pilot',)
         for k in simple:
             if k in data and data[k] != m.get(k):
                 sets.append(f'{k} = %({k})s')
@@ -209,6 +269,21 @@ def build_router(db, media_dir, save_webp):
                 rng = f'[{lo},{hi + 1})'
             sets.append('built_years = %(by)s::int4range'); params['by'] = rng
             changed['built'] = (str(old) if old else None, rng)
+        if 'page_from' in data or 'page_to' in data:
+            old = m['pages']
+            lo = data.get('page_from', old.lower if old else None)
+            hi = data.get('page_to', (old.upper - 1) if old and old.upper else None)
+            if lo is None and hi is None:
+                rng = None
+            else:
+                lo, hi = lo if lo is not None else hi, hi if hi is not None else lo
+                if hi < lo:
+                    raise HTTPException(422, 'Son sayfa ilk sayfadan önce olamaz.')
+                rng = f'[{lo},{hi + 1})'
+            before = f'[{old.lower},{old.upper})' if old else None
+            if rng != before:
+                sets.append('pages = %(pg)s::int4range'); params['pg'] = rng
+                changed['pages'] = (before, rng)   # 'pages' kaydı: otomatik hesap artık dokunmaz
         if sets:
             sets += ['updated_at = now()']
             db.execute(f"UPDATE monument SET {', '.join(sets)} WHERE id = %(id)s", params)
@@ -290,21 +365,29 @@ def build_router(db, media_dir, save_webp):
                                  if textfix_db.enabled(db) else 0,
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
-                                                   AND i.review_status = 'published')""")[0]['n'])
+                                                   AND i.review_status = 'published')""")[0]['n'],
+            # MVP pilot seçkisi: şehir başına seçilen eser ve hedef (pilot.py ile aynı hedefler)
+            pilot=[dict(city=r['city'], n=r['n'], target=pilot_targets.get(r['city'])) for r in db.query(
+                """SELECT c.slug AS city, count(m.*) FILTER (WHERE m.pilot) AS n FROM city c
+                   LEFT JOIN monument m ON m.city_id = c.id GROUP BY c.slug ORDER BY c.slug""")] if has_pilot() else [])
 
     @r.get('/monuments')
-    def list_monuments(q: str | None = None, city: str | None = None, status: REVIEW | None = None,
-                       has_image: bool | None = None, page: int = Query(1, ge=1),
+    def list_monuments(q: str | None = None, city: str | None = None,
+                       status: Literal['draft', 'reviewed', 'published', 'removed'] | None = None,
+                       has_image: bool | None = None, pilot: bool | None = None, page: int = Query(1, ge=1),
                        page_size: int = Query(50, ge=1, le=200), user: str = Depends(admin_user)):
-        where = """WHERE (%(q)s::text IS NULL OR m.name_tr ILIKE '%%' || %(q)s::text || '%%' OR m.slug ILIKE '%%' || %(q)s::text || '%%')
+        col = 'm.pilot' if has_pilot() else 'false'
+        where = f"""WHERE (%(q)s::text IS NULL OR m.name_tr ILIKE '%%' || %(q)s::text || '%%' OR m.slug ILIKE '%%' || %(q)s::text || '%%')
                      AND (%(city)s::text IS NULL OR c.slug = %(city)s::text)
-                     AND (%(st)s::text IS NULL OR m.review_status = %(st)s::text)
+                     AND (CASE WHEN %(st)s::text IS NULL THEN m.review_status <> 'removed'
+                               ELSE m.review_status = %(st)s::text END)   -- kaldırılanlar yalnızca istenince
                      AND (%(hi)s::boolean IS NULL OR %(hi)s::boolean = EXISTS (SELECT 1 FROM image i WHERE i.monument_id = m.id
-                                                                         AND i.review_status = 'published'))"""
-        p = dict(q=q or None, city=city, st=status, hi=has_image, lim=page_size, off=(page - 1) * page_size)
+                                                                         AND i.review_status = 'published'))
+                     AND (%(pi)s::boolean IS NULL OR {col} = %(pi)s::boolean)"""
+        p = dict(q=q or None, city=city, st=status, hi=has_image, pi=pilot, lim=page_size, off=(page - 1) * page_size)
         total = db.query(f'SELECT count(*) AS n FROM monument m JOIN city c ON c.id = m.city_id {where}', p)[0]['n']
         items = db.query(f"""
-            SELECT m.slug, m.name_tr, m.kind, c.slug AS city, m.district, m.review_status, m.is_synthetic, m.qa_flags,
+            SELECT m.slug, m.name_tr, m.kind, c.slug AS city, m.district, m.review_status, m.is_synthetic, m.qa_flags, {col} AS pilot,
                    m.updated_at, m.created_by, b.slug LIKE 'panel-%%' OR b.slug IS NULL AS from_panel,
                    (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status = 'published') AS images,
                    (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status IN ('draft','reviewed')) AS images_pending
@@ -323,12 +406,51 @@ def build_router(db, media_dir, save_webp):
                    lon=float(m['lon']) if m['lon'] is not None else None,
                    built_from=m['built_years'].lower if m['built_years'] else None,
                    built_to=(m['built_years'].upper - 1) if m['built_years'] and m['built_years'].upper else None,
+                   page_from=m['pages'].lower if m['pages'] else None,
+                   page_to=(m['pages'].upper - 1) if m['pages'] and m['pages'].upper else None,
+                   pages_auto=textfix_db.effective_pages(db, m['id']),
                    book=m['book_title'], from_panel=from_panel(m), text_editable=from_panel(m),
+                   pilot=bool(m.get('pilot')), deletable=deletable(m),
                    text_tr=m['text_tr'], text_en=m['text_en'], images=images_of(m['id']),
-                   paragraphs=paragraphs_of(m['id']),
+                   paragraphs=paragraphs_of(m['id']), artworks=artworks_of(m['id']),
+                   artwork_photos=artwork_photos_of(m['id'], m['parent_id']),
                    notes=db.query("""SELECT id, kind, note_tr, status FROM editorial_note WHERE monument_id = %(m)s
                                      ORDER BY status IN ('resolved', 'wontfix'), kind, id""", dict(m=m['id'])))
         return out
+
+    @r.get('/monuments/{slug}/page-photos')
+    def page_photos(slug: str, pad: int = Query(1, ge=0, le=6), user: str = Depends(admin_user)):
+        """Eserin kitap sayfalarındaki (± pad) bütün fotoğraflar, hangi esere bağlı olduklarıyla: yanlış esere bağlanmış
+        ya da hiç bağlanmamış fotoğrafları düzeltmek için. Atılmış fotoğraflar da gelir (yanlışlıkla atılmış olabilir)."""
+        m = monument_row(slug)
+        rng = m['pages']
+        if not rng or not m['book_id'] or from_panel(m):
+            return dict(book=m['book_slug'], pages=None, photos=[])
+        lo, hi = rng.lower, rng.upper - 1
+        photos = db.query("""SELECT i.id, i.file, i.review_status, i.is_cover, i.alt_tr, i.printed_page, i.pdf_page,
+                                     i.match_method, i.edited, i.width, i.height, mm.slug AS monument, mm.name_tr AS monument_name
+                              FROM image i LEFT JOIN monument mm ON mm.id = i.monument_id
+                              WHERE i.book_id = %(b)s AND i.printed_page BETWEEN %(lo)s AND %(hi)s
+                              ORDER BY i.printed_page, i.pdf_page, i.sort, i.id""",
+                          dict(b=m['book_id'], lo=lo - pad, hi=hi + pad))
+        for it in photos:
+            it['src'], it['thumb'] = f"/media/{it['file']}", f"/media/thumbs/{it['file']}"
+            it['here'] = it['monument'] == slug
+            it['in_range'] = lo <= it['printed_page'] <= hi
+        return dict(book=m['book_slug'], book_title=m['book_title'], pages=[lo, hi], photos=photos)
+
+    @r.get('/books/{book}/pdf-page')
+    def pdf_page(book: str, printed: int = Query(ge=1, le=2000), user: str = Depends(admin_user)):
+        """Kitabın basılı sayfasını içeren PDF açılımı (JPEG). Yalnızca panelde bakmak için; diske yazılmaz."""
+        try:
+            data, info = pdf_pages.render(book, printed)
+        except pdf_pages.PdfMissing as e:
+            raise HTTPException(503, str(e))
+        except KeyError as e:
+            raise HTTPException(404, str(e).strip("'\""))
+        return Response(data, media_type='image/jpeg', headers={
+            'X-Printed-Pages': ','.join(map(str, info['pages'])), 'X-Pdf-Page': str(info['pdf_page']),
+            'Access-Control-Expose-Headers': 'X-Printed-Pages, X-Pdf-Page', 'Cache-Control': 'private, max-age=3600'})
 
     @r.post('/monuments', status_code=201)
     def create_monument(body: MonumentCreate, user: str = Depends(admin_user)):
@@ -368,22 +490,72 @@ def build_router(db, media_dir, save_webp):
         chunks, embedded = save_text(m, body.text_tr, body.text_en, user)
         return dict(slug=slug, chunks=chunks, embedded=embedded)
 
+    def deletable(m):
+        """Kalıcı silinebilir mi: panelden eklenen ya da başka kayıttan paragraflarıyla ayrılmış (split) eser. Kitap eseri
+        silinmez, kaldırılır (geri getirilebilir)."""
+        return from_panel(m) or 'split' in (m['qa_flags'] or [])
+
     @r.delete('/monuments/{slug}', status_code=204)
     def delete_monument(slug: str, user: str = Depends(admin_user)):
         m = monument_row(slug)
-        if not from_panel(m):
-            raise HTTPException(409, 'Envanter kitabından gelen eser silinemez; yayından kaldırmak için durumunu taslak yap.')
+        if not deletable(m):
+            raise HTTPException(409, 'Envanter kitabından gelen eser silinemez; “Eseri kaldır” ile sitede ve listelerde '
+                                     'gizleyebilirsiniz (geri getirilebilir).')
         if db.query('SELECT 1 FROM monument WHERE parent_id = %(m)s', dict(m=m['id'])):
             raise HTTPException(409, 'Alt eserleri olan bir eser silinemez.')
+        # ayrılmış eser: ona taşınan paragraflar asıl kayıtlarına döner
+        sources = [r['monument_id'] for r in db.query(
+            """DELETE FROM para_fix WHERE target_monument_id = %(m)s AND decision = 'move' RETURNING monument_id""",
+            dict(m=m['id']))] if textfix_db.enabled(db) else []
         for img in images_of(m['id']):
             if img['source'] == 'upload':
                 remove_files(img['file'])
+        # kitap fotoğrafları silinmez: esere bağlı olmayan fotoğraflara döner (panelden yeniden bağlanabilir)
+        db.execute("""UPDATE image SET monument_id = NULL, is_cover = false, edited = true
+                      WHERE monument_id = %(m)s AND source = 'book'""", dict(m=m['id']))
         db.execute('DELETE FROM chunk WHERE monument_id = %(m)s', dict(m=m['id']))
-        db.execute('DELETE FROM monument WHERE id = %(m)s', dict(m=m['id']))  # fotoğraflar CASCADE ile silinir
-        if m['section_id']:
+        db.execute('DELETE FROM monument WHERE id = %(m)s', dict(m=m['id']))  # yüklenen fotoğraflar CASCADE ile silinir
+        if m['section_id'] and from_panel(m):
             db.execute('DELETE FROM source_section WHERE id = %(s)s', dict(s=m['section_id']))
+        if sources:
+            textfix_db.rechunk(db, set(sources))
+            for s in db.query('SELECT slug FROM monument WHERE id = ANY(%(i)s::int[])', dict(i=list(set(sources)))):
+                forget_answers(s['slug'])
         forget_answers(slug)
-        log(user, 'monument.delete', slug, dict(name_tr=m['name_tr']))
+        log(user, 'monument.delete', slug, dict(name_tr=m['name_tr'], returned_to=len(set(sources))))
+
+    class RemoveIn(Strict):
+        reason: str | None = Field(None, max_length=300)
+
+    @r.post('/monuments/{slug}/remove')
+    def remove_monument(slug: str, body: RemoveIn, user: str = Depends(admin_user)):
+        """Eseri kaldırır: sitede, panel listelerinde, görselle aramada, sohbette ve pilot seçkide görünmez. Metni,
+        fotoğrafları ve dizini silinmez; geri getirilebilir."""
+        m = monument_row(slug)
+        if m['review_status'] == 'removed':
+            return dict(slug=slug, review_status='removed')
+        before = m['review_status']
+        try:
+            db.execute(f"UPDATE monument SET review_status = 'removed', updated_at = now(){', pilot = false' if has_pilot() else ''} "
+                       "WHERE id = %(m)s", dict(m=m['id']))
+        except Exception as e:   # 010 göçü yoksa CHECK kısıtı 'removed' değerini reddeder
+            if 'review_status' in str(e) or 'check' in str(e).lower():
+                raise HTTPException(503, 'Eser kaldırma için önce veritabanı göçü gerekli: python migrate.py --apply')
+            raise
+        forget_answers(slug)
+        log(user, 'monument.remove', slug, dict(review_status=(before, 'removed'), reason=body.reason,
+                                                pilot=bool(m.get('pilot'))))
+        return dict(slug=slug, review_status='removed')
+
+    @r.post('/monuments/{slug}/restore')
+    def restore_monument(slug: str, user: str = Depends(admin_user)):
+        """Kaldırılmış eseri geri getirir; taslak olarak döner (kontrol edip yayına alınır)."""
+        m = monument_row(slug)
+        if m['review_status'] != 'removed':
+            raise HTTPException(409, 'Bu eser kaldırılmamış.')
+        db.execute("UPDATE monument SET review_status = 'draft', updated_at = now() WHERE id = %(m)s", dict(m=m['id']))
+        log(user, 'monument.restore', slug, dict(review_status=('removed', 'draft')))
+        return dict(slug=slug, review_status='draft')
 
     # ------------------------------------------------------------------------------------------ fotoğraflar
     def remove_files(rel):
@@ -517,6 +689,13 @@ def build_router(db, media_dir, save_webp):
                           RETURNING id""", dict(m=m['id'], c=m['city_id'], sha=sha, f=rel, w=w, h=h, s=sort, a=alt_tr,
                                                 ae=alt_en, cap=caption_tr, st=review_status))[0]['id']
         refresh_cover(m['id'])
+        # görselle aramada hemen bulunabilsin; model çalışmazsa visual_search.py sonra tamamlar
+        try:
+            vec = visual_search.embed([visual_search.prepare(data)], tries=2)[0]
+            db.execute(f"UPDATE image SET embedding = %(v)s{VEC_CAST}, embedding_model = %(t)s WHERE id = %(i)s",
+                       dict(v=vec_literal(vec), t=visual_search.MODEL_TAG, i=new))
+        except Exception as e:
+            log_warn('Yüklenen fotoğrafın görsel embedding\'i alınamadı (image:%s): %s', new, str(e)[:200])
         log(user, 'image.upload', f'image:{new}', dict(monument=slug, file=rel, review_status=review_status))
         return image_row(new) | {'monument': slug}
 
@@ -552,7 +731,7 @@ def build_router(db, media_dir, save_webp):
                                WHERE f.decision = 'move' AND f.target_monument_id = %(m)s""", dict(m=monument_id))
         out = [dict(no=p['no'], text=p['text'], pages=p['pages'],
                     **{k: (fixes.get(p['no']) or {}).get(k) for k in ('id', 'decision', 'source', 'rule', 'reason', 'target_slug',
-                                                                     'decided_by')})
+                                                                     'decided_by', 'split_at', 'split_part', 'hidden_spans')})
                for p in textfix_db.own_paragraphs(db, monument_id)]
         return dict(own=out, incoming=[dict(para_no=i['para_no'], from_slug=i['slug'], from_name=i['name_tr']) for i in incoming])
 
@@ -604,11 +783,94 @@ def build_router(db, media_dir, save_webp):
                 raise HTTPException(422, f'Geçersiz hedef eser: {body.target}')
             target_id = t[0]['id']
         try:
-            res = textfix_db.decide(db, monument_id, para_no, body.decision, target_id, user)
+            res = textfix_db.decide(db, monument_id, para_no, body.decision, target_id, user,
+                                    split_at=body.split_at, split_part=body.split_part)
         except IndexError:
             raise HTTPException(404, f'Bu eserin metninde P{para_no} yok.')
-        log(user, 'paragraph.decide', slug, dict(para=para_no, decision=(res['before'], res['after']), target=body.target))
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+        except RuntimeError as e:
+            raise HTTPException(503, str(e))
+        log(user, 'paragraph.decide', slug, dict(para=para_no, decision=(res['before'], res['after']), target=body.target,
+                                                **({'split': [body.split_at, body.split_part]} if body.split_at else {})))
         return dict(slug=slug, para_no=para_no, **res)
+
+    @r.put('/monuments/{slug}/paragraphs/{para_no}/spans')
+    def set_hidden_spans(slug: str, para_no: int, body: HiddenSpans, user: str = Depends(admin_user)):
+        """Paragrafın içinde yöneticinin seçtiği kısımları gizler (metne karışmış başlıklar, kırıntılar). Kitap metni
+        değişmez; ziyaretçi metni ve sohbet parçaları yeniden üretilir. [] gönderilirse gizlenen kısımlar geri gelir."""
+        m = monument_row(slug)
+        try:
+            res = textfix_db.set_spans(db, m['id'], para_no, [list(x) for x in body.hidden_spans], user)
+        except IndexError:
+            raise HTTPException(404, f'Bu eserin metninde P{para_no} yok.')
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+        except RuntimeError as e:
+            raise HTTPException(503, str(e))
+        forget_answers(slug)
+        log(user, 'paragraph.spans', slug, dict(para=para_no, hidden_spans=res['hidden_spans']))
+        return dict(slug=slug, para_no=para_no, **res)
+
+    @r.post('/monuments/{slug}/paragraphs/move')
+    def move_paragraphs(slug: str, body: ParagraphRange, user: str = Depends(admin_user)):
+        """Paragraf aralığını başka esere ya da bu paragraflardan oluşan yeni bir esere taşır. Yeni eser kitap kaynaklıdır
+        (aynı kitap ve sayfalar), taslak başlar; bölümlemede başlığı okunamamış eserleri ayırmak içindir."""
+        if not textfix_db.enabled(db):
+            raise HTTPException(503, 'Bölümleme düzeltmeleri için önce veritabanı göçü gerekli: python migrate.py --apply')
+        m = monument_row(slug)
+        paras = textfix_db.own_paragraphs(db, m['id'])
+        if not paras:
+            raise HTTPException(422, 'Bu eserin kitap metni yok.')
+        if body.to_para < body.from_para or body.to_para > len(paras):
+            raise HTTPException(422, f'Geçersiz paragraf aralığı: P{body.from_para}–P{body.to_para} (metinde {len(paras)} paragraf var).')
+        if bool(body.target) == bool(body.new):
+            raise HTTPException(422, 'Hedef olarak ya mevcut bir eser ya da yeni eser bilgisi verin.')
+        nos = list(range(body.from_para, body.to_para + 1))
+        if body.first_split_at is not None:   # yeni eser oluşturulmadan önce doğrula
+            if not textfix_db.split_enabled(db):
+                raise HTTPException(503, 'Paragraf bölme için önce veritabanı göçü gerekli: python migrate.py --apply')
+            try:
+                textfix_db.check_split(paras[body.from_para - 1]['text'], 'move', body.first_split_at, 'tail')
+            except ValueError as e:
+                raise HTTPException(422, str(e))
+        created = None
+        if body.target:
+            t = db.query('SELECT id, slug FROM monument WHERE slug = %(s)s', dict(s=body.target))
+            if not t or t[0]['id'] == m['id']:
+                raise HTTPException(422, f'Geçersiz hedef eser: {body.target}')
+            target_id, target_slug = t[0]['id'], t[0]['slug']
+        else:
+            n = body.new
+            city = db.query('SELECT slug, name_tr FROM city WHERE id = %(c)s', dict(c=m['city_id']))[0]
+            district = n.district if n.district is not None else m['district']
+            base = slugify(city['slug'], district, n.name_tr)
+            target_slug, k = base, 2
+            while db.query('SELECT 1 FROM monument WHERE slug = %(s)s', dict(s=target_slug)):
+                target_slug, k = f'{base}-{k}', k + 1
+            pages = sorted({pg for p in paras if p['no'] in nos for pg in p['pages']})
+            target_id = db.query("""INSERT INTO monument(slug, city_id, kind, name_tr, district, neighborhood, book_id, pages,
+                                                         heading_path, qa_flags, review_status, source_note, created_by, updated_at)
+                                    VALUES (%(s)s, %(c)s, %(k)s, %(n)s, %(d)s, %(nb)s, %(b)s, %(pg)s::int4range, %(h)s,
+                                            '{split}', 'draft', %(note)s, %(u)s, now()) RETURNING id""",
+                                 dict(s=target_slug, c=m['city_id'], k=n.kind, n=n.name_tr, d=district, nb=n.neighborhood,
+                                      b=m['book_id'], pg=f'[{pages[0]},{pages[-1] + 1})' if pages else None,
+                                      h=' › '.join(x for x in (city['name_tr'], district, n.name_tr) if x),
+                                      note=f"{m['book_title'] or 'Envanter kitabı'}: “{m['name_tr']}” kaydının "
+                                           f"P{body.from_para}–P{body.to_para} paragraflarından ayrıldı (başlığı bölümlemede okunamamıştı).",
+                                      u=user))[0]['id']
+            created = target_slug
+            log(user, 'monument.split', target_slug, dict(source=slug, paragraphs=[body.from_para, body.to_para], name_tr=n.name_tr))
+        try:
+            stats = textfix_db.move_range(db, m['id'], nos, target_id, user, first_split_at=body.first_split_at)
+        except (IndexError, ValueError) as e:
+            raise HTTPException(422, str(e))
+        except RuntimeError as e:
+            raise HTTPException(503, str(e))
+        forget_answers(slug)
+        forget_answers(target_slug)
+        log(user, 'paragraph.move_range', slug, dict(paragraphs=[body.from_para, body.to_para], target=target_slug))
+        return dict(slug=slug, target=target_slug, created=created, moved=len(nos), **stats)
 
     @r.post('/segmentation/{fix_id}')
     def decide_fix(fix_id: int, body: ParagraphDecision, user: str = Depends(admin_user)):
@@ -640,6 +902,100 @@ def build_router(db, media_dir, save_webp):
         log(user, 'note.update', rows[0]['slug'] or f'note:{note_id}',
             dict(note=note_id, status=(rows[0]['before'], body.status)))
         return dict(id=note_id, status=body.status)
+
+    def artworks_of(monument_id):
+        """Süsleme ve sanat kayıtları ve bağlı fotoğrafları (fotoğraf seçici için)."""
+        if not db.query("SELECT to_regclass('artwork_image') IS NOT NULL AS ok")[0]['ok']:
+            return []
+        return db.query("""SELECT a.id, a.kind, a.element, a.technique, a.script, a.date_text, a.description_tr,
+                                  coalesce(array_agg(ai.image_id ORDER BY ai.sort, ai.image_id)
+                                           FILTER (WHERE ai.image_id IS NOT NULL), '{}') AS image_ids
+                           FROM artwork a LEFT JOIN artwork_image ai ON ai.artwork_id = a.id
+                           WHERE a.monument_id = %(m)s GROUP BY a.id ORDER BY a.id""", dict(m=monument_id))
+
+    def artwork_photos_of(monument_id, parent_id):
+        """Süsleme kayıtlarına bağlanabilecek fotoğraflar: eserin, üst yapısının ve alt yapılarının atılmamış fotoğrafları
+        (haziredeki mezar taşının fotoğrafı caminin galerisinde olabilir)."""
+        return db.query("""SELECT i.id, i.file, i.source, i.review_status, i.alt_tr, i.printed_page, m.slug AS monument,
+                                  m.name_tr AS monument_name, m.id <> %(m)s AS other
+                           FROM image i JOIN monument m ON m.id = i.monument_id
+                           WHERE i.review_status <> 'rejected'
+                             AND (m.id = %(m)s OR m.id = %(p)s::int OR m.parent_id = %(m)s)
+                           ORDER BY m.id <> %(m)s, i.is_cover DESC, i.sort, i.id""", dict(m=monument_id, p=parent_id))
+
+    @r.put('/artworks/{artwork_id}/images')
+    def set_artwork_images(artwork_id: int, body: ArtworkImages, user: str = Depends(admin_user)):
+        """Süsleme kaydının fotoğraflarını belirler (sıralı liste; öncekilerin yerine geçer). Yalnızca aynı eserin, üst
+        yapısının ya da alt yapılarının atılmamış fotoğrafları bağlanabilir."""
+        a = db.query("""SELECT a.id, a.monument_id, m.slug, m.parent_id FROM artwork a JOIN monument m ON m.id = a.monument_id
+                        WHERE a.id = %(a)s""", dict(a=artwork_id))
+        if not a:
+            raise HTTPException(404, 'Süsleme kaydı bulunamadı')
+        a = a[0]
+        ids = list(dict.fromkeys(body.image_ids))
+        ok = {r['id'] for r in db.query("""SELECT i.id FROM image i JOIN monument m ON m.id = i.monument_id
+                                           WHERE i.id = ANY(%(ids)s::int[]) AND i.review_status <> 'rejected'
+                                             AND (m.id = %(m)s OR m.id = %(p)s::int OR m.parent_id = %(m)s)""",
+                                        dict(ids=ids, m=a['monument_id'], p=a['parent_id']))}
+        bad = [i for i in ids if i not in ok]
+        if bad:
+            raise HTTPException(422, f'Bu fotoğraflar bu esere ait değil ya da atılmış: {bad}')
+        before = [r['image_id'] for r in db.query(
+            'SELECT image_id FROM artwork_image WHERE artwork_id = %(a)s ORDER BY sort, image_id', dict(a=artwork_id))]
+        db.execute('DELETE FROM artwork_image WHERE artwork_id = %(a)s AND NOT (image_id = ANY(%(ids)s::int[]))',
+                   dict(a=artwork_id, ids=ids))
+        if ids:
+            db.execute("""INSERT INTO artwork_image(artwork_id, image_id, sort, linked_by)
+                          SELECT %(a)s, x.id, x.n, %(u)s FROM unnest(%(ids)s::int[]) WITH ORDINALITY AS x(id, n)
+                          ON CONFLICT (artwork_id, image_id) DO UPDATE SET sort = EXCLUDED.sort""",
+                       dict(a=artwork_id, ids=ids, u=user))
+        log(user, 'artwork.images', a['slug'], dict(artwork=artwork_id, images=(before, ids)))
+        return dict(artwork_id=artwork_id, image_ids=ids)
+
+    @r.post('/monuments/{slug}/narrations')
+    def generate_narration(slug: str, body: NarrationIn, user: str = Depends(admin_user)):
+        """Hikâye ya da çocuk anlatımını üretip kaydeder (varsa yenisiyle değiştirir). Tek Gemini çağrısı; ziyaretçiler
+        bundan sonra kayıtlı metni görür."""
+        monument_row(slug)
+        try:
+            out = narrations.generate(db, slug, body.mode, body.lang, user=user)
+        except G.LLMError as e:
+            busy = re.search(r'429|RESOURCE_EXHAUSTED', str(e))
+            raise HTTPException(503, 'Gemini kotası doldu, biraz sonra tekrar deneyin.' if busy else
+                                'Yapay zekâ servisine ulaşılamadı, biraz sonra tekrar deneyin.', headers={'Retry-After': '30'})
+        except RuntimeError as e:
+            raise HTTPException(503, str(e))
+        log(user, 'narration.generate', slug, dict(mode=body.mode, lang=body.lang, verification=out['verification']))
+        return out
+
+    @r.post('/monuments/{slug}/reextract')
+    def reextract_monument(slug: str, user: str = Depends(admin_user)):
+        """Künyeyi (kişiler, olaylar, tarih, süsleme kayıtları, özet) eserin düzeltilmiş metninden yeniden çıkarır.
+        Tek Gemini çağrısı. Panelde elle değiştirilmiş künye alanları ve süsleme fotoğraf bağları korunur."""
+        m = monument_row(slug)
+        if from_panel(m):
+            raise HTTPException(409, 'Panelden eklenen eserlerin künyesi elle girilir.')
+        try:
+            return reextract.run(db, slug, user=user)
+        except G.LLMError as e:
+            busy = re.search(r'429|RESOURCE_EXHAUSTED', str(e))
+            raise HTTPException(503, 'Gemini kotası doldu, biraz sonra tekrar deneyin.' if busy else
+                                'Yapay zekâ servisine ulaşılamadı, biraz sonra tekrar deneyin.', headers={'Retry-After': '30'})
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+
+    @r.put('/monuments/{slug}/narrations/{mode}')
+    def edit_narration(slug: str, mode: Literal['story', 'child'], body: NarrationEdit, user: str = Depends(admin_user)):
+        """Kayıtlı anlatımı elle düzeltir (yazım hatası vb.); yapay zekâ çağrılmaz. Eski ve yeni metin denetim kaydına yazılır."""
+        monument_row(slug)
+        try:
+            before, after = narrations.edit(db, slug, mode, body.lang, body.answer, user)
+        except KeyError:
+            raise HTTPException(404, 'Bu eser için düzenlenecek anlatım yok; önce üretin.')
+        except RuntimeError as e:
+            raise HTTPException(503, str(e))
+        log(user, 'narration.edit', slug, dict(mode=mode, lang=body.lang, answer=(before, after)))
+        return dict(mode=mode, lang=body.lang, answer=after)
 
     @r.get('/books')
     def books(user: str = Depends(admin_user)):

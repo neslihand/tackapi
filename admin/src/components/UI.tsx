@@ -15,7 +15,7 @@ export function Issues({ list }: { list: string[] }) {
   if (!list.length) return null;
   return <div className="admin-issues" role="alert" tabIndex={-1} ref={ref}><strong>Kaydetmeden önce düzelt:</strong><ul>{list.map(i => <li key={i}>{i}</li>)}</ul></div>;
 }
-export function Status({ value }: { value: ImageStatus }) { return <span className={`status ${value}`}>{STATUS_LABELS[value]}</span>; }
+export function Status({ value }: { value: ImageStatus | 'removed' }) { return <span className={`status ${value}`}>{STATUS_LABELS[value]}</span>; }
 export function PageHead({ kicker, title, children, actions }: { kicker: string; title: ReactNode; children?: ReactNode; actions?: ReactNode }) {
   return <header className="page-head"><div><p className="eyebrow"><span />{kicker}</p><h1>{title}</h1>{children && <p>{children}</p>}</div>{actions && <div className="admin-actions">{actions}</div>}</header>;
 }

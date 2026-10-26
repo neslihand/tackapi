@@ -261,7 +261,7 @@ def existing_data(dsn):
                     (SELECT count(*) FROM chunk WHERE embedding IS NOT NULL),
                     (SELECT count(*) FROM monument_person) + (SELECT count(*) FROM event) + (SELECT count(*) FROM artwork)"""
     names = ['eser', 'parça', "embedding'li parça", 'çıkarım satırı']
-    for table, label in (('answer_cache', 'önbellek cevabı'), ('image', 'fotoğraf kaydı')):
+    for table, label in (('answer_cache', 'önbellek cevabı'), ('image', 'fotoğraf kaydı'), ('narration', 'kayıtlı anlatım')):
         if psql_rows(dsn, f"SELECT to_regclass('public.{table}') IS NOT NULL")[0][0] == 't':
             sql += f', (SELECT count(*) FROM {table})'
             names.append(label)
@@ -306,7 +306,7 @@ def main():
         schema = open(os.path.join(ROOT, 'schema.sql'), encoding='utf-8').read()
         if a.reset:
             schema = ('DROP VIEW IF EXISTS monument_list, monument_city_context CASCADE;\n'
-                      'DROP TABLE IF EXISTS para_fix, admin_log, schema_migration, image, answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
+                      'DROP TABLE IF EXISTS artwork_image, narration, para_fix, admin_log, schema_migration, image, answer_cache, editorial_note, term, waqf_link, waqf, chunk, artwork, event, monument_person, '
                       'person, monument, period, source_section, source_book, city CASCADE;\n') + schema
         if a.no_vector:
             schema = schema.replace('CREATE EXTENSION IF NOT EXISTS vector;', '')

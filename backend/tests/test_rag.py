@@ -93,6 +93,23 @@ class VerifyTest(unittest.TestCase):
         v = rag.verify("Muradiye Camisi'nin bânîsi Sultan Murad'dır. The Muradiye Mosque is old.", self.CTX)
         self.assertEqual(v['unsupported_names'], [])
 
+    def test_capitalised_first_word_of_sentence(self):
+        # cümlenin ilk sözcüğü konumu yüzünden büyük harfli: 'Bugün Muradiye Camii' bir ad değildir
+        v = rag.verify('Bugün Muradiye Camii ayakta. Yıllar Sonra Sultan Murad geldi. Osmanlı Devleti büyüdü.',
+                       self.CTX + ' Osmanlı')
+        self.assertEqual(v['unsupported_names'], [])
+        # ama cümle başındaki uydurma ad yakalanır: 'Mehmed Paşa' → kalan 'Paşa' yalnızca unvan
+        self.assertEqual(rag.verify('Mehmed Paşa camiyi onardı.', self.CTX)['unsupported_names'], ['Mehmed Paşa'])
+        self.assertEqual(rag.verify('Bugün Mehmed Paşa geldi.', self.CTX)['unsupported_names'], ['Mehmed Paşa'])
+
+    def test_historical_only_for_stories(self):
+        text = ('Hani Lego parçaları var ya? Küçük Ayşe Hanım ile Can Bey camiye geldi. '
+                'Yapıyı Sultan Mehmed yaptırmış. Mimar Sinan da çalışmış.')
+        v = rag.verify(text, self.CTX, historical_only=True)
+        # kurgusal karakterler ve benzetmeler serbest; unvan taşıyan tarihî görünümlü adlar denetlenir
+        self.assertEqual(v['unsupported_names'], ['Can Bey', 'Mimar Sinan', 'Sultan Mehmed'])
+        self.assertIn('Lego', rag.verify(text, self.CTX)['unsupported_names'])   # sohbette her ad denetlenir
+
 
 if __name__ == '__main__':
     unittest.main()

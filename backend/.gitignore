@@ -15,6 +15,7 @@ data/eval_results.json
 # Gizli bilgiler
 .env
 *.env
+./claude
 
 # Python
 __pycache__/

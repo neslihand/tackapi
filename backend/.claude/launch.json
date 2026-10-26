@@ -1,0 +1,36 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-demo-test",
+      "runtimeExecutable": "C:\\Users\\dogan\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "api:app", "--app-dir", "pipeline", "--host", "127.0.0.1", "--port", "8000"],
+      "env": {
+        "DATABASE_URL": "postgresql://test@localhost:55432/vakif_demo_test",
+        "VAKIF_FAKE_LLM": "1",
+        "VAKIF_ADMIN_TOKENS": "neslihan:yerel-deneme-anahtari-0001,fatmanur:yerel-deneme-anahtari-0002",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "port": 8000
+    },
+    {
+      "name": "api-scratch-test",
+      "runtimeExecutable": "C:\\Users\\dogan\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "api:app", "--app-dir", "pipeline", "--host", "127.0.0.1", "--port", "8001"],
+      "env": {
+        "DATABASE_URL": "postgresql://test@localhost:55433/vakif_test",
+        "VAKIF_FAKE_LLM": "1",
+        "VAKIF_ADMIN_TOKENS": "neslihan:yerel-deneme-anahtari-0001",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "port": 8001
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../admin", "run", "dev", "--", "--port", "5175"],
+      "env": { "VAKIF_API_URL": "http://127.0.0.1:8001" },
+      "port": 5175
+    }
+  ]
+}

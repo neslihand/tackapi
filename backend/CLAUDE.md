@@ -44,7 +44,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   `grounded 14/15`. Bu ölçüm verify() sıkılaştırılmadan ve q04 talimatı değişmeden önceydi; yeniden ölçülmedi.
 - **Fotoğraflar:** `images.py` 6 kitap PDF'inden 1.547 fotoğraf çıkardı (556/753 eser fotoğraflı, 118'i kontrol bekliyor).
   WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin 23
-  fotoğrafı yinelenen kayıt nedeniyle taslakta; panelden onaylanmalı.
+  fotoğrafı yinelenen kayıt nedeniyle taslakta; panelden onaylanmalı. **26 Ekim 2026:** eleme eşiği 400 px / %3'ten
+  150 px / %0,8'e indi (küçük fotoğraflar alınmıyordu): +1.866 fotoğraf. Eklemek için `images.py --write` ve
+  `load_images.py --new-only` (yeniler taslak girer; var olanlara dokunmaz). Tam `load_images.py` artık çalıştırılmamalı.
 - **Yönetim paneli:** `../admin` (ayrı React + Vite uygulaması, ön yüzle aynı teknoloji ve görsel dil; 5174 portu, `/api` ve
   `/media` için 8000'e vekil). Ön yüzle birleştirme, ön yüz geliştiricisi (Fatmanur) izin verince yapılacak; o zamana
   kadar `../frontend` dosyalarına dokunma. Panelde "Sitede nasıl görünür?" önizlemesi var (`/api/admin/preview/{slug}`);
@@ -65,7 +67,57 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   `data/`'ya yeniden yazma (slug'lar değişir).
 - **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
   `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
-- **Testler:** `python -m unittest discover -s tests` (73 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Anlatımlar (24 Ekim 2026):** Eser sayfasındaki "Kısa ve Öz" kaldırıldı; yerine "Detaylı Anlatım" (kitaptaki
+  paragrafların tamamı, yapay zekâ yok) geldi. "Hikâyeleştirerek" ve "Çocuklar İçin" ziyaretçi tıklayınca üretilmez;
+  `narration` tablosundan okunur (göç `005_narration.sql`). Üretim: `python narrations.py` (toplu, kaldığı yerden devam
+  eder) ya da panel önizlemesindeki "Anlatımı üret" düğmesi. Anlatımlar sohbet kurallarıyla değil `rag.narrate` ve
+  `NARRATION_RULES` ile üretilir: kaynak işareti ve markdown yok (`clean_narration` yine de temizler), hikâye doğrudan
+  hikâyeyle başlar ve uzundur, ekonomik modda da zengin bağlam. Göç gerçek veritabanında uygulandı (24 Ekim 2026);
+  toplu üretim geliştiricinin onayını bekliyor (Gemini kotası harcar). İlk denemede (eski kurallarla) Muradiye Camii
+  için üretilen hikâye beğenilmedi, yeniden üretilmeli; çocuk anlatımı beğenildi. Anlatımlar panelden elle
+  düzeltilebilir ("Metni düzenle"; göç `006_narration_edit.sql`, gerçek veritabanında henüz uygulanmadı). Elle
+  düzeltilmiş anlatımı toplu üretim `--include-edited` olmadan ezmez. Ad denetimi (`rag.check_names`) cümle başındaki
+  büyük harfli sözcüğü ad saymaz; anlatımlarda yalnızca unvan/yapı türü taşıyan adları denetler (`historical_only`).
+  Kayıtlı uyarılar önizlemede bu kurala göre yeniden süzülür. Sohbet de aynı denetimi kullanır; `eval_rag.py` skorları
+  bu değişiklikten sonra ölçülmedi.
+- **Süsleme fotoğrafları (24 Ekim 2026):** "Süsleme ve sanat" kayıtlarına fotoğraflar panelden elle bağlanır
+  (`artwork_image`, göç `007_artwork_image.sql`, gerçek veritabanında henüz uygulanmadı). Yapay zekâ kullanılmaz
+  (geliştirici kararı). Kitapta fotoğraf altı yazısı olmadığı için otomatik eşleştirme yapılmadı. `load_extractions.py`
+  bağları alıntıya göre korur. Eser sayfasında fotoğraflı kayıtlar kart olarak, diğerleri metin olarak görünür.
+- **Görselle arama (24 Ekim 2026):** Ziyaretçi fotoğraf yükler, `POST /api/visual-search` kitap fotoğraflarıyla
+  karşılaştırıp eseri bulur (`visual_search.py`, göç `008_image_embedding.sql`: `image.embedding`). Görsel embedding
+  `gemini-embedding-2` ile (`gemini_client.embed_images`); modelin görsel kabul ettiği gerçek API ile henüz
+  doğrulanmadı (`visual_search.py --limit 3`). Kabul etmezse B planı yerel bir görüntü modeli. Düşük güvende tek eser
+  söylenmez, 3 aday "emin değiliz" diye gösterilir; eşik (`VAKIF_VISUAL_MIN`) `--eval` ile ayarlanmalı. Yüklenen
+  fotoğraf saklanmaz. **26 Ekim 2026:** geliştirici API yerine yerel çözüm istedi; varsayılan model artık yerel
+  DINOv2 (`local_vision.py`, `requirements-vision.txt`, CPU, ~0,3 sn/fotoğraf; `VAKIF_VISUAL_BACKEND=gemini` eski yol).
+  768 boyutlu vektör 1536'ya sıfırla tamamlanır (göç yok). Arama yalnızca etkin `embedding_model` etiketli vektörleri
+  kullanır; gerçek veritabanındaki Gemini vektörleri `visual_search.py --pilot` ile yerel modelle yeniden gömülmeli
+  (henüz çalıştırılmadı). Yerel eşik 0.70, `--eval` ile ayarlanmalı. Panelde `#/gorsel-arama` deneme sayfası; bileşen `admin/src/public/VisualSearch.tsx`, ön yüzün
+  kamera sayfası (`frontend/src/lib/recognition.ts`, şu an demo) bu uca bağlanacak. Göç 008 gerçek veritabanında
+  uygulandı; `--limit 3` denemesi başarılı (model görsel kabul ediyor, 24 Ekim 2026).
+- **MVP pilot seçkisi (24 Ekim 2026):** Geliştirici kararı: tüm eserler yerine 60 pilot eser (Bursa 30, Konya 20,
+  Hatay 10). Görsel embedding ve hikâye/çocuk anlatımları yalnızca bunlar için üretilecek (`visual_search.py --pilot`,
+  `narrations.py --pilot`). İşaret `monument.pilot` (göç `009_pilot.sql`, henüz uygulanmadı); seçim `pilot.py`
+  (`--suggest`, `--file`, `--status`) ya da panelde eser sayfasındaki "Pilot seçkide" kutusu. Seçimi geliştirici yapacak.
+- **Paragraf taşıma ve yeni esere ayırma (25 Ekim 2026):** Panelde paragraf aralığı tek seferde başka esere ya da
+  bu paragraflardan oluşan yeni bir kitap eserine taşınır (`textfix_db.move_range`, `POST .../paragraphs/move`). Taşınan
+  paragraflar hedefte kitap sırasına göre yerleşir (önceki kayıttan gelenler başa). Yeni eser `split` işaretli, `draft`.
+- **Paragraf içi düzeltmeler (25 Ekim 2026):** Panelde paragraf metninde fareyle seçerek bir kısmı gizleme (metne
+  karışmış başlıklar; `para_fix.hidden_spans`) ve tıklanan noktadan bölme (iki eserin metni birleşmişse; `split_at`,
+  `split_part`). Geliştirici kararı: bölme ve silme noktasını sistem önermez, yönetici seçer. Göç `011_para_split.sql`
+  gerçek veritabanında henüz uygulanmadı.
+- **Eser kaldırma (25 Ekim 2026):** Panelde eser sayfasının üstünde "Yayından kaldır / Yayına al" düğmesi; altta kitap
+  eserleri için "Eseri kaldır" (`removed`), panel ve ayrılmış eserler için "Kalıcı olarak sil". Göç `010_monument_removed.sql`
+  gerçek veritabanında henüz uygulanmadı.
+- **Pilot eserleri tamamlama (25 Ekim 2026):** Pilot seçki 26 esere indi; metinleri geliştirici panelde düzeltti.
+  Kaynakça sayfaları etkin paragraflardan hesaplanır (`textfix_db.sync_pages`, her paragraf kararında; panelde elle
+  girilen aralık korunur). Panelde "Kitap sayfalarındaki fotoğraflar" bölümü ve PDF sayfa görünümü (`pdf_pages.py`).
+  Künye `reextract.py` ile düzeltilmiş metinden, eser bazında yeniden çıkarılır (panel düzenlemeleri korunur).
+  **Düzeltmelerden sonra `load_extractions.py` çalıştırma** (tüm eserleri eski metinden yükler). Sıra: `migrate.py
+  --apply` → `reextract.py --pilot --pages-only` → `embed_gemini.py` → `reextract.py --pilot` → panelde fotoğraflar →
+  `visual_search.py --pilot` → `narrations.py --pilot` (geliştirici çalıştırır). README §7.9.
+- **Testler:** `python -m unittest discover -s tests` (122 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -96,8 +148,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 5. **Tek veritabanı.** İlişkisel veri, tam metin ve vektör arama PostgreSQL ile pgvector'da birlikte tutulur. Embedding
    1536 boyutludur (`gemini-embedding-2`). Model veya boyut değişirse hepsi yeniden gömülmelidir.
 6. **Her adım tekrar çalıştırılabilir ve kaldığı yerden devam eder.**
-7. **Kitap metni panelden değiştirilemez.** Kitap eserlerinin yalnızca künye alanları düzenlenir; kitap eseri silinmez,
-   yayından kaldırılır. Panelden eklenen eserler `draft` başlar ve kaynağı `source_note` alanında yazılır.
+7. **Kitap metni panelden değiştirilemez.** Kitap eserlerinin yalnızca künye alanları düzenlenir; kitap eseri kalıcı
+   silinmez: "Yayından kaldır" (`draft`) ya da "Eseri kaldır" (`removed`, göç 010; listelerde, aramada, sohbette ve
+   pilotta görünmez, geri getirilebilir). Panelden eklenen ve paragraflarından ayrılmış (`split`) eserler silinebilir.
+   Panelden eklenen eserler `draft` başlar ve kaynağı `source_note` alanında yazılır.
 8. **Kitap fotoğrafı silinmez, `rejected` olur.** Panelde dokunulan fotoğraf `edited` işaretlenir ve `load_images.py` onu
    bir daha değiştirmez.
 9. **Editör notları ziyaretçiye gösterilmez.** `editorial_note` satırları (bölümleme "P5, P6 başka esere ait", çelişki,
@@ -128,10 +182,13 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
 2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
    ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
 3. Harita ve "Yakınımdakiler" için eser koordinatları (adres ve mahalle bilgisinden toplu coğrafi kodlama ve kontrol).
-4. Veri temizliği: Hz. Üftâde Türbesi metni (Üç Kozlar kaydına karışmış); Hatay'da başlığı İngilizceyle karışmış kayıtlar ("Workplace and
+4. Veri temizliği: Hz. Üftâde Türbesi metni (Bursa II, "Şair (Gedik) Ahmet Paşa Türbesi Haziresi" kaydına karışmış;
+   panelde "yeni esere ayır" ile ayrılacak) ve Hz. Üftâde Tekkesi'nin sonundaki Abdal Mehmed Türbesi paragrafları
+   (panelde aralık taşıma); Hatay'da başlığı İngilizceyle karışmış kayıtlar ("Workplace and
    Others"); Konya II'deki Karapınar ve Ilgın başlıkları; `en_misaligned` kayıtları.
 5. Gerçek API ile `eval_rag.py` ölçümü (verify ve q04 değişiklikleri sonrası).
-6. Çocuk ve hikâye anlatımlarını demo eserleri için önceden üretip önbelleğe almak (maliyet ve sahnede güvenilirlik).
+6. MVP pilot seçkisi: 60 eseri seçmek (`pilot.py --suggest`), sonra yalnızca bunlar için fotoğraf embedding'leri
+   (`visual_search.py --pilot`) ve hikâye/çocuk anlatımları (`narrations.py --pilot`); `--eval` ile eşik ayarı.
 
 ## Çalışma şekli
 - Değişiklikten sonra mümkünse önce `VAKIF_FAKE_LLM=1` ile, sonra `python eval_rag.py` ile doğrula. Değerlendirme skorları

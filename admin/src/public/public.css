@@ -56,8 +56,50 @@
 .pv-list span{font-size:12.5px;color:#7a806c}
 .pv-relation{font-size:15px;margin-bottom:18px}
 .pv-visit{display:flex;gap:14px;align-items:flex-start;font-size:14px;line-height:1.8;color:#5f6b5a}
-.pv-text summary{cursor:pointer;display:inline-flex;gap:10px;align-items:center;font-size:15px;border-bottom:1px solid #a9b0a1;padding:4px 0}
-.pv-text p{font-size:15px;line-height:1.9;color:#3f4d42;margin-top:16px;max-width:760px}
+.pv-fulltext>small{display:inline-flex;gap:8px;align-items:center}
+.pv-fulltext p{font-family:var(--serif);font-size:19px;line-height:1.8;color:#3d4c41;margin-top:18px;max-width:780px}
+.pv-answer>small{display:block;margin-top:10px}
+.pv-vs{display:flex;flex-direction:column;gap:34px}
+.pv-vs-pick{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:center}
+.pv-vs-frame{position:relative;aspect-ratio:4/3;background:var(--teal);overflow:hidden}
+.pv-vs-frame img{width:100%;height:100%;object-fit:contain}
+.pv-vs-empty{position:absolute;inset:22px;border:1px solid #b9ab762e;display:grid;place-items:center;color:#aeae7d}
+.pv-vs-copy{display:flex;flex-direction:column;gap:16px;align-items:flex-start;min-width:0}
+.pv-vs-copy h2{font-size:clamp(30px,3vw,42px);line-height:1.15}
+.pv-vs-upload{position:relative;cursor:pointer}
+.pv-vs-upload input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.pv-vs-upload:focus-within{outline:2px solid #b08643;outline-offset:3px}
+.pv-vs-verdict{font-family:var(--serif);font-size:24px;line-height:1.35;margin-bottom:22px}
+.pv-vs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 24px}
+.pv-vs-grid.single{grid-template-columns:minmax(0,420px)}
+.pv-vs-cand{display:flex;flex-direction:column;gap:14px;min-width:0}
+.pv-vs-debug{display:flex;gap:12px;align-items:center;border-top:1px dashed #c4b998;padding-top:12px;font-size:12px;line-height:1.5;color:#646d5f}
+.pv-vs-debug img{width:72px;height:54px;object-fit:cover;flex-shrink:0}
+.pv-vs-debug b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.vs-admin{background:transparent;padding:6px 0}
+@media(max-width:800px){.pv-vs-pick{grid-template-columns:1fr;gap:22px}.pv-vs-grid{grid-template-columns:1fr}}
+.pv-art-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px 18px;margin-bottom:28px}
+.pv-art-card{margin:0;display:flex;flex-direction:column;gap:10px}
+.pv-art-card button{position:relative;aspect-ratio:4/3;overflow:hidden;background:#b5b8a3;padding:0}
+.pv-art-card img{width:100%;height:100%;object-fit:cover;filter:saturate(.9);transition:transform .6s}
+.pv-art-card button:hover img{transform:scale(1.04)}
+.pv-art-card button:focus-visible{outline:2px solid #c8a46b;outline-offset:2px}
+.pv-art-count{position:absolute;right:8px;bottom:8px;background:#142e2ecc;color:var(--paper);font-size:12px;padding:3px 8px}
+.pv-art-card figcaption{display:flex;flex-direction:column;gap:3px;font-size:14px;line-height:1.5}
+.pv-art-card figcaption small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a2f}
+.pv-art-card figcaption strong{font-weight:500}
+.pv-art-card figcaption span{font-size:12.5px;color:#7a806c}
+.pv-edit{display:flex;flex-direction:column;gap:12px}
+.pv-edit label{font-size:13px;color:#5f6d5b}
+.pv-edit textarea{width:100%;font-family:var(--serif);font-size:18px;line-height:1.7;color:var(--ink);background:#fffdf8;border:1px solid #c3c9b9;padding:16px 18px;resize:vertical}
+.pv-edit textarea:focus{outline:2px solid #c8a46b;outline-offset:1px}
+.pv-edit-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.pv-link{display:inline-flex;gap:8px;align-items:center;min-height:44px;padding:10px 16px;font-size:14px;color:#3d4c41;border:1px solid #c3c9b9;background:transparent}
+.pv-link:hover:not(:disabled){border-color:#8a6a2f}
+.pv-button:disabled,.pv-link:disabled{opacity:.55;cursor:not-allowed}
+.pv-cites-title{font-family:Inter,sans-serif;font-size:12.5px;font-weight:500;color:#6f786a;margin-top:22px}
+.pv-answer .pv-cites{margin-top:6px}
+.pv-answer .pv-ask{margin-top:18px}
 .pv-sources{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;padding:46px 0 10px}
 .pv-sources h3{font-size:23px;margin-bottom:12px}
 .pv-sources p{font-size:13.5px;color:#6f786a;line-height:1.8}

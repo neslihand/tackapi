@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Sparkles, X } from 'lucide-react';
-import { citedRefs, eventLabel, rangeText, roleLabel, splitCitations, strings, type ChatReply, type Lang, type PublicDetail, type PublicItem } from './model';
+import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Pencil, Sparkles, X } from 'lucide-react';
+import { artworkLabel, eventLabel, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
 
-type Mode = 'standard' | 'story' | 'child';
-const MODES: Mode[] = ['standard', 'story', 'child'];
+type Mode = 'detail' | NarrationMode;
+const MODES: Mode[] = ['detail', 'story', 'child'];
 
 /**
  * Ziyaretçinin gördüğü eser sayfası. Yalnızca API verisiyle çalışır (ön yüzün hikâye sayfasının görsel dili).
- * chat: anlatım istemek için fonksiyon; null ise (ör. taslak eser) sohbet devre dışı gösterilir.
+ * Anlatımlar: "Detaylı" kitaptaki paragrafların tamamıdır; hikâye ve çocuk anlatımı önceden üretilip kaydedilmiştir
+ * (detail.narrations), sayfa yapay zekâyı çağırmaz.
+ * generate / edit: yalnızca yönetici önizlemesinde; anlatımı üretir, yeniler ya da elle düzeltir. Ziyaretçi sayfasında verilmez.
  */
-export function MonumentView({ item, detail, lang, chat, backHref }: {
-  item: PublicItem; detail: PublicDetail; lang: Lang; chat: ((mode: Mode) => Promise<ChatReply>) | null; backHref?: string;
+export function MonumentView({ item, detail, lang, generate, edit, backHref }: {
+  item: PublicItem; detail: PublicDetail; lang: Lang; backHref?: string;
+  generate?: (mode: NarrationMode) => Promise<void>; edit?: (mode: NarrationMode, text: string) => Promise<void>;
 }) {
   const s = strings(lang);
   const c = detail.card;
@@ -19,6 +22,10 @@ export function MonumentView({ item, detail, lang, chat, backHref }: {
   const people = c.persons.filter(p => ['patron', 'founder', 'architect', 'builder', 'calligrapher'].includes(p.role)).slice(0, 4);
   const location = [item.district, item.neighborhood].filter(Boolean).join(', ');
   const paragraphs = (detail.text ?? '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number } | null>(null);
+  const artTitle = (a: Card['artworks'][number]) => [a.element, a.technique].filter(Boolean).join(' · ') || artworkLabel(a.kind, lang);
+  const artworksWithPhotos = c.artworks.filter(a => a.images?.length);
+  const artworksText = c.artworks.filter(a => !a.images?.length).slice(0, 8);
   return <div className="pv" lang={lang}>
     <section className="pv-hero">
       {hero ? <img className="pv-hero-image" src={hero.src} alt={hero.alt ?? ''} /> : <div className="pv-hero-image pv-hero-empty" />}
@@ -43,7 +50,7 @@ export function MonumentView({ item, detail, lang, chat, backHref }: {
 
     <div className="pv-body" id="pv-reading">
       {item.summary && <p className="pv-lead">{item.summary}</p>}
-      <Narration lang={lang} chat={chat} />
+      <Narration lang={lang} detail={detail} paragraphs={paragraphs} generate={generate} edit={edit} />
 
       {detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
         <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => setZoom(i)} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
@@ -56,8 +63,17 @@ export function MonumentView({ item, detail, lang, chat, backHref }: {
       </section>}
 
       {c.artworks.length > 0 && <section className="pv-section"><h2>{s.artworks}</h2>
-        <ul className="pv-list">{c.artworks.slice(0, 8).map((a, i) => <li key={i}><strong>{[a.element, a.technique].filter(Boolean).join(' · ') || a.kind}</strong>
-          {(a.script || a.artist || a.date_text) && <span>{[a.script, a.artist, a.date_text].filter(Boolean).join(' · ')}</span>}</li>)}</ul></section>}
+        {/* fotoğrafı olan kayıtlar önce, fotoğraflı kart olarak; diğerleri metin listesi */}
+        {artworksWithPhotos.length > 0 && <div className="pv-art-grid">{artworksWithPhotos.map((a, i) => <figure key={i} className="pv-art-card">
+          <button onClick={() => setArtZoom({ images: a.images, index: 0 })} aria-label={`${artTitle(a)}: ${s.gallery}`}>
+            <img src={a.images[0].thumb} alt={a.images[0].alt ?? ''} loading="lazy" />
+            {a.images.length > 1 && <span className="pv-art-count">+{a.images.length - 1}</span>}
+            {a.images[0].review_status && a.images[0].review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}</button>
+          <figcaption><small>{artworkLabel(a.kind, lang)}</small><strong>{artTitle(a)}</strong>
+            {(a.script || a.artist || a.date_text) && <span>{[a.script, a.artist, a.date_text].filter(Boolean).join(' · ')}</span>}</figcaption>
+        </figure>)}</div>}
+        {artworksText.length > 0 && <ul className="pv-list">{artworksText.map((a, i) => <li key={i}><strong>{artTitle(a)}</strong>
+          {(a.script || a.artist || a.date_text) && <span>{[a.script, a.artist, a.date_text].filter(Boolean).join(' · ')}</span>}</li>)}</ul>}</section>}
 
       {(c.parent || c.children.length > 0) && <section className="pv-section">
         {c.parent && <p className="pv-relation">{s.partOf}: <strong>{c.parent}</strong></p>}
@@ -66,9 +82,6 @@ export function MonumentView({ item, detail, lang, chat, backHref }: {
 
       {c.current_state && <section className="pv-section pv-visit"><MapPin size={20} /><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
 
-      {paragraphs.length > 0 && <section className="pv-section"><details className="pv-text"><summary><BookOpen size={17} /> {s.readText}</summary>
-        {detail.text_note && <p className="pv-muted">{detail.text_note}</p>}{paragraphs.map((p, i) => <p key={i}>{p}</p>)}</details></section>}
-
       <section className="pv-sources"><div><h3>{s.sources}</h3>
         <p>{lang === 'tr' ? 'Bu sayfadaki bilgiler Vakıf Katılım envanter kitabından alınmıştır.' : 'Information on this page comes from the Vakıf Katılım inventory book.'}</p></div>
         <ul>{detail.source.book && <li><span>{s.sourceBook}</span><strong>{detail.source.book}{detail.source.pages?.[0] ? `, ${s.pages} ${detail.source.pages[0]}–${detail.source.pages[1]}` : ''}</strong></li>}
@@ -76,36 +89,54 @@ export function MonumentView({ item, detail, lang, chat, backHref }: {
       </section>
     </div>
     {zoom !== null && <Lightbox images={detail.images} index={zoom} lang={lang} onIndex={setZoom} onClose={() => setZoom(null)} />}
+    {artZoom && <Lightbox images={artZoom.images} index={artZoom.index} lang={lang} onIndex={i => setArtZoom({ ...artZoom, index: i })} onClose={() => setArtZoom(null)} />}
   </div>;
 }
 
-function Narration({ lang, chat }: { lang: Lang; chat: ((mode: Mode) => Promise<ChatReply>) | null }) {
+function Narration({ lang, detail, paragraphs, generate, edit }: {
+  lang: Lang; detail: PublicDetail; paragraphs: string[]; generate?: (mode: NarrationMode) => Promise<void>;
+  edit?: (mode: NarrationMode, text: string) => Promise<void>;
+}) {
   const s = strings(lang);
-  const [mode, setMode] = useState<Mode>('standard');
-  const [replies, setReplies] = useState<Partial<Record<Mode, ChatReply>>>({});
+  const [mode, setMode] = useState<Mode>('detail');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  async function ask(m: Mode) {
-    setMode(m);
-    if (!chat || replies[m]) return;
+  const [draft, setDraft] = useState<string | null>(null);   // düzenleme kutusu açıkken metin
+  async function act(job: () => Promise<void>) {
     setBusy(true); setError('');
-    try { const r = await chat(m); setReplies(x => ({ ...x, [m]: r })); }
+    try { await job(); setDraft(null); }
     catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   }
-  const reply = replies[mode];
-  // Ziyaretçiye yalnızca cevapta atıf yapılan kaynaklar gösterilir (aramada gelip kullanılmayanlar değil)
-  const cited = reply ? reply.sources.filter(src => citedRefs(reply.answer).has(src.ref)) : [];
+  const run = (m: NarrationMode) => generate && act(() => generate(m));
+  const reply = mode === 'detail' ? null : detail.narrations?.[mode] ?? null;
   return <section className="pv-narration" aria-labelledby="pv-mode">
     <div className="pv-tools"><div id="pv-mode"><Sparkles size={18} /> {s.mode}</div>
-      <div className="pv-segmented" role="group" aria-labelledby="pv-mode">{MODES.map((m, i) => <button key={m} className={mode === m ? 'active' : ''} aria-pressed={mode === m} disabled={!chat} onClick={() => ask(m)}>{s.modes[i]}</button>)}</div></div>
-    {!chat ? <p className="pv-muted">{s.draftChat}</p>
-      : !reply ? <div className="pv-ask">{busy ? <p role="status">{s.loading}</p> : <button className="pv-button" onClick={() => ask(mode)}><Sparkles size={16} /> {s.ask}</button>}<p className="pv-muted">{s.askHint}</p>{error && <p className="pv-error" role="alert">{error}</p>}</div>
+      <div className="pv-segmented" role="group" aria-labelledby="pv-mode">{MODES.map((m, i) => <button key={m} className={mode === m ? 'active' : ''} aria-pressed={mode === m} onClick={() => { setMode(m); setError(''); setDraft(null); }}>{s.modes[i]}</button>)}</div></div>
+    {mode === 'detail'
+      ? <div className="pv-fulltext"><small className="pv-muted"><BookOpen size={14} /> {s.text}{detail.text_note ? ` · ${detail.text_note}` : ''}</small>
+        {paragraphs.length ? paragraphs.map((p, i) => <p key={i}>{p}</p>) : <p className="pv-muted">{s.noText}</p>}</div>
+      : !reply ? <div className="pv-ask"><p className="pv-muted">{s.notReady}</p>
+        {generate && (busy ? <p role="status">{s.loading}</p> : <button className="pv-button" onClick={() => run(mode)}><Sparkles size={16} /> Anlatımı üret</button>)}
+        {error && <p className="pv-error" role="alert">{error}</p>}</div>
+      : draft !== null && edit ? <div className="pv-edit">
+        <label htmlFor="pv-edit-text">Anlatım metni — paragrafları boş satırla ayırın</label>
+        <textarea id="pv-edit-text" value={draft} onChange={e => setDraft(e.target.value)} rows={18} disabled={busy} />
+        <div className="pv-edit-actions">
+          <button className="pv-button" disabled={busy || draft.trim().length < 50} onClick={() => act(() => edit(mode as NarrationMode, draft))}>{busy ? 'Kaydediliyor…' : 'Kaydet'}</button>
+          <button className="pv-link" disabled={busy} onClick={() => { setDraft(null); setError(''); }}>Vazgeç</button></div>
+        <p className="pv-muted">Kaydedilen metin yapay zekâya yeniden yazdırılmaz; ziyaretçiler doğrudan bu metni görür.</p>
+        {error && <p className="pv-error" role="alert">{error}</p>}</div>
       : <div className="pv-answer" aria-live="polite">
-        {reply.answer.split(/\n\s*\n/).map((para, i) => <p key={i}>{splitCitations(para).map((part, j) => 'text' in part ? part.text
-          : <sup key={j}>{part.refs.map(r => <a key={r} href={`#pv-src-${r}`}>{r}</a>)}</sup>)}</p>)}
+        {reply.answer.split(/\n\s*\n/).map((para, i) => <p key={i}>{para}</p>)}
         {mode === 'story' && <small className="pv-muted">{s.storyNote}</small>}
-        {cited.length > 0 && <ol className="pv-cites">{cited.map(src => <li key={src.ref} id={`pv-src-${src.ref}`}><b>{src.ref}</b> {src.book}, {src.pages} — {src.heading}</li>)}</ol>}
+        {reply.sources.length > 0 && <><h3 className="pv-cites-title">{s.usedSources}</h3>
+          <ul className="pv-cites">{reply.sources.map(src => <li key={`${src.book}-${src.pages}`}>{src.book}, {src.pages} — {src.heading}</li>)}</ul></>}
+        <small className="pv-muted">{s.aiNote}</small>
+        {(generate || edit) && <div className="pv-ask pv-admin-actions">{busy ? <p role="status">{s.loading}</p> : <div className="pv-edit-actions">
+            {edit && <button className="pv-button" onClick={() => { setDraft(reply.answer); setError(''); }}><Pencil size={16} /> Metni düzenle</button>}
+            {generate && <button className="pv-link" onClick={() => run(mode)}><Sparkles size={15} /> Yeniden üret</button>}</div>}
+          {error && <p className="pv-error" role="alert">{error}</p>}</div>}
       </div>}
   </section>;
 }

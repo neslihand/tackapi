@@ -115,12 +115,15 @@ CREATE TABLE monument (
     en_usable           boolean NOT NULL DEFAULT false, -- kitaptaki EN metin arayüzde gösterilebilir mi
     qa_flags            text[] NOT NULL DEFAULT '{}',  -- otomatik kalite bayrakları (insan kontrolü için)
     extraction          jsonb,                         -- Gemini çıkarımının ham çıktısı (denetim izi)
-    review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published')),
+    review_status       text NOT NULL DEFAULT 'draft' CONSTRAINT monument_review_status_check
+                          CHECK (review_status IN ('draft','reviewed','published','removed')),  -- removed: kaldırıldı (geri getirilebilir)
     source_note         text,                          -- panelden eklenen eserin kaynağı (kitap dışı)
     created_by          text,                          -- panelden ekleyen kişi (kitap kayıtlarında boş)
-    updated_at          timestamptz                    -- son panel değişikliği
+    updated_at          timestamptz,                   -- son panel değişikliği
+    pilot               boolean NOT NULL DEFAULT false -- MVP pilot seçkisi (pilot.py): embedding ve anlatımlar önce bunlara
 );
 CREATE INDEX ON monument USING gin (qa_flags);
+CREATE INDEX monument_pilot ON monument (city_id) WHERE pilot;
 CREATE INDEX ON monument (city_id, kind);
 CREATE INDEX ON monument (parent_id);
 CREATE INDEX ON monument USING gist (built_years);
@@ -355,11 +358,25 @@ CREATE TABLE image (
     alt_en              text,
     caption_tr          text,
     edited              boolean NOT NULL DEFAULT false, -- yönetim panelinde değiştirildiyse yükleyici dokunmaz
+    embedding           vector(1536),                  -- görselle arama: gemini-embedding-2 görsel embedding'i
+    embedding_model     text,
     review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published','rejected')),  -- rejected: atıldı
     created_at          timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX image_monument_sort ON image (monument_id, sort);
+CREATE INDEX image_embedding_hnsw ON image USING hnsw (embedding vector_cosine_ops);
 CREATE UNIQUE INDEX image_one_cover ON image (monument_id) WHERE is_cover;
+
+-- Süsleme ve sanat kayıtlarının fotoğrafları (panelden elle bağlanır; bir fotoğraf birden çok kayda bağlanabilir)
+CREATE TABLE artwork_image (
+    artwork_id          int NOT NULL REFERENCES artwork(id) ON DELETE CASCADE,
+    image_id            int NOT NULL REFERENCES image(id) ON DELETE CASCADE,
+    sort                int NOT NULL DEFAULT 0,
+    linked_by           text,
+    linked_at           timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (artwork_id, image_id)
+);
+CREATE INDEX artwork_image_image ON artwork_image (image_id);
 
 -- Uygulanan göç (migration) dosyaları: pipeline/migrate.py
 CREATE TABLE schema_migration (
@@ -369,7 +386,10 @@ CREATE TABLE schema_migration (
 -- Bu şema aşağıdaki göçlerin sonucunu zaten içerir; yeni kurulumda tekrar çalışmasınlar.
 -- (Yeni bir göç eklerken şemayı da güncelle ve adını buraya ekle.)
 INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_image_table.sql'),
-                                         ('003_admin.sql'), ('004_para_fix.sql');
+                                         ('003_admin.sql'), ('004_para_fix.sql'), ('005_narration.sql'),
+                                         ('006_narration_edit.sql'), ('007_artwork_image.sql'),
+                                         ('008_image_embedding.sql'), ('009_pilot.sql'),
+                                         ('010_monument_removed.sql'), ('011_para_split.sql');
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (
@@ -385,8 +405,13 @@ CREATE TABLE para_fix (
     decided_by          text,                                        -- panelde karar veren kişi (otomatikte boş)
     decided_at          timestamptz,
     created_at          timestamptz NOT NULL DEFAULT now(),
+    split_at            int CHECK (split_at IS NULL OR split_at > 0),   -- bölünmüş paragraf: bölme noktası (karakter)
+    split_part          text CHECK (split_part IS NULL OR split_part IN ('head', 'tail')),  -- kararın uygulandığı kısım
+    hidden_spans        jsonb NOT NULL DEFAULT '[]',                -- paragraf içinde gizlenen kısımlar [[başlangıç, bitiş], …]
     UNIQUE (monument_id, para_no),
-    CHECK (decision <> 'move' OR target_monument_id IS NOT NULL)
+    CHECK (decision <> 'move' OR target_monument_id IS NOT NULL),
+    CONSTRAINT para_fix_split_check
+      CHECK ((split_at IS NULL) = (split_part IS NULL) AND (split_at IS NULL OR decision IN ('move', 'hide')))
 );
 CREATE INDEX para_fix_target ON para_fix (target_monument_id) WHERE decision = 'move';
 CREATE INDEX para_fix_pending ON para_fix (decision);
@@ -419,6 +444,24 @@ CREATE TABLE answer_cache (
     created_at          timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX answer_cache_key ON answer_cache (monument_slug, mode, lang);
+
+-- Kayıtlı anlatımlar (narrations.py): "Hikâyeleştirerek" ve "Çocuklar İçin" metinleri bir kez üretilir, buradan okunur
+CREATE TABLE narration (
+    id                  serial PRIMARY KEY,
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    mode                text NOT NULL CHECK (mode IN ('story','child')),
+    lang                text NOT NULL CHECK (lang IN ('tr','en')),
+    answer              text NOT NULL,                               -- [S#]/[F#] kaynak işaretli metin
+    sources             jsonb NOT NULL DEFAULT '[]',                 -- [{ref, book, pages, heading}]
+    verification        jsonb,                                       -- rag.verify: desteksiz yıl ve adlar
+    text_hash           text,                                        -- üretildiği andaki etkin metnin sha1'i (eskime tespiti)
+    model               text,
+    generated_by        text,                                        -- panelde üreten kişi ya da 'narrations.py'
+    generated_at        timestamptz NOT NULL DEFAULT now(),
+    edited_by           text,                                        -- panelde elle düzelten kişi (yeniden üretimde boşalır)
+    edited_at           timestamptz,
+    UNIQUE (monument_id, mode, lang)
+);
 
 -- ---------------------------------------------------------------------
 -- 12. GÖRÜNÜMLER

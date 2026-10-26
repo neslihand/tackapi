@@ -21,11 +21,11 @@ class LoadImagesTest(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
-    def load(self, rows):
+    def load(self, rows, *extra):
         with tempfile.NamedTemporaryFile('w', suffix='.jsonl', delete=False, encoding='utf-8') as f:
             f.write('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows))
         try:
-            with mock.patch.object(sys, 'argv', ['load_images.py', '--dsn', DSN, '--src', f.name]), \
+            with mock.patch.object(sys, 'argv', ['load_images.py', '--dsn', DSN, '--src', f.name, *extra]), \
                     contextlib.redirect_stdout(io.StringIO()):
                 self.L.main()
         finally:
@@ -56,6 +56,14 @@ class LoadImagesTest(unittest.TestCase):
         self.assertTrue(self.img('k1')['is_cover'])                         # kapak değişmez
         self.assertFalse(self.img('k2')['is_cover'])
         self.assertEqual(self.db.query("SELECT count(*) AS n FROM image WHERE sha1 LIKE 'k%%'")[0]['n'], 2)
+
+    def test_new_only_adds_drafts_and_leaves_existing_alone(self):
+        self.load([row('k1', 'konya-meram-ornek-camii')])
+        self.db.execute("UPDATE image SET monument_id = NULL WHERE sha1 = 'k1'")   # ör. ad onarımında değişmiş
+        self.load([row('k1', 'konya-meram-ornek-camii'), row('k9', 'konya-meram-ornek-camii')], '--new-only')
+        self.assertIsNone(self.img('k1')['slug'])                            # var olana dokunulmadı
+        k9 = self.img('k9')
+        self.assertEqual((k9['slug'], k9['review_status'], k9['is_cover']), ('konya-meram-ornek-camii', 'draft', False))
 
     def test_reassigned_cover_does_not_collide(self):
         """Eşleştirme kuralı değişip kapak fotoğrafı başka (kapağı olan) esere taşınınca yükleme durmamalı."""

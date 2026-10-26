@@ -3,7 +3,11 @@
 Kitap metni (source_section.text_tr) hiç değişmez. Bir eserin etkin paragrafları:
   kendi paragrafları − gizlenenler (hide) − başka esere taşınanlar (move)
   + merge_prev: önceki paragrafa eklenir (satır kırılmasıyla bölünmüş cümle)
-  + başka eserlerden bu esere taşınanlar (sona, kaynak sırasıyla)
+  + başka eserlerden bu esere taşınanlar (kitap sırasına göre: önceki kayıttan gelenler başa, sonrakiler sona)
+  Paragraf içi düzeltmeler (yönetici panelde metinde seçerek yapar):
+  - bölme (split_at, split_part): iki eserin metni tek paragrafta birleşmişse paragraf seçilen noktadan sanal olarak
+    bölünür; taşı/gizle kararı yalnızca bir kısma uygulanır, diğer kısım eserde kalır.
+  - gizli kısımlar (hidden_spans): paragrafın içine karışmış başlık ve kırıntılar çıkarılır.
 
 Parçaları yeniden oluştururken (rechunk):
   - Metni değişmeyen parça eski satırıyla birebir korunur (yıllar, dönemler, embedding aynen kullanılır).
@@ -61,29 +65,87 @@ def fixes_for(db, monument_id):
            WHERE f.monument_id = %(m)s""", dict(m=monument_id))}
 
 
+def norm_spans(spans, length):
+    """Gizli kısımları [[başlangıç, bitiş], …] biçiminde sıralar, metin dışını kırpar, çakışanları birleştirir."""
+    out = []
+    for s, e in sorted((int(a), int(b)) for a, b in (spans or []) if b is not None):
+        s, e = max(0, s), min(length, e)
+        if e <= s:
+            continue
+        if out and s <= out[-1][1]:
+            out[-1][1] = max(out[-1][1], e)
+        else:
+            out.append([s, e])
+    return out
+
+
+def masked(text, spans, start=0, end=None):
+    """text[start:end] içinden gizli kısımlar çıkarılmış hâli (boşluklar toparlanır)."""
+    end = len(text) if end is None else end
+    pieces, pos = [], start
+    for s, e in norm_spans(spans, len(text)):
+        if e <= start or s >= end:
+            continue
+        pieces.append(text[pos:max(pos, s)])
+        pos = max(pos, min(e, end))
+    pieces.append(text[pos:end])
+    return re.sub(r'[ \t]{2,}', ' ', ' '.join(p.strip() for p in pieces if p.strip())).strip()
+
+
+def split_text(text, at, part, spans=()):
+    """Paragraf içi düzeltmeler uygulanmış paragraf: (eserde kalan kısım, kararın uygulandığı kısım). Bölünmüşse part
+    'tail' iken bölme noktasından sonrası, 'head' iken öncesi karara (taşı/gizle) gider; gizli kısımlar her iki taraftan
+    da çıkarılır. Bölme yoksa ya da geçersizse (None, gizli kısımları çıkarılmış metnin tamamı)."""
+    if not at or not part or not 0 < at < len(text) or not text[:at].strip() or not text[at:].strip():
+        return None, masked(text, spans)
+    head, tail = masked(text, spans, 0, at), masked(text, spans, at)
+    return (head, tail) if part == 'tail' else (tail, head)
+
+
+def _spans(f):
+    v = (f or {}).get('hidden_spans') or []
+    return json.loads(v) if isinstance(v, str) else v
+
+
 def effective_paragraphs(db, monument_id):
     """Ziyaretçinin gördüğü ve sohbetin kullandığı paragraflar: [{text, pages, origin}]."""
     out = []
     fixes = fixes_for(db, monument_id)
     for p in own_paragraphs(db, monument_id):
-        d = (fixes.get(p['no']) or {}).get('decision')
+        f = fixes.get(p['no']) or {}
+        d = f.get('decision')
+        kept, whole = split_text(p['text'], f.get('split_at'), f.get('split_part'), _spans(f))
         if d in ('hide', 'move'):
+            if kept:   # bölünmüş paragraf: kararın uygulanmadığı kısım eserde kalır
+                out.append(dict(text=kept, pages=p['pages'], origin=None, section_id=p['section_id'], book_id=p['book_id']))
+            continue
+        if not whole:   # paragrafın tamamı gizli kısım olarak işaretlenmiş
             continue
         if d == 'merge_prev' and out:
-            out[-1] = dict(out[-1], text=f"{out[-1]['text']} {p['text']}", pages=sorted(set(out[-1]['pages']) | set(p['pages'])))
+            out[-1] = dict(out[-1], text=f"{out[-1]['text']} {whole}", pages=sorted(set(out[-1]['pages']) | set(p['pages'])))
             continue
-        out.append(dict(text=p['text'], pages=p['pages'], origin=None, section_id=p['section_id'], book_id=p['book_id']))
+        out.append(dict(text=whole, pages=p['pages'], origin=None, section_id=p['section_id'], book_id=p['book_id']))
     if not enabled(db):
         return out
-    # başka eserlerden bu esere taşınan paragraflar
-    for f in db.query("""SELECT f.monument_id, f.para_no, m.slug FROM para_fix f JOIN monument m ON m.id = f.monument_id
-                         WHERE f.decision = 'move' AND f.target_monument_id = %(m)s ORDER BY m.slug, f.para_no""",
-                      dict(m=monument_id)):
+    # Başka eserlerden bu esere taşınan paragraflar kitaptaki sıralarına göre yerleşir: aynı kitapta bu eserin kendi
+    # bölümünden önce gelenler başa (ör. önceki kayda taşmış açılış paragrafları), sonra gelenler ve başka kitaptakiler sona.
+    own = db.query("""SELECT s.book_id, s.seq FROM monument m JOIN source_section s ON s.id = m.section_id
+                      WHERE m.id = %(m)s""", dict(m=monument_id))
+    own_key = (own[0]['book_id'], own[0]['seq']) if own else None
+    before, after = [], []
+    for f in db.query("""SELECT f.*, m.slug, s.book_id, s.seq FROM para_fix f
+                         JOIN monument m ON m.id = f.monument_id LEFT JOIN source_section s ON s.id = m.section_id
+                         WHERE f.decision = 'move' AND f.target_monument_id = %(m)s
+                         ORDER BY s.book_id NULLS LAST, s.seq NULLS LAST, m.slug, f.para_no""", dict(m=monument_id)):
         src = {p['no']: p for p in own_paragraphs(db, f['monument_id'])}.get(f['para_no'])
         if src:
-            out.append(dict(text=src['text'], pages=src['pages'], origin=f['slug'], section_id=src['section_id'],
-                            book_id=src['book_id']))
-    return out
+            _, moved = split_text(src['text'], f.get('split_at'), f.get('split_part'), _spans(f))   # bölünmüşse yalnızca taşınan kısım
+            if not moved:
+                continue
+            p = dict(text=moved, pages=src['pages'], origin=f['slug'], section_id=src['section_id'], book_id=src['book_id'])
+            early = own_key and f['book_id'] == own_key[0] and f['seq'] is not None and f['seq'] < own_key[1]
+            (before if early else after).append(p)
+    return before + out + after
 
 
 def effective_text(db, monument_id):
@@ -185,7 +247,39 @@ def rechunk(db, monument_ids, embed=True):
     if db.query("SELECT to_regclass('public.answer_cache') IS NOT NULL AS ok")[0]['ok']:
         db.execute('DELETE FROM answer_cache WHERE monument_slug IN (SELECT slug FROM monument WHERE id = ANY(%(ids)s::int[]))',
                    dict(ids=ids))
+    sync_pages(db, ids)
     return dict(added=len(todo), kept=kept, embedded=embedded)
+
+
+def effective_pages(db, monument_id):
+    """Etkin paragrafların eserin kendi kitabındaki sayfaları: (ilk, son) ya da None. Başka kitaptan taşınan
+    paragraflar yalnızca eserin kendi kitabında sayfası yoksa sayılır."""
+    paras = effective_paragraphs(db, monument_id)
+    book = db.query('SELECT book_id FROM monument WHERE id = %(m)s', dict(m=monument_id))
+    book = book[0]['book_id'] if book else None
+    pages = [pg for p in paras if p['book_id'] == book for pg in p['pages']] or [pg for p in paras for pg in p['pages']]
+    return (min(pages), max(pages)) if pages else None
+
+
+def pages_locked(db, monument_id):
+    """Sayfa aralığı panelde elle girildiyse True (otomatik hesap ona dokunmaz)."""
+    return bool(db.query("""SELECT 1 FROM admin_log l JOIN monument m ON m.slug = l.target
+                            WHERE m.id = %(m)s AND l.action = 'monument.update' AND l.detail ? 'pages' LIMIT 1""",
+                         dict(m=monument_id)))
+
+
+def sync_pages(db, monument_ids):
+    """Kaynakçada görünen sayfa aralığını (monument.pages) etkin paragraflardan günceller. Bölümleme hatası yüzünden
+    başka eserin sayfalarını da kapsayan aralık böylece düzelir. Elle girilmiş aralığa dokunmaz. Döner: güncellenen sayısı."""
+    n = 0
+    for mid in sorted({i for i in monument_ids if i}):
+        pages = effective_pages(db, mid)
+        if not pages or pages_locked(db, mid):
+            continue
+        n += len(db.query("""UPDATE monument SET pages = %(r)s::int4range WHERE id = %(m)s
+                             AND pages IS DISTINCT FROM %(r)s::int4range RETURNING id""",
+                          dict(m=mid, r=f'[{pages[0]},{pages[1] + 1})')))
+    return n
 
 
 def _remap_evidence(db, old, created):
@@ -211,8 +305,34 @@ def _remap_evidence(db, old, created):
         db.execute('UPDATE editorial_note SET chunk_ids = %(c)s::bigint[] WHERE id = %(i)s', dict(c=ids, i=n['id']))
 
 
-def decide(db, monument_id, para_no, decision, target_id=None, user=None, source='admin'):
-    """Bir paragraf için karar ver; etkilenen eserlerin (kaynak, eski ve yeni hedef) parçalarını yenile."""
+_split_ready = False
+
+
+def split_enabled(db):
+    """Paragraf içi düzeltme sütunları (split_at, hidden_spans; 011 göçü) var mı? Yalnızca olumlu sonuç saklanır."""
+    global _split_ready
+    if not _split_ready:
+        _split_ready = db.query("""SELECT count(*) = 2 AS ok FROM information_schema.columns WHERE table_schema = current_schema()
+                                   AND table_name = 'para_fix' AND column_name IN ('split_at', 'hidden_spans')""")[0]['ok']
+    return _split_ready
+
+
+def check_split(text, decision, split_at, split_part):
+    """Bölme kararını doğrular; geçersizse ValueError."""
+    if split_at is None and split_part is None:
+        return
+    if decision not in ('move', 'hide'):
+        raise ValueError('Paragraf yalnızca bir kısmı taşınırken ya da gizlenirken bölünebilir.')
+    if split_part not in ('head', 'tail') or split_at is None:
+        raise ValueError('Bölme için hem bölme noktası hem de kararın uygulanacağı kısım gerekli.')
+    kept, _ = split_text(text, split_at, split_part)
+    if kept is None:
+        raise ValueError('Bölme noktası paragrafın içinde olmalı; iki kısım da boş olmamalı.')
+
+
+def decide(db, monument_id, para_no, decision, target_id=None, user=None, source='admin', split_at=None, split_part=None):
+    """Bir paragraf için karar ver; etkilenen eserlerin (kaynak, eski ve yeni hedef) parçalarını yenile.
+    split_at/split_part: paragrafı bölüp kararı yalnızca bir kısmına uygula (iki eserin metni birleşmişse)."""
     if decision not in DECISIONS:
         raise ValueError(decision)
     if decision == 'move' and not target_id:
@@ -220,13 +340,17 @@ def decide(db, monument_id, para_no, decision, target_id=None, user=None, source
     paras = own_paragraphs(db, monument_id)
     if not 1 <= para_no <= len(paras):
         raise IndexError(para_no)
-    before = db.query("""SELECT decision, target_monument_id, source FROM para_fix
-                         WHERE monument_id = %(m)s AND para_no = %(n)s""", dict(m=monument_id, n=para_no))
-    if decision == 'pending' and (not before or before[0]['source'] == 'admin'):
+    check_split(paras[para_no - 1]['text'], decision, split_at, split_part)
+    before = db.query(f"""SELECT decision, target_monument_id, source{', hidden_spans' if split_enabled(db) else ''} FROM para_fix
+                          WHERE monument_id = %(m)s AND para_no = %(n)s""", dict(m=monument_id, n=para_no))
+    if decision == 'pending' and before and _spans(before[0]):
+        # karar geri alınır ama paragraf içinde gizlenen kısımlar kalır (onlar ayrı geri alınır)
+        _upsert(db, monument_id, para_no, 'keep', None, 'admin', user)
+    elif decision == 'pending' and (not before or before[0]['source'] == 'admin'):
         # Yöneticinin kendi başlattığı karar geri alınınca kayıt silinir; yalnızca kural/model işaretleri kuyruğa döner
         db.execute('DELETE FROM para_fix WHERE monument_id = %(m)s AND para_no = %(n)s', dict(m=monument_id, n=para_no))
     else:
-        _upsert(db, monument_id, para_no, decision, target_id, source, user)
+        _upsert(db, monument_id, para_no, decision, target_id, source, user, split_at, split_part)
     old = before[0] if before else {}
     text_changed = (old.get('decision') or 'pending') not in ('pending', 'keep') or decision not in ('pending', 'keep')
     affected = {monument_id, old.get('target_monument_id'), target_id if decision == 'move' else None}
@@ -234,14 +358,70 @@ def decide(db, monument_id, para_no, decision, target_id=None, user=None, source
     return dict(before=old.get('decision'), after=decision, **stats)
 
 
-def _upsert(db, monument_id, para_no, decision, target_id, source, user):
-    db.execute("""INSERT INTO para_fix(monument_id, para_no, decision, target_monument_id, source, decided_by, decided_at)
-                  VALUES (%(m)s, %(n)s, %(d)s, %(t)s, %(s)s, %(u)s, CASE WHEN %(u)s::text IS NULL THEN NULL ELSE now() END)
-                  ON CONFLICT (monument_id, para_no) DO UPDATE SET decision = EXCLUDED.decision,
-                      target_monument_id = EXCLUDED.target_monument_id, decided_by = EXCLUDED.decided_by,
-                      decided_at = EXCLUDED.decided_at""",
+def set_spans(db, monument_id, para_no, spans, user):
+    """Paragrafın içinde gizlenen kısımları belirler (öncekilerin yerine geçer; [] hepsini geri getirir). Paragrafın kararı
+    (taşı/gizle, bölme) değişmez. Konumlar kitap metnindeki karakterlerdir. Döner: parça yenileme istatistikleri."""
+    if not split_enabled(db):
+        raise RuntimeError('Paragraf içi düzeltmeler için önce veritabanı göçü gerekli: python migrate.py --apply')
+    paras = own_paragraphs(db, monument_id)
+    if not 1 <= para_no <= len(paras):
+        raise IndexError(para_no)
+    text = paras[para_no - 1]['text']
+    for s, e in spans:
+        if not 0 <= s < e <= len(text):
+            raise ValueError(f'Gizlenecek kısım paragrafın dışında: [{s}, {e}] (paragraf {len(text)} karakter).')
+    spans = norm_spans(spans, len(text))
+    row = db.query("""SELECT decision, source, split_at, target_monument_id FROM para_fix
+                      WHERE monument_id = %(m)s AND para_no = %(n)s""", dict(m=monument_id, n=para_no))
+    if not row and spans:
+        _upsert(db, monument_id, para_no, 'keep', None, 'admin', user)
+    if row and not spans and row[0]['decision'] == 'keep' and row[0]['source'] == 'admin' and not row[0]['split_at']:
+        db.execute('DELETE FROM para_fix WHERE monument_id = %(m)s AND para_no = %(n)s', dict(m=monument_id, n=para_no))
+    elif row or spans:
+        db.execute("""UPDATE para_fix SET hidden_spans = %(h)s::jsonb, decided_by = %(u)s, decided_at = now()
+                      WHERE monument_id = %(m)s AND para_no = %(n)s""",
+                   dict(h=json.dumps(spans), u=user, m=monument_id, n=para_no))
+    return dict(hidden_spans=spans, **rechunk(db, {monument_id, row[0]['target_monument_id'] if row else None}))
+
+
+def move_range(db, monument_id, para_nos, target_id, user, first_split_at=None):
+    """Birden çok paragrafı tek seferde başka esere taşır (tek parça yenilemesi). Döner: önceki hedeflerle birlikte
+    yenileme istatistikleri. Kitap metni değişmez; her paragraf ayrı ayrı geri alınabilir.
+    first_split_at: ilk paragraf ortadan başlıyorsa (taşınan eser paragrafın ortasında başlıyorsa) bölme noktası;
+    ilk paragrafın yalnızca bu noktadan sonrası taşınır."""
+    paras = own_paragraphs(db, monument_id)
+    if not para_nos or not all(1 <= n <= len(paras) for n in para_nos):
+        raise IndexError(para_nos)
+    if target_id == monument_id:
+        raise ValueError('Paragraflar aynı esere taşınamaz.')
+    first = min(para_nos)
+    if first_split_at is not None:
+        check_split(paras[first - 1]['text'], 'move', first_split_at, 'tail')
+    old_targets = {r['target_monument_id'] for r in db.query(
+        """SELECT target_monument_id FROM para_fix WHERE monument_id = %(m)s AND para_no = ANY(%(n)s::int[])
+           AND target_monument_id IS NOT NULL""", dict(m=monument_id, n=list(para_nos)))}
+    for n in para_nos:
+        at = first_split_at if n == first else None
+        _upsert(db, monument_id, n, 'move', target_id, 'admin', user, at, 'tail' if at is not None else None)
+    return rechunk(db, {monument_id, target_id} | old_targets)
+
+
+def _upsert(db, monument_id, para_no, decision, target_id, source, user, split_at=None, split_part=None):
+    split = split_enabled(db)
+    if split_at is not None and not split:
+        raise RuntimeError('Paragraf bölme için önce veritabanı göçü gerekli: python migrate.py --apply')
+    cols, vals, upd = '', '', ''
+    if split:   # bölme olmayan karar eski bölmeyi temizler
+        cols, vals = ', split_at, split_part', ', %(sa)s, %(sp)s'
+        upd = ', split_at = EXCLUDED.split_at, split_part = EXCLUDED.split_part'
+    db.execute(f"""INSERT INTO para_fix(monument_id, para_no, decision, target_monument_id, source, decided_by, decided_at{cols})
+                   VALUES (%(m)s, %(n)s, %(d)s, %(t)s, %(s)s, %(u)s, CASE WHEN %(u)s::text IS NULL THEN NULL ELSE now() END{vals})
+                   ON CONFLICT (monument_id, para_no) DO UPDATE SET decision = EXCLUDED.decision,
+                       target_monument_id = EXCLUDED.target_monument_id, decided_by = EXCLUDED.decided_by,
+                       decided_at = EXCLUDED.decided_at{upd}""",
                dict(m=monument_id, n=para_no, d=decision, t=target_id if decision == 'move' else None, s=source,
-                    u=None if decision == 'pending' else user))   # geri alınan işaret yeniden kuyruğa döner
+                    u=None if decision == 'pending' else user,   # geri alınan işaret yeniden kuyruğa döner
+                    sa=split_at, sp=split_part))
 
 
 def apply_plan(dsn, rows):

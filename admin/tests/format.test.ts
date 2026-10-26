@@ -51,3 +51,12 @@ test('Bağlama yöntemleri yöneticiye açıklanır', () => {
   assert.equal(methodLabel(null), 'Panelden yüklendi');
   assert.equal(methodLabel('yeni_yontem'), 'yeni_yontem');
 });
+
+
+test('Kaynak sayfaları: değişen aralık gönderilir, ters aralık reddedilir', () => {
+  const d = { ...detail, page_from: 120, page_to: 124 } as MonumentDetail;
+  assert.deepEqual(changedFields(d, fieldsFromForm({ ...formFromDetail(d), page_to: '122' })), { page_to: 122 });
+  assert.ok(monumentIssues({ page_from: 130, page_to: 120 }).length > 0);
+  assert.ok(monumentIssues({ page_from: 0 }).length > 0);
+  assert.deepEqual(monumentIssues({ page_from: 120, page_to: null }), []);
+});

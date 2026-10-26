@@ -81,7 +81,7 @@ def facts(db, slug):
                               LEFT JOIN chunk c ON c.id = e.chunk_id WHERE e.monument_id = %(id)s ORDER BY lower(e.years) NULLS LAST""", q)
     m['persons'] = db.query("""SELECT pe.name, mp.role, mp.detail, c.page_start FROM monument_person mp JOIN person pe ON pe.id = mp.person_id
                                LEFT JOIN chunk c ON c.id = mp.chunk_id WHERE mp.monument_id = %(id)s""", q)
-    m['artworks'] = db.query("""SELECT a.kind, a.element, a.technique, a.colors, a.motifs, a.script, a.text_original,
+    m['artworks'] = db.query("""SELECT a.id, a.kind, a.element, a.technique, a.colors, a.motifs, a.script, a.text_original,
                                        a.text_translation_tr, a.date_text, a.condition, pe.name artist, c.page_start
                                 FROM artwork a LEFT JOIN person pe ON pe.id = a.artist_id LEFT JOIN chunk c ON c.id = a.chunk_id
                                 WHERE a.monument_id = %(id)s OR a.monument_id IN (SELECT id FROM monument WHERE parent_id = %(id)s)""", q)
@@ -162,8 +162,9 @@ RERANK_SCHEMA = {'type': 'object', 'properties': {'puanlar': {'type': 'array', '
     'required': ['puanlar']}
 
 
-def rerank(q, cands, plan, slug=None):
-    quota = dict(ECO_QUOTA if ECO else QUOTA)
+def rerank(q, cands, plan, slug=None, full=False):
+    """full=True: ekonomik modda da zengin kota (kayıtlı anlatım bir kez üretilir, malzemesi bol olmalı)."""
+    quota = dict(ECO_QUOTA if ECO and not full else QUOTA)
     if plan.get('sehir_baglami_gerekli'):
         quota['sehir_donem'] = 3 if ECO else 5
     if plan.get('karsilastirma'):
@@ -209,13 +210,15 @@ def rng_text(r):
     return str(a) if a == b else f'{a}-{b}'
 
 
-def build_context(f, chunks, question=''):
+def build_context(f, chunks, question='', full=False):
+    """full=True: ekonomik modda da parçalar kısaltılmaz ve olgu kartı tam verilir (kayıtlı anlatım üretimi)."""
+    eco = ECO and not full
     q = (question or '').lower()
     want_art = bool(re.search(ART_WORDS, q))
     want_person = bool(re.search(PERSON_WORDS, q))
     want_event = bool(re.search(EVENT_WORDS, q))
     general = not (want_art or want_person or want_event)
-    if ECO:
+    if eco:
         n_ev = 8 if (want_event or general) else 3
         n_pe = 6 if (want_person or general) else 2
         n_ar = 6 if (want_art or general) else 2
@@ -236,14 +239,14 @@ def build_context(f, chunks, question=''):
         lines.append(f"[F{k}] KİŞİ ({fmt_pages(p['page_start'], None)}): {p['name']} — rol: {p['role']}; {(p['detail'] or '')[:160]}")
         k += 1
     for a in f['artworks'][:n_ar]:
-        meal = a['text_translation_tr'] if (a['text_translation_tr'] and (want_art or not ECO)) else None
+        meal = a['text_translation_tr'] if (a['text_translation_tr'] and (want_art or not eco)) else None
         lines.append(f"[F{k}] SANAT ESERİ ({fmt_pages(a['page_start'], None)}): {a['kind']} — yer: {a['element']}; "
                      f"teknik: {a['technique'] or '-'}; hat: {a['script'] or '-'}; sanatçı: {a['artist'] or 'belirtilmemiş'}; "
                      f"renkler: {', '.join(a['colors'] or []) or '-'}; tarih: {a['date_text'] or '-'}"
                      f"{('; meal: ' + meal[:300]) if meal else ''}")
         k += 1
     for i, c in enumerate(chunks, 1):
-        body = c['content'] if not ECO else c['content'][:ECO_CHUNK_CHARS]
+        body = c['content'] if not eco else c['content'][:ECO_CHUNK_CHARS]
         lines.append(f"[S{i}] ({c['book']}, {fmt_pages(c['page_start'], c['page_end'])} | {c['heading_path']})\n{body}")
     notes = [n['model_instruction'] or n['note_tr'] for n in f['notes']]
     return '\n\n'.join(lines), notes
@@ -274,47 +277,152 @@ LANG = {'tr': "Cevabı Türkçe yaz.",
         'en': ("Write the answer in English. The sources are Turkish; translate faithfully without adding facts. Keep proper names "
                "in Turkish (e.g. 'Muradiye Mosque'), and explain Turkish terms briefly.")}
 
+# Kayıtlı anlatımlar (narrations.py): eser sayfasında okunacak düz metin. Sohbetten farkı: kaynak işareti ve markdown yok
+# (kaynaklar sayfada metnin altında listelenir), soru-cevap değil doğrudan anlatım, daha uzun.
+NARRATION_RULES = """Sen Türkiye'deki vakıf eserlerini tanıtan bir rehbersin. Eser sayfasında ziyaretçinin okuyacağı bir anlatım yazıyorsun.
+Kaynak kuralları:
+1. Tarihî bilgileri (tarih, kişi, olay, sayı, malzeme, renk, ölçü, süsleme) YALNIZCA aşağıdaki BAĞLAM'dan al. Bağlamda
+   olmayan tarihî ayrıntı ekleme. Tahmini bilgiyi kesin gibi sunma: kitâbeye dayanan tarih için "kitâbesine göre",
+   üslup tahmini için "... olduğu düşünülüyor", rivayet için "rivayete göre" de.
+2. Bağlamdaki uyarılara (KAYNAK UYARILARI) uy; çelişkili bilgiyi tek doğruymuş gibi anlatma.
+Biçim kuralları:
+3. Düz metin yaz; paragrafları boş satırla ayır. Markdown KULLANMA: yıldız (*), kalın yazı, başlık, madde işareti, numaralı
+   liste, yatay çizgi yok.
+4. Kaynak işareti YAZMA: [S1], [F0], S2, F10, T gibi kısaltmalar metinde hiç geçmesin.
+5. Terimleri parantez içinde sözlük tanımıyla verme; gerekiyorsa cümlenin içinde doğal biçimde açıkla ("mihrap, yani
+   namazda yönü gösteren niş").
+6. Tarihleri art arda sıralama; okuru yormayacak kadarını seç. Hicri tarihleri yalnızca Miladisiyle birlikte ve gerekirse ver.
+"""
+NARRATION_MODES = {
+    'story': ("HİKÂYE ANLATIMI:\n"
+              "- Doğrudan hikâyeyle başla. Önce bilgilendirici bir giriş ya da özet yazma; başlık koyma; sona bilgi listesi ekleme.\n"
+              "- 6-9 paragraf, yaklaşık 600-900 kelime.\n"
+              "- Kurgusal bir çerçeve kur: bir anlatıcı ya da karakter (ör. yapının inşasında çalışan bir çırak, yüzyıllar "
+              "sonra yapıyı ziyaret eden bir çocuk ya da yapının kendisi). Kurgusal karakterlere ad verebilirsin; onları "
+              "gerçek tarihî kişi gibi sunma.\n"
+              "- Hikâye bağlamdaki bilgileri bir akış içinde taşısın: yapının yapılışı ve yaptıranı, mimarisi ve süslemeleri, "
+              "yüzyıllar içindeki önemli değişiklikler, bugünkü hâli. Eseri yapıldığı dönemin şehriyle ilişkilendir "
+              "(bağlamdaki şehir tarihi parçalarından).\n"
+              "- Işık, ses, koku gibi duyusal ayrıntılar yalnızca atmosfer içindir ve yapının somut özelliklerini değiştirmez.\n"
+              "- Gerçek tarihî kişilere kaynakta olmayan sözler, düşünceler ya da duygular yükleme."),
+    'child': ("ÇOCUKLAR İÇİN ANLATIM:\n"
+              "- 8-12 yaş arası bir çocuğa anlatıyorsun. Kısa cümleler, günlük hayattan benzetmeler ve merak uyandıran sorular kullan.\n"
+              "- 4-6 paragraf. Başlık ya da liste kullanma.\n"
+              "- Benzetmeler senin yorumundur; tarihî bilgiler yine yalnızca bağlamdan gelir. Korkutucu ayrıntılardan kaçın."),
+}
+NARRATION_TASK = {'tr': 'Bu eseri anlat.', 'en': 'Tell me about this monument.'}
+
+
+def clean_narration(text):
+    """Kayıtlı anlatımdan kaynak işaretlerini ve markdown'ı temizler (model kurala uymasa da sayfada görünmesin).
+
+    '[S1, F0]', 'F0F10', 'S2T', '(tanım) T' · '**kalın**', '* madde', '# başlık', '***' · '— Hikâyedeki tarihî bilgiler:' bölümü
+    """
+    text = re.split(r'\n?\s*[—–-]*\s*\**\s*Hikâyedeki tarihî bilgiler', text)[0]
+    text = re.sub(r'\[\s*[SFT]\d*(?:\s*,\s*[SFT]\d*)*\s*\]', '', text)                  # [S1], [F0, S2], [T]
+    text = re.sub(r'(?<![\wçğıöşüÇĞİÖŞÜ])(?:[SF]\d+)+T?(?![\wçğıöşü])', '', text)       # F0F10, S2T, S6
+    text = re.sub(r'(?<=[\s)])T(?=[\s,;:]|\.(?:\s|$)|$)', '', text)                    # tek başına 'T' (terim işareti)
+    text = re.sub(r'(?m)^[ \t]*(?:#+|[-•*]|\d+[.)])[ \t]+', '', text)                    # başlık ve liste başları
+    text = re.sub(r'\*+', '', text)                                                     # **kalın**, ***
+    text = re.sub(r'(?m)^[ \t]*(?:Hikâye|Story)[ \t]*:[ \t]*$', '', text)               # 'Hikâye:' başlığı
+    text = re.sub(r'[ \t]+([,.;:!?])', r'\1', text)                                     # işaret silinince kalan boşluk
+    text = re.sub(r'[ \t]{2,}', ' ', text)
+    text = re.sub(r'(?m)^[ \t]+|[ \t]+$', '', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
 
 # Özel ad içinde geçse de tek başına bilgi taşımayan sözcükler (unvan, yapı türü; TR ve EN)
 GENERIC_NAME_WORDS = set('''cami camii camisi mescit mescidi türbe türbesi külliye külliyesi medrese medresesi hamam hamamı
     han hanı çeşme çeşmesi hazire haziresi imaret imareti zaviye zaviyesi tekke tekkesi köprü köprüsü sultan sultanı bey beyi
     paşa paşası efendi hatun ağa hazret hazreti şeyh mimar usta ulu büyük küçük yeni eski
-    mosque masjid tomb complex madrasa bath fountain inn lodge bridge the of and'''.split())
-# Cümle başında büyük harfle yazıldığı için ada yapışan sözcükler ('Ayrıca Habib' → 'Habib')
+    mosque masjid tomb complex madrasa bath fountain inn lodge bridge the of and
+    devlet devleti devletinin imparatorluk imparatorluğu imparatorluğunun beylik beyliği beyliğinin dönem dönemi döneminde
+    cumhuriyet cumhuriyeti state empire period'''.split())
+# Cümle başında büyük harfle yazıldığı için ada yapışan sözcükler ('Ayrıca Habib' → 'Habib', 'Bugün Muradiye' → 'Muradiye')
 SENTENCE_START_WORDS = set('''ayrıca ancak fakat ama bu şu o bunun bunlar burada sonra daha ile ve kaynaklarımızda kaynaklarda
-    kaynağa kitâbede kitabede kitâbesine kitabesine eserin caminin yapının rivayete göre also however this that in our the'''.split())
+    kaynağa kitâbede kitabede kitâbesine kitabesine eserin caminin yapının rivayete göre also however this that in our the
+    bugün bugünkü günümüzde şimdi artık hani işte belki hatta peki evet hayır haydi bak bakın düşün düşünün sevgili
+    merhaba bir bazen zamanla yıllar yüzyıllar sonunda önce ilk her hem çünkü eğer sen siz biz onlar ben
+    today now once then imagine look'''.split())
+# Tarihî bir adı belli eden sözcükler (unvan ve yapı türü). Hikâye ve çocuk anlatımında yalnızca bunları taşıyan adlar
+# denetlenir: kurgusal karakter adları ('Ayşe') ve benzetmeler ('Lego') bu modlarda serbesttir.
+HISTORICAL_NAME_WORDS = set('''sultan sultanı bey beyi paşa paşası efendi hatun ağa ağası hazret hazreti hz şeyh mimar usta hacı
+    çelebi dede baba molla kadı vali sadrazam vezir cami camii camisi mescit mescidi türbe türbesi külliye külliyesi
+    medrese medresesi hamam hamamı han hanı çeşme çeşmesi hazire haziresi imaret imareti zaviye zaviyesi tekke tekkesi
+    köprü köprüsü kale kalesi mahalle mahallesi çarşı çarşısı bedesten bedesteni saray sarayı'''.split())
+NAME_RE = r'\b([A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+(?:\s+(?:[A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+|II?I?\.|IV\.|V\.))+)'
 
 
 def _tr_lower(s):
     return s.replace('I', 'ı').replace('İ', 'i').lower()
 
 
-def verify(answer, context):
+def _name_support(context):
+    """Bağlamdaki sözcük önekleri → ad sözcüğünün bağlamda geçip geçmediğini söyleyen fonksiyon (Türkçe ekler için 5 harf)."""
+    prefixes = {w[:n] for w in re.findall(r'\w+', _tr_lower(context)) for n in (3, 4, 5)}
+
+    def supported(words):
+        toks = [t for t in re.findall(r'\w+', _tr_lower(' '.join(words))) if len(t) >= 3 and t not in GENERIC_NAME_WORDS]
+        return all(t[:5] in prefixes for t in toks)
+
+    def meaningful(words):   # unvan ve yapı türü dışında en az bir sözcük var mı ('Muradiye Camii' evet, 'Paşa' hayır)
+        return any(len(t) >= 3 and t not in GENERIC_NAME_WORDS for t in re.findall(r'\w+', _tr_lower(' '.join(words))))
+    return supported, meaningful
+
+
+def check_names(candidates, context, historical_only=False):
+    """[(ad, cümle başında mı)] → bağlamda desteklenmeyen adlar.
+
+    - Baştaki bağlaç/zarf ('Ayrıca', 'Bugün', 'Hani') atılır.
+    - Cümle başındaki ilk sözcük yalnızca konumu yüzünden büyük harfli olabilir: kalan kısım kendi başına bir adsa
+      ilk sözcük atılır ve kalan denetlenir ('Bugün Muradiye Camii' → 'Muradiye Camii', 'Yapıyı Sultan Mehmed' →
+      'Sultan Mehmed'). Kalan kısım yalnızca unvansa ('Mehmed Paşa' → 'Paşa') ilk sözcük adın parçasıdır.
+    - historical_only: yalnızca unvan, yapı türü ya da Roma rakamı taşıyan adlar denetlenir (hikâye ve çocuk anlatımı).
+    """
+    supported, meaningful = _name_support(context)
+    bad = []
+    for name, at_start in candidates:
+        words = name.split()
+        while words and _tr_lower(words[0]) in SENTENCE_START_WORDS:
+            words.pop(0)
+            at_start = False
+        if (at_start and len(words) > 1 and _tr_lower(words[0]) not in GENERIC_NAME_WORDS   # 'Sultan', 'Mimar' adın parçası
+                and not supported(words) and meaningful(words[1:])):
+            words = words[1:]
+        if not words:
+            continue
+        if historical_only and not any(_tr_lower(w).rstrip('.') in HISTORICAL_NAME_WORDS or re.fullmatch(r'[IVX]+\.', w)
+                                       for w in words):
+            continue
+        if not supported(words):
+            bad.append(' '.join(words))
+    return sorted(set(bad))
+
+
+def name_candidates(answer):
+    """Cevaptaki çok sözcüklü büyük harfli öbekler ve cümle başında olup olmadıkları."""
+    out = []
+    for m in re.finditer(NAME_RE, answer):
+        before = answer[:m.start()].rstrip(' \t')
+        out.append((m.group(1), not before or before[-1] in '.!?…:;"“”‘’\'(\n—–-'))
+    return out
+
+
+def verify(answer, context, historical_only=False):
     """Cevaptaki yıllar ve çok kelimeli özel adlar bağlamda geçiyor mu?
 
     - Yıl: 3-4 haneli sayı bağlamda aynı sayı olarak geçmeli ('142', '1425' içinde geçti sayılmaz).
       '600 yıl önce' gibi süre ifadeleri yıl değildir (kural 6: hesap yapılabilir).
     - Ad: addaki her anlamlı sözcük (unvan ve yapı türü hariç) bağlamda geçmeli. Türkçe ekler için ilk 5 harf
-      karşılaştırılır ('Muradiye'nin', 'Murad'ı' → 'murad').
+      karşılaştırılır ('Muradiye'nin', 'Murad'ı' → 'murad'). Ayrıntılar check_names'te.
+    - historical_only: hikâye ve çocuk anlatımı; kurgusal adlar ve benzetmeler denetlenmez, yalnızca tarihî görünen adlar.
     """
     ctx_nums = set(re.findall(r'\d+', context))
     years = re.findall(r'\b(1[0-9]{3}|[5-9][0-9]{2})\b(?!\s*(?:yıl\b|yıl önce|yıllık|years? (?:ago|old)))', answer)
     bad_years = {y for y in years if y not in ctx_nums}
-    ctx_words = re.findall(r'\w+', _tr_lower(context))
-    prefixes = {w[:n] for w in ctx_words for n in (3, 4, 5)}
-    names = set()
-    for n in re.findall(r'\b([A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+(?:\s+(?:[A-ZÇĞİÖŞÜ][a-zçğıöşüâîû]+|II?I?\.|IV\.|V\.))+)', answer):
-        words = n.split()
-        while words and _tr_lower(words[0]) in SENTENCE_START_WORDS:
-            words.pop(0)
-        if words:
-            names.add(' '.join(words))
-
-    def supported(name):
-        toks = [t for t in re.findall(r'\w+', _tr_lower(name)) if len(t) >= 3 and t not in GENERIC_NAME_WORDS]
-        return all(t[:5] in prefixes for t in toks)
-    bad_names = [n for n in names if not supported(n)]
-    return dict(unsupported_years=sorted(bad_years), unsupported_names=sorted(bad_names)[:10])
+    bad_names = check_names(name_candidates(answer), context, historical_only)
+    return dict(unsupported_years=sorted(bad_years), unsupported_names=bad_names[:10])
 
 
 # ------------------------------------------------------------------------------------------- cevap önbelleği
@@ -418,6 +526,50 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
         except Exception:
             pass
     return result
+
+
+def narrate(db, slug, mode, lang='tr', model=None):
+    """Eser sayfasında saklanacak hikâye ya da çocuk anlatımı (narrations.py). Sohbetten farkları: kendi kuralları
+    (kaynak işareti ve markdown yok, doğrudan anlatım), ekonomik modda da zengin bağlam, önbellek yok, çıktı temizlenir.
+    Doğrulama sohbetle aynıdır: bağlamda olmayan yıl varsa bir kez yeniden üretilir."""
+    model = model or ANSWER_MODEL
+    question = NARRATION_TASK[lang]
+    f = facts(db, slug)
+    plan = analyze(question, f['name_tr'])
+    qvec = G.embed_query(question)
+    chunks = rerank(question, retrieve(db, slug, question, plan, qvec), plan, slug, full=True)
+    context, notes = build_context(f, chunks, question, full=True)
+    if chunks:
+        notes += [n['model_instruction'] for n in db.query(
+            "SELECT DISTINCT model_instruction FROM editorial_note WHERE model_instruction IS NOT NULL AND chunk_ids && %(ids)s::bigint[]",
+            dict(ids=[c['id'] for c in chunks]))]
+    terms = db.query("""SELECT term_tr, term_en, definition_tr, definition_child_tr FROM term
+                         WHERE position(lower(term_tr) IN lower(%(ctx)s)) > 0 LIMIT 12""", dict(ctx=context))
+    if terms:
+        context += '\n\nTERİMLER (kavram açıklaması; tarihî bilgi değildir):\n' + '\n'.join(
+            f"- {t['term_tr']} ({t['term_en']}): {(t['definition_child_tr'] if mode == 'child' and t['definition_child_tr'] else t['definition_tr'])}"
+            for t in terms)
+    system = NARRATION_RULES + '\n' + NARRATION_MODES[mode] + '\n' + LANG[lang]
+    if notes:
+        system += '\nKAYNAK UYARILARI:\n- ' + '\n- '.join(dict.fromkeys(notes))
+    prompt = f"BAĞLAM:\n{context}\n\nGÖREV: {f['name_tr']} için {'hikâye' if mode == 'story' else 'çocuklara yönelik'} anlatımı yaz."
+    calls = 1
+    text = clean_narration(G.generate(prompt, system=system, model=model, thinking='low'))
+    check = verify(text, context, historical_only=True)
+    if check['unsupported_years'] and not G.FAKE:
+        fix = f"\n\nDİKKAT: Önceki taslakta bağlamda olmayan bilgiler vardı: {check}. Bunları çıkararak yeniden yaz."
+        text = clean_narration(G.generate(prompt + fix, system=system, model=model, thinking='low'))
+        calls += 1
+        check = verify(text, context, historical_only=True)
+    # Sayfada metnin altında listelenecek kaynaklar: kitap ve sayfa bazında tekil
+    sources, seen = [], set()
+    for c in chunks:
+        key = (c['book'], fmt_pages(c['page_start'], c['page_end']))
+        if key not in seen:
+            seen.add(key)
+            sources.append(dict(book=c['book'], pages=key[1], heading=c['heading_path']))
+    return dict(answer=text, sources=sources, verification=check,
+                usage=dict(model=model, llm_calls=calls, approx_prompt_tokens=(len(system) + len(prompt)) // 4))
 
 
 if __name__ == '__main__':

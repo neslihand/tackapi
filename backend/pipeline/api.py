@@ -11,6 +11,7 @@ Uç noktalar
        → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
   GET  /api/monuments/{slug}?lang=tr|en
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
+  POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
@@ -19,14 +20,14 @@ VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 1
 import os, sys, re, time, logging, threading, mimetypes
 from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db
+import rag, admin, images, textfix_db, narrations, visual_search
 
 log = logging.getLogger('vakif.api')
 
@@ -46,6 +47,18 @@ PUBLISHED = "m.review_status = 'published'"
 
 # Yönetim uçları (/api/admin/*, bkz. admin.py)
 app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.save_webp(data, rel, MEDIA_DIR)))
+
+
+@app.on_event('startup')
+def warm_visual_model():
+    """Yerel görsel model arka planda belleğe alınır; ilk görselle arama birkaç saniye beklemesin."""
+    def warm():
+        try:
+            visual_search.LV.warmup()
+        except Exception as e:
+            log.warning('Yerel görsel model yüklenemedi: %s', str(e)[:300])
+    if visual_search.BACKEND == 'local':
+        threading.Thread(target=warm, daemon=True).start()
 
 
 def image_obj(r, lang, prefix=''):
@@ -205,6 +218,17 @@ def monuments(city: str | None = None, kind: str | None = None, period: str | No
     return dict(total=total, page=page, page_size=page_size, items=items, facets=facets)
 
 
+_art_img_ready = False
+
+
+def artwork_images_enabled():
+    """artwork_image tablosu var mı (007 göçü)? Yoksa süsleme kayıtları fotoğrafsız gösterilir."""
+    global _art_img_ready
+    if not _art_img_ready:   # yalnızca olumlu sonuç saklanır: göç sunucu çalışırken uygulanırsa da fark edilir
+        _art_img_ready = db.query("SELECT to_regclass('artwork_image') IS NOT NULL AS ok")[0]['ok']
+    return _art_img_ready
+
+
 def is_published(slug):
     return bool(db.query(f"SELECT 1 FROM monument m WHERE m.slug = %(s)s AND {PUBLISHED}", dict(s=slug)))
 
@@ -222,7 +246,10 @@ def monument_detail(slug, lang, drafts=False):
     # Editör notları (bölümleme, çelişki, OCR uyarıları) iç kalite notlarıdır: sohbet asistanına uyarı olarak gider,
     # yöneticiler panelde görür; ziyaretçiye gösterilmez.
     f.pop('notes', None)
-    sec = db.query("""SELECT s.text_tr, s.text_en, s.page_start, s.page_end, b.title AS book, b.credits, m.en_usable,
+    # Sayfalar eserin kendi aralığından gelir (düzeltilmiş paragraflardan hesaplanır ya da panelde elle girilir);
+    # aralık yoksa kitap bölümünün sayfaları
+    sec = db.query("""SELECT s.text_tr, s.text_en, coalesce(lower(m.pages), s.page_start) AS page_start,
+                             coalesce(upper(m.pages) - 1, s.page_end) AS page_end, b.title AS book, b.credits, m.en_usable,
                              m.summary_en, m.alt_names, m.status, m.qa_flags, m.review_status
                       FROM monument m LEFT JOIN source_section s ON s.id = m.section_id
                       LEFT JOIN source_book b ON b.id = m.book_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
@@ -245,9 +272,26 @@ def monument_detail(slug, lang, drafts=False):
         else:
             text = sec['summary_en']
             text_note = 'Machine-translated summary; the full text is available in Turkish.'
+    # Süsleme ve sanat kayıtlarının panelden bağlanmış fotoğrafları (yalnızca yayımlanmışlar; önizlemede bekleyenler de)
+    art_imgs = defaultdict(list)
+    if f['artworks'] and artwork_images_enabled():
+        for r in db.query("""SELECT ai.artwork_id, i.file, i.alt_tr, i.alt_en, i.width, i.height, i.caption_tr,
+                                    i.printed_page, i.review_status, b.title AS book
+                             FROM artwork_image ai JOIN image i ON i.id = ai.image_id
+                             LEFT JOIN source_book b ON b.id = i.book_id
+                             WHERE ai.artwork_id = ANY(%(ids)s::int[]) AND (i.review_status = 'published'
+                                   OR (%(d)s::boolean AND i.review_status IN ('draft', 'reviewed')))
+                             ORDER BY ai.sort, i.id""", dict(ids=[a['id'] for a in f['artworks']], d=drafts)):
+            art_imgs[r['artwork_id']].append(dict(image_obj(r, lang), caption=r['caption_tr'],
+                                                  source=dict(book=r['book'], page=r['printed_page']) if r['book'] else None,
+                                                  **({'review_status': r['review_status']} if drafts else {})))
+    for a in f['artworks']:
+        a['images'] = art_imgs.get(a.pop('id'), [])
+    # Hikâye ve çocuk anlatımları önceden üretilip kaydedilir; sayfa açılınca yapay zekâ çağrılmaz
+    stored = narrations.public(db, f['id'], lang)
     f.pop('id', None)
     f.pop('city_id', None)
-    return dict(card=f, text=text, text_note=text_note, images=images,
+    return dict(card=f, text=text, text_note=text_note, narrations=stored, images=images,
                 source=dict(book=sec['book'], pages=[sec['page_start'], sec['page_end']], credits=sec['credits']),
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
@@ -259,13 +303,15 @@ def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, u
     rows = db.query(f'{ITEM_SELECT} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
     if not rows:
         raise HTTPException(404, 'Eser bulunamadı')
-    m = db.query("""SELECT m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
+    m = db.query("""SELECT m.id, m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
                            m.date_basis, m.lat IS NOT NULL AND m.lon IS NOT NULL AS has_coords, m.is_synthetic,
                            coalesce(length(s.text_tr), 0) AS text_len,
                            (SELECT count(*) FROM chunk c WHERE c.monument_id = m.id AND c.embedding IS NOT NULL) AS indexed,
                            (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status = 'published') AS images,
                            (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status IN ('draft','reviewed')) AS pending
                     FROM monument m LEFT JOIN source_section s ON s.id = m.section_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
+    if not m['text_len']:   # başka kayıttan taşınan paragraflar da kaynak metindir
+        m['text_len'] = len(textfix_db.effective_text(db, m['id']) or '')
     checks = [
         dict(key='cover', ok=m['images'] > 0, required=True, label='Yayında en az bir fotoğraf (kapak)',
              hint='Listede ve sayfanın başında kapak fotoğrafı görünür.'),
@@ -284,8 +330,13 @@ def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, u
         dict(key='english', ok=bool(m['name_en'] and m['summary_en']), required=False, label='İngilizce ad ve özet',
              hint='Eksikse İngilizce arayüzde Türkçe ad gösterilir, özet boş kalır.'),
     ]
+    stories = narrations.status(db, m['id'])
+    ready = {n['mode'] for n in stories if n['lang'] == lang}
+    checks.append(dict(key='narrations', ok=ready >= set(narrations.MODES), required=False,
+                       label='Hikâye ve çocuk anlatımı hazır',
+                       hint='Hazırlanmamış anlatım sayfada “henüz hazırlanmadı” görünür; aşağıdaki önizlemeden üretebilirsiniz.'))
     return dict(review_status=m['review_status'], item=list_item(rows[0], lang),
-                detail=monument_detail(slug, lang, drafts), checks=checks)
+                detail=monument_detail(slug, lang, drafts), checks=checks, narrations=stories)
 
 
 class Turn(BaseModel):
@@ -340,3 +391,34 @@ def chat(body: ChatIn, request: Request):
                             headers={'Retry-After': '30'})
     r.pop('plan', None)
     return r
+
+
+VISUAL_MAX = 10 * 1024 * 1024
+
+
+@app.post('/api/visual-search')
+async def visual_search_endpoint(request: Request, file: UploadFile = File(...), lang: Literal['tr', 'en'] = Form('tr')):
+    """Fotoğrafla eser bulma. Fotoğraf saklanmaz. confident=true ise match eserdir; değilse en yakın adaylar
+    "emin değiliz" diye gösterilmeli (tek eser kesin gibi sunulmaz)."""
+    _rate_limit('vs:' + (request.client.host if request.client else '-'))
+    data = await file.read(VISUAL_MAX + 1)
+    if len(data) > VISUAL_MAX:
+        raise HTTPException(413, 'Fotoğraf en fazla 10 MB olabilir.')
+    try:
+        r = visual_search.search(db, data)
+    except visual_search.BadImage as e:
+        raise HTTPException(422, str(e))
+    except G.LLMError as e:
+        log.warning('Görsel model hatası: %s', str(e)[:300])
+        busy = re.search(r'429|RESOURCE_EXHAUSTED', str(e))
+        raise HTTPException(503, 'Görsel arama şu an yoğun, lütfen biraz sonra tekrar deneyin.' if busy else
+                            'Görsel arama servisine şu an ulaşılamıyor, lütfen biraz sonra tekrar deneyin.',
+                            headers={'Retry-After': '30'})
+    slugs = [c['slug'] for c in r['candidates']]
+    items = {row['slug']: list_item(row, lang) for row in db.query(
+        f'{ITEM_SELECT} WHERE m.slug = ANY(%(slugs)s::text[])', dict(slugs=slugs, drafts=False))} if slugs else {}
+    candidates = [dict(item=items[c['slug']], score=c['score'],
+                       photo=dict(src=f"/media/{c['file']}", thumb=f"/media/thumbs/{c['file']}"))
+                  for c in r['candidates'] if c['slug'] in items]
+    return dict(confident=r['confident'] and bool(candidates), match=candidates[0]['item'] if r['confident'] and candidates else None,
+                candidates=candidates)

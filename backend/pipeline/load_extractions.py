@@ -141,9 +141,28 @@ def build(src):
                                           ('artworks', arts), ('waqfs', waqfs), ('waqf_links', links), ('notes', notes)]}
 
 
+# Panelde süsleme kayıtlarına bağlanmış fotoğraflar (artwork_image, 007 göçü): artwork satırları yeniden kurulacağı
+# için bağlar eser, tür ve alıntıya göre saklanır ve yüklemeden sonra geri bağlanır. Göç yoksa ikisi de atlanır.
+KEEP_ART_IMG = """DO $$ BEGIN IF to_regclass('artwork_image') IS NOT NULL THEN
+  CREATE TEMP TABLE keep_art_img AS
+    SELECT a.monument_id, a.kind, coalesce(a.quote, a.description_tr) AS akey, ai.image_id, ai.sort, ai.linked_by, ai.linked_at
+    FROM artwork_image ai JOIN artwork a ON a.id = ai.artwork_id;
+END IF; END $$;
+"""
+RESTORE_ART_IMG = """DO $$ BEGIN IF to_regclass('pg_temp.keep_art_img') IS NOT NULL THEN
+  INSERT INTO artwork_image(artwork_id, image_id, sort, linked_by, linked_at)
+  SELECT DISTINCT ON (a.id, k.image_id) a.id, k.image_id, k.sort, k.linked_by, k.linked_at
+  FROM keep_art_img k JOIN artwork a ON a.monument_id = k.monument_id AND a.kind = k.kind
+                                    AND coalesce(a.quote, a.description_tr) = k.akey
+  ON CONFLICT DO NOTHING;
+END IF; END $$;
+"""
+
+
 SQL = r"""
 \set ON_ERROR_STOP on
 BEGIN;
+{keep_art_img}
 DELETE FROM editorial_note WHERE monument_id IS NOT NULL; DELETE FROM waqf_link; DELETE FROM waqf; DELETE FROM event WHERE monument_id IS NOT NULL; DELETE FROM artwork;
 DELETE FROM monument_person; DELETE FROM person;
 CREATE TEMP TABLE stg(doc jsonb);
@@ -205,6 +224,7 @@ FROM stg JOIN monument m ON m.slug = doc->>'monument_slug' LEFT JOIN person p ON
 UPDATE event e SET evidence_artwork_id = a.id FROM artwork a
  WHERE a.monument_id = e.monument_id AND a.kind = 'inscription' AND e.basis = 'inscription' AND e.evidence_artwork_id IS NULL
    AND (a.years IS NULL OR e.years IS NULL OR a.years && e.years);
+{restore_art_img}
 TRUNCATE stg;
 
 CREATE TEMP TABLE wkey(key text, id int);
@@ -255,7 +275,7 @@ def main():
     files, counts = build(a.src)
     print('hazırlandı:', counts)
     p = os.path.join(OUT, 'load_extractions.sql')
-    open(p, 'w', encoding='utf-8').write(SQL.format(**copy_names(files)))
+    open(p, 'w', encoding='utf-8').write(SQL.format(**copy_names(files), keep_art_img=KEEP_ART_IMG, restore_art_img=RESTORE_ART_IMG))
     print(psql(a.dsn, p))
 
 

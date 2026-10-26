@@ -21,43 +21,66 @@ export type Card = {
     description_tr: string; person: string | null; page_start: number | null }[];
   persons: { name: string; role: string; detail: string | null; page_start: number | null }[];
   artworks: { kind: string; element: string | null; technique: string | null; script: string | null; artist: string | null;
-    date_text: string | null; text_translation_tr: string | null; page_start: number | null }[];
+    date_text: string | null; text_translation_tr: string | null; page_start: number | null; images: PublicImage[] }[];
   children: { name_tr: string; kind: string }[];
 };
 
+export type NarrationSource = { book: string; pages: string; heading: string };
+/** Önceden üretilip kaydedilmiş anlatım (narration tablosu); sayfa açılınca yapay zekâ çağrılmaz. */
+export type Narration = { answer: string; sources: NarrationSource[]; generated_at?: string };
+export type NarrationMode = 'story' | 'child';
+
 export type PublicDetail = {
   card: Card; text: string | null; text_note: string | null; images: PublicImage[];
+  narrations: Record<NarrationMode, Narration | null>;
   source: { book: string | null; pages: [number | null, number | null]; credits: { authors?: string[] | null; editor?: string | null } | null };
   alt_names: string[] | null; status: string | null; review_status: string;
 };
 
 export type Check = { key: string; ok: boolean; required: boolean; label: string; hint: string };
-export type Preview = { review_status: string; item: PublicItem; detail: PublicDetail; checks: Check[] };
-export type ChatSource = { ref: string; book: string; pages: string; heading: string; route: string; chunk_id: number };
-export type ChatReply = { answer: string; sources: ChatSource[]; notes: string[]; cached: boolean };
+/** POST /api/visual-search: confident ise match eserdir; değilse adaylar "emin değiliz" diye gösterilir. */
+export type VisualCandidate = { item: PublicItem; score: number; photo: { src: string; thumb: string } };
+export type VisualSearchResult = { confident: boolean; match: PublicItem | null; candidates: VisualCandidate[] };
+
+export type NarrationStatus = { mode: NarrationMode; lang: Lang; stale: boolean; model: string | null; generated_by: string | null;
+  edited_by: string | null; edited_at: string | null;
+  generated_at: string; unsupported: string[] };
+export type Preview = { review_status: string; item: PublicItem; detail: PublicDetail; checks: Check[]; narrations: NarrationStatus[] };
 
 const T = {
   tr: {
     back: 'Koleksiyona dön', explore: 'HİKÂYEYİ KEŞFET', period: 'DÖNEM', date: 'TARİH', kind: 'TÜR', location: 'KONUM',
-    people: 'KİŞİLER', mode: 'Anlatım şeklini seç', modes: ['Kısa ve Öz', 'Hikâyeleştirerek', 'Çocuklar İçin'],
-    ask: 'Bu eseri anlat', askHint: 'Yapay zekâ rehber, yalnızca envanter kitabındaki bilgilere dayanarak anlatır.',
-    draftChat: 'Sohbet, eser yayına alındıktan sonra çalışır.', storyNote: 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler kaynaklara dayanır.',
+    people: 'KİŞİLER', mode: 'Anlatım şeklini seç', modes: ['Detaylı Anlatım', 'Hikâyeleştirerek', 'Çocuklar İçin'],
+    aiNote: 'Bu anlatımı yapay zekâ, yalnızca envanter kitabındaki bilgilere dayanarak hazırladı.',
+    notReady: 'Bu anlatım henüz hazırlanmadı.', usedSources: 'Bu anlatımda yararlanılan kaynaklar', noText: 'Bu eser için kitapta metin bulunmuyor.', storyNote: 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler kaynaklara dayanır.',
     sources: 'Kaynaklar', gallery: 'Fotoğraflar', timeline: 'Tarihçe', artworks: 'Süsleme ve sanat', text: 'Kitaptaki metin',
-    readText: 'Envanter kitabındaki metni oku', children: 'Bu yapının parçaları', partOf: 'Bağlı olduğu yapı',
+    children: 'Bu yapının parçaları', partOf: 'Bağlı olduğu yapı',
     sourceBook: 'Kaynak kitap', pages: 'sayfa', authors: 'Yazarlar', photoSource: 'Fotoğraf', today: 'Bugünkü durumu',
     loading: 'Anlatım hazırlanıyor…', card: 'ESER', discover: 'Hikâyeyi keşfet', pending: 'onay bekliyor', noImage: 'GÖRSEL HAZIRLANIYOR',
     close: 'Kapat', prev: 'Önceki', next: 'Sonraki',
+    vsTitle: 'Fotoğrafla eser bul', vsUpload: 'Fotoğraf seç', vsChange: 'Başka fotoğraf seç', vsSearching: 'Fotoğraf eserlerle karşılaştırılıyor…',
+    vsHint: 'JPEG, PNG ya da WebP · en fazla 10 MB. Fotoğrafın saklanmaz; yalnızca karşılaştırma için kullanılır.',
+    vsMatch: 'Fotoğraftaki eser büyük olasılıkla bu:', vsUnsure: 'Emin olamadık. Fotoğrafına en çok benzeyen eserler:',
+    vsNone: 'Fotoğrafa benzeyen bir eser bulamadık. Yapının tamamını gösteren, net bir fotoğrafla yeniden dene.',
+    vsTooBig: 'Fotoğraf 10 MB\'tan küçük olmalı.', vsBadType: 'Yalnızca JPEG, PNG ya da WebP fotoğraf seçebilirsin.',
+    vsMatched: 'Eşleşen kitap fotoğrafı', vsYours: 'Senin fotoğrafın', vsSimilarity: 'benzerlik',
   },
   en: {
     back: 'Back to collection', explore: 'EXPLORE THE STORY', period: 'PERIOD', date: 'DATE', kind: 'TYPE', location: 'LOCATION',
-    people: 'PEOPLE', mode: 'Choose a narration style', modes: ['Short', 'As a story', 'For children'],
-    ask: 'Tell me about this monument', askHint: 'The AI guide only uses information from the inventory book.',
-    draftChat: 'Chat becomes available once the monument is published.', storyNote: 'The atmosphere is a creative interpretation; historical facts come from the sources.',
+    people: 'PEOPLE', mode: 'Choose a narration style', modes: ['In detail', 'As a story', 'For children'],
+    aiNote: 'This narration was prepared by AI using only information from the inventory book.',
+    notReady: 'This narration is not ready yet.', usedSources: 'Sources used in this narration', noText: 'The book has no text for this monument.', storyNote: 'The atmosphere is a creative interpretation; historical facts come from the sources.',
     sources: 'Sources', gallery: 'Photographs', timeline: 'History', artworks: 'Decoration and art', text: 'Text from the book',
-    readText: 'Read the inventory book text', children: 'Parts of this complex', partOf: 'Part of',
+    children: 'Parts of this complex', partOf: 'Part of',
     sourceBook: 'Source book', pages: 'pages', authors: 'Authors', photoSource: 'Photo', today: 'Current state',
     loading: 'Preparing the narration…', card: 'MONUMENT', discover: 'Explore the story', pending: 'awaiting review', noImage: 'IMAGE IN PREPARATION',
     close: 'Close', prev: 'Previous', next: 'Next',
+    vsTitle: 'Find a monument by photo', vsUpload: 'Choose a photo', vsChange: 'Choose another photo', vsSearching: 'Comparing your photo with the monuments…',
+    vsHint: 'JPEG, PNG or WebP · up to 10 MB. Your photo is not stored; it is only used for the comparison.',
+    vsMatch: 'The monument in your photo is most likely:', vsUnsure: 'We are not sure. The monuments most similar to your photo:',
+    vsNone: 'We could not find a similar monument. Try again with a clear photo showing the whole building.',
+    vsTooBig: 'The photo must be smaller than 10 MB.', vsBadType: 'Only JPEG, PNG or WebP photos are accepted.',
+    vsMatched: 'Matching book photo', vsYours: 'Your photo', vsSimilarity: 'similarity',
   },
 } as const;
 export const strings = (lang: Lang) => T[lang];
@@ -74,7 +97,16 @@ const EVENTS: Record<string, [string, string]> = {
   registration: ['Tescil', 'Registration'], waqf: ['Vakıf', 'Waqf'], burial: ['Defin', 'Burial'], political: ['Siyasi olay', 'Political event'],
   other: ['Olay', 'Event'],
 };
+const ARTWORKS: Record<string, [string, string]> = {
+  inscription: ['Kitâbe', 'Inscription'], calligraphy_panel: ['Hat levhası', 'Calligraphy panel'], tile: ['Çini', 'Tile'],
+  hand_painted: ['Kalem işi', 'Hand-painted decoration'], wood_carving: ['Ahşap oyma', 'Wood carving'],
+  kundekari: ['Kündekâri', 'Kündekâri woodwork'], stone_carving: ['Taş işçiliği', 'Stone carving'], stucco: ['Alçı işçiliği', 'Stucco'],
+  mother_of_pearl: ['Sedef kakma', 'Mother-of-pearl inlay'], stained_glass: ['Revzen (renkli cam)', 'Stained glass'],
+  metalwork: ['Maden işçiliği', 'Metalwork'], textile: ['Dokuma', 'Textile'], gravestone: ['Mezar taşı', 'Gravestone'],
+  furnishing: ['Ahşap donatı', 'Furnishing'], other: ['Süsleme', 'Decoration'],
+};
 export const roleLabel = (role: string, lang: Lang) => (ROLES[role] ?? ['', ''])[lang === 'en' ? 1 : 0];
+export const artworkLabel = (kind: string, lang: Lang) => (ARTWORKS[kind] ?? ARTWORKS.other)[lang === 'en' ? 1 : 0];
 export const eventLabel = (kind: string, lang: Lang) => (EVENTS[kind] ?? EVENTS.other)[lang === 'en' ? 1 : 0];
 
 /** '[1425,1427)' → '1425–1426' */
