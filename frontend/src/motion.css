@@ -1,0 +1,6 @@
+/* Smooth scrolling (Lenis, started in src/lib/motion.ts). */
+html.lenis, html.lenis body { height: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+/* The footer's content settles into place as the footer slides up (data-curtain); it never shows above the footer. */
+.footer { overflow: clip; }
