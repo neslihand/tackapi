@@ -1,0 +1,25 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { App } from './App';
+import './styles.css';
+import './play.css';
+import './explore.css';
+import './map.css';
+import './hero.css';
+import './accessibility.css';
+import './theme.css';
+import './story.css';
+import './medals.css';
+import './chat.css';
+import './ring.css';
+import './motion.css';
+import './scenes.css';
+import './storytelling.css';
+import './entrance.css';
+import './playroom.css';
+import './home.css';
+import './catalogue.css';
+import './atlas.css';
+import './camera.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
