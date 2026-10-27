@@ -11,6 +11,7 @@ import { Link } from '../lib/navigation';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import { quizPool } from '../lib/quiz';
+import { Discoveries } from '../vakif/Discoveries';
 
 // The home page after the entrance: numbered chapters in the entrance's language, ivory and night in turn, each with
 // its own scene — the story ring, Divriği's pinned picture, a second threshold, the routes, the passport and the day's
@@ -92,6 +93,7 @@ export function Home() {
           <span className="hp-exhibit-body"><small>MERAKINI BİLGİYE DÖNÜŞTÜR</small><b>Tarihin izini sürebilir misin?</b><span>{Math.min(4, quizPool(quizQuestions, artifacts).length)} soru, yepyeni bilgiler ve kazanılacak bir madalyon.</span><em>Yarışmaya başla <ArrowUpRight size={16} aria-hidden="true" /></em></span>
         </Link>
       </div>
+      <Discoveries />
     </Chapter>
   </div>;
 }

@@ -4,6 +4,8 @@ import type { GameKind, GameLevel } from './games';
 import { buildQuests, questRoutes } from './quests';
 import { answerableArtifacts } from './quiz';
 import { useContent } from './contentStore';
+import { accountApi, useAccount } from './account';
+import { track } from './analytics';
 
 // `previous` is the best result before this one; `unlocked` names the medals this result opened. The game shows both
 // inside its dialog, where the page toast does not reach screen readers.
@@ -42,6 +44,26 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     if (news.length) notify(news.join(' · '));
     previous.current = progress;
   }, [progress, notify, progressStorageKey]);
+  // Hesap: kullanıcı belli olunca (açılışta, girişte) bu tarayıcıdaki ilerleme sunucudakiyle birleştirilir; sonra her
+  // değişiklik kısa bir gecikmeyle hesaba yazılır. Hesap yoksa pasaport yalnızca bu tarayıcıdadır.
+  const { user } = useAccount();
+  const synced = useRef('');
+  useEffect(() => {
+    if (!user) { synced.current = ''; return; }
+    let alive = true;
+    accountApi.syncProgress(latest.current).then(r => {
+      if (!alive) return;
+      const merged = parseProgress(JSON.stringify(r.progress), known.current.map(a => a.id));
+      synced.current = JSON.stringify(merged);
+      setProgress(merged);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user || !synced.current || JSON.stringify(progress) === synced.current) return;
+    const t = setTimeout(() => { synced.current = JSON.stringify(progress); accountApi.syncProgress(progress).catch(() => {}); }, 1500);
+    return () => clearTimeout(t);
+  }, [progress, user]);
   useEffect(() => {
     const sync = (event: StorageEvent) => {
       if (event.key === progressStorageKey) setProgress(parseProgress(event.newValue, known.current.map(a => a.id)));
@@ -50,14 +72,15 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', sync);
   }, [progressStorageKey]);
   return <Context.Provider value={{ progress, toast, storageAvailable, notify,
-    markDiscovered: id => { if (known.current.some(a => a.id === id)) setProgress(p => discover(p, id)); },
-    toggleFavorite: id => { if (known.current.some(a => a.id === id)) setProgress(p => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter(f => f !== id) : [...p.favorites, id] })); },
-    finishQuiz: score => setProgress(p => ({ ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, score) } })),
+    markDiscovered: id => { if (known.current.some(a => a.id === id)) { track('stamp', id); setProgress(p => discover(p, id)); } },
+    toggleFavorite: id => { if (known.current.some(a => a.id === id)) { track('favorite', id, { on: !latest.current.favorites.includes(id) }); setProgress(p => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter(f => f !== id) : [...p.favorites, id] })); } },
+    finishQuiz: score => { track('quiz_finish', undefined, { score }); setProgress(p => ({ ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, score) } })); },
     answerCorrect: id => { if (known.current.some(a => a.id === id)) setProgress(p => p.answered.includes(id) ? p : { ...p, answered: [...p.answered, id] }); },
     finishGame: (game, id, level, result) => {
       const before = latest.current;
       const outcome: GameOutcome = { previous: before.games[game][id]?.[level], unlocked: [] };
       if (!known.current.some(a => a.id === id)) return outcome;
+      track('game_finish', id, { game, level, result });
       const next = recordGame(before, game, id, level, result);
       if (next === before) return outcome;
       const old = achievements(before, known.current);

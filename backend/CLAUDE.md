@@ -133,6 +133,13 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **Testler:** `python -m unittest discover -s tests` (145 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
+- **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
+  Göç `015_visitors.sql` (gerçek veritabanında henüz uygulanmadı): hesaplar (`users.py`, `visitors.py`: e-posta + scrypt,
+  httpOnly çerez), pasaport eşitleme, katkılar (onaylı, kitaptan ayrı, sohbet kaynağı değil), izinli olay kaydı
+  (`/api/events`), profiller/öneriler/pano (`insights.py`), deneme verisi (`demo_activity.py`, demo=true). Panel:
+  `#/katkilar`, `#/analitik`. Ön yüz: `lib/analytics.ts`, `lib/account.tsx`, `vakif/AccountPages.tsx`, `Contributions.tsx`,
+  `Discoveries.tsx`, izin bandı. Tarayıcıda yalnızca olay akışı denendi; kayıt/katkı/panel sayfaları tarayıcıda denenmedi.
+
 ## Mimari özeti
 `segment → finalize → chunk` (çevrim dışı, deterministik) → `load_db` (yalnızca bir kez) → `extract_gemini` + `load_extractions` →
 `embed_gemini` → `rag.py` → `api.py`. Ayrıntılar `README.md` dosyasında.

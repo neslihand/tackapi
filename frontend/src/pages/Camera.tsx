@@ -5,6 +5,7 @@ import { Girih } from '../components/PlayArt';
 import { Link } from '../lib/navigation';
 import { demoRecognition } from '../lib/recognition';
 import { findByPhoto, vakifApiEnabled, type VisualResult } from '../lib/vakifApi';
+import { track } from '../lib/analytics';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -46,7 +47,9 @@ export function Camera() {
       const r = await findByPhoto(blob);
       if (!alive.current) return;
       setFound(r);
-      if (r.confident && r.match && artifacts.some(a => a.id === r.match)) setResult(r.match);
+      const matched = r.confident && r.match && artifacts.some(a => a.id === r.match);
+      track('camera_search', matched ? r.match! : undefined, { result: matched ? 'match' : r.candidates.length ? 'unsure' : 'none' });
+      if (matched) setResult(r.match!);
     } catch (e) { if (alive.current) setError((e as Error).message || 'Fotoğraf karşılaştırılamadı. Biraz sonra yeniden dene.'); }
     finally { if (alive.current) setBusy(false); }
   }

@@ -8,6 +8,8 @@ import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
 import { normalize } from '../lib/progress';
 import { useProgress } from '../lib/store';
+import { track } from '../lib/analytics';
+import { Discoveries } from '../vakif/Discoveries';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -110,6 +112,16 @@ export function Explore({ query }: { query: string }) {
       resultsTitle.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
     } else filterButton.current?.focus();
   }
+  // Analitik: arama yazmayı bitirince, süzgeç ve rota seçildiğinde (yalnızca izin verildiyse gönderilir)
+  useEffect(() => {
+    if (!search.trim()) return;
+    const t = setTimeout(() => track('search', undefined, { q: search.trim().slice(0, 80), results: filtered.length }), 1200);
+    return () => clearTimeout(t);
+  }, [search]);
+  useEffect(() => { if (city) track('filter', undefined, { kind: 'city', value: city }); }, [city]);
+  useEffect(() => { if (period) track('filter', undefined, { kind: 'period', value: period }); }, [period]);
+  useEffect(() => { if (category) track('filter', undefined, { kind: 'category', value: category }); }, [category]);
+  useEffect(() => { if (seasonId) track('route_open', undefined, { route: seasonId }); }, [seasonId]);
   const seasonFound = season ? season.artifactIds.filter(id => progress.discovered[id]).length : 0;
   const waiting = filtered.filter(a => !progress.discovered[a.id]).length;
   const unique = (values: string[]) => [...new Set(values)].map(v => [v, v] as [string, string]);
@@ -122,6 +134,7 @@ export function Explore({ query }: { query: string }) {
         <label className="ex-search"><Search size={18} aria-hidden="true" /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} placeholder="Bir eser veya şehir ara…" aria-label="Eser veya şehir ara" />{search && <button type="button" onClick={() => { setSearch(''); searchInput.current?.focus(); }} aria-label="Aramayı temizle"><X size={16} aria-hidden="true" /></button>}</label>
       </div>
       <Corridor artifacts={artifacts} />
+      {readOnly && <Discoveries />}
       <div className="ex-toolbar">
         <p className="ex-toolbar-note"><em>Süz</em> şehre, döneme, rotaya ya da eser türüne göre</p>
         <button ref={filterButton} type="button" className="ex-filter-toggle" onClick={() => setFiltersOpen(!filtersOpen)} aria-expanded={filtersOpen} aria-controls="ex-filter-panel"><SlidersHorizontal size={17} aria-hidden="true" /> Filtreler{activeFilters.length > 0 && <span className="ex-filter-badge"><span className="sr-only">, etkin filtre: </span>{activeFilters.length}</span>}<ChevronDown size={15} aria-hidden="true" /></button>

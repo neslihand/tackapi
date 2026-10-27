@@ -7,6 +7,7 @@ import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
 import { distanceKm, normalize } from '../lib/progress';
 import { ANATOLIA, GEO_LABELS, THRACE } from '../lib/turkeyOutline';
+import { track } from '../lib/analytics';
 
 const TURKEY: L.LatLngBoundsExpression = [[35.8, 25.9], [42.1, 44.6]];
 const SVG = 'http://www.w3.org/2000/svg';
@@ -145,14 +146,14 @@ export function MapPage({ query = '' }: { query?: string }) {
     const target = shift ? map.unproject(map.project(coords, zoom).subtract([shift, 0]), zoom) : coords;
     if (!glide || reducedMotion()) map.setView(target, zoom, { animate: false }); else map.flyTo(target, zoom, { duration: 1.2, easeLinearity: .2 });
   }
-  function focus(id: string) { const a = artifacts.find(a => a.id === id); if (!a) return; setSelected(id); if (a.coordinates) show(a.coordinates, online ? 12 : 7); }
+  function focus(id: string) { const a = artifacts.find(a => a.id === id); if (!a) return; setSelected(id); track('map_select', a.slug); if (a.coordinates) show(a.coordinates, online ? 12 : 7); }
   function locate() {
     if (!navigator.geolocation) { setStatus('Bu cihazda konum desteği yok. Şehir seçerek keşfedebilirsin.'); return; }
     setLocating(true); setStatus('Konum iznin bekleniyor…');
     navigator.geolocation.getCurrentPosition(position => {
       if (!alive.current) return;
       const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
-      setLocation(coords); setCity(''); setLocating(false); setStatus('Eserler kuş uçuşu mesafeye göre sıralandı. Konumun kaydedilmez.');
+      setLocation(coords); setCity(''); setLocating(false); track('map_locate', undefined, { radius }); setStatus('Eserler kuş uçuşu mesafeye göre sıralandı. Konumun kaydedilmez.');
       if (mapRef.current) { userMarker.current?.remove(); userMarker.current = L.circleMarker(coords, { radius: 8, fillColor: '#7beeba', color: '#f3eee5', weight: 3, fillOpacity: 1, className: 'map-user' }).addTo(mapRef.current); show(coords, 7); }
     }, error => { if (!alive.current) return; setLocating(false); setStatus(error.code === 1 ? 'Konum izni verilmedi. Şehir seçerek keşfetmeye devam edebilirsin.' : 'Konum alınamadı. Şehir seçimiyle devam edebilirsin.'); }, { timeout: 12000, maximumAge: 60000, enableHighAccuracy: false });
   }

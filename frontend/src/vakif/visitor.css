@@ -1,0 +1,63 @@
+/* Ziyaretçi hesabı, katkılar, öneriler ve izin bandı. Sitenin paleti ve yazı tipleri (styles.css :root). */
+.visitor-scene { background: var(--paper); }
+.v-page { max-width: 760px; padding-top: 150px; padding-bottom: 90px; }
+.v-page h1 { font-family: var(--serif); font-size: clamp(40px, 5vw, 64px); font-weight: 400; line-height: 1.05; margin: 10px 0 14px; color: var(--teal); }
+.v-page h1 em, .v-contrib h2 em, .v-discover h2 em { font-style: italic; color: #8a6a2e; }
+.v-lede { font-size: 17px; line-height: 1.7; color: var(--ink); margin: 0 0 26px; }
+.v-tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.v-tabs button { padding: 10px 16px; font-size: 15px; color: var(--muted); border-bottom: 2px solid transparent; }
+.v-tabs button[aria-selected='true'] { color: var(--teal); border-bottom-color: var(--gold); font-weight: 600; }
+.v-form { display: flex; flex-direction: column; gap: 16px; }
+.v-field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink); }
+.v-field > span { font-weight: 600; }
+.v-field input, .v-field select, .v-field textarea { padding: 11px 13px; font: inherit; font-size: 15px; color: var(--ink); border: 1px solid #c9c7bb; border-radius: 4px; background: #fbf9f3; }
+.v-field input:focus-visible, .v-field select:focus-visible, .v-field textarea:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+.v-field small, .v-note { font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+.v-fieldset { display: flex; flex-direction: column; gap: 14px; margin: 6px 0 0; padding: 18px 20px; border: 1px solid var(--line); background: #f8f4ec; }
+.v-fieldset legend { font-family: var(--serif); font-size: 22px; padding: 0 6px; color: var(--teal); }
+.v-fieldset legend small { font-family: Inter, sans-serif; font-size: 13px; color: var(--muted); }
+.v-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.v-chips label { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 14px; border: 1px solid #c9c7bb; border-radius: 999px; cursor: pointer; background: #fbf9f3; }
+.v-chips label.on { border-color: var(--teal); background: #e3ebe5; }
+.v-chips input { accent-color: var(--teal); }
+.v-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.6; }
+.v-check input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--teal); flex: none; }
+.v-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.v-section { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); }
+.v-section h2 { font-family: var(--serif); font-size: 30px; font-weight: 400; margin: 0 0 12px; color: var(--teal); }
+.v-mine { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.v-mine li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.v-mine small { flex-basis: 100%; color: var(--muted); }
+.v-status { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.v-status.pending { color: #8a6a2e; } .v-status.approved { color: #2f6b4f; } .v-status.rejected { color: #8b4d40; }
+.button.danger { color: #8b4d40; border-color: #c9a39b; }
+.v-prose h2 { font-family: var(--serif); font-size: 28px; font-weight: 400; margin: 30px 0 8px; color: var(--teal); }
+.v-prose p { font-size: 16px; line-height: 1.8; color: var(--ink); }
+
+/* İzin bandı */
+.consent-banner { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 300; display: flex; gap: 18px; align-items: center; max-width: 920px; margin: 0 auto;
+  padding: 18px 22px; color: #f4f1eb; background: #0c241cf2; border: 1px solid #c3a86966; box-shadow: 0 24px 50px -24px #000; }
+.consent-banner strong { font-family: var(--serif); font-size: 22px; font-weight: 400; }
+.consent-banner p { margin: 4px 0 0; font-size: 14px; line-height: 1.6; color: #dcd8cc; }
+.consent-banner a { color: #e6d5ae; text-decoration: underline; }
+.consent-actions { display: flex; flex-direction: column; gap: 8px; flex: none; }
+.consent-banner .button.line { color: #f4f1eb; border-color: #f4f1eb66; }
+@media (max-width: 700px) { .consent-banner { flex-direction: column; align-items: stretch; } .consent-actions { flex-direction: row; } }
+
+/* Eser sayfası: ziyaretçi katkıları */
+.v-contrib { padding-top: 60px; padding-bottom: 60px; border-top: 1px solid var(--line); background: var(--paper); }
+.v-contrib h2 { font-family: var(--serif); font-size: clamp(30px, 3.4vw, 44px); font-weight: 400; margin: 8px 0 8px; color: var(--teal); }
+.v-contrib-list { list-style: none; padding: 0; margin: 22px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.v-contrib-list li { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--line); background: #fbf9f3; }
+.v-contrib-list img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.v-contrib-list small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #8a6a2e; }
+.v-contrib-list p { margin: 4px 0; font-family: var(--serif); font-size: 19px; line-height: 1.5; color: var(--ink); }
+.v-contrib-list span { font-size: 13px; color: var(--muted); }
+.v-contrib .v-form { max-width: 620px; margin-top: 16px; }
+
+/* Yeni keşif: öneriler */
+.v-discover { display: flex; flex-direction: column; gap: 40px; margin-top: 40px; }
+.v-discover h2 { font-family: var(--serif); font-size: clamp(28px, 3vw, 40px); font-weight: 400; margin: 6px 0 16px; color: var(--teal); }
+.v-discover h2 small { font-family: Inter, sans-serif; font-size: 14px; font-style: normal; color: var(--muted); }
+.v-cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.explore-page .v-discover h2, .explore-page .v-discover .eyebrow { color: #f4f1eb; }

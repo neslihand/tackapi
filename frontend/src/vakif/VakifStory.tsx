@@ -9,6 +9,8 @@ import { AskArtifact } from '../components/AskArtifact';
 import { NextDoor } from '../components/ArtifactCard';
 import { MonumentSections, MonumentView } from './MonumentView';
 import { toImmersive } from './immersive';
+import { Contributions } from './Contributions';
+import { track } from '../lib/analytics';
 import { ImmersiveStory } from '../pages/Story';
 import type { PublicDetail, PublicItem } from './model';
 import './public.css';
@@ -27,6 +29,7 @@ export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
   const [detail, setDetail] = useState<PublicDetail | null>(null);
   const [error, setError] = useState('');
   const item = vakifItem(artifact.slug) as PublicItem | undefined;
+  useEffect(() => { track('monument_view', artifact.slug); }, [artifact.slug]);
   useEffect(() => {
     let alive = true;
     setDetail(null); setError('');
@@ -40,7 +43,8 @@ export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
   if (!detail) return <div className="page-shell loading-state" role="status">{artifact.name} hazırlanıyor…</div>;
   const immersive = toImmersive(item, detail);
   if (immersive) return <ImmersiveStory artifact={immersive}
-    extras={<section className="vakif-extras pv" aria-label="Eserin fotoğrafları, tarihçesi ve konumu"><div className="pv-body"><MonumentSections item={item} detail={detail} lang="tr" /></div></section>} />;
+    extras={<><section className="vakif-extras pv" aria-label="Eserin fotoğrafları, tarihçesi ve konumu"><div className="pv-body"><MonumentSections item={item} detail={detail} lang="tr" /></div></section>
+      <Contributions slug={artifact.slug} name={artifact.name} /></>} />;
   const actions = <>
     <AskArtifact artifact={artifact} mode="short" />
     <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>Favori</span></button>
@@ -49,6 +53,7 @@ export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
   </>;
   return <div className="vakif-story">
     <MonumentView item={item} detail={detail} lang="tr" backHref="#/kesfet" actions={actions} />
+    <Contributions slug={artifact.slug} name={artifact.name} />
     {next && next.id !== artifact.id && <NextDoor artifact={next} />}
   </div>;
 }

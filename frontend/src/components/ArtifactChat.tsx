@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, typ
 import { createPortal } from 'react-dom';
 import { ArrowUp, ArrowUpRight, BookOpen, Check, Copy, RotateCcw, Square, Trash2, X } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
+import { track } from '../lib/analytics';
 import { CHAT_LIMITS, parseSources, type ChatErrorCode, type ChatSource, type ChatTurn } from '../lib/chatContract';
 import { ChatError, sendChat } from '../lib/chatApi';
 import { chatStorageKey, chatSuggestions, loadHistory, parseRichText, plainText, requestTurns, saveHistory, welcomeMessage, type Inline, type RichAllow } from '../lib/chat';
@@ -123,6 +124,9 @@ export function ArtifactChat({ id, artifact, mode, chapter, endpoint, open, onCl
       const answer: ChatTurn = { role: 'assistant', content: text.trim() + (truncated ? '\n\n_(Yanıt uzunluk sınırına ulaştı.)_' : ''), ...(sources.length ? { sources } : {}) };
       commit([...turns, answer]);
       setAnnouncement(`Rehber yanıtladı. ${plainText(answer.content)}`);
+      const asked = [...turns].reverse().find(t => t.role === 'user')?.content ?? '';
+      track('chat_question', artifact.slug, { question: asked.slice(0, 300), mode });
+      track('chat_answer', artifact.slug, { no_info: /bilgi\s+yok|bilgi\s+bulunmuyor|yer\s+almıyor/i.test(text), chars: text.length });
     } catch (failure) {
       if (controller.signal.aborted) {
         // Stopped by the user: keep what arrived. Cleared or closed for good: request.current was let go first.

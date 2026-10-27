@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Pencil, Sparkles, X } from 'lucide-react';
 import { MonumentMap } from './MonumentMap';
+import { track } from '../lib/analytics';   // site: fotoğraf açma olayı
 import { artworkLabel, eventLabel, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
 
 type Mode = 'detail' | NarrationMode;
@@ -77,7 +78,7 @@ export function MonumentSections({ item, detail, lang }: { item: PublicItem; det
   const artworksText = c.artworks.filter(a => !a.images?.length).slice(0, 8);
   return <>
       {detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
-        <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => setZoom(i)} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
+        <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => { setZoom(i); track('photo_open', item.slug); }} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
           <img src={img.thumb} alt="" loading="lazy" />{img.review_status && img.review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}
         </button>)}</div></section>}
 

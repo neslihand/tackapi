@@ -19,7 +19,8 @@ import { BriefChapter, BriefNarration, CineChapter, CineNarration, Hotspot, pad,
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
 import { chatEndpoint } from '../lib/chatApi';
-import { vakifApiEnabled } from '../lib/vakifApi';
+import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
+import { track } from '../lib/analytics';
 // Loaded on demand: its map (Leaflet) needs a browser window and the demo pages do not use it.
 const VakifStory = lazy(() => import('../vakif/VakifStory').then(m => ({ default: m.VakifStory })));
 
@@ -91,13 +92,42 @@ function storyMotion(mode: NarrationMode) {
   }
 }
 
+// Reading, for "Veriyle Gelişen Döngü": how far through the telling the visitor got (25/50/75/100 %, once each per
+// telling) and how long they read it while the tab was visible. Sent only with consent (analytics.track).
+function useReading(ref: React.RefObject<HTMLDivElement | null>, slug: string, mode: NarrationMode) {
+  useEffect(() => {
+    const sent = new Set<number>();
+    let shown = 0, since = document.visibilityState === 'visible' ? performance.now() : 0;
+    const check = () => {
+      const box = ref.current?.querySelector('.story-chapters')?.getBoundingClientRect();
+      if (!box || box.height <= 0) return;
+      const seen = Math.min(1, Math.max(0, (window.innerHeight - box.top) / box.height));
+      for (const depth of [25, 50, 75, 100]) if (seen * 100 >= depth && !sent.has(depth)) { sent.add(depth); track('read_depth', slug, { mode, depth }); }
+    };
+    const visibility = () => {
+      if (document.visibilityState === 'visible') since = performance.now();
+      else if (since) { shown += performance.now() - since; since = 0; }
+    };
+    window.addEventListener('scroll', check, { passive: true });
+    document.addEventListener('visibilitychange', visibility);
+    return () => {
+      window.removeEventListener('scroll', check);
+      document.removeEventListener('visibilitychange', visibility);
+      const seconds = Math.round((shown + (since ? performance.now() - since : 0)) / 1000);
+      if (seconds >= 5) track('read_time', slug, { mode, seconds });
+    };
+  }, [ref, slug, mode]);
+}
+
 // extras: more of the page below the chapters (for a backend monument: photos, history, decoration, map).
 export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extras?: ReactNode }) {
-  const [mode, setMode] = useNarrationMode('story');
+  // a backend monument opens in the panel's default telling (unless the visitor has chosen one before)
+  const [mode, setMode] = useNarrationMode(artifact.origin ? siteDefaultMode() : 'story');
   const [chapter, setChapter] = useState(0);
   const [detail, setDetail] = useState(false);
   const [railOn, setRailOn] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  useReading(ref, artifact.slug, mode);
   const { progress, markDiscovered, toggleFavorite, notify } = useProgress();
   const { artifacts } = useContent();
   const sound = useAmbience(mode, chapter);
@@ -146,6 +176,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   // Changing the telling rebuilds the chapters; a reader already inside them stays at the same chapter.
   function choose(next: NarrationMode) {
     if (next === mode) return;
+    track('narration_mode', artifact.slug, { mode: next });
     const inside = (document.getElementById('story-reading')?.getBoundingClientRect().top ?? 1) <= 180;
     const at = chapter;
     setMode(next);

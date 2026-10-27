@@ -24,6 +24,10 @@ export type VakifItem = {
   architect?: string | null; builder?: string | null; patron?: string | null;
 };
 
+// Site settings from the admin panel (or computed from visitor data): the default telling and the featured route.
+let settings: { default_mode: 'short' | 'story' | 'child'; featured_route: string | null } = { default_mode: 'short', featured_route: null };
+export const siteDefaultMode = () => settings.default_mode;
+
 // List items by slug, kept from the feed for the monument page (it needs the card as well as the detail).
 const items = new Map<string, VakifItem>();
 export const vakifItem = (slug: string) => items.get(slug);
@@ -64,11 +68,16 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 export async function loadPilotFeed(): Promise<ArtifactFeed> {
   // Routes ("Keşif Sezonları") and written quiz questions are optional: without them the collection still opens.
-  const [data, seasons, quizQuestions] = await Promise.all([
+  const [data, routes, quizQuestions, site] = await Promise.all([
     getJson<{ items: VakifItem[] }>('/api/monuments?pilot=true&page_size=200&lang=tr'),
     getJson<Season[]>('/api/routes?pilot=true').catch(() => [] as Season[]),
     getJson<QuizQuestion[]>('/api/quiz?pilot=true').catch(() => [] as QuizQuestion[]),
+    getJson<typeof settings>('/api/site-settings').catch(() => settings),
   ]);
+  if (['short', 'story', 'child'].includes(site.default_mode)) settings = site;
+  // the featured route (panel setting, or the most opened one) leads the "Keşif Sezonları"
+  const featured = routes.find(r => r.id === settings.featured_route);
+  const seasons = featured ? [{ ...featured, kicker: 'ÖNE ÇIKAN ROTA' }, ...routes.filter(r => r !== featured)] : routes;
   items.clear();
   data.items.forEach(item => items.set(item.slug, item));
   return { schemaVersion: 1, items: data.items.map(toRecord), seasons, quizQuestions };
