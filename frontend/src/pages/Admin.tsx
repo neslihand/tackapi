@@ -40,7 +40,7 @@ function ArtifactsPanel() {
   const patchSource = (index: number, next: Partial<Artifact['sourceReferences'][number]>) => setDraft(d => ({ ...d, sourceReferences: d.sourceReferences.map((s, i) => i === index ? { ...s, ...next } : s) }));
   function submit(event: FormEvent) {
     event.preventDefault();
-    const cleaned = { ...draft, sourceReferences: draft.sourceReferences.filter(s => s.title.trim() || s.url.trim()) };
+    const cleaned = { ...draft, sourceReferences: draft.sourceReferences.filter(s => s.title.trim() || s.url?.trim()) };
     const found = artifactIssues(cleaned, artifacts.filter(a => isNew || a.id !== cleaned.id));
     setIssues(found);
     if (found.length) { requestAnimationFrame(() => form.current?.querySelector<HTMLElement>('.admin-issues')?.focus()); return; }

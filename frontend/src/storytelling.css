@@ -7,10 +7,10 @@
 .story-curtain > .story-body::before { background: var(--edge-a, #fbf9f3); }
 .story-curtain > .story-body::after { background: var(--edge-b, #f0ece4); }
 .story-page.mode-story { --edge-a: #1b2b25; --edge-b: #06110d; }
-.story-page.mode-child { --edge-a: #fffaf0; --edge-b: #fdf3df; }
+.story-page.mode-child { --edge-a: #fbf9f3; --edge-b: #f4f1eb; }
 .story-page.mode-short { --edge-a: #fbf9f3; --edge-b: #f4f1eb; }
 .mode-story .story-body { color: #ece6d9; background: #06110d; }
-.mode-child .story-body { background: radial-gradient(ellipse 70% 40% at 20% 0, #fffaf0, transparent 70%), linear-gradient(180deg, #fdf3df, #f8e5c4 60%, #fdf3df); }
+.mode-child .story-body { background: radial-gradient(ellipse 70% 40% at 20% 0, #fbf9f3, transparent 70%), linear-gradient(180deg, #f4f1eb, #eee8db 60%, #f4f1eb); }
 .mode-short .story-body { background: #f4f1eb; }
 .story-chapters { position: relative; z-index: 1; }
 
@@ -107,13 +107,13 @@
 
 /* ——— Çocuklar İçin: a picture book under the stars ——— */
 .story-chapter.tale { display: block; min-height: 0; padding: clamp(46px, 7vw, 96px) max(5vw, 18px); border: 0; perspective: 1600px; scroll-margin-top: 150px; }
-.tale-page { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); align-items: center; gap: clamp(26px, 4.4vw, 64px); max-width: 1280px; margin: 0 auto; padding: clamp(18px, 2.6vw, 38px); border-radius: 38px; background: #fffaf0; box-shadow: 0 0 0 3px #f1dcb4, 0 0 0 11px #fffaf0, 0 0 0 13px #f1dcb499, 0 50px 80px -46px #7a5a2a80; transform-origin: 50% 0; }
+.tale-page { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); align-items: center; gap: clamp(26px, 4.4vw, 64px); max-width: 1280px; margin: 0 auto; padding: clamp(18px, 2.6vw, 38px); border-radius: 38px; background: #fbf9f3; box-shadow: 0 0 0 1px #d9d8d0, 0 0 0 9px #fbf9f3, 0 0 0 10px #c3a86966, 0 50px 80px -46px #0c241c55; transform-origin: 50% 0; }
 .tale.flip .tale-page { grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); }
 .tale.flip .tale-art { order: 2; }
 .tale-art { position: relative; }
-.tale-window { position: relative; aspect-ratio: 1.4; overflow: hidden; border: 8px solid #fff; border-radius: 30px; box-shadow: 0 0 0 3px #f1c98c, 0 26px 44px -26px #5a3d1a99; }
+.tale-window { position: relative; aspect-ratio: 1.4; overflow: hidden; border: 8px solid #fbf9f3; border-radius: 30px; box-shadow: 0 0 0 2px #c3a869, 0 26px 44px -26px #0c241c80; }
 .tale-window img { display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; }
-.tale-spark { position: absolute; width: 16px; height: 16px; background: #ffe27a; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); filter: drop-shadow(0 0 6px #ffe27a); animation: tale-twinkle 2.4s ease-in-out infinite; }
+.tale-spark { position: absolute; width: 16px; height: 16px; background: #efdca8; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); filter: drop-shadow(0 0 6px #e6d5ae); animation: tale-twinkle 2.4s ease-in-out infinite; }
 .tale-shooting { position: absolute; top: 10%; left: 72%; width: 130px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #fffbe8, transparent); opacity: 0; rotate: -24deg; animation: tale-shooting 7s ease-in infinite; }
 .tale-cloud { position: absolute; height: 9%; border-radius: 999px; background: #e8e3ff8c; filter: blur(1.5px); }
 .tale-cloud::before, .tale-cloud::after { content: ''; position: absolute; bottom: 30%; border-radius: 50%; background: inherit; }
@@ -128,37 +128,59 @@
 .hoopoe-eye { transform-box: fill-box; transform-origin: center; animation: tale-blink 5s infinite; }
 .hoopoe-crest { transform-box: fill-box; transform-origin: 50% 100%; }
 .tale-guide:hover .hoopoe-crest, .tale-guide.talking .hoopoe-crest { animation: tale-crest .5s ease-in-out 2; }
-.tale-guide:focus-visible { outline: 3px solid #1f4d42; outline-offset: 4px; border-radius: 20px; }
-.tale-hotspot { top: calc(var(--fy) * 1%); left: calc(var(--fx) * 1%); width: 60px; height: 60px; color: #5a3d1a; border: 4px solid #fff; background: radial-gradient(circle at 35% 30%, #fff3b0, #ffd45e 60%, #f2b13b); box-shadow: 0 0 0 6px #ffe27a66; animation: hotspot 1.8s ease-out infinite; }
-.tale-hotspot-info { top: 14px; right: 14px; bottom: auto; left: 14px; padding: 18px 20px; color: #2b2a24; border: 3px solid #ffd45e; border-radius: 22px; background: #fffaf0; font-size: 17px; }
+.tale-guide:focus-visible { outline: 3px solid #0c241c; outline-offset: 4px; border-radius: 20px; }
+.tale-hotspot { top: calc(var(--fy) * 1%); left: calc(var(--fx) * 1%); width: 60px; height: 60px; color: #0c241c; border: 3px solid #fbf9f3; background: radial-gradient(circle at 35% 30%, #f6ecd0, #dcc48e 60%, #c3a869); box-shadow: 0 0 0 6px #c3a86955; animation: hotspot 1.8s ease-out infinite; }
+.tale-hotspot-info { top: 14px; right: 14px; bottom: auto; left: 14px; padding: 18px 20px; color: var(--ink); border: 2px solid #c3a869; border-radius: 22px; background: #fbf9f3; font-size: 17px; }
 .tale-hotspot-info p { font-size: 15.5px; line-height: 1.6; }
-.tale-text { color: #2b2a24; }
-.tale-page-no { display: inline-block; padding: 7px 14px; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #7a4a14; border-radius: 999px; background: #ffe6b8; }
-.tale-text h2 { margin: 16px 0 14px; font-family: Inter, sans-serif; font-size: clamp(30px, 3vw, 46px); font-weight: 800; line-height: 1.08; letter-spacing: -.01em; color: #1f4d42; }
-.tale .tale-words { margin: 0; font-family: Inter, sans-serif; font-size: clamp(20px, 1.75vw, 26px); font-weight: 500; line-height: 1.62; color: #2b2a24; animation: none; }
+.tale-text { color: var(--ink); }
+.tale-page-no { display: inline-block; padding: 7px 14px; font-size: 11px; font-weight: 600; letter-spacing: .2em; color: #6e4f1f; border: 1px solid #c3a86966; border-radius: 999px; background: #efe6d1; }
+.tale-text h2 { margin: 16px 0 14px; font-family: var(--serif); font-size: clamp(36px, 3.4vw, 54px); font-weight: 500; line-height: 1.05; color: #0c241c; }
+.tale .tale-words { margin: 0; font-family: Inter, sans-serif; font-size: clamp(19px, 1.6vw, 23px); font-weight: 400; line-height: 1.7; color: var(--ink); animation: none; }
 .tale-words > span { display: inline-block; white-space: pre; }
-.tale-bubble { position: relative; margin: 0; font-size: 18px; font-weight: 600; line-height: 1.5; color: #1f4d42; border-radius: 22px; }
-.tale-bubble.open { margin-top: 20px; padding: 16px 20px; background: #e1f4ee; box-shadow: 0 0 0 3px #b9e3d6; }
-.tale-bubble.open::before { content: ''; position: absolute; top: -12px; left: 34px; width: 22px; height: 22px; background: #e1f4ee; box-shadow: -3px -3px 0 0 #b9e3d6; rotate: 45deg; }
-.tale .narrative-note { font-size: 13px; color: #6a5a3c; }
+.tale-bubble { position: relative; margin: 0; font-family: var(--serif); font-size: 20px; font-style: italic; line-height: 1.45; color: #0c241c; border-radius: 22px; }
+.tale-bubble.open { margin-top: 20px; padding: 16px 20px; background: #fbf9f3; box-shadow: 0 0 0 1px #c3a869, 0 18px 30px -22px #0c241c66; }
+.tale-bubble.open::before { content: ''; position: absolute; top: -11px; left: 34px; width: 20px; height: 20px; background: #fbf9f3; box-shadow: -1px -1px 0 0 #c3a869; rotate: 45deg; }
+.tale .narrative-note { font-size: 13px; color: var(--muted); }
 .tale .story-facts { gap: 10px; padding-top: 18px; border-top: 0; }
-.tale .story-facts > div { padding: 12px 14px; border-radius: 16px; background: #e1f4ee; }
-.tale .story-facts > div:nth-child(2) { background: #ffe6b8; }
-.tale .story-facts > div:nth-child(3) { background: #fde0d6; }
-.tale .story-facts > div:nth-child(4) { background: #e8e3ff; }
-.tale .story-facts small { color: #5b4a2a; }
-.tale .story-facts strong { font-size: 16px; font-weight: 600; color: #1f2a26; }
-.tale .image-description { color: #3e3a2e; border-top-color: #e8cf9f; }
-.tale .image-description summary { color: #7a4a14; }
-.tale .detail-hint { display: flex; color: #3e3a2e; border: 3px dashed #f2b13b; border-radius: 18px; background: #fff3d1; font-size: 15px; }
-.tale .detail-hint > svg { flex: none; color: #b8741d; }
-.tale .visit-note { color: #3e3a2e; border-left: 0; border-radius: 18px; background: #e1f4ee; }
-.tale :focus-visible { outline-color: #1f4d42; box-shadow: 0 0 0 4px #fffaf0; }
+.tale .story-facts > div { padding: 12px 14px; border: 1px solid #d9d8d0; border-radius: 16px; background: #fbf9f3; }
+.tale .story-facts small { color: #6e4f1f; }
+.tale .story-facts strong { font-family: var(--serif); font-size: 19px; font-weight: 500; color: #0c241c; }
+.tale .image-description { color: var(--ink); border-top-color: #d9d8d0; }
+.tale .image-description summary { color: #6e4f1f; }
+.tale .detail-hint { display: flex; color: var(--ink); border: 1.5px dashed #c3a869; border-radius: 18px; background: #f7f1e3; font-size: 15px; }
+.tale .detail-hint > svg { flex: none; color: #8a6a2e; }
+.tale .visit-note { color: var(--ink); border-left: 0; border-radius: 18px; background: #e8ece6; }
+.tale :focus-visible { outline-color: #0c241c; box-shadow: 0 0 0 4px #fbf9f3; }
 @keyframes tale-twinkle { 50% { scale: .55; opacity: .55; } }
 @keyframes tale-shooting { 0%, 80% { opacity: 0; translate: 0 0; } 84% { opacity: 1; } 100% { opacity: 0; translate: -280px 120px; } }
 @keyframes tale-bob { 50% { translate: 0 -8px; } }
 @keyframes tale-blink { 0%, 93%, 100% { scale: 1 1; } 95% { scale: 1 .1; } }
 @keyframes tale-crest { 50% { rotate: 8deg; } }
+
+/* Çocuklar İçin, bütün metin (arka uç eseri): resim çerçevesi, ardından paragraflar. Hüdhüd metnin yanında okurla
+   birlikte ilerler, yeni bir paragrafa geçildiğinde zıplar, dokununca konuşur. */
+.tale-whole .tale-cover { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); }
+.tale-lead { margin: 18px 0 0; font-family: var(--serif); font-size: clamp(30px, 3vw, 46px); line-height: 1.08; color: #0c241c; }
+.tale-story { display: grid; grid-template-columns: minmax(0, 720px) 170px; justify-content: center; gap: clamp(24px, 4vw, 56px); max-width: 1100px; margin: clamp(46px, 6vw, 84px) auto 0; }
+.tale-para { margin: 0 0 1.15em; padding-left: 20px; font-family: Inter, sans-serif; font-size: clamp(19px, 1.6vw, 22px); line-height: 1.75; color: var(--ink); border-left: 3px solid transparent; transition: border-color .5s, color .5s; }
+.tale-para.now { border-left-color: #c3a869; }
+.tale-para:first-child::first-letter { font-family: var(--serif); font-size: 2.1em; line-height: 1; color: #8a6a2e; }
+.tale-extras { display: grid; gap: 16px; margin-top: 44px; }
+.tale-companion { position: sticky; top: 140px; align-self: start; }
+.tale-whole .tale-guide { position: relative; bottom: auto; left: auto; display: block; width: 100%; }
+.tale-whole .tale-bubble.open { margin-top: 10px; }
+.tale-guide.hop .hoopoe { animation: tale-hop .8s cubic-bezier(.3, 1.6, .5, 1), tale-bob 2.6s ease-in-out .8s infinite; }
+@keyframes tale-hop { 0% { translate: 0 0; rotate: 0deg; } 30% { translate: 0 -28px; rotate: -7deg; } 58% { translate: 0 0; rotate: 2deg; } 74% { translate: 0 -8px; rotate: 0deg; } 100% { translate: 0 0; } }
+@media (max-width: 900px) {
+  .tale-story { grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; }
+  .tale-para { padding-left: 12px; }
+  .tale-companion { top: 96px; }
+  .tale-whole .tale-bubble.open { position: absolute; top: 100%; right: 0; width: min(250px, 70vw); z-index: 2; }
+}
+@media (prefers-reduced-motion: reduce) { .tale-guide.hop .hoopoe { animation: none; } }
+
+/* Hikâyeleştirerek, bütün metin: sahne tek, paragraflar yazı kartı olarak üzerinden geçer. */
+.cine-whole .cine-captions { gap: 36svh; }
 
 /* ——— Kısa ve Öz: an editorial museum label beside an arched lens ——— */
 .brief-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: start; gap: clamp(32px, 5vw, 84px); max-width: 1480px; margin: 0 auto; padding: 30px max(6.2vw, 24px) 60px; }

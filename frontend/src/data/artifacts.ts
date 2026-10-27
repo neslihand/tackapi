@@ -12,10 +12,15 @@ export type Artifact = {
   image: string;
   // Text equivalent of what the illustration shows; used as alt text and as a visible image description.
   imageAlt?: string;
-  sourceReferences: { title: string; url: string }[];
+  // url is missing for a book citation (an inventory book has no web address)
+  sourceReferences: { title: string; url?: string }[];
   chapters: { title: string; short: string; story: string; child: string }[];
   // focus: the detail's position on the illustration, in percent [x, y]; the story stage zooms there.
   detail: { title: string; text: string; focus?: [number, number] };
+  // Set for a monument from the backend: the image is a photograph from the book (not an illustration), the first
+  // telling is the book's own text in chapters and the other two (narrations) are stored texts shown whole, without
+  // chapters or chapter titles. An empty detail title means there is no documented detail to point at.
+  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { story: string; child: string } };
 };
 
 // Coordinates are approximate discovery markers, not entrances or navigation data.

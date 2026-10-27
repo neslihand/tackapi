@@ -385,6 +385,26 @@ CREATE TABLE artwork_image (
 CREATE INDEX artwork_image_image ON artwork_image (image_id);
 
 -- Uygulanan göç (migration) dosyaları: pipeline/migrate.py
+-- Keşif rotaları (göç 013): yöneticinin panelde yazdığı sıralı eser listeleri; sitede "Keşif Sezonları".
+-- Şehir başına otomatik rotalar tabloya yazılmaz, routes.py üretir.
+CREATE TABLE route (
+    id                  serial PRIMARY KEY,
+    slug                text UNIQUE NOT NULL,
+    title               text NOT NULL,
+    kicker              text,
+    description         text,
+    sort                int NOT NULL DEFAULT 0,
+    published           boolean NOT NULL DEFAULT false,
+    created_by          text,
+    updated_at          timestamptz
+);
+CREATE TABLE route_stop (
+    route_id            int NOT NULL REFERENCES route(id) ON DELETE CASCADE,
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    sort                int NOT NULL DEFAULT 0,
+    PRIMARY KEY (route_id, monument_id)
+);
+
 CREATE TABLE schema_migration (
     name                text PRIMARY KEY,
     applied_at          timestamptz NOT NULL DEFAULT now()
@@ -395,7 +415,8 @@ INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_im
                                          ('003_admin.sql'), ('004_para_fix.sql'), ('005_narration.sql'),
                                          ('006_narration_edit.sql'), ('007_artwork_image.sql'),
                                          ('008_image_embedding.sql'), ('009_pilot.sql'),
-                                         ('010_monument_removed.sql'), ('011_para_split.sql'), ('012_geo.sql');
+                                         ('010_monument_removed.sql'), ('011_para_split.sql'), ('012_geo.sql'),
+                                         ('013_route.sql');
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (

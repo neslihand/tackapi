@@ -78,6 +78,12 @@ export type SegItem = { id: number; para_no: number; count: number; decision: Pa
   suggested_slug: string | null; suggested_name: string | null; text: string; pages: number[]; prev: string | null; next: string | null };
 export type DecisionResult = { slug: string; para_no: number; before: ParaDecision | null; after: ParaDecision; added: number; kept: number; embedded: number };
 
+// Keşif rotası (sitede "Keşif Sezonları"): panelde yazılır; durakları sıralı eserlerdir
+export type RouteStop = { slug: string; name_tr: string; city: string; review_status: string; pilot: boolean };
+export type AdminRoute = { id: number; slug: string; title: string; kicker: string | null; description: string | null; sort: number;
+  published: boolean; created_by: string | null; updated_at: string | null; stops: RouteStop[] };
+export type AutoRoute = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
+
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
 export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };
 export type Period = { slug: string; name_tr: string; parent: string | null; city: string | null; start: number; end: number };

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { MapPin, Plus, Search, X } from 'lucide-react';
 import type { Artifact } from '../data/artifacts';
 import type { NarrationMode } from '../lib/preferences';
@@ -47,8 +47,8 @@ function ChapterExtras({ artifact, index, mode }: { artifact: Artifact; index: n
   return <>
     {mode !== 'short' && <small className="narrative-note">{mode === 'story' ? 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.' : 'Çocuklar için hazırlanmış sadeleştirilmiş anlatım.'}</small>}
     {index === 0 && <div className="story-facts"><div><small>DÖNEM</small><strong>{artifact.period}</strong></div><div><small>MİMAR / USTA</small><strong>{artifact.architect}</strong></div><div><small>TARİH</small><strong>{artifact.year}</strong></div><div><small>TÜR</small><strong>{artifact.category}</strong></div></div>}
-    {index === 0 && artifact.imageAlt && <details className="image-description"><summary>GÖRSELDE NE VAR?</summary><p>{artifact.imageAlt} Bu çizim eserden esinlenen özgün bir yorumdur; fotoğraf veya rölöve değildir.</p></details>}
-    {index === 2 && <p className="detail-hint">{mode === 'child' ? <Search size={16} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}<span>{hints[mode](artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
+    {index === 0 && artifact.imageAlt && <details className="image-description"><summary>GÖRSELDE NE VAR?</summary><p>{artifact.imageAlt} {artifact.origin ? `Fotoğraf: ${artifact.origin.photoCredit}.` : 'Bu çizim eserden esinlenen özgün bir yorumdur; fotoğraf veya rölöve değildir.'}</p></details>}
+    {index === 2 && artifact.detail.title && <p className="detail-hint">{mode === 'child' ? <Search size={16} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}<span>{hints[mode](artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
     {last && <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. Haritadaki konumlar yaklaşık yönlendirme içindir. <Link to="/harita">Haritada gör</Link></p></div>}
   </>;
 }
@@ -94,7 +94,7 @@ export function CineChapter({ artifact, index, detail, setDetail }: { artifact: 
       <span className="cine-grade" aria-hidden="true" />
       <span className="cine-bar top" aria-hidden="true" /><span className="cine-bar bottom" aria-hidden="true" />
       <span className="cine-slate" aria-hidden="true">SAHNE {pad(index + 1)} <i>·</i> {tone === 'dawn' ? 'BUGÜN' : artifact.year}</span>
-      {index === 2 && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="cine-hotspot" />}
+      {index === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="cine-hotspot" />}
     </div>
     <div className="cine-flow">
       <header className="cine-title">
@@ -148,7 +148,7 @@ export function TaleChapter({ artifact, index, detail, setDetail }: { artifact: 
           {sparkles.map(([x, y], k) => <span key={k} className="tale-spark" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${k * -0.6}s` }} />)}
           <span className="tale-shooting" /><span className="tale-cloud c1" /><span className="tale-cloud c2" />
         </div>
-        {index === 2 && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="tale-hotspot" />}
+        {index === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="tale-hotspot" />}
         <button type="button" className={`tale-guide ${talking ? 'talking' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls={`guide-${index}`} aria-label="Rehber kuş Hüdhüd ile konuş"><Hoopoe /></button>
       </div>
       <div className="tale-text">
@@ -175,11 +175,89 @@ export function BriefChapter({ artifact, index, detail, setDetail }: { artifact:
   return <section className="story-chapter brief" id={`chapter-${index}`} data-chapter={index} aria-labelledby={`chapter-title-${index}`}>
     <span className="brief-num" aria-hidden="true">{pad(index + 1)}</span>
     <div className="brief-body">
-      <div className="brief-thumb" aria-hidden={index !== 2 || undefined}><div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': Math.min(1.7, s) } as CSSProperties}><img src={artifact.image} alt="" loading="lazy" /></div>{index === 2 && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="brief-hotspot" />}</div>
+      <div className="brief-thumb" aria-hidden={index !== 2 || undefined}><div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': Math.min(1.7, s) } as CSSProperties}><img src={artifact.image} alt="" loading="lazy" /></div>{index === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="brief-hotspot" />}</div>
       <span className="chapter-number">BÖLÜM {pad(index + 1)}</span>
       <h2 id={`chapter-title-${index}`}>{c.title}</h2>
       <p className="narrative brief-lead">{marked(c.short)}</p>
       <ChapterExtras artifact={artifact} index={index} mode="short" />
+    </div>
+  </section>;
+}
+
+// ——— Whole narrations (a backend monument): the stored text, paragraph by paragraph, without chapters ———
+
+export const paragraphs = (text: string) => text.split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+// The facts, the image description and the visit note that the chapters would carry, once, after the text.
+function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: 'story' | 'child' }) {
+  return <>
+    <small className="narrative-note">{mode === 'story' ? 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.' : 'Çocuklar için hazırlanmış sadeleştirilmiş anlatım.'}</small>
+    <div className="story-facts"><div><small>DÖNEM</small><strong>{artifact.period}</strong></div><div><small>MİMAR / USTA</small><strong>{artifact.architect}</strong></div><div><small>TARİH</small><strong>{artifact.year}</strong></div><div><small>TÜR</small><strong>{artifact.category}</strong></div></div>
+    {artifact.imageAlt && <details className="image-description"><summary>GÖRSELDE NE VAR?</summary><p>{artifact.imageAlt}{artifact.origin ? ` Fotoğraf: ${artifact.origin.photoCredit}.` : ''}</p></details>}
+    <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. <Link to="/harita">Haritada gör</Link></p></div>
+  </>;
+}
+
+/** Hikâyeleştirerek, whole: one night scene behind the photograph, the paragraphs rising over it as captions. */
+export function CineNarration({ artifact, text }: { artifact: Artifact; text: string }) {
+  const style = { '--fx': 50, '--fy': 50, '--zoom': 1.12, '--sx': 0, '--sy': 0 } as CSSProperties;
+  return <section className="story-chapter cine tone-lantern cine-whole" id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: hikâye`} style={style}>
+    <div className="cine-stage">
+      <div className="cine-camera" aria-hidden="true"><img src={artifact.image} alt="" loading="lazy" draggable={false} /></div>
+      <CineAtmosphere tone="lantern" />
+      <span className="cine-grade" aria-hidden="true" />
+      <span className="cine-bar top" aria-hidden="true" /><span className="cine-bar bottom" aria-hidden="true" />
+      <span className="cine-slate" aria-hidden="true">{artifact.city.toLocaleUpperCase('tr-TR')} <i>·</i> {artifact.year}</span>
+    </div>
+    <div className="cine-flow">
+      <header className="cine-title"><span className="cine-numeral" aria-hidden="true" /><span className="chapter-number">HİKÂYELEŞTİREREK</span></header>
+      <div className="narrative cine-captions">{paragraphs(text).map((p, k) => <p key={k} className={`cine-caption at-${k % 3}`}>{p}</p>)}</div>
+      <div className="cine-panel"><NarrationExtras artifact={artifact} mode="story" /></div>
+    </div>
+  </section>;
+}
+
+/**
+ * Çocuklar İçin, whole: the picture in its frame, then the text paragraph by paragraph. Hüdhüd the guide stays beside
+ * the text as the child reads: it hops when a new paragraph comes into view and talks when tapped.
+ */
+export function TaleNarration({ artifact, text }: { artifact: Artifact; text: string }) {
+  const parts = paragraphs(text);
+  const [talking, setTalking] = useState(false);
+  const [at, setAt] = useState(0);
+  const [hop, setHop] = useState(0);
+  const story = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = story.current;
+    if (!root || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const k = Number((entry.target as HTMLElement).dataset.k);
+      setAt(k); setHop(h => h + 1);
+    }), { rootMargin: '-40% 0px -45% 0px' });
+    root.querySelectorAll('.tale-para').forEach(p => observer.observe(p));
+    return () => observer.disconnect();
+  }, [text]);
+  const line = guideLines[at === 0 ? 0 : at >= parts.length - 1 ? 3 : 1 + (at % 2)];
+  return <section className="story-chapter tale tale-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: çocuklar için`}>
+    <div className="tale-page tale-cover">
+      <div className="tale-art">
+        <div className="tale-window" aria-hidden="true">
+          <img src={artifact.image} alt="" loading="lazy" draggable={false} />
+          {sparkles.map(([x, y], k) => <span key={k} className="tale-spark" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${k * -0.6}s` }} />)}
+          <span className="tale-shooting" /><span className="tale-cloud c1" /><span className="tale-cloud c2" />
+        </div>
+      </div>
+      <div className="tale-text"><span className="tale-page-no">ÇOCUKLAR İÇİN</span><p className="tale-lead">{artifact.name} · {artifact.city}</p></div>
+    </div>
+    <div className="tale-story" ref={story}>
+      <div className="tale-story-text narrative">{parts.map((p, k) => <p key={k} data-k={k} className={`tale-para ${k === at ? 'now' : ''}`}>{p}</p>)}
+        <div className="tale-extras"><NarrationExtras artifact={artifact} mode="child" /></div></div>
+      <aside className="tale-companion">
+        {/* The drawing is remounted on each hop so its animation restarts; the button keeps its focus. */}
+        <button type="button" className={`tale-guide ${talking ? 'talking' : ''} ${hop > 1 ? 'hop' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls="guide-whole" aria-label="Rehber kuş Hüdhüd ile konuş"><Hoopoe key={hop} /></button>
+        <p className={`tale-bubble ${talking ? 'open' : ''}`} id="guide-whole" aria-live="polite">{talking ? line : ''}</p>
+      </aside>
     </div>
   </section>;
 }

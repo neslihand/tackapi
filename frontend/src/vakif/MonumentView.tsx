@@ -21,14 +21,9 @@ export function MonumentView({ item, detail, lang, generate, edit, backHref, act
   const s = strings(lang);
   const c = detail.card;
   const hero = detail.images[0] ?? item.image;
-  const [zoom, setZoom] = useState<number | null>(null);
   const people = c.persons.filter(p => ['patron', 'founder', 'architect', 'builder', 'calligrapher'].includes(p.role)).slice(0, 4);
   const location = [item.district, item.neighborhood].filter(Boolean).join(', ');
   const paragraphs = (detail.text ?? '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-  const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number } | null>(null);
-  const artTitle = (a: Card['artworks'][number]) => [a.element, a.technique].filter(Boolean).join(' · ') || artworkLabel(a.kind, lang);
-  const artworksWithPhotos = c.artworks.filter(a => a.images?.length);
-  const artworksText = c.artworks.filter(a => !a.images?.length).slice(0, 8);
   return <div className="pv" lang={lang}>
     <section className="pv-hero" data-nav-theme="dark">
       {hero ? <img className="pv-hero-image" src={hero.src} alt={hero.alt ?? ''} /> : <div className="pv-hero-image pv-hero-empty" />}
@@ -57,6 +52,30 @@ export function MonumentView({ item, detail, lang, generate, edit, backHref, act
       {item.summary && <p className="pv-lead">{item.summary}</p>}
       <Narration lang={lang} detail={detail} paragraphs={paragraphs} generate={generate} edit={edit} />
 
+      <MonumentSections item={item} detail={detail} lang={lang} />
+
+      <section className="pv-sources"><div><h3>{s.sources}</h3>
+        <p>{lang === 'tr' ? 'Bu sayfadaki bilgiler Vakıf Katılım envanter kitabından alınmıştır.' : 'Information on this page comes from the Vakıf Katılım inventory book.'}</p></div>
+        <ul>{detail.source.book && <li><span>{s.sourceBook}</span><strong>{detail.source.book}{detail.source.pages?.[0] ? `, ${s.pages} ${detail.source.pages[0]}–${detail.source.pages[1]}` : ''}</strong></li>}
+          {detail.source.credits?.authors?.length ? <li><span>{s.authors}</span><strong>{detail.source.credits.authors.join(', ')}</strong></li> : null}</ul>
+      </section>
+    </div>
+  </div>;
+}
+
+/**
+ * site: eser sayfasının künye dışındaki bölümleri (fotoğraflar, tarihçe, süsleme, bağlı yapılar, harita, bugünkü
+ * durumu). MonumentView'da ve sitenin sinematik hikâye sayfasının altında aynı bileşen kullanılır.
+ */
+export function MonumentSections({ item, detail, lang }: { item: PublicItem; detail: PublicDetail; lang: Lang }) {
+  const s = strings(lang);
+  const c = detail.card;
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number } | null>(null);
+  const artTitle = (a: Card['artworks'][number]) => [a.element, a.technique].filter(Boolean).join(' · ') || artworkLabel(a.kind, lang);
+  const artworksWithPhotos = c.artworks.filter(a => a.images?.length);
+  const artworksText = c.artworks.filter(a => !a.images?.length).slice(0, 8);
+  return <>
       {detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
         <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => setZoom(i)} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
           <img src={img.thumb} alt="" loading="lazy" />{img.review_status && img.review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}
@@ -88,16 +107,9 @@ export function MonumentView({ item, detail, lang, generate, edit, backHref, act
       {detail.location && <MonumentMap location={detail.location} name={item.name} lang={lang} />}
 
       {c.current_state && <section className="pv-section pv-visit"><MapPin size={20} /><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
-
-      <section className="pv-sources"><div><h3>{s.sources}</h3>
-        <p>{lang === 'tr' ? 'Bu sayfadaki bilgiler Vakıf Katılım envanter kitabından alınmıştır.' : 'Information on this page comes from the Vakıf Katılım inventory book.'}</p></div>
-        <ul>{detail.source.book && <li><span>{s.sourceBook}</span><strong>{detail.source.book}{detail.source.pages?.[0] ? `, ${s.pages} ${detail.source.pages[0]}–${detail.source.pages[1]}` : ''}</strong></li>}
-          {detail.source.credits?.authors?.length ? <li><span>{s.authors}</span><strong>{detail.source.credits.authors.join(', ')}</strong></li> : null}</ul>
-      </section>
-    </div>
     {zoom !== null && <Lightbox images={detail.images} index={zoom} lang={lang} onIndex={setZoom} onClose={() => setZoom(null)} />}
     {artZoom && <Lightbox images={artZoom.images} index={artZoom.index} lang={lang} onIndex={i => setArtZoom({ ...artZoom, index: i })} onClose={() => setArtZoom(null)} />}
-  </div>;
+  </>;
 }
 
 function Narration({ lang, detail, paragraphs, generate, edit }: {

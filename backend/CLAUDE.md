@@ -187,8 +187,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında canlı demo olarak yapılacak.
 1. **Ön yüz bağlantısı (27 Ekim 2026, pilot eserler):** `VITE_VAKIF_API=1` ile koleksiyon, eser sayfası, "Esere Sor",
    kamera ve harita API'den gelir (`frontend/src/lib/vakifApi.ts`, `frontend/src/vakif/`; eser sayfası panel
-   önizlemesindeki `MonumentView`'un kopyası). Kalan işler ve arka uç planı: `docs/on-yuz-baglanti-plani.md`
-   (tek adresten sunma, mimar/bânî alanı, keşif rotaları, …).
+   önizlemesindeki `MonumentView`'un kopyası). **28 Ekim 2026:** ana sayfa, Keşif Sezonları (rotalar: `GET /api/routes`,
+   `routes.py`, göç `013_route.sql` gerçek veritabanında henüz uygulanmadı, panelde `#/rotalar`) ve sinematik hikâye
+   sayfası (kitap metni ve kayıtlı anlatımlar 4 bölüme ayrılır, yeni üretim yok: `frontend/src/vakif/immersive.ts`)
+   geri geldi. Ön yüzün mevcut özelliklerini geliştiriciye sormadan kaldırma. Kalan işler: `docs/on-yuz-baglanti-plani.md`.
 2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
    ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
 3. Harita ve "Yakınımdakiler": pilot eserler için `geocode.py` ve eser sayfası haritası hazır (göç 012 ve

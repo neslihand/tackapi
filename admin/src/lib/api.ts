@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AdminImage, Book, City, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { AdminImage, AdminRoute, AutoRoute, Book, City, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -148,5 +148,12 @@ export const api = {
     form.append('lang', lang);
     return request<VisualSearchResult>('/api/visual-search', { method: 'POST', body: form });
   },
+  routes: () => request<{ enabled: boolean; routes: AdminRoute[]; auto: AutoRoute[] }>('/api/admin/routes'),
+  createRoute: (body: { title: string; kicker?: string | null; description?: string | null; published?: boolean }) =>
+    request<AdminRoute>('/api/admin/routes', json('POST', body)),
+  updateRoute: (id: number, body: { title?: string; kicker?: string | null; description?: string | null; sort?: number; published?: boolean }) =>
+    request<AdminRoute>(`/api/admin/routes/${id}`, json('PATCH', body)),
+  setRouteStops: (id: number, slugs: string[]) => request<{ id: number; stops: string[] }>(`/api/admin/routes/${id}/stops`, json('PUT', { slugs })),
+  deleteRoute: (id: number) => request<void>(`/api/admin/routes/${id}`, { method: 'DELETE' }),
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };

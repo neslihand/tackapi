@@ -1,5 +1,6 @@
 import type { Artifact } from '../data/artifacts';
 import type { ArtifactChapter, ArtifactFeedIssue, ArtifactFeedResult, DiscoveryArtifact } from './artifactContract';
+import type { Season } from '../data/collections';
 import { PLACEHOLDER_IMAGE } from './content.ts';
 
 type ObjectValue = Record<string, unknown>;
@@ -86,7 +87,25 @@ export function adaptArtifactFeed(input: unknown): ArtifactFeedResult {
       sourceReferences: sources, chapters, detail,
     });
   });
-  return issues.length ? { ok: false, issues } : { ok: true, artifacts };
+  return issues.length ? { ok: false, issues } : { ok: true, artifacts, seasons: adaptSeasons(input.seasons, artifacts) };
+}
+
+// Routes are extra: a malformed one is dropped rather than failing the whole collection. Stops must be items of this
+// feed; a route left without stops is not shown.
+function adaptSeasons(value: unknown, artifacts: DiscoveryArtifact[]): Season[] {
+  if (!Array.isArray(value)) return [];
+  const known = new Set(artifacts.map(a => a.id));
+  const seen = new Set<string>();
+  const out: Season[] = [];
+  for (const season of value) {
+    if (!isObject(season) || !filled(season.id, 120) || !filled(season.title, 200) || seen.has(season.id)) continue;
+    const artifactIds = Array.isArray(season.artifactIds) ? [...new Set(season.artifactIds.filter((id): id is string => typeof id === 'string' && known.has(id)))] : [];
+    if (!artifactIds.length) continue;
+    seen.add(season.id);
+    out.push({ id: season.id, title: season.title.trim(), kicker: filled(season.kicker, 60) ? season.kicker.trim() : 'KEŞİF ROTASI',
+      description: filled(season.description, 600) ? season.description.trim() : '', artifactIds });
+  }
+  return out;
 }
 
 export function hasImmersiveStory(artifact: DiscoveryArtifact): artifact is Artifact {

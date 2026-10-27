@@ -48,26 +48,32 @@ Finalde geliştiricinin bilgisayarında iki sunucu (Vite + uvicorn) yerine tek a
   Bânî "mimar" diye gösterilmemeli.
 - Bu, yarışmada "Bu yapının mimarı kim?" sorularını da gerçek veriden açar.
 
-### 3. Keşif rotaları ve görevler (orta öncelik)
-Ön yüzün "Keşif rotası" süzgeci, sezon bandı ve "Keşif Görevleri" sayfası `seasons` listesine dayanıyor; arka uç
-modunda bu liste boş, bu yüzden görünmüyorlar.
-- Göç: `route(id, slug, title, kicker, description, sort)` ve `route_stop(route_id, monument_id, sort)`.
-- `GET /api/routes` → `[{id, title, kicker, description, artifactIds: [slug…]}]` (yalnızca yayındaki eserler).
-- Panelde rota düzenleme sayfası. İlk rotalar elle yazılır (ör. "Bursa'da erken Osmanlı", "Konya'da Selçuklu
-  medreseleri"); açıklamaları yapay zekâ yazmaz.
-- Ön yüz: `contentStore` arka uç modunda `seasons`'ı bu uçtan doldurur.
+### 3. Keşif rotaları ve görevler — YAPILDI (28 Ekim 2026)
+- Göç `013_route.sql` (`route`, `route_stop`; gerçek veritabanında henüz uygulanmadı), `pipeline/routes.py`.
+- `GET /api/routes?pilot=true` → önce panelde yazılıp yayına alınan rotalar, ardından şehir başına otomatik rotalar
+  (`sehir-bursa` …). Otomatik rotanın açıklaması yalnızca kayıttaki bilgiyi söyler (durak sayısı, ilçeler, dönemler).
+- Panel: `#/rotalar` (rota adı, kısa etiket, açıklama, sıralı duraklar, yayına alma). Göç uygulanmadan panelde yalnızca
+  şehir rotaları görünür.
+- Ön yüz: `loadPilotFeed` rotaları da alır; `artifactAdapter` yalnızca koleksiyondaki eserleri durak kabul eder.
 
-### 4. Bölümlü sürükleyici hikâye sayfası (karar gerekiyor, şimdilik yapılmamalı)
-Ön yüzün sinematik sayfası her eser için **4 bölüm × 3 anlatım** (kısa / hikâye / çocuk) ve bir "mimari ayrıntı"
-istiyor. Bizde her eser için kitap metni ve tek parça hikâye/çocuk anlatımı var. 4 bölüm üretmek eser başına yeni
-Gemini çağrıları ve yeni doğrulama demek (maliyet ve uydurma riski). Öneri: demoda `VakifStory` sayfası kalsın.
-İstenirse sonra: kayıtlı anlatımları paragraflara bölüp bölüm başlığını kitap metninin ilgili bölümünden almak
-(yeni üretim yok).
+### 4. Bölümlü sinematik hikâye sayfası — YAPILDI (28 Ekim 2026, yeni üretim yok)
+- `frontend/src/vakif/immersive.ts`: "Detaylı Anlatım" kitaptaki metindir; paragraf (az paragrafta cümle)
+  sınırlarından, uzunlukça dengeli 4 bölüme ayrılır, metne bir şey eklenmez ya da çıkarılmaz (testle korunur).
+- "Hikâyeleştirerek" ve "Çocuklar İçin" kayıtlı anlatımlardır; **bölünmez ve başlık almaz** (geliştirici kararı,
+  28 Ekim 2026): veritabanındaki metin paragraf paragraf gösterilir (`CineNarration`, `TaleNarration`,
+  `components/StoryScenes.tsx`). Hikâyede tek gece sahnesi ve yazı kartları; çocuk modunda resim çerçevesi ve metnin
+  yanında okurla ilerleyen kuş (Hüdhüd: yeni paragrafta zıplar, dokununca konuşur). Bu iki modda bölüm göstergesi
+  ve başlık listesi görünmez. Çocuk modu projenin renk ve yazı tiplerine çekildi (Cormorant, Inter, fildişi/altın).
+- Bölüm başlıkları sitenin genel başlıklarıdır ("Eserin doğuşu", "Geçmişin izleri", "Mimari sırlar", "Günümüze
+  yolculuk"); içerikle birebir örtüşmeyebilir. İstenirse eser başına panelden yazılabilir (yapılmadı).
+- 3. bölümdeki "mimari ayrıntı" kitaptaki ilk süsleme kaydından, yoksa "Bugünkü durumu"ndan gelir; ikisi de yoksa
+  gösterilmez. Fotoğraflar "özgün illüstrasyon" değil "FOTOĞRAF · kitap, sayfa" diye etiketlenir.
+- Sayfanın altında fotoğraflar, tarihçe, süsleme, bağlı yapılar ve harita (`MonumentSections`) gösterilir.
+- Hikâye ya da çocuk anlatımı ya da fotoğrafı olmayan eserde sade sayfa (`MonumentView`) açılır.
 
-### 5. Ana sayfa (ön yüz kararı, arka uç gerekmez)
-Arka uç modunda ön yüz `/` adresinde ana sayfa yerine Keşfet'i açıyor (dış koleksiyon modu böyle tasarlanmış).
-Ana sayfanın arka uç eserleriyle çalışması Fatmanur'un kararı; veri olarak liste yeterli.
-Ayrıca "Proje & Kaynaklar" sayfasındaki metinler (6 eser, UNESCO/TDV kaynakları) arka uç moduna göre
+### 5. Ana sayfa — YAPILDI
+Arka uç modunda da kapı açılışlı ana sayfa açılır.
+Kalan:  "Proje & Kaynaklar" sayfasındaki metinler (6 eser, UNESCO/TDV kaynakları) arka uç moduna göre
 güncellenmeli: kaynak Vakıf Katılım envanter kitapları.
 
 ### 6. Görsel arama eşiği (orta öncelik, betik hazır)

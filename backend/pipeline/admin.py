@@ -20,7 +20,7 @@ import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode
+import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes
 
 log_warn = logging.getLogger('vakif.admin').warning
 pilot_targets = pilot.TARGETS
@@ -169,6 +169,22 @@ class ArtworkImages(Strict):
 class NarrationEdit(Strict):
     lang: Literal['tr', 'en'] = 'tr'
     answer: str = Field(min_length=50, max_length=20000)
+
+
+class RouteFields(Strict):
+    title: str | None = Field(None, min_length=3, max_length=120)
+    kicker: str | None = Field(None, max_length=40)
+    description: str | None = Field(None, max_length=600)
+    sort: int | None = Field(None, ge=0, le=10000)
+    published: bool | None = None
+
+
+class RouteCreate(RouteFields):
+    title: str = Field(min_length=3, max_length=120)
+
+
+class RouteStops(Strict):
+    slugs: list[str] = Field(max_length=60)   # sıralı; boş liste durakları kaldırır
 
 
 class CityCreate(Strict):
@@ -1038,6 +1054,78 @@ def build_router(db, media_dir, save_webp):
                                   upper(p.years) - 1 AS "end"
                            FROM period p LEFT JOIN period pp ON pp.id = p.parent_id LEFT JOIN city c ON c.id = p.city_id
                            ORDER BY lower(p.years), p.slug""")
+
+    # ------------------------------------------------------------------------------------------ keşif rotaları
+    def route_row(route_id):
+        if not routes.enabled(db):
+            raise HTTPException(503, 'Keşif rotaları kapalı: önce python migrate.py --apply')
+        rows = db.query('SELECT * FROM route WHERE id = %(i)s', dict(i=route_id))
+        if not rows:
+            raise HTTPException(404, 'Rota bulunamadı')
+        return rows[0]
+
+    @r.get('/routes')
+    def list_routes(user: str = Depends(admin_user)):
+        """Yazılan rotalar (yayında olmayanlar da) ve durakları; ayrıca sitede gösterilen otomatik şehir rotaları."""
+        written = []
+        if routes.enabled(db):
+            for rt in db.query('SELECT * FROM route ORDER BY sort, id'):
+                rt['stops'] = db.query("""SELECT m.slug, m.name_tr, c.slug AS city, m.review_status, m.pilot
+                                          FROM route_stop rs JOIN monument m ON m.id = rs.monument_id
+                                          JOIN city c ON c.id = m.city_id WHERE rs.route_id = %(r)s
+                                          ORDER BY rs.sort, m.name_tr""", dict(r=rt['id']))
+                written.append(rt)
+        return dict(enabled=routes.enabled(db), routes=written, auto=routes.city_routes(db, pilot=True))
+
+    @r.post('/routes', status_code=201)
+    def create_route(body: RouteCreate, user: str = Depends(admin_user)):
+        if not routes.enabled(db):
+            raise HTTPException(503, 'Keşif rotaları kapalı: önce python migrate.py --apply')
+        base = slugify(body.title) or 'rota'
+        slug, n = base, 2
+        while db.query('SELECT 1 FROM route WHERE slug = %(s)s', dict(s=slug)):
+            slug, n = f'{base}-{n}', n + 1
+        rt = db.query("""INSERT INTO route(slug, title, kicker, description, sort, published, created_by, updated_at)
+                         VALUES (%(s)s, %(t)s, %(k)s, %(d)s, coalesce(%(o)s::int, (SELECT coalesce(max(sort), 0) + 1 FROM route)),
+                                 coalesce(%(p)s::boolean, false), %(u)s, now()) RETURNING *""",
+                      dict(s=slug, t=body.title, k=body.kicker, d=body.description, o=body.sort, p=body.published, u=user))[0]
+        log(user, 'route.create', f'route:{slug}', dict(title=body.title))
+        return rt
+
+    @r.patch('/routes/{route_id}')
+    def update_route(route_id: int, body: RouteFields, user: str = Depends(admin_user)):
+        rt = route_row(route_id)
+        data = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v != rt[k]}
+        if 'title' in data and data['title'] is None:
+            raise HTTPException(422, 'Rota adı boş olamaz.')
+        if data:
+            sets = ', '.join(f'{k} = %({k})s' for k in data)
+            db.execute(f'UPDATE route SET {sets}, updated_at = now() WHERE id = %(id)s', dict(data, id=route_id))
+            log(user, 'route.update', f"route:{rt['slug']}", {k: (rt[k], v) for k, v in data.items()})
+        return route_row(route_id)
+
+    @r.put('/routes/{route_id}/stops')
+    def set_route_stops(route_id: int, body: RouteStops, user: str = Depends(admin_user)):
+        rt = route_row(route_id)
+        slugs = list(dict.fromkeys(s.strip() for s in body.slugs if s.strip()))
+        found = {x['slug']: x['id'] for x in db.query('SELECT id, slug FROM monument WHERE slug = ANY(%(s)s::text[])', dict(s=slugs))}
+        unknown = [s for s in slugs if s not in found]
+        if unknown:
+            raise HTTPException(422, f"Bilinmeyen eser: {', '.join(unknown)}")
+        db.execute('DELETE FROM route_stop WHERE route_id = %(r)s', dict(r=route_id))
+        for i, s in enumerate(slugs):
+            db.execute('INSERT INTO route_stop(route_id, monument_id, sort) VALUES (%(r)s, %(m)s, %(i)s)',
+                       dict(r=route_id, m=found[s], i=i))
+        db.execute('UPDATE route SET updated_at = now() WHERE id = %(r)s', dict(r=route_id))
+        log(user, 'route.stops', f"route:{rt['slug']}", dict(stops=slugs))
+        return dict(id=route_id, stops=slugs)
+
+    @r.delete('/routes/{route_id}', status_code=204)
+    def delete_route(route_id: int, user: str = Depends(admin_user)):
+        rt = route_row(route_id)
+        db.execute('DELETE FROM route WHERE id = %(r)s', dict(r=route_id))
+        log(user, 'route.delete', f"route:{rt['slug']}", dict(title=rt['title']))
+        return Response(status_code=204)
 
     @r.get('/log')
     def admin_log(target: str | None = None, limit: int = Query(100, ge=1, le=500), user: str = Depends(admin_user)):

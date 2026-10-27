@@ -4,6 +4,7 @@
 // For now only the MVP pilot selection is shown (GET /api/monuments?pilot=true).
 import type { ArtifactFeed, ArtifactRecord } from './artifactContract.ts';
 import type { ChatRequest } from './chatContract.ts';
+import type { Season } from '../data/collections.ts';
 
 export const vakifApiEnabled = () => ['1', 'true', 'on'].includes(String(import.meta.env?.VITE_VAKIF_API ?? '').trim().toLowerCase());
 export const VAKIF_CHAT_ENDPOINT = '/api/chat';
@@ -56,10 +57,14 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export async function loadPilotFeed(): Promise<ArtifactFeed> {
-  const data = await getJson<{ items: VakifItem[] }>('/api/monuments?pilot=true&page_size=200&lang=tr');
+  // Routes ("Keşif Sezonları") are optional: without them the collection still opens.
+  const [data, seasons] = await Promise.all([
+    getJson<{ items: VakifItem[] }>('/api/monuments?pilot=true&page_size=200&lang=tr'),
+    getJson<Season[]>('/api/routes?pilot=true').catch(() => [] as Season[]),
+  ]);
   items.clear();
   data.items.forEach(item => items.set(item.slug, item));
-  return { schemaVersion: 1, items: data.items.map(toRecord) };
+  return { schemaVersion: 1, items: data.items.map(toRecord), seasons };
 }
 
 export const fetchMonument = <T,>(slug: string) => getJson<T>(`/api/monuments/${encodeURIComponent(slug)}?lang=tr`);

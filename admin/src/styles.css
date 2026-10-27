@@ -257,3 +257,11 @@ select{border:1px solid var(--line);padding:11px 30px 11px 12px;border-radius:0;
 .geo-status{padding:11px 14px;border-left:3px solid var(--line);background:#efe9db;font-size:13.5px;line-height:1.6}
 .geo-status.ok{border-left-color:var(--ok)}
 .geo-status.warn{border-left-color:var(--gold)}
+/* Keşif rotaları */
+.route-stops-title{font-size:15px;margin:18px 0 8px}
+.route-stops{display:flex;flex-direction:column;gap:6px;margin:0 0 12px;padding-left:22px}
+.route-stops li{display:flex;gap:8px;align-items:center}
+.route-stops li>span{flex:1}
+.route-stops small,.route-auto small{color:var(--muted)}
+.route-auto{display:flex;flex-direction:column;gap:12px;list-style:none;padding:0}
+.route-auto p{margin:4px 0 0;font-size:13.5px}

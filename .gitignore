@@ -17,6 +17,7 @@ data/eval_results.json
 *.env
 ./claude
 **/node_modules/
+**/dist
 # Python
 __pycache__/
 *.pyc

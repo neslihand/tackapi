@@ -1,4 +1,4 @@
-import { lazy, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { lazy, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowDown, ArrowLeft, ArrowUpRight, BookOpen, Check, Heart, MapPin, Puzzle, Sparkles, Stamp, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -15,7 +15,7 @@ import { hasImmersiveStory } from '../lib/artifactAdapter';
 import { imageAlt, PLACEHOLDER_IMAGE } from '../lib/content';
 import { narrationModes, useNarrationMode, type NarrationMode } from '../lib/preferences';
 import { useAmbience } from '../lib/ambience';
-import { BriefChapter, CineChapter, Hotspot, pad, shot, TaleChapter } from '../components/StoryScenes';
+import { BriefChapter, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
 import { chatEndpoint } from '../lib/chatApi';
@@ -31,11 +31,11 @@ function Stage({ artifact, chapter, detail, setDetail }: { artifact: Artifact; c
   const { x, y, s } = shot(artifact, chapter);
   const tone = ['past', 'past', 'detail', 'present'][Math.min(chapter, 3)];
   return <aside className={`story-stage tone-${tone}`} aria-label="Hikâye sahnesi">
-    <div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': s } as CSSProperties}><img src={artifact.image} alt={`${artifact.name} için özgün mimari illüstrasyon; ${artifact.chapters[chapter]?.title ?? ''} bölümünün görünümü`} /></div>
+    <div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': s } as CSSProperties}><img src={artifact.image} alt={artifact.origin ? `${artifact.name} fotoğrafı; ${artifact.chapters[chapter]?.title ?? ''} bölümü` : `${artifact.name} için özgün mimari illüstrasyon; ${artifact.chapters[chapter]?.title ?? ''} bölümünün görünümü`} /></div>
     <div className="stage-grade" aria-hidden="true" />
     <div className="stage-top"><span>BÖLÜM {pad(chapter + 1)} / {pad(artifact.chapters.length)}</span><span className="stage-era">{chapter === artifact.chapters.length - 1 ? 'BUGÜN' : artifact.year}</span></div>
-    {chapter === 2 && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
-    <div className="stage-caption"><small>{artifact.city} · ÖZGÜN MİMARİ YORUM</small><strong>{artifact.chapters[chapter]?.title}</strong></div>
+    {chapter === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
+    <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? 'FOTOĞRAF' : 'ÖZGÜN MİMARİ YORUM'}</small><strong>{artifact.chapters[chapter]?.title}</strong></div>
   </aside>;
 }
 
@@ -46,46 +46,52 @@ export function Story({ artifact }: { artifact: DiscoveryArtifact }) {
 }
 
 // Scroll scenes for each telling. Everything here only adds motion: without it (reduced motion) the page reads the same.
+// Animations skip what a page does not have (a backend story is told whole: no chapter titles, no picture-book words).
+const present = (t: gsap.TweenTarget | null): t is gsap.TweenTarget => t !== null && !(t instanceof NodeList && !t.length);
+const from = (t: gsap.TweenTarget | null, vars: gsap.TweenVars) => { if (present(t)) gsap.from(t, vars); };
+const fromTo = (t: gsap.TweenTarget | null, a: gsap.TweenVars, b: gsap.TweenVars) => { if (present(t)) gsap.fromTo(t, a, b); };
+
 function storyMotion(mode: NarrationMode) {
   if (mode === 'story') {
     gsap.utils.toArray<HTMLElement>('.cine').forEach(scene => {
       const whole = { trigger: scene, start: 'top bottom', end: 'bottom top', scrub: true };
       // The camera glides in through the scene and drifts sideways; the letterbox closes in while the scene is on.
-      gsap.fromTo(scene.querySelector('.cine-camera'), { '--cam': 1.22, '--pan': 40 }, { '--cam': 1, '--pan': -40, ease: 'none', scrollTrigger: whole });
-      gsap.fromTo(scene.querySelectorAll('.cine-bar'), { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: scene, start: 'top 60%', end: 'top top', scrub: true } });
-      gsap.fromTo(scene.querySelector('.cine-numeral'), { yPercent: 30 }, { yPercent: -40, ease: 'none', scrollTrigger: whole });
-      gsap.from(scene.querySelectorAll('.cine-title > *:not(.cine-numeral)'), { y: 50, opacity: 0, duration: 1, stagger: 0.12, ease: 'power3.out', scrollTrigger: { trigger: scene.querySelector('.cine-title'), start: 'top 75%' } });
-      scene.querySelectorAll('.cine-caption, .cine-panel').forEach(box => gsap.from(box, { y: 70, clipPath: 'inset(0% 0% 100% 0%)', duration: 1, ease: 'power3.out', scrollTrigger: { trigger: box, start: 'top 88%' } }));
+      fromTo(scene.querySelector('.cine-camera'), { '--cam': 1.22, '--pan': 40 }, { '--cam': 1, '--pan': -40, ease: 'none', scrollTrigger: whole });
+      fromTo(scene.querySelectorAll('.cine-bar'), { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: scene, start: 'top 60%', end: 'top top', scrub: true } });
+      fromTo(scene.querySelector('.cine-numeral'), { yPercent: 30 }, { yPercent: -40, ease: 'none', scrollTrigger: whole });
+      from(scene.querySelectorAll('.cine-title > *:not(.cine-numeral)'), { y: 50, opacity: 0, duration: 1, stagger: 0.12, ease: 'power3.out', scrollTrigger: { trigger: scene.querySelector('.cine-title'), start: 'top 75%' } });
+      scene.querySelectorAll('.cine-caption, .cine-panel').forEach(box => from(box, { y: 70, clipPath: 'inset(0% 0% 100% 0%)', duration: 1, ease: 'power3.out', scrollTrigger: { trigger: box, start: 'top 88%' } }));
       // The atmosphere tells the time: lines drawn at night, lanterns lit, the light gathering on a detail, dawn.
       if (scene.classList.contains('tone-sketch')) {
-        gsap.fromTo(scene.querySelectorAll('.cine-lines > *'), { strokeDashoffset: 1 }, { strokeDashoffset: 0, ease: 'none', stagger: 0.08, scrollTrigger: { trigger: scene, start: 'top 70%', end: 'center center', scrub: true } });
-        gsap.fromTo(scene.querySelector('.cine-camera img'), { opacity: 0.18 }, { opacity: 1, ease: 'none', scrollTrigger: { trigger: scene, start: 'top top', end: 'bottom 70%', scrub: true } });
+        fromTo(scene.querySelectorAll('.cine-lines > *'), { strokeDashoffset: 1 }, { strokeDashoffset: 0, ease: 'none', stagger: 0.08, scrollTrigger: { trigger: scene, start: 'top 70%', end: 'center center', scrub: true } });
+        fromTo(scene.querySelector('.cine-camera img'), { opacity: 0.18 }, { opacity: 1, ease: 'none', scrollTrigger: { trigger: scene, start: 'top top', end: 'bottom 70%', scrub: true } });
       }
-      if (scene.classList.contains('tone-lantern')) gsap.fromTo(scene.querySelectorAll('.cine-glow'), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, stagger: 0.15, ease: 'none', scrollTrigger: { trigger: scene, start: 'top 60%', end: 'top -20%', scrub: true } });
-      if (scene.classList.contains('tone-detail')) gsap.fromTo(scene.querySelector('.cine-spot'), { '--spot': '70%' }, { '--spot': '16%', ease: 'none', scrollTrigger: { trigger: scene, start: 'top 60%', end: 'center center', scrub: true } });
-      if (scene.classList.contains('tone-dawn')) gsap.fromTo(scene.querySelector('.cine-dawn'), { opacity: 0, yPercent: 30 }, { opacity: 1, yPercent: 0, ease: 'none', scrollTrigger: { trigger: scene, start: 'top 50%', end: 'bottom bottom', scrub: true } });
+      if (scene.classList.contains('tone-lantern')) fromTo(scene.querySelectorAll('.cine-glow'), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, stagger: 0.15, ease: 'none', scrollTrigger: { trigger: scene, start: 'top 60%', end: 'top -20%', scrub: true } });
+      if (scene.classList.contains('tone-detail')) fromTo(scene.querySelector('.cine-spot'), { '--spot': '70%' }, { '--spot': '16%', ease: 'none', scrollTrigger: { trigger: scene, start: 'top 60%', end: 'center center', scrub: true } });
+      if (scene.classList.contains('tone-dawn')) fromTo(scene.querySelector('.cine-dawn'), { opacity: 0, yPercent: 30 }, { opacity: 1, yPercent: 0, ease: 'none', scrollTrigger: { trigger: scene, start: 'top 50%', end: 'bottom bottom', scrub: true } });
     });
   }
   if (mode === 'child') {
     gsap.utils.toArray<HTMLElement>('.tale').forEach((page, i) => {
       const enter = { trigger: page, start: 'top 72%' };
       // The page turns in like a book page, the words pop in, the sparkles appear, the guide hops on.
-      gsap.from(page.querySelector('.tale-page'), { rotateY: i % 2 ? 14 : -14, y: 40, opacity: 0, duration: 1.1, ease: 'power3.out', scrollTrigger: enter });
-      gsap.from(page.querySelectorAll('.tale-words > span'), { y: 18, opacity: 0, duration: 0.5, stagger: 0.035, ease: 'back.out(2.2)', scrollTrigger: enter });
-      gsap.from(page.querySelectorAll('.tale-spark'), { scale: 0, duration: 0.7, stagger: 0.12, ease: 'back.out(3)', scrollTrigger: enter, delay: 0.4 });
-      gsap.from(page.querySelector('.tale-guide'), { x: i % 2 ? 80 : -80, y: -60, rotate: i % 2 ? 20 : -20, duration: 1, ease: 'bounce.out', scrollTrigger: enter, delay: 0.3 });
-      gsap.fromTo(page.querySelectorAll('.tale-cloud'), { xPercent: -30 }, { xPercent: 30, ease: 'none', scrollTrigger: { trigger: page, start: 'top bottom', end: 'bottom top', scrub: true } });
+      from(page.querySelector('.tale-page'), { rotateY: i % 2 ? 14 : -14, y: 40, opacity: 0, duration: 1.1, ease: 'power3.out', scrollTrigger: enter });
+      from(page.querySelectorAll('.tale-words > span'), { y: 18, opacity: 0, duration: 0.5, stagger: 0.035, ease: 'back.out(2.2)', scrollTrigger: enter });
+      from(page.querySelectorAll('.tale-spark'), { scale: 0, duration: 0.7, stagger: 0.12, ease: 'back.out(3)', scrollTrigger: enter, delay: 0.4 });
+      from(page.querySelector('.tale-guide'), { x: i % 2 ? 80 : -80, y: -60, rotate: i % 2 ? 20 : -20, duration: 1, ease: 'bounce.out', scrollTrigger: enter, delay: 0.3 });
+      fromTo(page.querySelectorAll('.tale-cloud'), { xPercent: -30 }, { xPercent: 30, ease: 'none', scrollTrigger: { trigger: page, start: 'top bottom', end: 'bottom top', scrub: true } });
     });
   }
   if (mode === 'short') {
     gsap.utils.toArray<HTMLElement>('.brief').forEach(entry => {
-      gsap.fromTo(entry.querySelector('.brief-num'), { yPercent: 40 }, { yPercent: -40, ease: 'none', scrollTrigger: { trigger: entry, start: 'top bottom', end: 'bottom top', scrub: true } });
-      gsap.from(entry.querySelectorAll('.brief-body > :not(.brief-thumb)'), { y: 36, opacity: 0, duration: 0.9, stagger: 0.08, ease: 'power2.out', scrollTrigger: { trigger: entry, start: 'top 75%' } });
+      fromTo(entry.querySelector('.brief-num'), { yPercent: 40 }, { yPercent: -40, ease: 'none', scrollTrigger: { trigger: entry, start: 'top bottom', end: 'bottom top', scrub: true } });
+      from(entry.querySelectorAll('.brief-body > :not(.brief-thumb)'), { y: 36, opacity: 0, duration: 0.9, stagger: 0.08, ease: 'power2.out', scrollTrigger: { trigger: entry, start: 'top 75%' } });
     });
   }
 }
 
-function ImmersiveStory({ artifact }: { artifact: Artifact }) {
+// extras: more of the page below the chapters (for a backend monument: photos, history, decoration, map).
+export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extras?: ReactNode }) {
   const [mode, setMode] = useNarrationMode('story');
   const [chapter, setChapter] = useState(0);
   const [detail, setDetail] = useState(false);
@@ -101,6 +107,8 @@ function ImmersiveStory({ artifact }: { artifact: Artifact }) {
   const favorite = progress.favorites.includes(artifact.id);
   const [fx, fy] = artifact.detail.focus ?? [50, 50];
   const Chapter = mode === 'story' ? CineChapter : mode === 'child' ? TaleChapter : BriefChapter;
+  // A backend monument tells its story and children's version whole, as stored: no chapters, no chapter titles.
+  const whole = artifact.origin && mode !== 'short' ? artifact.origin.narrations[mode] : null;
   useEffect(() => { if (chapter !== 2) setDetail(false); }, [chapter]);
   useEffect(() => {
     const root = ref.current;
@@ -121,7 +129,7 @@ function ImmersiveStory({ artifact }: { artifact: Artifact }) {
         gsap.fromTo('.story-hero-image', { scale: 1.5 }, { scale: 1.02, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight * 1.1}`, scrub: true } });
         gsap.to('.story-hero-copy', { yPercent: -25, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight}`, scrub: true } });
         gsap.fromTo('.reading-progress span', { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 60%', end: 'bottom 60%', scrub: true } });
-        gsap.fromTo('.story-index-progress span', { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 50%', end: 'bottom 50%', scrub: true } });
+        if (ref.current?.querySelector('.story-index-progress span')) gsap.fromTo('.story-index-progress span', { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 50%', end: 'bottom 50%', scrub: true } });
         storyMotion(mode);
         // Interlude: the camera pulls back from the facade while the date rises out of the stone.
         const interlude = gsap.timeline({ scrollTrigger: { trigger: '.story-interlude', start: 'top top', end: 'bottom bottom', scrub: 0.8 } });
@@ -148,28 +156,29 @@ function ImmersiveStory({ artifact }: { artifact: Artifact }) {
   return <div ref={ref} className={`story-page mode-${mode}`}>
     {/* The opening scene stays put while the telling slides up over it on a torn paper edge. */}
     <div className="story-curtain">
-    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt={`${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`} /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> Koleksiyona dön</Link>
+    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt={artifact.origin ? `${artifact.name} fotoğrafı. ${imageAlt(artifact)}` : `${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`} /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> Koleksiyona dön</Link>
       <div className="story-hero-copy"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label="Eser künyesi"><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>ESER {pad(position + 1)}</li></ul><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>Hikâyeyi keşfet <ArrowDown size={17} aria-hidden="true" /></button></div>
       {stamped && <span className="ex-stamp story-hero-stamp">MÜHÜRLENDİ<span className="ex-seal" aria-hidden="true">✦</span></span>}
-      <ol className="story-hero-chapters" aria-label="Hikâyenin bölümleri">{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>
-      <span className="story-art-note">ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR</span></section>
+      {!whole && <ol className="story-hero-chapters" aria-label="Hikâyenin bölümleri">{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}
+      <span className="story-art-note">{artifact.origin ? `FOTOĞRAF · ${artifact.origin.photoCredit}` : 'ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR'}</span></section>
     <div className="story-body" data-nav-theme={mode === 'story' ? 'dark' : 'light'}>
       <Girih className="story-girih" />
       <div className="story-tools" id="story-reading">
         <div><span className="ex-medallion" aria-hidden="true"><BookOpen size={16} /></span><span>Anlatım şeklini seç</span></div>
-        <div className="segmented" role="group" aria-label="Anlatım biçimi">{narrationModes.map(([value, label]) => <button key={value} className={mode === value ? 'active' : ''} aria-pressed={mode === value} onClick={() => choose(value)}>{label}</button>)}</div>
+        <div className="segmented" role="group" aria-label="Anlatım biçimi">{narrationModes.map(([value, label]) => <button key={value} className={mode === value ? 'active' : ''} aria-pressed={mode === value} onClick={() => choose(value)}>{value === 'short' && artifact.origin ? artifact.origin.shortLabel : label}</button>)}</div>
         <button className="story-sound" onClick={sound.toggle} aria-pressed={sound.on} aria-label={sound.on ? 'Ortam sesini kapat' : 'Ortam sesini aç'}><span className="story-save-icon" aria-hidden="true">{sound.on ? <Volume2 size={16} /> : <VolumeX size={16} />}</span><span>Ses</span></button>
         <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>Favori</span></button>
         <AskArtifact artifact={artifact} mode={mode} chapter={chapter} />
         <div className="reading-progress" aria-hidden="true"><span /></div>
       </div>
-      <nav className={`story-index ${railOn ? 'on' : ''}`} aria-label="Bölümler arasında gezin">
+      {!whole && <nav className={`story-index ${railOn ? 'on' : ''}`} aria-label="Bölümler arasında gezin">
         <span>HİKÂYENİN İZİ</span>
         {artifact.chapters.map((c, i) => <button key={i} className={chapter === i ? 'current' : ''} aria-current={chapter === i ? 'step' : undefined} onClick={() => goTo(i)}><i>{pad(i + 1)}</i><span>{c.title}</span></button>)}
         <div className="story-index-progress" aria-hidden="true"><span /></div>
-      </nav>
+      </nav>}
       <div className="story-chapters">
-        {mode === 'short'
+        {whole ? (mode === 'story' ? <CineNarration artifact={artifact} text={whole} /> : <TaleNarration artifact={artifact} text={whole} />)
+          : mode === 'short'
           ? <div className="brief-layout"><Stage artifact={artifact} chapter={chapter} detail={detail} setDetail={setDetail} /><div className="brief-entries">{artifact.chapters.map((_, i) => <BriefChapter key={i} artifact={artifact} index={i} detail={detail} setDetail={setDetail} />)}</div></div>
           : artifact.chapters.map((_, i) => <Chapter key={`${mode}-${i}`} artifact={artifact} index={i} detail={detail} setDetail={setDetail} />)}
       </div>
@@ -180,6 +189,7 @@ function ImmersiveStory({ artifact }: { artifact: Artifact }) {
         <span className="interlude-year" aria-hidden="true">{artifact.year.split(/[–-]/)[0]}</span>
         <div className="interlude-copy"><p className="eyebrow light"><span />GEÇMİŞTEN BUGÜNE</p><h2>Yüzyıllar geçti.<br /><em>Hikâye hâlâ burada.</em></h2><p>{artifact.name} · {artifact.city} · {artifact.year}</p></div></div>
     </section>
+    {extras}
     <div className="story-end"><Girih className="story-girih" />
     <div className="end-wrap">
     <section className="story-finish" aria-labelledby="finish-title">
@@ -198,6 +208,6 @@ function ImmersiveStory({ artifact }: { artifact: Artifact }) {
         </ul>
       </div>
     </section>
-    <section className="story-sources"><div><p className="story-sources-kicker">KAYNAKÇA</p><h3>Hikâyenin kaynakları</h3><p>Üç anlatım biçimi de önceden hazırlanmış içeriktir.<br />{chatEndpoint() ? '“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.' : 'Bu sürümde yapay zekâ ile metin üretimi yapılmaz.'}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only"> (yeni sekmede açılır)</span><ArrowUpRight size={16} aria-hidden="true" /></a></li>)}</ul></section>
+    <section className="story-sources"><div><p className="story-sources-kicker">KAYNAKÇA</p><h3>Hikâyenin kaynakları</h3><p>{artifact.origin ? artifact.origin.sourcesNote : 'Üç anlatım biçimi de önceden hazırlanmış içeriktir.'}<br />{chatEndpoint() ? '“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.' : 'Bu sürümde yapay zekâ ile metin üretimi yapılmaz.'}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only"> (yeni sekmede açılır)</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul></section>
     <NextDoor artifact={next} /></div></div></div>;
 }

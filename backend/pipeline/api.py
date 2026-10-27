@@ -10,6 +10,7 @@ Uç noktalar
   GET  /api/monuments?city=bursa&kind=mosque&period=erken-osmanli&q=muradiye&pilot=true&lang=tr&page=1&page_size=50
        → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
   GET  /api/monuments/{slug}?lang=tr|en
+  GET  /api/routes?pilot=true&auto=true   → keşif rotaları [{id, kicker, title, description, artifactIds, auto}]
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
@@ -27,7 +28,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes
 
 log = logging.getLogger('vakif.api')
 
@@ -237,6 +238,13 @@ def artwork_images_enabled():
 
 def is_published(slug):
     return bool(db.query(f"SELECT 1 FROM monument m WHERE m.slug = %(s)s AND {PUBLISHED}", dict(s=slug)))
+
+
+@app.get('/api/routes')
+def public_routes(pilot: bool | None = None, auto: bool = True):
+    """Keşif rotaları: panelde yazılıp yayımlananlar, ardından şehir başına otomatik rotalar (auto=false ile yalnızca
+    yazılanlar). Duraklar yalnızca yayındaki eserlerdir; pilot=true ise yalnızca pilot eserler."""
+    return routes.public_routes(db, pilot, auto)
 
 
 @app.get('/api/monuments/{slug}')

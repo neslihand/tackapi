@@ -1,4 +1,5 @@
 import type { Artifact } from '../data/artifacts';
+import type { Season } from '../data/collections';
 
 // url is optional for book citations (an inventory book has no web address); when given it is https.
 export type SourceReference = { title: string; url?: string };
@@ -24,7 +25,8 @@ export type ArtifactRecord = {
   detail?: Artifact['detail'] | null;
 };
 
-export type ArtifactFeed = { schemaVersion: 1; items: ArtifactRecord[] };
+// seasons: optional discovery routes over the feed's items (artifactIds are item ids).
+export type ArtifactFeed = { schemaVersion: 1; items: ArtifactRecord[]; seasons?: Season[] };
 
 export type DiscoveryArtifact = Omit<Artifact, 'coordinates' | 'chapters' | 'detail' | 'sourceReferences'> & {
   coordinates: [number, number] | null;
@@ -36,5 +38,5 @@ export type DiscoveryArtifact = Omit<Artifact, 'coordinates' | 'chapters' | 'det
 
 export type ArtifactFeedIssue = { path: string; message: string };
 export type ArtifactFeedResult =
-  | { ok: true; artifacts: DiscoveryArtifact[] }
+  | { ok: true; artifacts: DiscoveryArtifact[]; seasons: Season[] }
   | { ok: false; issues: ArtifactFeedIssue[] };
