@@ -44,12 +44,12 @@ Bu iş için arka uçta yapılan küçük değişiklikler: `/api/monuments`'a `p
 ### 1. Tek adresten demo — YAPILDI (28 Ekim 2026)
 Site `/`, panel `/panel/` altında uvicorn'dan sunulur (yukarıdaki "Nasıl açılır?"). Test: `tests/test_quiz.py`.
 
-### 2. Liste öğesine mimar / bânî (yüksek öncelik, küçük iş, yapay zekâ yok)
-Ön yüz kartta, eser sayfasında, yarışmada ve "dedektif" oyununda `architect` alanını kullanıyor; şimdi hep boş.
-- `ITEM_SELECT`'e `monument_person` içinden `role IN ('architect','patron')` olan ilk kişiyi ekle
-  (`architect`, `patron` ayrı alanlar). `vakifApi.toRecord` → `architect` alanı mimar varsa mimar, yoksa boş.
-  Bânî "mimar" diye gösterilmemeli.
-- Bu, yarışmada "Bu yapının mimarı kim?" sorularını da gerçek veriden açar.
+### 2. Mimar / usta / bânî — YAPILDI (28 Ekim 2026)
+Liste öğesinde `architect`, `builder`, `patron` (kitapta geçiş sırasıyla, virgülle; `monument_person`). Sitede
+"MİMAR / USTA" önce mimarları, yoksa ustaları gösterir (`vakifApi.makers`); bânî bu alana hiç girmez, ikisi de yoksa
+"Bilinmiyor". Yarışma ve "dedektif" oyunu bu alanı kullanır. Test: `tests/test_people.py`.
+Eser listesinin yavaşlığı: gerçek veritabanında ölçüldü, liste 43 ms (28 Ekim 2026); daha önceki bekleme sunucunun
+açılışında yerel görüntü modelinin yüklenmesine denk gelmiş olmalı. İş gerekmedi.
 
 ### 3. Keşif rotaları ve görevler — YAPILDI (28 Ekim 2026)
 - Göç `013_route.sql` (`route`, `route_stop`; gerçek veritabanında henüz uygulanmadı), `pipeline/routes.py`.

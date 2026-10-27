@@ -29,3 +29,4 @@ venv/
 media/
 data/images.jsonl
 data/geocode_cache.json
+data/backup/

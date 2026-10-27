@@ -40,8 +40,12 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **Çıkarım:** Gemini çıkarımı yapıldı ve `load_extractions.py` ile yüklendi. `monument_person` tablosunda yaklaşık 2.000 satır var.
 - **Embedding:** 3.248 parçanın yaklaşık 3.230'u gömüldü. Kalanlar kota nedeniyle eksik; `python embed_gemini.py` tamamlar.
   12 sözlük parçası `is_retrievable=false` olduğu için kasıtlı olarak boştur.
-- **RAG değerlendirmesi** (ekonomik mod, gerçek API, 15 soru): `route_ok 12/12`, `mention_ok 6/6`, `refuse_ok 1/1`,
-  `grounded 14/15`. Bu ölçüm verify() sıkılaştırılmadan ve q04 talimatı değişmeden önceydi; yeniden ölçülmedi.
+- **RAG değerlendirmesi** (ekonomik mod, gerçek API, 15 soru, 28 Ekim 2026): `route_ok 12/12`, `page_ok 1/1`,
+  `mention_ok 6/6`, `refuse_ok 1/1`, `grounded 14/15`, ort. 3.085 istem token'ı, soru başına 1,07 çağrı (20 Ekim:
+  rota 11/12, grounded 13/15; `data/eval_results_20261020.json`). Ölçüm artık cevap önbelleğini kullanmaz
+  (`--use-cache` ile kullanır); `--only q11` tek soruyu ayrı dosyaya ölçer. q11'de model yeniden yazımda da kaynakta
+  olmayan bir yılı (848) bırakmıştı: düzeltme isteği artık yılları açıkça sayar ve son güvence olarak hâlâ desteksiz
+  yıl içeren cümle cevaptan çıkarılır (`rag.drop_years`; hiç cümle kalmazsa "bilgi yok"), böyle cevap önbelleğe girmez.
 - **Fotoğraflar:** `images.py` 6 kitap PDF'inden 1.547 fotoğraf çıkardı (556/753 eser fotoğraflı, 118'i kontrol bekliyor).
   WebP'ler `media/` altında (git dışı). Kontrol listesi `data/review/gorseller.csv`. Bursa Ulucami'nin 23
   fotoğrafı yinelenen kayıt nedeniyle taslakta; panelden onaylanmalı. **26 Ekim 2026:** eleme eşiği 400 px / %3'ten
@@ -126,7 +130,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
-- **Testler:** `python -m unittest discover -s tests` (140 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (145 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -195,8 +199,11 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
    panel `/panel/` altında sunar (`api.py` sonu). Yazılı yarışma soruları: göç `014_quiz.sql` (gerçek veritabanında
    henüz uygulanmadı), `quiz.py`, `GET /api/quiz`, panelde `#/sorular`. Göç 013 gerçek veritabanında uygulandı,
    `visual_search.py --eval` çalıştırıldı (28 Ekim 2026). Kalan işler: `docs/on-yuz-baglanti-plani.md`.
-2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
-   ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
+2. **`ingest.py` (28 Ekim 2026):** `--remove-book KITAP --yes` kitabın bütün satırlarını (embedding ve panel emeği dahil)
+   `data/backup/`'a yedekleyip siler; `--add-book KITAP` yedekten aynı kimliklerle geri ekler (Gemini yok); `--rehearse`
+   gerçek veritabanında kaldır + geri ekle + karşılaştır yapıp ROLLBACK eder. README §7.11. **Geliştirici kararı:
+   Hatay'ın gerçek silinmesini sunuma yakın kendisi yapacak; şimdi gerçek veritabanında silme çalıştırma.** Kalan: yedeği
+   olmayan yeni bir kitabı ham dosyadan ekleme (tek kitaplık yükleme ve çıkarım yükleme).
 3. Harita ve "Yakınımdakiler": pilot eserler için `geocode.py` ve eser sayfası haritası hazır (göç 012 ve
    `geocode.py --pilot --write` geliştiricinin onayını bekliyor; sonra konumlar panelden onaylanmalı). Kalan:
    "Yakınımdakiler" ucu ve liste haritası, pilot dışı eserler.

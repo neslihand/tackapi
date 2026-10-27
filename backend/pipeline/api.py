@@ -162,6 +162,12 @@ def _where(skip=None):
     return 'WHERE ' + ' AND '.join(v for k, v in LIST_FILTERS.items() if k != skip)
 
 
+def _people(role):
+    """Eserin bu roldeki kişileri, kitapta geçiş sırasıyla, virgülle (çıkarımda alıntısı olan kayıtlar)."""
+    return (f"(SELECT string_agg(pe.name, ', ' ORDER BY mp.chunk_id NULLS LAST, pe.name) FROM monument_person mp "
+            f"JOIN person pe ON pe.id = mp.person_id WHERE mp.monument_id = m.id AND mp.role = '{role}')")
+
+
 # Liste kartı: herkese açık liste ve yönetici önizlemesi aynı sorguyu ve aynı biçimi kullanır.
 # %(drafts)s: önizlemede yayımlanmamış fotoğraflar da kapak adayı olur (herkese açık uçta her zaman false).
 ITEM_SELECT = f"""
@@ -175,7 +181,8 @@ ITEM_SELECT = f"""
            EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
                       OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
            cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
-           cov.height AS img_height, m.lat, m.lon{{geo}}
+           cov.height AS img_height, m.lat, m.lon{{geo}},
+           {_people('architect')} AS architects, {_people('builder')} AS builders, {_people('patron')} AS patrons
     {LIST_FROM} LEFT JOIN monument par ON par.id = m.parent_id LEFT JOIN source_book b ON b.id = m.book_id
     LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
                         WHERE monument_id = m.id AND (review_status = 'published'
@@ -203,6 +210,8 @@ def list_item(r, lang):
         if r['parent_slug'] else None,
         children_count=r['children_count'], summary=r['summary_en'] if en else r['summary_tr'], status=r['status'],
         has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'), location=geocode.public_location(r),
+        # mimar (architect), usta (builder) ve bânî (patron) ayrı tutulur: bânî mimar diye gösterilmemeli
+        architect=r['architects'], builder=r['builders'], patron=r['patrons'],
         source=dict(book=r['book'], pages=[r['page_start'], r['page_end']] if r['page_start'] is not None else None))
 
 

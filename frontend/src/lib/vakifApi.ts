@@ -20,6 +20,8 @@ export type VakifItem = {
   parent: { slug: string; name: string } | null; children_count: number; summary: string | null; status: string | null;
   has_artworks: boolean; image: VakifImage | null; source: { book: string | null; pages: [number, number] | null };
   location?: VakifLocation | null;
+  // names in the order the book gives them, comma separated; the patron (bânî) is never shown as the architect
+  architect?: string | null; builder?: string | null; patron?: string | null;
 };
 
 // List items by slug, kept from the feed for the monument page (it needs the card as well as the detail).
@@ -32,6 +34,9 @@ export function sourceTitle(source: VakifItem['source']): string {
   return from ? `${book}, s. ${from}${to && to !== from ? `–${to}` : ''}` : book;
 }
 
+/** "MİMAR / USTA": the architects, otherwise the builders (master craftsmen); never the patron. */
+export const makers = (item: Pick<VakifItem, 'architect' | 'builder'>) => item.architect?.trim() || item.builder?.trim() || null;
+
 /** Backend list item → the site's feed record. Nothing is invented: a missing value stays missing (null). */
 export function toRecord(item: VakifItem): ArtifactRecord {
   const where = [item.district, item.city.name].filter(Boolean).join(', ');
@@ -40,7 +45,7 @@ export function toRecord(item: VakifItem): ArtifactRecord {
     period: item.period?.name ?? 'Dönemi belirtilmemiş', category: item.kind_label,
     // The card needs a sentence; without the book's summary it says only what the record states.
     description: item.summary?.trim() || `${where}: ${item.kind_label.toLocaleLowerCase('tr-TR')}.`,
-    year: item.built.label, architect: null,
+    year: item.built.label, architect: makers(item),
     coordinates: item.location ? [item.location.lat, item.location.lon] : null,
     coordinatesApproximate: item.location ? item.location.approximate : undefined,
     image: item.image?.src ?? null, imageAlt: item.image?.alt ?? null,

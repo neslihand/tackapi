@@ -9,6 +9,7 @@ const item = {
   district: 'Osmangazi', neighborhood: null, period: { slug: 'erken-osmanli', name: 'Erken Osmanlı' },
   built: { from: 1396, to: 1400, label: '1396–1400', basis: 'inscription', basis_label: 'Kitâbesine göre' }, parent: null, children_count: 0,
   summary: 'Özet.', status: 'standing', has_artworks: true, image: null, source: { book: 'Bursa I', pages: [10, 20] },
+  architect: 'Ali Neccar', builder: null, patron: 'Yıldırım Bayezid',
 } as PublicItem;
 const detail = {
   card: { persons: [{ name: 'Ali Neccar', role: 'architect', detail: null, page_start: null }], current_state: 'İbadete açıktır.',

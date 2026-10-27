@@ -642,6 +642,32 @@ python geocode.py --pilot --csv-only   # veritabanındaki konumlardan (panel dü
 - Denemede (26 Ekim 2026) Muradiye Camii, Ördekli Hamam, Beyşehir Eşrefoğlu Camii ve Habib-i Neccar Camii doğru
   yapıda bulundu.
 
+### 7.11 Bir kitabı kaldırıp geri eklemek: `ingest.py`
+Demo senaryosu: Hatay kitabını siteden kaldırmak ve yeniden eklemek; diğer kitaplara dokunulmaz, Gemini çağrılmaz.
+
+```powershell
+python ingest.py --status                       # kitaplar, eser/parça/fotoğraf sayıları, yedekler
+python ingest.py --rehearse hatay-1             # PROVA: kaldır + geri ekle + karşılaştır, sonra hepsini geri al
+python ingest.py --remove-book hatay-1          # neyin silineceğini sayar; hiçbir şey değiştirmez
+python ingest.py --remove-book hatay-1 --yes    # önce yedek (data/backup/hatay-1-…json.gz), sonra tek işlemde siler
+python ingest.py --add-book hatay-1             # en son yedekten, aynı kimliklerle geri ekler
+```
+- **Ne silinir:** kitabın bölümleri, eserleri, metin parçaları (embedding'leriyle), çıkarım (kişi rolleri, olaylar,
+  süsleme, vakıflar), fotoğraf kayıtları (vektörleriyle), editör notları ve panel emeği (künye düzeltmeleri, pilot,
+  konum, kayıtlı anlatımlar, paragraf kararları, süsleme fotoğrafları, rota durakları, yarışma soruları). Yalnızca bu
+  kitapta geçen kişiler silinir; başka kitapta da geçen kişi kalır. Fotoğraf dosyaları (`media/`), yönetim kaydı ve
+  panelden eklenmiş kitap dışı eserler silinmez. Başka kayıtlardan kitaba giden bağlantılar (panel eserinin üst eseri,
+  sözlük teriminin parçası, paragraf taşıma hedefi…) boşaltılır, yedeğe yazılır ve geri eklemede yeniden kurulur.
+- **Güvenlik:** `--yes` olmadan yalnızca sayar. Yedek yazılıp yeniden okunarak doğrulanmadan silme başlamaz. Silme ve
+  geri ekleme tek işlemdir; yarıda kalırsa hiçbir şey değişmez. Kitap zaten varsa ya da yedekteki bir kimlik başka bir
+  kayıtta kullanılıyorsa geri ekleme yapılmaz. Yedekler kitap metnini içerdiği için git dışındadır (`data/backup/`).
+- **Prova** (`--rehearse`): gerçek veritabanında, tek işlem içinde kaldırıp geri ekler, her tablonun parmak izini
+  (satır sayısı ve içerik özeti) karşılaştırır, sonunda işlemi geri alır. Sunumdan önce bir kez çalıştırılmalı; "PROVA
+  BAŞARILI" yazmalı. Prova süresince bu kitabın satırları kilitlenir; panelde aynı anda o eserler düzenlenmemeli.
+- **Sohbet önbelleği:** kaldırılan eserlerin önbellekteki cevapları silinir, geri eklenmez (yeniden oluşur).
+- **Henüz yok:** yedeği olmayan, ilk kez eklenecek bir kitap (bölümleme → parçalama → çıkarım → embedding → fotoğraf).
+  Mevcut `load_db.py` ve `load_extractions.py` bütün kitapları birlikte yüklediği için tek kitaplık sürümleri yazılmalı.
+
 ---
 
 ## 8. Ekonomik mod ve maliyet

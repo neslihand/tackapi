@@ -4,6 +4,7 @@
 // chapter titles (origin.narrations).
 import type { Artifact } from '../data/artifacts';
 import { artworkLabel, type PublicDetail, type PublicItem } from './model.ts';
+import { makers } from '../lib/vakifApi.ts';
 
 export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | null {
   const book = detail.text?.trim();
@@ -12,7 +13,6 @@ export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | 
   const image = detail.images[0] ?? item.image;
   if (!book || !story || !child || !image) return null;
   const card = detail.card;
-  const architect = card.persons.find(p => p.role === 'architect')?.name;
   // The documented detail on the photograph: the first decoration record of the book, otherwise none.
   const art = card.artworks[0];
   const artDetail = art ? {
@@ -24,7 +24,7 @@ export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | 
   const [from, to] = detail.source.pages ?? [null, null];
   return {
     id: item.slug, slug: item.slug, name: item.name, city: item.city.name, period: item.period?.name ?? 'Dönemi belirtilmemiş',
-    category: item.kind_label, year: item.built.label ?? 'Bilinmiyor', architect: architect ?? 'Bilinmiyor',
+    category: item.kind_label, year: item.built.label ?? 'Bilinmiyor', architect: makers(item) ?? 'Bilinmiyor',
     description: item.summary ?? '', coordinates: detail.location ? [detail.location.lat, detail.location.lon] : [39, 35],
     image: image.src, ...(image.alt ? { imageAlt: image.alt } : {}),
     sourceReferences: [{ title: [detail.source.book, from ? `s. ${from}${to && to !== from ? `–${to}` : ''}` : null].filter(Boolean).join(', ') || 'Vakıf Katılım envanter kitabı' }],

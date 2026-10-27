@@ -51,7 +51,10 @@ class CacheTest(unittest.TestCase):
     def test_unsupported_year_retried_and_not_cached(self):
         r, calls = self.ask('Cami 1550 yılında yapıldı [S1].')
         self.assertEqual(calls, 2)                       # bir kez yeniden üretildi
-        self.assertEqual(r['verification']['unsupported_years'], ['1550'])
+        # yeniden yazımda da kalan yıl: o cümle ziyaretçiye gösterilmez, cevap önbelleğe girmez
+        self.assertEqual(r['verification']['removed_years'], ['1550'])
+        self.assertNotIn('1550', r['answer'])
+        self.assertEqual(r['answer'], rag.NO_INFO['tr'])
         self.assertEqual(self.cached_rows(), 0)
 
     def test_history_bypasses_cache(self):
@@ -113,3 +116,19 @@ class VerifyTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DropYearsTest(unittest.TestCase):
+    """Yeniden yazımdan sonra hâlâ bağlamda olmayan yıl kalırsa o cümle ziyaretçiye gösterilmez (eval q11)."""
+
+    def test_only_sentences_with_unsupported_years_go(self):
+        text = ('Kaynaklarımızda bu yapı hakkında bilgi yok. Şehir 846, 847 ve 848 yıllarında depremlerle yıkıldı [S5].'
+                '\n\nCami 1474 yılında onarıldı [S2].')
+        out, removed = rag.drop_years(text, ['848'])
+        self.assertEqual(removed, 1)
+        self.assertEqual(out, 'Kaynaklarımızda bu yapı hakkında bilgi yok.\n\nCami 1474 yılında onarıldı [S2].')
+        self.assertEqual(rag.drop_years('Cami 1848 yılında yandı.', ['848']), ('Cami 1848 yılında yandı.', 0))
+
+    def test_nothing_left_means_no_information(self):
+        self.assertEqual(rag.drop_years('Cami 848 yılında yapıldı.', ['848']), (rag.NO_INFO['tr'], 1))
+        self.assertEqual(rag.drop_years('Built in 848.', ['848'], 'en')[0], rag.NO_INFO['en'])

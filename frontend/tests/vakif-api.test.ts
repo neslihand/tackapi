@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fromVakifChat, sourceTitle, stripCitations, toRecord, toVakifChat, type VakifItem } from '../src/lib/vakifApi.ts';
+import { fromVakifChat, makers, sourceTitle, stripCitations, toRecord, toVakifChat, type VakifItem } from '../src/lib/vakifApi.ts';
 import { adaptArtifactFeed } from '../src/lib/artifactAdapter.ts';
 
 const item: VakifItem = {
@@ -57,4 +57,13 @@ test('Cevaptaki kaynak işaretleri çıkarılır, kaynaklar kitap ve sayfa olara
   assert.deepEqual(fromVakifChat({ answer: 'Metin [S1].', sources: [{ book: 'Bursa I', pages: 's. 75–76' }, { book: 'Bursa I', pages: '75–76' }, { book: 'Bursa I', pages: 's. 20' }] }),
     { answer: 'Metin.', sources: [{ title: 'Bursa I, s. 75–76' }, { title: 'Bursa I, s. 20' }] });
   assert.equal(fromVakifChat({ detail: 'hata' }), null);
+});
+
+test('MİMAR / USTA: önce mimarlar, yoksa ustalar; bânî hiçbir zaman mimar diye gösterilmez', () => {
+  assert.equal(makers({ architect: 'Hacı İvaz Paşa, Ali Neccâr', builder: 'Usta' }), 'Hacı İvaz Paşa, Ali Neccâr');
+  assert.equal(makers({ architect: null, builder: 'Ali Usta' }), 'Ali Usta');
+  assert.equal(makers({ architect: ' ', builder: null }), null);
+  const record = toRecord({ ...item, architect: null, builder: null, patron: 'II. Bayezid' });
+  assert.equal(record.architect, null);
+  assert.equal(adaptArtifactFeed({ schemaVersion: 1, items: [record] }).ok && adaptArtifactFeed({ schemaVersion: 1, items: [record] }).artifacts[0].architect, 'Bilinmiyor');
 });

@@ -425,6 +425,29 @@ def verify(answer, context, historical_only=False):
     return dict(unsupported_years=sorted(bad_years), unsupported_names=bad_names[:10])
 
 
+NO_INFO = {'tr': 'Kaynaklarımızda bu konuda bilgi yok.', 'en': 'Our sources do not contain information on this.'}
+
+
+def drop_years(text, years, lang='tr'):
+    """Son güvence: bağlamda geçmeyen bir yıl içeren cümleleri çıkarır (yeniden yazımdan sonra hâlâ varsa).
+    Paragraf düzeni ve kaynak işaretleri korunur. Hiç cümle kalmazsa 'bilgi yok' cümlesi döner.
+    Döner: (metin, çıkarılan cümle sayısı)."""
+    if not years:
+        return text, 0
+    bad = re.compile(r'\b(?:' + '|'.join(map(re.escape, years)) + r')\b')
+    paras, removed = [], 0
+    for para in re.split(r'\n\s*\n', text):
+        kept = []
+        for sent in re.split(r'(?<=[.!?…])\s+', para.strip()):
+            if bad.search(sent):
+                removed += 1
+            elif sent:
+                kept.append(sent)
+        if kept:
+            paras.append(' '.join(kept))
+    return ('\n\n'.join(paras) or NO_INFO.get(lang, NO_INFO['tr'])), removed
+
+
 # ------------------------------------------------------------------------------------------- cevap önbelleği
 CACHE_DDL = """CREATE TABLE IF NOT EXISTS answer_cache (
     id bigserial PRIMARY KEY, monument_slug text NOT NULL, mode text NOT NULL, lang text NOT NULL,
@@ -508,10 +531,19 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
     # ekonomik modda yalnızca bağlamda olmayan YIL varsa yeniden üret; ad uyuşmazlıkları yalnızca işaretlenir
     need_retry = check['unsupported_years'] or (not ECO and len(check['unsupported_names']) > 2)
     if need_retry and not G.FAKE:
-        fix = (f"\n\nDİKKAT: Önceki taslakta bağlamda olmayan bilgiler vardı: {check}. Bunları çıkararak yeniden yaz.")
+        # hangi bilgilerin bağlamda olmadığı açıkça söylenir; model düzeltme notunu cevaba yazmasın
+        wrong = [f"bağlamda geçmeyen yıllar: {', '.join(check['unsupported_years'])}"] if check['unsupported_years'] else []
+        if not ECO and check['unsupported_names']:
+            wrong.append(f"bağlamda geçmeyen adlar: {', '.join(check['unsupported_names'])}")
+        fix = (f"\n\nDİKKAT: Önceki taslakta {'; '.join(wrong)}. Bunları hiç yazmadan, yalnızca BAĞLAM'daki bilgilerle "
+               "yeniden yaz. Cevaba düzeltme notu, açıklama ya da parantez içinde başka yıl ekleme.")
         text = G.generate(prompt + fix, system=system, model=ANSWER_MODEL, thinking=thinking, tries=CHAT_TRIES)
         calls += 1
         check = verify(text, context)
+    # son güvence: yeniden yazımdan sonra hâlâ bağlamda olmayan yıl varsa o cümleler gösterilmez
+    if check['unsupported_years']:
+        text, removed = drop_years(text, check['unsupported_years'], lang)
+        check = dict(verify(text, context), removed_sentences=removed, removed_years=check['unsupported_years'])
     sources = [dict(ref=f'S{i}', book=c['book'], pages=fmt_pages(c['page_start'], c['page_end']), heading=c['heading_path'],
                     route=c['route'], chunk_id=c['id']) for i, c in enumerate(chunks, 1)]
     result = dict(answer=text, sources=sources, plan=plan, verification=check, notes=notes,
@@ -520,7 +552,8 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
                              prompt_chars=len(system) + len(prompt), approx_prompt_tokens=(len(system) + len(prompt)) // 4),
                   cached=False)
     # yalnızca doğrulamadan temiz geçen cevaplar önbelleğe girer (hatalı cevap tekrar tekrar dönmesin)
-    if use_cache and not check['unsupported_years'] and not check['unsupported_names'] and not G.FAKE:
+    if use_cache and not check['unsupported_years'] and not check['unsupported_names'] and not check.get('removed_sentences') \
+            and not G.FAKE:
         try:
             cache_put(db, slug, mode, lang, question, qvec, result)
         except Exception:
