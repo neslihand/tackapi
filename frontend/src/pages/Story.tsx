@@ -15,7 +15,7 @@ import { hasImmersiveStory } from '../lib/artifactAdapter';
 import { imageAlt, PLACEHOLDER_IMAGE } from '../lib/content';
 import { narrationModes, useNarrationMode, type NarrationMode } from '../lib/preferences';
 import { useAmbience } from '../lib/ambience';
-import { BriefChapter, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
+import { BriefChapter, BriefNarration, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
 import { chatEndpoint } from '../lib/chatApi';
@@ -27,15 +27,16 @@ gsap.registerPlugin(ScrollTrigger);
 const smooth = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
 
 // The lens of the short telling: an arched window on the illustration whose camera follows the chapter in view.
-function Stage({ artifact, chapter, detail, setDetail }: { artifact: Artifact; chapter: number; detail: boolean; setDetail: (open: boolean) => void }) {
-  const { x, y, s } = shot(artifact, chapter);
+// whole: a backend monument's book text, not in chapters; the lens shows the photograph and its detail throughout.
+function Stage({ artifact, chapter, detail, setDetail, whole = false }: { artifact: Artifact; chapter: number; detail: boolean; setDetail: (open: boolean) => void; whole?: boolean }) {
+  const { x, y, s } = whole ? { x: 50, y: 50, s: 1.04 } : shot(artifact, chapter);
   const tone = ['past', 'past', 'detail', 'present'][Math.min(chapter, 3)];
   return <aside className={`story-stage tone-${tone}`} aria-label="Hikâye sahnesi">
-    <div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': s } as CSSProperties}><img src={artifact.image} alt={artifact.origin ? `${artifact.name} fotoğrafı; ${artifact.chapters[chapter]?.title ?? ''} bölümü` : `${artifact.name} için özgün mimari illüstrasyon; ${artifact.chapters[chapter]?.title ?? ''} bölümünün görünümü`} /></div>
+    <div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': s } as CSSProperties}><img src={artifact.image} alt={whole ? `${artifact.name} fotoğrafı` : artifact.origin ? `${artifact.name} fotoğrafı; ${artifact.chapters[chapter]?.title ?? ''} bölümü` : `${artifact.name} için özgün mimari illüstrasyon; ${artifact.chapters[chapter]?.title ?? ''} bölümünün görünümü`} /></div>
     <div className="stage-grade" aria-hidden="true" />
-    <div className="stage-top"><span>BÖLÜM {pad(chapter + 1)} / {pad(artifact.chapters.length)}</span><span className="stage-era">{chapter === artifact.chapters.length - 1 ? 'BUGÜN' : artifact.year}</span></div>
-    {chapter === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
-    <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? 'FOTOĞRAF' : 'ÖZGÜN MİMARİ YORUM'}</small><strong>{artifact.chapters[chapter]?.title}</strong></div>
+    <div className="stage-top">{whole ? <span>KİTAPTAKİ METİN</span> : <span>BÖLÜM {pad(chapter + 1)} / {pad(artifact.chapters.length)}</span>}<span className="stage-era">{!whole && chapter === artifact.chapters.length - 1 ? 'BUGÜN' : artifact.year}</span></div>
+    {(whole || chapter === 2) && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
+    <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? 'FOTOĞRAF' : 'ÖZGÜN MİMARİ YORUM'}</small><strong>{whole ? artifact.name : artifact.chapters[chapter]?.title}</strong></div>
   </aside>;
 }
 
@@ -108,7 +109,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   const [fx, fy] = artifact.detail.focus ?? [50, 50];
   const Chapter = mode === 'story' ? CineChapter : mode === 'child' ? TaleChapter : BriefChapter;
   // A backend monument tells its story and children's version whole, as stored: no chapters, no chapter titles.
-  const whole = artifact.origin && mode !== 'short' ? artifact.origin.narrations[mode] : null;
+  const whole = artifact.origin ? artifact.origin.narrations[mode] : null;
   useEffect(() => { if (chapter !== 2) setDetail(false); }, [chapter]);
   useEffect(() => {
     const root = ref.current;
@@ -177,7 +178,8 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         <div className="story-index-progress" aria-hidden="true"><span /></div>
       </nav>}
       <div className="story-chapters">
-        {whole ? (mode === 'story' ? <CineNarration artifact={artifact} text={whole} /> : <TaleNarration artifact={artifact} text={whole} />)
+        {whole ? (mode === 'story' ? <CineNarration artifact={artifact} text={whole} /> : mode === 'child' ? <TaleNarration artifact={artifact} text={whole} />
+            : <div className="brief-layout"><Stage artifact={artifact} chapter={0} detail={detail} setDetail={setDetail} whole /><div className="brief-entries"><BriefNarration artifact={artifact} text={whole} /></div></div>)
           : mode === 'short'
           ? <div className="brief-layout"><Stage artifact={artifact} chapter={chapter} detail={detail} setDetail={setDetail} /><div className="brief-entries">{artifact.chapters.map((_, i) => <BriefChapter key={i} artifact={artifact} index={i} detail={detail} setDetail={setDetail} />)}</div></div>
           : artifact.chapters.map((_, i) => <Chapter key={`${mode}-${i}`} artifact={artifact} index={i} detail={detail} setDetail={setDetail} />)}

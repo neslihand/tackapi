@@ -1,4 +1,4 @@
-import type { Artifact } from '../data/artifacts';
+import type { Artifact, QuizQuestion } from '../data/artifacts';
 import type { Season } from '../data/collections';
 
 // url is optional for book citations (an inventory book has no web address); when given it is https.
@@ -25,8 +25,9 @@ export type ArtifactRecord = {
   detail?: Artifact['detail'] | null;
 };
 
-// seasons: optional discovery routes over the feed's items (artifactIds are item ids).
-export type ArtifactFeed = { schemaVersion: 1; items: ArtifactRecord[]; seasons?: Season[] };
+// seasons: optional discovery routes over the feed's items (artifactIds are item ids); quizQuestions: written quiz
+// questions about the items.
+export type ArtifactFeed = { schemaVersion: 1; items: ArtifactRecord[]; seasons?: Season[]; quizQuestions?: QuizQuestion[] };
 
 export type DiscoveryArtifact = Omit<Artifact, 'coordinates' | 'chapters' | 'detail' | 'sourceReferences'> & {
   coordinates: [number, number] | null;
@@ -38,5 +39,5 @@ export type DiscoveryArtifact = Omit<Artifact, 'coordinates' | 'chapters' | 'det
 
 export type ArtifactFeedIssue = { path: string; message: string };
 export type ArtifactFeedResult =
-  | { ok: true; artifacts: DiscoveryArtifact[]; seasons: Season[] }
+  | { ok: true; artifacts: DiscoveryArtifact[]; seasons: Season[]; quizQuestions: QuizQuestion[] }
   | { ok: false; issues: ArtifactFeedIssue[] };

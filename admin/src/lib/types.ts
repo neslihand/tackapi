@@ -84,6 +84,11 @@ export type AdminRoute = { id: number; slug: string; title: string; kicker: stri
   published: boolean; created_by: string | null; updated_at: string | null; stops: RouteStop[] };
 export type AutoRoute = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
 
+// Bilgi yarışması sorusu (sitede "Tarihin İzinde"): panelde yazılır, bir esere bağlıdır
+export type QuizQuestion = { id: number; question: string; options: string[]; answer: number; explanation: string; published: boolean;
+  created_by: string | null; updated_at: string | null; monument: string; monument_name: string; city: string; review_status: string; pilot: boolean };
+export type QuizFields = { monument?: string; question?: string; options?: string[]; answer?: number; explanation?: string; published?: boolean };
+
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
 export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };
 export type Period = { slug: string; name_tr: string; parent: string | null; city: string | null; start: number; end: number };

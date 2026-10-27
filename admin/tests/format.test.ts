@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, geoStatus, methodLabel, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
+import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, geoStatus, methodLabel, quizIssues, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
 import type { GeoInfo, MonumentDetail } from '../src/lib/types.ts';
 
 const detail = {
@@ -73,4 +73,13 @@ test('Konum durumu: otomatik konum onay bekler, doğrulanmış ve elle girilmiş
   const missing = geoStatus({ source: 'nominatim', precision: null, checked: false, detail: { status: 'not_found', tried: ['A, Bursa'] } }, false);
   assert.ok(missing.text.includes('bulunamadı') && missing.text.includes('A, Bursa') && !missing.canConfirm);
   assert.equal(geoStatus(null, false).tone, 'none');   // göç 012 uygulanmamış
+});
+
+test('Yarışma sorusu sitedeki kurallarla doğrulanır', () => {
+  const ok = { monument: 'bursa-ulucami', question: 'Ulucami hangi şehirdedir?', options: ['Bursa', 'Konya', 'Hatay', 'Edirne'], answer: 0, explanation: 'Kitaba göre Bursa’dadır.' };
+  assert.deepEqual(quizIssues(ok), []);
+  assert.ok(quizIssues({ ...ok, options: ['Bursa', 'BURSA', 'Hatay', 'Edirne'] }).some(m => m.includes('farklı')));
+  assert.ok(quizIssues({ ...ok, answer: null }).some(m => m.includes('Doğru cevabı')));
+  assert.ok(quizIssues({ ...ok, monument: '' }).some(m => m.includes('eseri')));
+  assert.ok(quizIssues({ ...ok, explanation: '' }).some(m => m.includes('Açıklama')));
 });

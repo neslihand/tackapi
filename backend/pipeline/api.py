@@ -11,12 +11,16 @@ Uç noktalar
        → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
   GET  /api/monuments/{slug}?lang=tr|en
   GET  /api/routes?pilot=true&auto=true   → keşif rotaları [{id, kicker, title, description, artifactIds, auto}]
+  GET  /api/quiz?pilot=true               → panelde yazılan yarışma soruları [{id, question, options, answer, explanation, artifactId}]
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
+VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında sunulur; 'off' kapatır
+VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/panel/' altında sunulur; 'off' kapatır
+                    Tek adresten demo: önce iki uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
 """
 import os, sys, re, time, logging, threading, mimetypes
 from collections import defaultdict, deque
@@ -28,7 +32,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz
 
 log = logging.getLogger('vakif.api')
 
@@ -247,6 +251,12 @@ def public_routes(pilot: bool | None = None, auto: bool = True):
     return routes.public_routes(db, pilot, auto)
 
 
+@app.get('/api/quiz')
+def public_quiz(pilot: bool | None = None):
+    """Bilgi yarışması için panelde yazılıp yayımlanan sorular (yalnızca yayındaki eserlerin)."""
+    return quiz.public_questions(db, pilot)
+
+
 @app.get('/api/monuments/{slug}')
 def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
     if not is_published(slug):
@@ -444,3 +454,22 @@ async def visual_search_endpoint(request: Request, file: UploadFile = File(...),
                   for c in r['candidates'] if c['slug'] in items]
     return dict(confident=r['confident'] and bool(candidates), match=candidates[0]['item'] if r['confident'] and candidates else None,
                 candidates=candidates)
+
+
+# ------------------------------------------------------------------------------------------- tek adresten site
+# Derlenmiş site '/' ve yönetim paneli '/panel/' altında: demo tek sunucu ve tek adresle açılır. /api ve /media bu
+# bağlamalardan önce tanımlandığı için etkilenmez. Klasör yoksa (derlenmemişse) bağlanmaz; geliştirmede Vite kullanılır.
+ROOT_DIR = os.path.join(os.path.dirname(__file__), '..', '..')
+
+
+def static_dir(env, default):
+    path = os.environ.get(env) or os.path.join(ROOT_DIR, default)
+    return path if path != 'off' and os.path.isfile(os.path.join(path, 'index.html')) else None
+
+
+PANEL_DIR = static_dir('VAKIF_PANEL_DIR', os.path.join('admin', 'dist'))
+SITE_DIR = static_dir('VAKIF_SITE_DIR', os.path.join('frontend', 'dist'))
+if PANEL_DIR:
+    app.mount('/panel', StaticFiles(directory=PANEL_DIR, html=True), name='panel')
+if SITE_DIR:
+    app.mount('/', StaticFiles(directory=SITE_DIR, html=True), name='site')

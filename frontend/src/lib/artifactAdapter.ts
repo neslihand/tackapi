@@ -1,7 +1,8 @@
 import type { Artifact } from '../data/artifacts';
 import type { ArtifactChapter, ArtifactFeedIssue, ArtifactFeedResult, DiscoveryArtifact } from './artifactContract';
 import type { Season } from '../data/collections';
-import { PLACEHOLDER_IMAGE } from './content.ts';
+import { PLACEHOLDER_IMAGE, questionIssues } from './content.ts';
+import type { QuizQuestion } from '../data/artifacts';
 
 type ObjectValue = Record<string, unknown>;
 const isObject = (value: unknown): value is ObjectValue => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -87,7 +88,19 @@ export function adaptArtifactFeed(input: unknown): ArtifactFeedResult {
       sourceReferences: sources, chapters, detail,
     });
   });
-  return issues.length ? { ok: false, issues } : { ok: true, artifacts, seasons: adaptSeasons(input.seasons, artifacts) };
+  return issues.length ? { ok: false, issues }
+    : { ok: true, artifacts, seasons: adaptSeasons(input.seasons, artifacts), quizQuestions: adaptQuestions(input.quizQuestions, artifacts) };
+}
+
+// Written quiz questions are extra too: one that breaks the quiz rules (content.ts → questionIssues) or asks about a
+// work outside this feed is dropped.
+function adaptQuestions(value: unknown, artifacts: DiscoveryArtifact[]): QuizQuestion[] {
+  if (!Array.isArray(value)) return [];
+  const ids = artifacts.map(a => a.id);
+  const seen = new Set<string>();
+  return value.filter((q): q is QuizQuestion => isObject(q) && typeof q.id === 'string' && !seen.has(q.id)
+    && Array.isArray(q.options) && !questionIssues(q as QuizQuestion, ids).length && Boolean(seen.add(q.id)))
+    .map(q => ({ id: q.id, question: q.question.trim(), options: q.options.map(o => o.trim()), answer: q.answer, explanation: q.explanation.trim(), artifactId: q.artifactId }));
 }
 
 // Routes are extra: a malformed one is dropped rather than failing the whole collection. Stops must be items of this

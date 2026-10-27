@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Building2, History, Images, LayoutDashboard, LogOut, MapPinned, Plus, Route, ScanSearch, SplitSquareVertical } from 'lucide-react';
+import { Building2, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Plus, Route, ScanSearch, SplitSquareVertical } from 'lucide-react';
 import { api, getToken, handleUnauthorized, setToken } from './lib/api';
 import { Link, useRoute } from './lib/navigation';
 import { Brand, ToastProvider } from './components/UI';
@@ -15,11 +15,12 @@ import { PreviewPage } from './pages/Preview';
 import { Segmentation } from './pages/Segmentation';
 import { VisualSearchPage } from './pages/VisualSearchPage';
 import { RoutesPage } from './pages/Routes';
+import { QuizPage } from './pages/Quiz';
 
 const NAV: [string, string, ReactNode][] = [
   ['/', 'Pano', <LayoutDashboard size={17} />], ['/fotograflar', 'Fotoğraflar', <Images size={17} />],
   ['/eserler', 'Eserler', <Building2 size={17} />], ['/bolumleme', 'Bölümleme', <SplitSquareVertical size={17} />], ['/yeni-eser', 'Yeni eser', <Plus size={17} />],
-  ['/gorsel-arama', 'Görselle arama', <ScanSearch size={17} />], ['/rotalar', 'Keşif rotaları', <Route size={17} />],
+  ['/gorsel-arama', 'Görselle arama', <ScanSearch size={17} />], ['/rotalar', 'Keşif rotaları', <Route size={17} />], ['/sorular', 'Yarışma soruları', <CircleHelp size={17} />],
   ['/sehirler', 'Şehirler', <MapPinned size={17} />], ['/kayit', 'Değişiklik kaydı', <History size={17} />],
 ];
 
@@ -39,6 +40,7 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (path === '/kayit') page = <AuditLog params={params} />;
   else if (path === '/gorsel-arama') page = <VisualSearchPage />;
   else if (path === '/rotalar') page = <RoutesPage />;
+  else if (path === '/sorular') page = <QuizPage />;
   else page = <div className="empty">Bu sayfa bulunamadı. <Link className="text-link" to="/">Panoya dön</Link></div>;
   useEffect(() => { document.getElementById('main')?.focus({ preventScroll: true }); }, [path]);
   return <div className="shell">

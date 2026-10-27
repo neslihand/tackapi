@@ -50,7 +50,7 @@ export function ContentProvider({ children, artifactFeed }: { children: ReactNod
     return () => window.removeEventListener('storage', sync);
   }, [readOnly]);
   const value = useMemo<Store>(() => ({
-    ...(feed ? { artifacts: feed.ok ? feed.artifacts : [], quizQuestions: [], seasons: feed.ok ? feed.seasons : [] } : state.content),
+    ...(feed ? { artifacts: feed.ok ? feed.artifacts : [], quizQuestions: feed.ok ? feed.quizQuestions : [], seasons: feed.ok ? feed.seasons : [] } : state.content),
     eras, readOnly, issues: feed && !feed.ok ? feed.issues : [],
     progressStorageKey: readOnly ? 'esik:passport:feed:v1' : STORAGE_KEY,
     localContent: state.content, overrides: readOnly ? {} : state.overrides,

@@ -236,3 +236,8 @@
 @media (forced-colors: active) {
   .cine-caption, .cine-panel, .tale-page, .story-page .story-index { border: 1px solid CanvasText; }
 }
+
+/* Detaylı Anlatım, bütün metin: paragraflar arka arkaya, fotoğraf merceği yanda sabit. */
+.story-chapter.brief-whole { min-height: 0; padding-bottom: 80px; }
+.brief-whole .brief-lead + .brief-lead { margin-top: 1.1em; }
+.brief-whole .narrative-note { display: block; margin-top: 28px; }

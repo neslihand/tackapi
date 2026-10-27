@@ -405,6 +405,20 @@ CREATE TABLE route_stop (
     PRIMARY KEY (route_id, monument_id)
 );
 
+-- Bilgi yarışması soruları (göç 014): yönetici panelde yazar; her soru bir esere bağlıdır.
+CREATE TABLE quiz_question (
+    id                  serial PRIMARY KEY,
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    question            text NOT NULL,
+    options             text[] NOT NULL CHECK (cardinality(options) = 4),
+    answer              int NOT NULL CHECK (answer BETWEEN 0 AND 3),
+    explanation         text NOT NULL,
+    published           boolean NOT NULL DEFAULT false,
+    created_by          text,
+    updated_at          timestamptz
+);
+CREATE INDEX quiz_question_monument ON quiz_question (monument_id);
+
 CREATE TABLE schema_migration (
     name                text PRIMARY KEY,
     applied_at          timestamptz NOT NULL DEFAULT now()
@@ -416,7 +430,7 @@ INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_im
                                          ('006_narration_edit.sql'), ('007_artwork_image.sql'),
                                          ('008_image_embedding.sql'), ('009_pilot.sql'),
                                          ('010_monument_removed.sql'), ('011_para_split.sql'), ('012_geo.sql'),
-                                         ('013_route.sql');
+                                         ('013_route.sql'), ('014_quiz.sql');
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (

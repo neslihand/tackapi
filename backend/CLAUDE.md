@@ -126,7 +126,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
-- **Testler:** `python -m unittest discover -s tests` (132 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (140 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 ## Mimari özeti
@@ -188,9 +188,13 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
 1. **Ön yüz bağlantısı (27 Ekim 2026, pilot eserler):** `VITE_VAKIF_API=1` ile koleksiyon, eser sayfası, "Esere Sor",
    kamera ve harita API'den gelir (`frontend/src/lib/vakifApi.ts`, `frontend/src/vakif/`; eser sayfası panel
    önizlemesindeki `MonumentView`'un kopyası). **28 Ekim 2026:** ana sayfa, Keşif Sezonları (rotalar: `GET /api/routes`,
-   `routes.py`, göç `013_route.sql` gerçek veritabanında henüz uygulanmadı, panelde `#/rotalar`) ve sinematik hikâye
+   `routes.py`, göç `013_route.sql`, panelde `#/rotalar`) ve sinematik hikâye
    sayfası (kitap metni ve kayıtlı anlatımlar 4 bölüme ayrılır, yeni üretim yok: `frontend/src/vakif/immersive.ts`)
-   geri geldi. Ön yüzün mevcut özelliklerini geliştiriciye sormadan kaldırma. Kalan işler: `docs/on-yuz-baglanti-plani.md`.
+   geri geldi. Ön yüzün mevcut özelliklerini geliştiriciye sormadan kaldırma. Üç anlatım da (kitap metni dahil)
+   bölünmeden, başlıksız gösterilir. **Demo tek adresten:** iki uygulama `npm run build`, sonra uvicorn site `/` ve
+   panel `/panel/` altında sunar (`api.py` sonu). Yazılı yarışma soruları: göç `014_quiz.sql` (gerçek veritabanında
+   henüz uygulanmadı), `quiz.py`, `GET /api/quiz`, panelde `#/sorular`. Göç 013 gerçek veritabanında uygulandı,
+   `visual_search.py --eval` çalıştırıldı (28 Ekim 2026). Kalan işler: `docs/on-yuz-baglanti-plani.md`.
 2. **`ingest.py`:** Bir envanter kitabını (bölümleme → parçalama → çıkarım → embedding → fotoğraf) mevcut veriyi silmeden
    ekler; `--remove-book` ile bir kitabın verisini siler. Demo senaryosu: Hatay'ı silip yeniden eklemek.
 3. Harita ve "Yakınımdakiler": pilot eserler için `geocode.py` ve eser sayfası haritası hazır (göç 012 ve

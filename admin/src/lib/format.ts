@@ -93,6 +93,19 @@ export const PRECISION_LABELS: Record<GeoPrecision, string> = {
   exact: 'elle yerleştirildi', building: 'yapının kendisi', street: 'sokak düzeyinde', neighborhood: 'yalnızca mahalle',
 };
 
+/** Yarışma sorusu doğrulaması; sunucudaki (quiz.issues) ve sitedeki (questionIssues) kurallarla aynı. Boş liste = geçerli. */
+export function quizIssues(q: { monument: string; question: string; options: string[]; answer: number | null; explanation: string }): string[] {
+  const out: string[] = [];
+  const fold = (s: string) => s.trim().toLocaleLowerCase('tr-TR');
+  if (!q.monument) out.push('Sorunun bağlı olduğu eseri seçin.');
+  if (q.question.trim().length < 5 || q.question.length > 240) out.push('Soru 5–240 karakter olmalı.');
+  if (q.options.length !== 4 || q.options.some(o => !o.trim() || o.length > 120)) out.push('Dört seçeneğin tamamı doldurulmalı (her biri en çok 120 karakter).');
+  else if (new Set(q.options.map(fold)).size !== 4) out.push('Seçenekler birbirinden farklı olmalı.');
+  if (q.answer === null || q.answer < 0 || q.answer > 3) out.push('Doğru cevabı işaretleyin.');
+  if (!q.explanation.trim() || q.explanation.length > 400) out.push('Açıklama gerekli (en çok 400 karakter).');
+  return out;
+}
+
 /** Konum durumu: panelde haritanın üstünde gösterilen tek cümle ve onay düğmesinin görünüp görünmeyeceği. */
 export function geoStatus(geo: GeoInfo | null, hasCoords: boolean): { text: string; tone: 'ok' | 'warn' | 'none'; canConfirm: boolean } {
   if (!geo) return hasCoords ? { text: 'Konum girilmiş.', tone: 'ok', canConfirm: false }

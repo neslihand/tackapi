@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AdminImage, AdminRoute, AutoRoute, Book, City, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { AdminImage, AdminRoute, AutoRoute, Book, City, QuizFields, QuizQuestion, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -155,5 +155,9 @@ export const api = {
     request<AdminRoute>(`/api/admin/routes/${id}`, json('PATCH', body)),
   setRouteStops: (id: number, slugs: string[]) => request<{ id: number; stops: string[] }>(`/api/admin/routes/${id}/stops`, json('PUT', { slugs })),
   deleteRoute: (id: number) => request<void>(`/api/admin/routes/${id}`, { method: 'DELETE' }),
+  quiz: (monument?: string) => request<{ enabled: boolean; questions: QuizQuestion[] }>(`/api/admin/quiz${qs({ monument })}`),
+  createQuiz: (body: Required<Omit<QuizFields, 'published'>> & { published?: boolean }) => request<QuizQuestion>('/api/admin/quiz', json('POST', body)),
+  updateQuiz: (id: number, body: QuizFields) => request<QuizQuestion>(`/api/admin/quiz/${id}`, json('PATCH', body)),
+  deleteQuiz: (id: number) => request<void>(`/api/admin/quiz/${id}`, { method: 'DELETE' }),
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };

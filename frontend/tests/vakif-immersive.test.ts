@@ -1,22 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CHAPTER_TITLES, divide, toImmersive, units } from '../src/vakif/immersive.ts';
+import { toImmersive } from '../src/vakif/immersive.ts';
 import { adaptArtifactFeed } from '../src/lib/artifactAdapter.ts';
 import type { PublicDetail, PublicItem } from '../src/vakif/model.ts';
-
-test('Metin paragraf sınırlarından, uzunlukça dengeli ve sırası bozulmadan bölünür', () => {
-  const parts = ['a'.repeat(10), 'b'.repeat(10), 'c'.repeat(10), 'd'.repeat(10), 'e'.repeat(10)];
-  const out = divide(parts, 4);
-  assert.equal(out.length, 4);
-  assert.equal(out.join('\n\n'), parts.join('\n\n'));               // hiçbir şey eklenmez ya da atılmaz
-  assert.deepEqual(divide(['x', 'y'], 4), []);
-  assert.equal(divide(['uzun '.repeat(80), 'k', 'k', 'k', 'k'], 4).length, 4);
-});
-
-test('Paragraf azsa cümlelerden bölünür', () => {
-  assert.deepEqual(units('Bir. İki! Üç? Dört.'), ['Bir.', 'İki!', 'Üç?', 'Dört.']);
-  assert.equal(units('P1\n\nP2\n\nP3\n\nP4').length, 4);
-});
 
 const item = {
   slug: 'bursa-osmangazi-ulucami', name: 'Ulucami', alt_names: [], kind: 'mosque', kind_label: 'Cami', city: { slug: 'bursa', name: 'Bursa' },
@@ -37,12 +23,9 @@ const detail = {
 
 test('Arka uç eseri sinematik sayfaya kitap metni ve kayıtlı anlatımlarla, uydurma olmadan çevrilir', () => {
   const a = toImmersive(item, detail)!;
-  assert.equal(a.chapters.length, 4);
-  assert.deepEqual(a.chapters.map(c => c.title), CHAPTER_TITLES);
-  assert.equal(a.chapters.map(c => c.short).join('\n\n'), detail.text);
-  // hikâye ve çocuk anlatımı bölünmez, başlık almaz: kayıtlı metin olduğu gibi
-  assert.ok(a.chapters.every(c => c.story === '' && c.child === ''));
-  assert.deepEqual(a.origin?.narrations, { story: 'H1.\n\nH2.\n\nH3.\n\nH4.', child: 'Ç1. Ç2. Ç3. Ç4. Ç5.' });
+  // üç anlatım da bölünmez ve başlık almaz: kitap metni ve kayıtlı anlatımlar olduğu gibi
+  assert.deepEqual(a.chapters, []);
+  assert.deepEqual(a.origin?.narrations, { short: detail.text, story: 'H1.\n\nH2.\n\nH3.\n\nH4.', child: 'Ç1. Ç2. Ç3. Ç4. Ç5.' });
   assert.equal(a.architect, 'Ali Neccar');
   assert.deepEqual(a.detail, { title: 'Taç kapı', text: 'Kitâbe · sülüs · 1399' });
   assert.equal(a.origin?.photoCredit, 'Bursa I, s. 12');
@@ -50,7 +33,8 @@ test('Arka uç eseri sinematik sayfaya kitap metni ve kayıtlı anlatımlarla, u
   assert.deepEqual(a.sourceReferences, [{ title: 'Bursa I, s. 10–20' }]);
 });
 
-test('Anlatımı ya da fotoğrafı olmayan eser sinematik sayfaya girmez', () => {
+test('Kitap metni, anlatımı ya da fotoğrafı olmayan eser sinematik sayfaya girmez', () => {
+  assert.equal(toImmersive(item, { ...detail, text: '  ' } as PublicDetail), null);
   assert.equal(toImmersive(item, { ...detail, narrations: { story: null, child: detail.narrations.child } } as PublicDetail), null);
   assert.equal(toImmersive(item, { ...detail, images: [] } as unknown as PublicDetail), null);
   const noArt = toImmersive(item, { ...detail, card: { ...detail.card, artworks: [] } } as PublicDetail)!;
@@ -64,4 +48,13 @@ test('Veri akışındaki rotalar yalnızca akıştaki eserleri durak alır; dura
     { id: 'bos', title: 'Boş', artifactIds: ['yok'] }, { title: 'Kimliksiz', artifactIds: ['a-1'] }] });
   assert.ok(feed.ok);
   assert.deepEqual(feed.seasons, [{ id: 'sehir-bursa', kicker: 'ŞEHİR ROTASI', title: 'Bursa rotası', description: '2 durak.', artifactIds: ['b-2', 'a-1'] }]);
+});
+
+test('Panelde yazılan sorular yalnızca kurallara uyuyor ve eser koleksiyondaysa alınır', () => {
+  const rec = { id: 'a-1', slug: 'a-1', name: 'A', city: 'Bursa', period: 'P', category: 'Cami', description: 'D', sourceReferences: [{ title: 'Kitap' }] };
+  const good = { id: 'soru-1', question: 'A hangi şehirdedir?', options: ['Bursa', 'Konya', 'Hatay', 'Edirne'], answer: 0, explanation: 'Kitaba göre Bursa’dadır.', artifactId: 'a-1' };
+  const feed = adaptArtifactFeed({ schemaVersion: 1, items: [rec], quizQuestions: [good, { ...good, id: 'soru-2', artifactId: 'yok' },
+    { ...good, id: 'soru-3', options: ['Bursa', 'Bursa', 'Hatay', 'Edirne'] }, { ...good, id: 'soru-4', answer: 7 }, good] });
+  assert.ok(feed.ok);
+  assert.deepEqual(feed.quizQuestions, [good]);
 });

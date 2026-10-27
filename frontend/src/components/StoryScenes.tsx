@@ -189,9 +189,9 @@ export function BriefChapter({ artifact, index, detail, setDetail }: { artifact:
 export const paragraphs = (text: string) => text.split(/\n\s*\n/).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
 
 // The facts, the image description and the visit note that the chapters would carry, once, after the text.
-function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: 'story' | 'child' }) {
+function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: NarrationMode }) {
   return <>
-    <small className="narrative-note">{mode === 'story' ? 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.' : 'Çocuklar için hazırlanmış sadeleştirilmiş anlatım.'}</small>
+    <small className="narrative-note">{mode === 'story' ? 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.' : mode === 'child' ? 'Çocuklar için hazırlanmış sadeleştirilmiş anlatım.' : `Envanter kitabındaki metin: ${artifact.sourceReferences[0]?.title ?? ''}.`}</small>
     <div className="story-facts"><div><small>DÖNEM</small><strong>{artifact.period}</strong></div><div><small>MİMAR / USTA</small><strong>{artifact.architect}</strong></div><div><small>TARİH</small><strong>{artifact.year}</strong></div><div><small>TÜR</small><strong>{artifact.category}</strong></div></div>
     {artifact.imageAlt && <details className="image-description"><summary>GÖRSELDE NE VAR?</summary><p>{artifact.imageAlt}{artifact.origin ? ` Fotoğraf: ${artifact.origin.photoCredit}.` : ''}</p></details>}
     <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. <Link to="/harita">Haritada gör</Link></p></div>
@@ -258,6 +258,18 @@ export function TaleNarration({ artifact, text }: { artifact: Artifact; text: st
         <button type="button" className={`tale-guide ${talking ? 'talking' : ''} ${hop > 1 ? 'hop' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls="guide-whole" aria-label="Rehber kuş Hüdhüd ile konuş"><Hoopoe key={hop} /></button>
         <p className={`tale-bubble ${talking ? 'open' : ''}`} id="guide-whole" aria-live="polite">{talking ? line : ''}</p>
       </aside>
+    </div>
+  </section>;
+}
+
+/** Detaylı Anlatım, whole: the book's text paragraph by paragraph beside the photograph lens (Stage in Story.tsx). */
+export function BriefNarration({ artifact, text }: { artifact: Artifact; text: string }) {
+  return <section className="story-chapter brief brief-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: kitaptaki metin`}>
+    <div className="brief-body">
+      <span className="chapter-number">KİTAPTAKİ METİN</span>
+      {paragraphs(text).map((p, k) => <p key={k} className="narrative brief-lead">{marked(p)}</p>)}
+      {artifact.detail.title && <p className="detail-hint"><Plus size={15} aria-hidden="true" /><span>{hints.short(artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
+      <NarrationExtras artifact={artifact} mode="short" />
     </div>
   </section>;
 }

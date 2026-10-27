@@ -17,10 +17,10 @@ export type Artifact = {
   chapters: { title: string; short: string; story: string; child: string }[];
   // focus: the detail's position on the illustration, in percent [x, y]; the story stage zooms there.
   detail: { title: string; text: string; focus?: [number, number] };
-  // Set for a monument from the backend: the image is a photograph from the book (not an illustration), the first
-  // telling is the book's own text in chapters and the other two (narrations) are stored texts shown whole, without
-  // chapters or chapter titles. An empty detail title means there is no documented detail to point at.
-  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { story: string; child: string } };
+  // Set for a monument from the backend: the image is a photograph from the book (not an illustration); the three
+  // tellings (the book's own text and two stored narrations) are shown whole, without chapters or chapter titles.
+  // An empty detail title means there is no documented detail to point at.
+  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { short: string; story: string; child: string } };
 };
 
 // Coordinates are approximate discovery markers, not entrances or navigation data.

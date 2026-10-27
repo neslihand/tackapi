@@ -5,6 +5,7 @@
 import type { ArtifactFeed, ArtifactRecord } from './artifactContract.ts';
 import type { ChatRequest } from './chatContract.ts';
 import type { Season } from '../data/collections.ts';
+import type { QuizQuestion } from '../data/artifacts.ts';
 
 export const vakifApiEnabled = () => ['1', 'true', 'on'].includes(String(import.meta.env?.VITE_VAKIF_API ?? '').trim().toLowerCase());
 export const VAKIF_CHAT_ENDPOINT = '/api/chat';
@@ -57,14 +58,15 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export async function loadPilotFeed(): Promise<ArtifactFeed> {
-  // Routes ("Keşif Sezonları") are optional: without them the collection still opens.
-  const [data, seasons] = await Promise.all([
+  // Routes ("Keşif Sezonları") and written quiz questions are optional: without them the collection still opens.
+  const [data, seasons, quizQuestions] = await Promise.all([
     getJson<{ items: VakifItem[] }>('/api/monuments?pilot=true&page_size=200&lang=tr'),
     getJson<Season[]>('/api/routes?pilot=true').catch(() => [] as Season[]),
+    getJson<QuizQuestion[]>('/api/quiz?pilot=true').catch(() => [] as QuizQuestion[]),
   ]);
   items.clear();
   data.items.forEach(item => items.set(item.slug, item));
-  return { schemaVersion: 1, items: data.items.map(toRecord), seasons };
+  return { schemaVersion: 1, items: data.items.map(toRecord), seasons, quizQuestions };
 }
 
 export const fetchMonument = <T,>(slug: string) => getJson<T>(`/api/monuments/${encodeURIComponent(slug)}?lang=tr`);

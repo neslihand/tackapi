@@ -3,14 +3,20 @@
 Kapsam: şimdilik yalnızca **pilot eserler** (`monument.pilot = true`). Ön yüz `../frontend` (React + Vite).
 
 ## Nasıl açılır?
+**Demo (tek adres, tek sunucu):** site `http://127.0.0.1:8000/`, yönetim paneli `http://127.0.0.1:8000/panel/`.
 ```powershell
-# 1) arka uç (backend klasöründe)
-python -m uvicorn api:app --app-dir pipeline --port 8000
-# 2) ön yüz (frontend klasöründe; .env.example'ı .env olarak kopyala)
-npm run dev
+cd ..\frontend; npm run build      # site → frontend/dist
+cd ..\admin;    npm run build      # panel → admin/dist (base /panel/)
+cd ..\backend;  python -m uvicorn api:app --app-dir pipeline --port 8000
 ```
-`.env` içinde `VITE_VAKIF_API=1` ve `VAKIF_API_PROXY=http://127.0.0.1:8000` olmalı. Vite `/api` ve `/media`
-isteklerini arka uca yönlendirir (CORS gerekmez). `VITE_VAKIF_API` boşsa site eski 6 örnek eserle çalışır.
+`api.py` derlenmiş klasörleri bulursa kendiliğinden bağlar (`VAKIF_SITE_DIR`, `VAKIF_PANEL_DIR` ile başka klasör,
+`off` ile kapatılır). Site ya da panelde değişiklik yapınca yeniden `npm run build` gerekir; uvicorn yeniden
+başlatılmasa da yeni dosyaları sunar. Sitedeki "Yönetim Paneli" bağlantısı derlemede `/panel/`'e gider
+(`frontend/.env.production`).
+
+**Geliştirme (iki sunucu):** arka uç yukarıdaki gibi; ön yüz `frontend` klasöründe `npm run dev`. `.env` içinde
+`VITE_VAKIF_API=1` ve `VAKIF_API_PROXY=http://127.0.0.1:8000` var; Vite `/api` ve `/media` isteklerini arka uca
+yönlendirir. `VITE_VAKIF_API` boşsa site eski 6 örnek eserle çalışır.
 
 ## Bağlananlar (API hazırdı)
 | Ön yüz | Arka uç | Ön yüzdeki dosya |
@@ -35,11 +41,8 @@ Bu iş için arka uçta yapılan küçük değişiklikler: `/api/monuments`'a `p
 
 ## Hazır olmayanlar: arka uç planı (öncelik sırasıyla)
 
-### 1. Tek adresten demo: ön yüzü FastAPI'den sunmak (yüksek öncelik, küçük iş)
-Finalde geliştiricinin bilgisayarında iki sunucu (Vite + uvicorn) yerine tek adres daha güvenli.
-- `api.py`: `VAKIF_SITE_DIR` (ör. `../frontend/dist`) tanımlıysa `/` altında `StaticFiles(html=True)` bağla;
-  `/api` ve `/media` önce gelsin. Ön yüz hash yönlendirmesi kullandığı için ek yönlendirme kuralı gerekmez.
-- Ön yüzü `VITE_VAKIF_API=1 npm run build` ile derle. Test: `GET /` → `index.html`, `GET /api/cities` bozulmamalı.
+### 1. Tek adresten demo — YAPILDI (28 Ekim 2026)
+Site `/`, panel `/panel/` altında uvicorn'dan sunulur (yukarıdaki "Nasıl açılır?"). Test: `tests/test_quiz.py`.
 
 ### 2. Liste öğesine mimar / bânî (yüksek öncelik, küçük iş, yapay zekâ yok)
 Ön yüz kartta, eser sayfasında, yarışmada ve "dedektif" oyununda `architect` alanını kullanıyor; şimdi hep boş.
@@ -76,9 +79,19 @@ Arka uç modunda da kapı açılışlı ana sayfa açılır.
 Kalan:  "Proje & Kaynaklar" sayfasındaki metinler (6 eser, UNESCO/TDV kaynakları) arka uç moduna göre
 güncellenmeli: kaynak Vakıf Katılım envanter kitapları.
 
-### 6. Görsel arama eşiği (orta öncelik, betik hazır)
-Pilot fotoğrafların vektörleri yerel modelle üretildiyse `python visual_search.py --eval` çalıştırılıp
-`VAKIF_VISUAL_MIN` buna göre ayarlanmalı. Demo öncesi gerçek fotoğraflarla (telefondan çekilmiş) 5–10 deneme.
+### 6. Görsel arama eşiği — `--eval` çalıştırıldı (28 Ekim 2026)
+Önerilen `VAKIF_VISUAL_MIN` değeri ortam değişkeni olarak ayarlanmalı. Demo öncesi telefondan çekilmiş gerçek
+fotoğraflarla 5–10 deneme önerilir.
+
+### 6b. Yazılı yarışma soruları — YAPILDI (28 Ekim 2026)
+Göç `014_quiz.sql` (`quiz_question`; gerçek veritabanında henüz uygulanmadı), `pipeline/quiz.py`,
+`GET /api/quiz?pilot=true`, panelde `#/sorular` (eser, soru, dört seçenek, doğru cevap, açıklama, yayına alma).
+Kurallar sitenin kendi doğrulamasıyla aynı (`quiz.issues` = `questionIssues`). Site yazılı soruları künyeden
+ürettiği soruların önüne koyar; kurala uymayan ya da koleksiyon dışı esere ait soru düşer.
+
+### 6c. Detaylı Anlatım başlıkları — YAPILDI (28 Ekim 2026)
+Kitap metni de bölünmeden, başlıksız, paragraf paragraf gösterilir (`BriefNarration`); fotoğraf merceği yanda
+sabit, mimari ayrıntı noktası merceğin üstündedir.
 
 ### 7. "Esere Sor" akışı (düşük öncelik)
 Cevap şimdi tek parça JSON geliyor; ön yüz akışlı (SSE) cevabı da anlıyor. Bekleme süresi demoda sorun olursa

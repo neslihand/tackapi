@@ -20,7 +20,7 @@ import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes
+import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes, quiz
 
 log_warn = logging.getLogger('vakif.admin').warning
 pilot_targets = pilot.TARGETS
@@ -185,6 +185,23 @@ class RouteCreate(RouteFields):
 
 class RouteStops(Strict):
     slugs: list[str] = Field(max_length=60)   # sıralı; boş liste durakları kaldırır
+
+
+class QuizFields(Strict):
+    monument: str | None = Field(None, max_length=200)            # eser slug'ı
+    question: str | None = Field(None, max_length=240)
+    options: list[str] | None = Field(None, min_length=4, max_length=4)
+    answer: int | None = Field(None, ge=0, le=3)
+    explanation: str | None = Field(None, max_length=400)
+    published: bool | None = None
+
+
+class QuizCreate(QuizFields):
+    monument: str = Field(max_length=200)
+    question: str = Field(max_length=240)
+    options: list[str] = Field(min_length=4, max_length=4)
+    answer: int = Field(ge=0, le=3)
+    explanation: str = Field(max_length=400)
 
 
 class CityCreate(Strict):
@@ -1125,6 +1142,80 @@ def build_router(db, media_dir, save_webp):
         rt = route_row(route_id)
         db.execute('DELETE FROM route WHERE id = %(r)s', dict(r=route_id))
         log(user, 'route.delete', f"route:{rt['slug']}", dict(title=rt['title']))
+        return Response(status_code=204)
+
+    # ------------------------------------------------------------------------------------------ yarışma soruları
+    QUIZ_SELECT = """SELECT q.id, q.question, q.options, q.answer, q.explanation, q.published, q.created_by, q.updated_at,
+                            m.slug AS monument, m.name_tr AS monument_name, c.slug AS city, m.review_status, m.pilot
+                     FROM quiz_question q JOIN monument m ON m.id = q.monument_id JOIN city c ON c.id = m.city_id"""
+
+    def quiz_row(qid):
+        if not quiz.enabled(db):
+            raise HTTPException(503, 'Yarışma soruları kapalı: önce python migrate.py --apply')
+        rows = db.query(f'{QUIZ_SELECT} WHERE q.id = %(i)s', dict(i=qid))
+        if not rows:
+            raise HTTPException(404, 'Soru bulunamadı')
+        return rows[0]
+
+    def monument_id_of(slug):
+        rows = db.query('SELECT id FROM monument WHERE slug = %(s)s', dict(s=slug))
+        if not rows:
+            raise HTTPException(422, f'Bilinmeyen eser: {slug}')
+        return rows[0]['id']
+
+    def check_quiz(q):
+        problems = quiz.issues(q['question'], q['options'], q['answer'], q['explanation'])
+        if problems:
+            raise HTTPException(422, ' '.join(problems))
+
+    @r.get('/quiz')
+    def list_quiz(monument: str | None = None, user: str = Depends(admin_user)):
+        if not quiz.enabled(db):
+            return dict(enabled=False, questions=[])
+        return dict(enabled=True, questions=db.query(f"""{QUIZ_SELECT}
+            WHERE %(m)s::text IS NULL OR m.slug = %(m)s::text ORDER BY m.name_tr, q.id""", dict(m=monument)))
+
+    @r.post('/quiz', status_code=201)
+    def create_quiz(body: QuizCreate, user: str = Depends(admin_user)):
+        if not quiz.enabled(db):
+            raise HTTPException(503, 'Yarışma soruları kapalı: önce python migrate.py --apply')
+        q = dict(question=body.question.strip(), options=[o.strip() for o in body.options], answer=body.answer,
+                 explanation=body.explanation.strip())
+        check_quiz(q)
+        qid = db.query("""INSERT INTO quiz_question(monument_id, question, options, answer, explanation, published, created_by, updated_at)
+                          VALUES (%(m)s, %(q)s, %(o)s, %(a)s, %(e)s, coalesce(%(p)s::boolean, false), %(u)s, now()) RETURNING id""",
+                       dict(m=monument_id_of(body.monument), q=q['question'], o=q['options'], a=q['answer'],
+                            e=q['explanation'], p=body.published, u=user))[0]['id']
+        log(user, 'quiz.create', body.monument, dict(id=qid, question=q['question']))
+        return quiz_row(qid)
+
+    @r.patch('/quiz/{qid}')
+    def update_quiz(qid: int, body: QuizFields, user: str = Depends(admin_user)):
+        old = quiz_row(qid)
+        data = body.model_dump(exclude_unset=True)
+        merged = dict(question=(data.get('question') or old['question']).strip(),
+                      options=[o.strip() for o in (data.get('options') or old['options'])],
+                      answer=data['answer'] if data.get('answer') is not None else old['answer'],
+                      explanation=(data.get('explanation') or old['explanation']).strip())
+        check_quiz(merged)
+        sets, params = [], dict(id=qid)
+        for k in ('question', 'options', 'answer', 'explanation'):
+            if k in data and merged[k] != (list(old[k]) if k == 'options' else old[k]):
+                sets.append(f'{k} = %({k})s'); params[k] = merged[k]
+        if data.get('published') is not None and data['published'] != old['published']:
+            sets.append('published = %(published)s'); params['published'] = data['published']
+        if data.get('monument') and data['monument'] != old['monument']:
+            sets.append('monument_id = %(mid)s'); params['mid'] = monument_id_of(data['monument'])
+        if sets:
+            db.execute(f"UPDATE quiz_question SET {', '.join(sets)}, updated_at = now() WHERE id = %(id)s", params)
+            log(user, 'quiz.update', old['monument'], dict(id=qid, changed=[s.split(' ')[0] for s in sets]))
+        return quiz_row(qid)
+
+    @r.delete('/quiz/{qid}', status_code=204)
+    def delete_quiz(qid: int, user: str = Depends(admin_user)):
+        old = quiz_row(qid)
+        db.execute('DELETE FROM quiz_question WHERE id = %(i)s', dict(i=qid))
+        log(user, 'quiz.delete', old['monument'], dict(id=qid, question=old['question']))
         return Response(status_code=204)
 
     @r.get('/log')
