@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors
 
 log = logging.getLogger('vakif.api')
 
@@ -52,6 +52,9 @@ PUBLISHED = "m.review_status = 'published'"
 
 # Yönetim uçları (/api/admin/*, bkz. admin.py)
 app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.save_webp(data, rel, MEDIA_DIR)))
+# Ziyaretçi uçları: hesap, pasaport, davranış olayları (visitors.py)
+visitor_router = visitors.build_router(db, MEDIA_DIR)
+app.include_router(visitor_router)
 
 
 @app.on_event('startup')

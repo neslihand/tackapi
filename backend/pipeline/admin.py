@@ -20,7 +20,7 @@ import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes, quiz
+import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes, quiz, insights
 
 log_warn = logging.getLogger('vakif.admin').warning
 pilot_targets = pilot.TARGETS
@@ -202,6 +202,16 @@ class QuizCreate(QuizFields):
     options: list[str] = Field(min_length=4, max_length=4)
     answer: int = Field(ge=0, le=3)
     explanation: str = Field(max_length=400)
+
+
+class ContributionReview(Strict):
+    status: Literal['pending', 'approved', 'rejected']
+    reject_reason: str | None = Field(None, max_length=300)
+
+
+class SettingsIn(Strict):
+    default_mode: Literal['auto', 'short', 'story', 'child'] | None = None
+    featured_route: str | None = Field(None, max_length=120)      # 'auto', 'none' ya da rota kimliği
 
 
 class CityCreate(Strict):
@@ -419,6 +429,8 @@ def build_router(db, media_dir, save_webp):
                                           WHERE monument_id IS NULL AND review_status <> 'rejected'""")[0]['n'],
             segmentation_pending=db.query("SELECT count(*) AS n FROM para_fix WHERE decision = 'pending'")[0]['n']
                                  if textfix_db.enabled(db) else 0,
+            contributions_pending=db.query("SELECT count(*) AS n FROM contribution WHERE status = 'pending'")[0]['n']
+                                  if db.query("SELECT to_regclass('contribution') IS NOT NULL AS ok")[0]['ok'] else 0,
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'],
@@ -1217,6 +1229,69 @@ def build_router(db, media_dir, save_webp):
         db.execute('DELETE FROM quiz_question WHERE id = %(i)s', dict(i=qid))
         log(user, 'quiz.delete', old['monument'], dict(id=qid, question=old['question']))
         return Response(status_code=204)
+
+    # ------------------------------------------------------------------------------------------ ziyaretçi katkıları
+    @r.get('/contributions')
+    def list_contributions(status: Literal['pending', 'approved', 'rejected'] | None = 'pending',
+                           page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200), user: str = Depends(admin_user)):
+        """Onay kuyruğu: katkı, eser, katkıyı yapan (takma ad) ve kullanıcının diğer katkı sayısı."""
+        if not db.query("SELECT to_regclass('contribution') IS NOT NULL AS ok")[0]['ok']:
+            return dict(enabled=False, total=0, items=[], counts=[])
+        p = dict(st=status, lim=page_size, off=(page - 1) * page_size)
+        where = 'WHERE %(st)s::text IS NULL OR c.status = %(st)s::text'
+        items = db.query(f"""SELECT c.id, c.kind, c.text_kind, c.body, c.file, c.width, c.height, c.status, c.reject_reason,
+                                      c.reviewed_by, c.reviewed_at, c.created_at, m.slug AS monument, m.name_tr AS monument_name,
+                                      u.display_name AS author, (u.deleted_at IS NOT NULL) AS author_deleted,
+                                      (SELECT count(*) FROM contribution c2 WHERE c2.user_id = c.user_id) AS author_total
+                               FROM contribution c JOIN monument m ON m.id = c.monument_id LEFT JOIN app_user u ON u.id = c.user_id
+                               {where} ORDER BY c.created_at {'ASC' if status == 'pending' else 'DESC'}, c.id
+                               LIMIT %(lim)s OFFSET %(off)s""", p)
+        for it in items:
+            if it['file']:
+                it['src'], it['thumb'] = f"/media/{it['file']}", f"/media/thumbs/{it['file']}"
+        return dict(enabled=True, total=db.query(f'SELECT count(*) AS n FROM contribution c {where}', p)[0]['n'], items=items,
+                    counts=db.query('SELECT status, count(*) AS n FROM contribution GROUP BY status ORDER BY status'))
+
+    @r.patch('/contributions/{cid}')
+    def review_contribution(cid: int, body: ContributionReview, user: str = Depends(admin_user)):
+        rows = db.query('SELECT c.*, m.slug FROM contribution c JOIN monument m ON m.id = c.monument_id WHERE c.id = %(i)s', dict(i=cid))
+        if not rows:
+            raise HTTPException(404, 'Katkı bulunamadı')
+        if body.status == 'rejected' and not body.reject_reason:
+            raise HTTPException(422, 'Reddetme gerekçesini yazın (katkıyı yapan görür).')
+        db.execute("""UPDATE contribution SET status = %(s)s, reject_reason = %(r)s, reviewed_by = %(u)s,
+                      reviewed_at = CASE WHEN %(s)s = 'pending' THEN NULL ELSE now() END WHERE id = %(i)s""",
+                   dict(s=body.status, r=body.reject_reason if body.status == 'rejected' else None, u=user, i=cid))
+        log(user, f'contribution.{body.status}', rows[0]['slug'], dict(id=cid, kind=rows[0]['kind'], reason=body.reject_reason))
+        return dict(id=cid, status=body.status)
+
+    # ------------------------------------------------------------------------------------------ analitik ve ayarlar
+    def insights_ready():
+        if not db.query("SELECT to_regclass('analytics_event') IS NOT NULL AS ok")[0]['ok']:
+            raise HTTPException(503, 'Analitik kapalı: önce python migrate.py --apply (göç 015)')
+
+    @r.get('/insights')
+    def get_insights(days: int = Query(30, ge=1, le=365), demo: bool = True, user: str = Depends(admin_user)):
+        """Veriyle gelişen döngünün panosu (insights.dashboard). demo=false deneme verisini dışarıda bırakır."""
+        insights_ready()
+        return insights.dashboard(db, days, demo)
+
+    @r.get('/settings')
+    def get_site_settings(user: str = Depends(admin_user)):
+        insights_ready()
+        return dict(stored=insights.get_settings(db), effective=insights.effective_settings(db))
+
+    @r.put('/settings')
+    def put_site_settings(body: SettingsIn, user: str = Depends(admin_user)):
+        insights_ready()
+        for key, value in body.model_dump(exclude_unset=True).items():
+            if value is None:
+                continue
+            db.execute("""INSERT INTO site_setting(key, value, updated_by, updated_at) VALUES (%(k)s, %(v)s, %(u)s, now())
+                          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by,
+                          updated_at = now()""", dict(k=key, v=value, u=user))
+            log(user, 'settings.update', key, dict(value=value))
+        return dict(stored=insights.get_settings(db), effective=insights.effective_settings(db))
 
     @r.get('/log')
     def admin_log(target: str | None = None, limit: int = Query(100, ge=1, le=500), user: str = Depends(admin_user)):
