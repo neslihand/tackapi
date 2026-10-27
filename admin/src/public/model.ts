@@ -11,6 +11,8 @@ export type PublicItem = {
   built: { from: number | null; to: number | null; label: string | null; basis: string | null; basis_label: string | null };
   parent: { slug: string; name: string } | null; children_count: number; summary: string | null; status: string | null;
   has_artworks: boolean; image: PublicImage | null; source: { book: string | null; pages: [number, number] | null };
+  // kitaptaki sırayla, virgülle; bânî (patron) mimar diye gösterilmez
+  architect?: string | null; builder?: string | null; patron?: string | null;
 };
 
 export type Card = {
