@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AdminImage, AdminRoute, AutoRoute, Book, City, QuizFields, QuizQuestion, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -159,5 +159,13 @@ export const api = {
   createQuiz: (body: Required<Omit<QuizFields, 'published'>> & { published?: boolean }) => request<QuizQuestion>('/api/admin/quiz', json('POST', body)),
   updateQuiz: (id: number, body: QuizFields) => request<QuizQuestion>(`/api/admin/quiz/${id}`, json('PATCH', body)),
   deleteQuiz: (id: number) => request<void>(`/api/admin/quiz/${id}`, { method: 'DELETE' }),
+  contributions: (status: ContributionStatus | null, page = 1) =>
+    request<{ enabled: boolean; total: number; items: Contribution[]; counts: { status: ContributionStatus; n: number }[] }>(
+      `/api/admin/contributions${qs({ status: status ?? '', page })}`),
+  reviewContribution: (id: number, body: { status: ContributionStatus; reject_reason?: string | null }) =>
+    request<{ id: number; status: ContributionStatus }>(`/api/admin/contributions/${id}`, json('PATCH', body)),
+  insights: (days: number, demo: boolean) => request<Insights>(`/api/admin/insights${qs({ days, demo })}`),
+  settings: () => request<Insights['settings']>('/api/admin/settings'),
+  saveSettings: (body: Partial<SiteSettings>) => request<Insights['settings']>('/api/admin/settings', json('PUT', body)),
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };

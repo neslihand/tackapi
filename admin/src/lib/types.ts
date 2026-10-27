@@ -12,7 +12,7 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
 export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
-  segmentation_pending: number;
+  segmentation_pending: number; contributions_pending?: number;
   // MVP pilot seçkisi: şehir başına seçilen eser ve hedef (009 göçü yoksa boş)
   pilot?: { city: string; n: number; target: number | null }[] };
 
@@ -88,6 +88,35 @@ export type AutoRoute = { id: string; kicker: string; title: string; description
 export type QuizQuestion = { id: number; question: string; options: string[]; answer: number; explanation: string; published: boolean;
   created_by: string | null; updated_at: string | null; monument: string; monument_name: string; city: string; review_status: string; pilot: boolean };
 export type QuizFields = { monument?: string; question?: string; options?: string[]; answer?: number; explanation?: string; published?: boolean };
+
+// Ziyaretçi katkısı (fotoğraf ya da metin); panelde onaylanır, sitede kitap bilgisinden ayrı görünür
+export type ContributionStatus = 'pending' | 'approved' | 'rejected';
+export type Contribution = { id: number; kind: 'photo' | 'text'; text_kind: 'memory' | 'info' | 'correction' | null; body: string | null;
+  file: string | null; src?: string; thumb?: string; width: number | null; height: number | null; status: ContributionStatus;
+  reject_reason: string | null; reviewed_by: string | null; reviewed_at: string | null; created_at: string; monument: string;
+  monument_name: string; author: string | null; author_deleted: boolean | null; author_total: number };
+
+// Veriyle gelişen döngünün panosu (GET /api/admin/insights)
+export type Count2 = { value: string; n: number };
+export type SegmentRow = { id: string; name: string; description: string; visitors: number; any: number; modes: Record<string, number> };
+export type Suggestion = { kind: 'gap' | 'drop' | 'question' | 'search' | 'segment'; slug: string | null; title: string; detail: string; action: string };
+export type SiteSettings = { default_mode: string; featured_route: string | null };
+export type Insights = {
+  days: number; demo: boolean;
+  totals: { visitors: number; events: number; registered: number; active_users: number; demo_events: number; views_per_visitor: number };
+  daily: { day: string; visitors: number; events: number }[];
+  monuments: { slug: string; name_tr: string; city: string; visitors: number; questions: number; stamps: number; favorites: number;
+    avg_seconds: number | null; deep: number }[];
+  modes: { mode: string; label: string; n: number }[];
+  segments: SegmentRow[];
+  funnel: { visited: number; viewed: number; read: number; asked: number; stamped: number; contributed: number };
+  searches: { q: string; n: number; empty: number }[];
+  questions: { slug: string | null; question: string; n: number; no_info: number }[];
+  camera: { result: string; n: number }[];
+  profile: { age_range: Count2[]; home_city: Count2[]; purposes: Count2[]; interests: Count2[] };
+  suggestions: Suggestion[];
+  settings: { stored: SiteSettings; effective: SiteSettings & { source: Record<string, string> } };
+};
 
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
 export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };
