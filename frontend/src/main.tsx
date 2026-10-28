@@ -23,6 +23,7 @@ import './catalogue.css';
 import './atlas.css';
 import './camera.css';
 import './facade.css';
+import './footer.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 // The collection comes from the backend: wait for it once, then the site runs as a read-only feed.

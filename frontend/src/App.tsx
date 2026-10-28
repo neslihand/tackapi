@@ -1,10 +1,10 @@
 import { Component, lazy, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-import { ArrowRight, ArrowUpRight, Camera, Check, Menu, Stamp, UserRound, X } from 'lucide-react';
+import { ArrowRight, ArrowUp, ArrowUpRight, Camera, Check, Menu, Stamp, UserRound, X } from 'lucide-react';
 import { ContentProvider, useContent } from './lib/contentStore';
 import { Brand, Scene } from './components/UI';
 import { Link, useRoute } from './lib/navigation';
 import { ProgressProvider, useProgress } from './lib/store';
-import { useParallax, useSmoothScroll } from './lib/motion';
+import { settleScroll, useParallax, useSmoothScroll } from './lib/motion';
 import { Home } from './pages/Home';
 import { Explore } from './pages/Explore';
 import { Story } from './pages/Story';
@@ -73,8 +73,30 @@ function Navigation({ route }: { route: string }) {
   return <header className={`navigation ${dark ? 'nav-dark' : ''} ${scrolled ? 'scrolled' : ''} ${intro ? 'nav-intro' : ''}`}><Brand /><nav className="desktop-nav" aria-label="Ana menü">{links.map(([to, label], i) => <Link to={to} key={to} className={route.startsWith(to) ? 'active' : ''} aria-current={route.startsWith(to) ? 'page' : undefined}><span className="nav-num" aria-hidden="true">0{i + 1}</span><span className="nav-label">{label}</span></Link>)}</nav><div className="nav-actions"><Link to="/kamera" className="nav-camera" aria-label="Kamera ile keşfet"><Camera size={19} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'} className="nav-camera" aria-label={account.user ? `Hesabım${account.user.display_name ? `: ${account.user.display_name}` : ''}` : 'Giriş yap ya da hesap aç'} title={account.user ? 'Hesabım' : 'Giriş yap'}><UserRound size={19} /></Link>}<Link className="nav-passport" to="/pasaport"><Stamp size={17} /><span>Miras Pasaportum</span><small><span className="sr-only">, </span>{Object.keys(progress.discovered).length}<span className="sr-only"> keşif</span></small></Link><button className="mobile-toggle icon-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? 'Menüyü kapat' : 'Menüyü aç'}>{open ? <X /> : <Menu />}</button></div>{open && <nav id="mobile-menu" className="mobile-menu" aria-label="Mobil menü" onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); } }}>{links.map(([to, label]) => <Link key={to} to={to}>{label}<ArrowUpRight size={18} /></Link>)}<Link to="/pasaport">Miras Pasaportum<Stamp size={18} /></Link><Link to="/kamera">Kamera ile keşfet<Camera size={18} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'}>{account.user ? 'Hesabım' : 'Giriş yap'}<UserRound size={18} /></Link>}</nav>}</header>;
 }
 
+// The footer, on every page: one last invitation under a row of doors, the links in three groups, the project's
+// credits and a way back to the top.
 function Footer() {
-  return <footer className="footer" data-nav-theme="dark"><div className="footer-top" data-curtain><div><Brand /><p>Geçmişin izinde.<br />Geleceğe birlikte.</p></div><div className="footer-discover"><span>BİR SONRAKİ HİKÂYEN SENİ BEKLİYOR.</span><Link to="/kesfet">Merak etmeye<br /><em>devam et.</em><ArrowUpRight /></Link></div><div className="footer-links"><Link to="/oyun">Oyna & Öğren</Link><Link to="/harita">Miras Haritası</Link><Link to="/pasaport">Miras Pasaportum</Link><Link to="/kamera">Kamera ile Keşfet</Link><Link to="/hakkinda">Proje & Kaynaklar</Link>{vakifApiEnabled() && <Link to="/gizlilik">Gizlilik ve veriler</Link>}<Link to="/yonetim">Demo Yönetim Paneli</Link></div></div><div className="footer-bottom" data-curtain><span>© {new Date().getFullYear()} EŞİK · Girls & Codes</span><span>KÜLTÜREL MİRASI MERAKLA YAŞATIYORUZ.</span><span>Bir Kök & Kod hackathon prototipi.</span></div></footer>;
+  const { artifacts } = useContent();
+  const cities = new Set(artifacts.map(a => a.city)).size;
+  const groups: [string, [string, string][]][] = [
+    ['Keşfet', [['/kesfet', 'Eserleri Keşfet'], ['/harita', 'Miras Haritası'], ['/kamera', 'Kamera ile Keşfet']]],
+    ['Oyna & Öğren', [['/oyun', 'Oyna & Öğren'], ['/oyun/quiz', 'Bilgi Yarışması'], ['/pasaport', 'Miras Pasaportum'], ['/basarimlar', 'Madalyonlar']]],
+    ['Proje', [['/hakkinda', 'Proje & Kaynaklar'], ...(vakifApiEnabled() ? [['/gizlilik', 'Gizlilik ve veriler'] as [string, string]] : []), ['/yonetim', 'Demo Yönetim Paneli']]],
+  ];
+  function top() { settleScroll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  return <footer className="footer ft" data-nav-theme="dark">
+    <div className="ft-doors" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} />)}</div>
+    <div className="ft-invite" data-curtain>
+      <p className="ft-kicker"><span>✦</span>BİR SONRAKİ HİKÂYEN SENİ BEKLİYOR</p>
+      <Link to="/kesfet" className="ft-cta">Merak etmeye <em>devam et.</em><span className="ft-cta-arrow" aria-hidden="true"><ArrowUpRight /></span></Link>
+      <p className="ft-count"><b>{String(artifacts.length).padStart(2, '0')}</b> eser <span>·</span> <b>{String(cities).padStart(2, '0')}</b> şehir <span>·</span> <i>keşfedilmeyi bekliyor</i></p>
+    </div>
+    <div className="ft-main" data-curtain>
+      <div className="ft-brand"><Brand /><p>Geçmişin izinde.<br /><em>Geleceğe birlikte.</em></p><small>Vakıf Katılım · Vakıf Eserleri Envanter Projesi kapsamında geliştirilen dijital keşif platformu.</small></div>
+      {groups.map(([title, links]) => <nav key={title} className="ft-group" aria-label={title}><h2>{title}</h2><ul>{links.map(([to, label]) => <li key={to}><Link to={to}>{label}</Link></li>)}</ul></nav>)}
+    </div>
+    <div className="footer-bottom ft-bottom" data-curtain><span>© {new Date().getFullYear()} EŞİK · Girls & Codes</span><span>KÜLTÜREL MİRASI MERAKLA YAŞATIYORUZ.</span><span>Bir Kök & Kod hackathon prototipi.</span><button className="ft-top" onClick={top}>Başa dön <ArrowUp size={14} aria-hidden="true" /></button></div>
+  </footer>;
 }
 
 function About() {
