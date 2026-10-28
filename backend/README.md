@@ -90,10 +90,7 @@ Sistem iki ayrı katmandan oluşur:
 ```
 backend/
 ├── README.md
-<<<<<<< HEAD
 ├── CLAUDE.md                  # Yapay zekâ asistanı için proje bağlamı, kararlar ve tuzaklar
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 ├── schema.sql                 # PostgreSQL + pgvector şeması (v0.2): 21 tablo, 2 görünüm
 ├── retrieval.sql              # Çok rotalı hibrit aramanın saf SQL örneği (belgeleme amaçlı)
 ├── caps.py                    # Yardımcı: ham metinde satır aralığı inceleme
@@ -141,10 +138,7 @@ backend/
     ├── narrations.py          # Kayıtlı hikâye ve çocuk anlatımları: toplu üretim ve okuma
     ├── visual_search.py       # Görselle arama: fotoğraf embedding'leri, arama, doğruluk ölçümü
     ├── pilot.py               # MVP pilot seçkisi: öneri listesi, seçim, hazırlık durumu
-<<<<<<< HEAD
     ├── geocode.py             # Eser koordinatları: OpenStreetMap Nominatim, kontrol listesi (konumlar.csv)
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     ├── eval_rag.py            # RAG kalite ve maliyet ölçümü
     ├── api.py                 # REST API (herkese açık uçlar, önizleme)
     └── admin.py               # Yönetim API'si (/api/admin/*)
@@ -617,7 +611,6 @@ dizini de yanlış metinden üretilmiştir. Paragraflar panelde düzeltildikten 
    `python embed_gemini.py` tamamlar.
 5. Ardından fotoğraf vektörleri (`visual_search.py --pilot`) ve anlatımlar (`narrations.py --pilot`).
 
-<<<<<<< HEAD
 ### 7.10 Eser konumları ve harita: `geocode.py`
 Eser sayfasında "Haritada" bölümü ve ileride "Yakınımdakiler" için. Ücretli API yok: koordinatlar OpenStreetMap
 Nominatim'den (anahtarsız) alınır, harita Leaflet + OpenStreetMap karolarıyla çizilir. Şimdilik yalnızca pilot eserler.
@@ -743,8 +736,6 @@ python agent.py --list             # açık öneriler
   sayılar silinir, sayfa başına en çok 5), `page_perf` (açılış süresi), `api_error` (5xx ya da bağlantı yok),
   `api_slow` (4 saniyeden uzun).
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 ---
 
 ## 8. Ekonomik mod ve maliyet
@@ -792,10 +783,7 @@ Yalnızca yayımlanmış (`published`) eserler listelenir; taslak bir eserin ayr
 | `kind` | metin | — | Tür: `mosque`, `tomb`, `madrasa`, `bath`, `complex`… |
 | `period` | metin | — | Dönem slug'ı; üst dönem verilirse alt dönemler de gelir |
 | `q` | metin | — | Ad araması (bulanık, alternatif adlarda da) |
-<<<<<<< HEAD
 | `pilot` | `true`/`false` | — | Yalnızca MVP pilot seçkisi (ya da dışındakiler); ön yüz şimdilik `pilot=true` kullanır |
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 | `lang` | `tr`/`en` | `tr` | Ad, etiket, özet ve dönem adının dili |
 | `page` | tam sayı | 1 | 1'den başlar |
 | `page_size` | tam sayı | 50 | En çok 200 |
@@ -838,13 +826,10 @@ Cevap biçimi:
   ya da hazırlanmamışsa `null` (bkz. §7.6).
 - **`source`:** Kitap, sayfa aralığı, künye.
 - **`images`:** Yayımlanmış fotoğraflar (önce kapak): `src`, `thumb`, `alt`, `width`, `height`, `caption`, `source{book,page}`.
-<<<<<<< HEAD
 - **`location`:** `{lat, lon, approximate, radius_m}` ya da `null` (konum yoksa; ön yüz harita bölümünü göstermez).
   Aynı alan liste öğelerinde (`GET /api/monuments`) de vardır.
   `approximate: true` ise konum otomatik bulunmuş, doğrulanmamıştır: işaretçi değil `radius_m` yarıçaplı daire
   çizilmeli ve "yaklaşık" denmeli (bkz. §7.10).
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 - **`status`**, **`review_status`**.
 
 Eser bulunamazsa `404` döner.
@@ -894,11 +879,7 @@ Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablos
 | GET | `/api/admin/monuments?q&city&status&has_image&page` | Taslaklar dahil eser listesi, yayımlanmış ve bekleyen fotoğraf sayısı |
 | GET | `/api/admin/monuments/{slug}` | Düzenlenebilir tüm alanlar, metin ve tüm fotoğraflar |
 | POST | `/api/admin/monuments` | Yeni eser (`draft` başlar); isteğe bağlı `text_tr`/`text_en` |
-<<<<<<< HEAD
 | PATCH | `/api/admin/monuments/{slug}` | Künye alanları, dönem, üst eser, tarih, koordinat, özet, kaynak notu, `review_status`. Değişen `lat`/`lon` konumu elle girilmiş ve doğrulanmış yapar; `{geo_checked: true}` otomatik konumu onaylar (§7.10) |
-=======
-| PATCH | `/api/admin/monuments/{slug}` | Künye alanları, dönem, üst eser, tarih, koordinat, özet, kaynak notu, `review_status` |
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 | PUT | `/api/admin/monuments/{slug}/text` | Panel eserinin metni: parçalanır ve embedding'i üretilir |
 | DELETE | `/api/admin/monuments/{slug}` | Panelden eklenmiş ya da paragraflarından ayrılmış (`split`), alt eseri olmayan eser; ayrılmış eserin paragrafları asıl kaydına döner, kitap fotoğrafları esersiz fotoğraflara geçer |
 | POST | `/api/admin/monuments/{slug}/remove` | Kitap eserini kaldırır (`{reason?}`): sitede, panel listelerinde, aramada, sohbette ve pilotta görünmez; veri silinmez |
@@ -1014,22 +995,16 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_NARRATE_MODEL` | (cevap modeli) | Kayıtlı anlatımların modeli (`narrations.py` ve paneldeki "Anlatımı üret") |
 | `VAKIF_VISUAL_BACKEND` | `local` | Görselle arama modeli: `local` (DINOv2, bilgisayarda) ya da `gemini` (`gemini-embedding-2`) |
 | `VAKIF_LOCAL_VISION_MODEL` | `facebook/dinov2-base` | Yerel görsel model (daha hızlısı `facebook/dinov2-small`; değişirse fotoğraflar yeniden gömülür) |
-<<<<<<< HEAD
 | `VAKIF_GEOCODE_UA` | `vakif-eserleri-hackathon/0.1 (…)` | `geocode.py`'nin Nominatim'e gönderdiği User-Agent (iletişim bilgisi eklenebilir) |
 | `VAKIF_GEOCODE_URL` | `https://nominatim.openstreetmap.org/search` | Başka bir Nominatim sunucusu |
 | `VAKIF_SITE_DIR` | `../frontend/dist` | Derlenmiş site; varsa `/` altında sunulur (tek adresten demo), `off` kapatır |
 | `VAKIF_PANEL_DIR` | `../admin/dist` | Derlenmiş yönetim paneli; varsa `/panel/` altında sunulur, `off` kapatır |
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 | `VAKIF_VISUAL_MIN` | `0.70` (yerel), `0.75` (Gemini) | Görselle aramada eser önermek için en düşük benzerlik (`visual_search.py --eval` önerisine göre ayarlanmalı) |
 | `VAKIF_VISUAL_MARGIN` | `0.03` | En iyi aday ikinciden en az bu kadar önde olmalı |
 | `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |
 | `VAKIF_MEDIA_DIR` | `backend/media` | WebP fotoğrafların yazıldığı ve `/media` adresinden sunulduğu klasör |
-<<<<<<< HEAD
 | `VAKIF_AGENT_HORIZON` | `45` | Yönetici asistanı yaklaşan takvim günlerini kaç gün önceden önersin |
 | `VAKIF_AGENT_MODEL` | `VAKIF_LITE_MODEL` | Asistanın taslak yazdığı model (yalnızca "Taslak hazırla" ile çağrılır) |
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 | `VAKIF_TEST_DSN` | — | Testlerin kullanacağı veritabanı; adı `_test` ile bitmeli, testler onu **sıfırdan kurar** |
 
 ---

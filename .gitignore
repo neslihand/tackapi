@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Telifli kaynak metinler ve bunlardan türeyen veriler
 raw/
 data/*/segments.json
@@ -16,7 +15,6 @@ data/eval_results.json
 # Gizli bilgiler
 .env
 *.env
-./claude
 **/node_modules/
 **/dist
 */dist
@@ -32,6 +30,6 @@ venv/
 media/
 data/images.jsonl
 data/geocode_cache.json
-=======
+
+# macOS
 .DS_Store
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

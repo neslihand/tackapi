@@ -1,9 +1,5 @@
 // Saf yardımcılar: etiketler, form doğrulama, değişen alanları bulma. React'e bağlı değildir (node:test ile sınanır).
-<<<<<<< HEAD
 import type { DateBasis, GeoInfo, GeoPrecision, ImageStatus, Kind, MonumentDetail, MonumentFields, MonumentState } from './types';
-=======
-import type { DateBasis, ImageStatus, Kind, MonumentDetail, MonumentFields, MonumentState } from './types';
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 export const KIND_LABELS: Record<Kind, string> = {
   complex: 'Külliye', mosque: 'Cami', masjid: 'Mescit', madrasa: 'Medrese', tomb: 'Türbe', imaret: 'İmaret', bath: 'Hamam',
@@ -93,7 +89,6 @@ export function changedFields(original: MonumentDetail, draft: MonumentFields): 
   return out as MonumentFields;
 }
 
-<<<<<<< HEAD
 export const PRECISION_LABELS: Record<GeoPrecision, string> = {
   exact: 'elle yerleştirildi', building: 'yapının kendisi', street: 'sokak düzeyinde', neighborhood: 'yalnızca mahalle',
 };
@@ -125,8 +120,6 @@ export function geoStatus(geo: GeoInfo | null, hasCoords: boolean): { text: stri
   return { text: `Otomatik bulundu (OpenStreetMap, ${prec}), henüz doğrulanmadı: sitede “yaklaşık konum” olarak görünür.${geo.detail?.found ? ` Bulunan yer: ${geo.detail.found}.` : ''}${warn} Doğruysa onaylayın, değilse işaretçiyi sürükleyin.`, tone: 'warn', canConfirm: true };
 }
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 // Düzenleme formu: bütün alanlar metin olarak tutulur (boş = null), kaydederken tiplerine çevrilir.
 export type MonumentForm = Record<'name_tr' | 'name_en' | 'alt_names' | 'kind' | 'district' | 'neighborhood' | 'address' | 'lat' | 'lon'
   | 'period' | 'parent' | 'built_from' | 'built_to' | 'page_from' | 'page_to' | 'date_basis' | 'status' | 'summary_tr' | 'summary_en' | 'current_state'

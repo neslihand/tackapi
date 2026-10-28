@@ -1,12 +1,8 @@
 import type { Artifact } from '../data/artifacts';
 import type { ArtifactChapter, ArtifactFeedIssue, ArtifactFeedResult, DiscoveryArtifact } from './artifactContract';
-<<<<<<< HEAD
 import type { Season } from '../data/collections';
 import { PLACEHOLDER_IMAGE, questionIssues } from './content.ts';
 import type { QuizQuestion } from '../data/artifacts';
-=======
-import { PLACEHOLDER_IMAGE } from './content.ts';
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 type ObjectValue = Record<string, unknown>;
 const isObject = (value: unknown): value is ObjectValue => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -15,11 +11,8 @@ const httpsUrl = (value: unknown): value is string => {
   try { return typeof value === 'string' && new URL(value).protocol === 'https:'; } catch { return false; }
 };
 const localImage = (value: unknown): value is string => typeof value === 'string' && /^\/images\/[a-zA-Z0-9_-]+\.(svg|png|jpe?g|webp)$/.test(value);
-<<<<<<< HEAD
 // Photos served by the backend next to the site (/media/books/bursa-1/019-a1.webp); no '..' segments.
 const mediaImage = (value: unknown): value is string => typeof value === 'string' && /^\/media\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_.-]+\.(png|jpe?g|webp)$/.test(value) && !value.includes('..');
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 export function adaptArtifactFeed(input: unknown): ArtifactFeedResult {
   const issues: ArtifactFeedIssue[] = [];
@@ -48,22 +41,13 @@ export function adaptArtifactFeed(input: unknown): ArtifactFeedResult {
     if (coordinates != null && !(Array.isArray(coordinates) && coordinates.length === 2 && coordinates.every(n => typeof n === 'number' && Number.isFinite(n)) && coordinates[0] >= 35 && coordinates[0] <= 43 && coordinates[1] >= 25 && coordinates[1] <= 45)) {
       issue(`${path}.coordinates`, 'Türkiye için [enlem, boylam] gerekli; bilinmiyorsa null kullan.');
     }
-<<<<<<< HEAD
     if (value.image != null && !localImage(value.image) && !mediaImage(value.image) && !httpsUrl(value.image)) issue(`${path}.image`, 'Yerel /images/ ya da /media/ dosyası veya HTTPS görsel adresi gerekli.');
-=======
-    if (value.image != null && !localImage(value.image) && !httpsUrl(value.image)) issue(`${path}.image`, 'Yerel /images/ dosyası veya HTTPS görsel adresi gerekli.');
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     if (value.imageAlt != null && !filled(value.imageAlt, 600)) issue(`${path}.imageAlt`, 'Görsel betimlemesi metin, null veya eksik alan olmalı (en fazla 600 karakter).');
     const sources: DiscoveryArtifact['sourceReferences'] = [];
     if (!Array.isArray(value.sourceReferences) || !value.sourceReferences.length) issue(`${path}.sourceReferences`, 'En az bir kaynak gerekli.');
     else value.sourceReferences.forEach((source: unknown, i: number) => {
-<<<<<<< HEAD
       if (!isObject(source) || !filled(source.title, 300) || (source.url !== undefined && !httpsUrl(source.url))) issue(`${path}.sourceReferences[${i}]`, 'Kaynak başlığı gerekli; bağlantı varsa HTTPS olmalı.');
       else sources.push({ title: source.title.trim(), ...(source.url !== undefined ? { url: source.url as string } : {}) });
-=======
-      if (!isObject(source) || !filled(source.title, 300) || !httpsUrl(source.url)) issue(`${path}.sourceReferences[${i}]`, 'Kaynak başlığı ve HTTPS adresi gerekli.');
-      else sources.push({ title: source.title.trim(), url: source.url });
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     });
     const chapters: ArtifactChapter[] = [];
     if (value.chapters != null) {
@@ -98,16 +82,12 @@ export function adaptArtifactFeed(input: unknown): ArtifactFeedResult {
       year: typeof value.year === 'string' ? value.year.trim() : 'Bilinmiyor',
       architect: typeof value.architect === 'string' ? value.architect.trim() : 'Bilinmiyor',
       coordinates: coordinates == null ? null : [...coordinates as [number, number]],
-<<<<<<< HEAD
       ...(coordinates != null && value.coordinatesApproximate === true ? { coordinatesApproximate: true } : {}),
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       image: typeof value.image === 'string' ? value.image : PLACEHOLDER_IMAGE,
       ...(typeof value.image === 'string' && typeof value.imageAlt === 'string' ? { imageAlt: value.imageAlt.trim() } : {}),
       sourceReferences: sources, chapters, detail,
     });
   });
-<<<<<<< HEAD
   return issues.length ? { ok: false, issues }
     : { ok: true, artifacts, seasons: adaptSeasons(input.seasons, artifacts), quizQuestions: adaptQuestions(input.quizQuestions, artifacts) };
 }
@@ -139,9 +119,6 @@ function adaptSeasons(value: unknown, artifacts: DiscoveryArtifact[]): Season[] 
       description: filled(season.description, 600) ? season.description.trim() : '', artifactIds });
   }
   return out;
-=======
-  return issues.length ? { ok: false, issues } : { ok: true, artifacts };
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 }
 
 export function hasImmersiveStory(artifact: DiscoveryArtifact): artifact is Artifact {

@@ -12,11 +12,7 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
 export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
-<<<<<<< HEAD
   segmentation_pending: number; contributions_pending?: number; agent_open?: number;
-=======
-  segmentation_pending: number;
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   // MVP pilot seçkisi: şehir başına seçilen eser ve hedef (009 göçü yoksa boş)
   pilot?: { city: string; n: number; target: number | null }[] };
 
@@ -43,7 +39,6 @@ export type MonumentFields = {
   page_from?: number | null; page_to?: number | null;
   status?: MonumentState | null; summary_tr?: string | null; summary_en?: string | null; current_state?: string | null;
   source_note?: string | null; review_status?: ReviewStatus; pilot?: boolean;
-<<<<<<< HEAD
   geo_checked?: boolean;   // konumu onayla (geocode.py'nin otomatik bulduğu konum)
 };
 
@@ -52,20 +47,12 @@ export type GeoPrecision = 'exact' | 'building' | 'street' | 'neighborhood';
 export type GeoInfo = { source: 'nominatim' | 'manual' | null; precision: GeoPrecision | null; checked: boolean;
   detail: { status?: 'found' | 'not_found'; query?: string; found?: string; warnings?: string[]; tried?: string[] } | null };
 
-=======
-};
-
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 // Süsleme ve sanat kaydı (çıkarımdan); fotoğrafları panelden elle bağlanır
 export type AdminArtwork = { id: number; kind: string; element: string | null; technique: string | null; script: string | null;
   date_text: string | null; description_tr: string; image_ids: number[] };
 
-<<<<<<< HEAD
 export type MonumentDetail = Required<Omit<MonumentFields, 'review_status' | 'geo_checked'>> & {
   geo: GeoInfo | null;
-=======
-export type MonumentDetail = Required<Omit<MonumentFields, 'review_status'>> & {
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   slug: string; city: string; review_status: MonumentStatus; deletable: boolean; qa_flags: string[]; is_synthetic: boolean;
   created_by: string | null; updated_at: string | null; book: string | null; from_panel: boolean; text_editable: boolean;
   pages_auto: [number, number] | null;   // düzeltilmiş paragrafların sayfaları (otomatik hesap)
@@ -91,7 +78,6 @@ export type SegItem = { id: number; para_no: number; count: number; decision: Pa
   suggested_slug: string | null; suggested_name: string | null; text: string; pages: number[]; prev: string | null; next: string | null };
 export type DecisionResult = { slug: string; para_no: number; before: ParaDecision | null; after: ParaDecision; added: number; kept: number; embedded: number };
 
-<<<<<<< HEAD
 // Keşif rotası (sitede "Keşif Sezonları"): panelde yazılır; durakları sıralı eserlerdir
 export type RouteStop = { slug: string; name_tr: string; city: string; review_status: string; pilot: boolean };
 export type AdminRoute = { id: number; slug: string; title: string; kicker: string | null; description: string | null; sort: number;
@@ -132,8 +118,6 @@ export type Insights = {
   settings: { stored: SiteSettings; effective: SiteSettings & { source: Record<string, string> } };
 };
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
 export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };
 export type Period = { slug: string; name_tr: string; parent: string | null; city: string | null; start: number; end: number };
@@ -144,7 +128,6 @@ export type PagePhoto = { id: number; file: string; src: string; thumb: string; 
   alt_tr: string | null; printed_page: number; pdf_page: number | null; match_method: string | null; edited: boolean;
   width: number | null; height: number | null; monument: string | null; monument_name: string | null; here: boolean; in_range: boolean };
 export type PagePhotos = { book: string | null; book_title?: string | null; pages: [number, number] | null; photos: PagePhoto[] };
-<<<<<<< HEAD
 
 // Yönetici asistanı (agent.py, göç 016)
 export type AgentKind = 'calendar' | 'anniversary' | 'experience' | 'content' | 'engagement';
@@ -163,5 +146,3 @@ export type Announcement = { id: number; title: string; body: string; monuments:
   starts_on: string | null; ends_on: string | null; published: boolean; ai_draft: boolean; suggestion_id: number | null;
   created_by: string | null; updated_at: string };
 export type AnnouncementFields = Partial<Pick<Announcement, 'title' | 'body' | 'monuments' | 'route_slug' | 'starts_on' | 'ends_on' | 'published'>>;
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

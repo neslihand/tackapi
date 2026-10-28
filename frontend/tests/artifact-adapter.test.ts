@@ -45,11 +45,7 @@ test('Görsel betimlemesi yalnızca görselle birlikte taşınır; boş betimlem
 });
 
 test('Boş koleksiyon geçerlidir; örnek altı esere dönülmez', () => {
-<<<<<<< HEAD
   assert.deepEqual(adaptArtifactFeed(feed([])), { ok: true, artifacts: [], seasons: [], quizQuestions: [] });
-=======
-  assert.deepEqual(adaptArtifactFeed(feed([])), { ok: true, artifacts: [] });
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 });
 
 test('Sıfır, bir, üç veya beş bölüm kabul edilir; eksik anlatım biçimleri kopyalanmaz', () => {

@@ -7,29 +7,20 @@
 
 Uç noktalar
   GET  /api/cities
-<<<<<<< HEAD
   GET  /api/monuments?city=bursa&kind=mosque&period=erken-osmanli&q=muradiye&pilot=true&lang=tr&page=1&page_size=50
        → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
   GET  /api/monuments/{slug}?lang=tr|en
   GET  /api/routes?pilot=true&auto=true   → keşif rotaları [{id, kicker, title, description, artifactIds, auto}]
   GET  /api/quiz?pilot=true               → panelde yazılan yarışma soruları [{id, question, options, answer, explanation, artifactId}]
-=======
-  GET  /api/monuments?city=bursa&kind=mosque&period=erken-osmanli&q=muradiye&lang=tr&page=1&page_size=50
-       → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
-  GET  /api/monuments/{slug}?lang=tr|en
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
-<<<<<<< HEAD
 VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında sunulur; 'off' kapatır
 VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/panel/' altında sunulur; 'off' kapatır
                     Tek adresten demo: önce iki uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 """
 import os, sys, re, time, logging, threading, mimetypes
 from collections import defaultdict, deque
@@ -41,11 +32,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-<<<<<<< HEAD
 import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent
-=======
-import rag, admin, images, textfix_db, narrations, visual_search
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 log = logging.getLogger('vakif.api')
 
@@ -65,13 +52,10 @@ PUBLISHED = "m.review_status = 'published'"
 
 # Yönetim uçları (/api/admin/*, bkz. admin.py)
 app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.save_webp(data, rel, MEDIA_DIR)))
-<<<<<<< HEAD
 # Ziyaretçi uçları: hesap, pasaport, davranış olayları (visitors.py)
 app.include_router(agent.build_router(db))
 visitor_router = visitors.build_router(db, MEDIA_DIR)
 app.include_router(visitor_router)
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 
 @app.on_event('startup')
@@ -174,27 +158,20 @@ LIST_FILTERS = {
     'period': "(%(period)s::text IS NULL OR p.slug = %(period)s::text "
               "OR p.parent_id = (SELECT id FROM period WHERE slug = %(period)s::text))",
     'q': "(%(q)s::text IS NULL OR m.name_tr %% %(q)s::text OR m.name_tr ILIKE '%%' || %(q)s::text || '%%' "
-<<<<<<< HEAD
          "OR EXISTS (SELECT 1 FROM unnest(m.alt_names) a WHERE a ILIKE '%%' || %(q)s::text || '%%'))",
     'pilot': "(%(pilot)s::boolean IS NULL OR m.pilot = %(pilot)s::boolean)"}
-=======
-         "OR EXISTS (SELECT 1 FROM unnest(m.alt_names) a WHERE a ILIKE '%%' || %(q)s::text || '%%'))"}
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 
 def _where(skip=None):
     return 'WHERE ' + ' AND '.join(v for k, v in LIST_FILTERS.items() if k != skip)
 
 
-<<<<<<< HEAD
 def _people(role):
     """Eserin bu roldeki kişileri, kitapta geçiş sırasıyla, virgülle (çıkarımda alıntısı olan kayıtlar)."""
     return (f"(SELECT string_agg(pe.name, ', ' ORDER BY mp.chunk_id NULLS LAST, pe.name) FROM monument_person mp "
             f"JOIN person pe ON pe.id = mp.person_id WHERE mp.monument_id = m.id AND mp.role = '{role}')")
 
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 # Liste kartı: herkese açık liste ve yönetici önizlemesi aynı sorguyu ve aynı biçimi kullanır.
 # %(drafts)s: önizlemede yayımlanmamış fotoğraflar da kapak adayı olur (herkese açık uçta her zaman false).
 ITEM_SELECT = f"""
@@ -208,12 +185,8 @@ ITEM_SELECT = f"""
            EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
                       OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
            cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
-<<<<<<< HEAD
            cov.height AS img_height, m.lat, m.lon{{geo}},
            {_people('architect')} AS architects, {_people('builder')} AS builders, {_people('patron')} AS patrons
-=======
-           cov.height AS img_height
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     {LIST_FROM} LEFT JOIN monument par ON par.id = m.parent_id LEFT JOIN source_book b ON b.id = m.book_id
     LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
                         WHERE monument_id = m.id AND (review_status = 'published'
@@ -221,14 +194,11 @@ ITEM_SELECT = f"""
                         ORDER BY is_cover DESC, review_status = 'published' DESC, sort, id LIMIT 1) cov ON true"""
 
 
-<<<<<<< HEAD
 def item_select():
     """ITEM_SELECT; konumun doğrulanma bilgisi yalnızca 012 göçü uygulanmışsa seçilir."""
     return ITEM_SELECT.replace('{geo}', ', m.geo_precision, m.geo_checked' if geocode.enabled(db) else '')
 
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 def list_item(r, lang):
     en = lang == 'en'
     return dict(
@@ -243,31 +213,19 @@ def list_item(r, lang):
         parent=dict(slug=r['parent_slug'], name=(r['parent_en'] or r['parent_tr']) if en else r['parent_tr'])
         if r['parent_slug'] else None,
         children_count=r['children_count'], summary=r['summary_en'] if en else r['summary_tr'], status=r['status'],
-<<<<<<< HEAD
         has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'), location=geocode.public_location(r),
         # mimar (architect), usta (builder) ve bânî (patron) ayrı tutulur: bânî mimar diye gösterilmemeli
         architect=r['architects'], builder=r['builders'], patron=r['patrons'],
-=======
-        has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'),
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         source=dict(book=r['book'], pages=[r['page_start'], r['page_end']] if r['page_start'] is not None else None))
 
 
 @app.get('/api/monuments')
 def monuments(city: str | None = None, kind: str | None = None, period: str | None = None, q: str | None = None,
-<<<<<<< HEAD
               pilot: bool | None = None, lang: Literal['tr', 'en'] = 'tr', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)):
     params = dict(city=city, kind=kind, period=period, q=q or None, pilot=pilot, lang=lang, drafts=False,
                   limit=page_size, offset=(page - 1) * page_size)
     total = db.query(f"SELECT count(*) AS n {LIST_FROM} {_where()}", params)[0]['n']
     rows = db.query(f"""{item_select()} {_where()}
-=======
-              lang: Literal['tr', 'en'] = 'tr', page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200)):
-    params = dict(city=city, kind=kind, period=period, q=q or None, lang=lang, drafts=False,
-                  limit=page_size, offset=(page - 1) * page_size)
-    total = db.query(f"SELECT count(*) AS n {LIST_FROM} {_where()}", params)[0]['n']
-    rows = db.query(f"""{ITEM_SELECT} {_where()}
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
                         ORDER BY c.slug, m.district, m.name_tr LIMIT %(limit)s OFFSET %(offset)s""", params)
     items = [list_item(r, lang) for r in rows]
     facets = dict(
@@ -299,7 +257,6 @@ def is_published(slug):
     return bool(db.query(f"SELECT 1 FROM monument m WHERE m.slug = %(s)s AND {PUBLISHED}", dict(s=slug)))
 
 
-<<<<<<< HEAD
 @app.get('/api/routes')
 def public_routes(pilot: bool | None = None, auto: bool = True):
     """Keşif rotaları: panelde yazılıp yayımlananlar, ardından şehir başına otomatik rotalar (auto=false ile yalnızca
@@ -319,8 +276,6 @@ def public_quiz(pilot: bool | None = None):
     return quiz.public_questions(db, pilot)
 
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 @app.get('/api/monuments/{slug}')
 def monument(slug: str, lang: Literal['tr', 'en'] = 'tr'):
     if not is_published(slug):
@@ -377,7 +332,6 @@ def monument_detail(slug, lang, drafts=False):
         a['images'] = art_imgs.get(a.pop('id'), [])
     # Hikâye ve çocuk anlatımları önceden üretilip kaydedilir; sayfa açılınca yapay zekâ çağrılmaz
     stored = narrations.public(db, f['id'], lang)
-<<<<<<< HEAD
     # Harita: doğrulanmamış otomatik konum "yaklaşık" gelir (belirsizlik dairesiyle); konum yoksa None, bölüm görünmez
     geo = ', m.geo_precision, m.geo_checked' if geocode.enabled(db) else ''
     location = geocode.public_location(db.query(f'SELECT m.lat, m.lon{geo} FROM monument m WHERE m.id = %(i)s',
@@ -385,11 +339,6 @@ def monument_detail(slug, lang, drafts=False):
     f.pop('id', None)
     f.pop('city_id', None)
     return dict(card=f, text=text, text_note=text_note, narrations=stored, images=images, location=location,
-=======
-    f.pop('id', None)
-    f.pop('city_id', None)
-    return dict(card=f, text=text, text_note=text_note, narrations=stored, images=images,
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
                 source=dict(book=sec['book'], pages=[sec['page_start'], sec['page_end']], credits=sec['credits']),
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
@@ -398,20 +347,12 @@ def monument_detail(slug, lang, drafts=False):
 def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, user: str = Depends(admin.admin_user)):
     """Ziyaretçinin göreceği liste kartı ve eser sayfası, eser taslakta olsa bile; ayrıca yayın öncesi kontrol listesi.
     drafts=true: kontrol bekleyen fotoğraflar da gösterilir (yayına alınırsa sayfa nasıl görünür)."""
-<<<<<<< HEAD
     rows = db.query(f'{item_select()} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
     if not rows:
         raise HTTPException(404, 'Eser bulunamadı')
     m = db.query(f"""SELECT m.id, m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
                            m.date_basis, m.lat IS NOT NULL AND m.lon IS NOT NULL AS has_coords, m.is_synthetic,
                            {'m.geo_checked' if geocode.enabled(db) else 'true'} AS geo_checked,
-=======
-    rows = db.query(f'{ITEM_SELECT} WHERE m.slug = %(slug)s', dict(slug=slug, drafts=drafts))
-    if not rows:
-        raise HTTPException(404, 'Eser bulunamadı')
-    m = db.query("""SELECT m.id, m.review_status, m.name_en, m.summary_tr, m.summary_en, m.built_years IS NOT NULL AS has_date,
-                           m.date_basis, m.lat IS NOT NULL AND m.lon IS NOT NULL AS has_coords, m.is_synthetic,
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
                            coalesce(length(s.text_tr), 0) AS text_len,
                            (SELECT count(*) FROM chunk c WHERE c.monument_id = m.id AND c.embedding IS NOT NULL) AS indexed,
                            (SELECT count(*) FROM image i WHERE i.monument_id = m.id AND i.review_status = 'published') AS images,
@@ -430,16 +371,11 @@ def preview(slug: str, lang: Literal['tr', 'en'] = 'tr', drafts: bool = False, u
              hint='Dizin yoksa sohbet bu eser hakkında kaynak bulamaz; embed_gemini.py eksikleri tamamlar.'),
         dict(key='date', ok=m['has_date'], required=False, label='Yapım tarihi',
              hint='Tarih yoksa kartta tarih alanı boş kalır.'),
-<<<<<<< HEAD
         dict(key='coords', ok=m['has_coords'] and m['geo_checked'], required=False,
              label='Doğrulanmış konum (harita ve “Yakınımdakiler”)',
              hint=('Konum otomatik bulundu, henüz doğrulanmadı: sitede “yaklaşık konum” olarak gösterilir. Eser düzenleme '
                    'sayfasındaki haritadan onaylayın ya da düzeltin.') if m['has_coords'] else
                   'Konumu olmayan eserde harita bölümü görünmez; geocode.py --pilot ya da eser düzenleme sayfasındaki harita.'),
-=======
-        dict(key='coords', ok=m['has_coords'], required=False, label='Koordinat (harita ve “Yakınımdakiler”)',
-             hint='Koordinatı olmayan eser haritada görünmez.'),
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         dict(key='pending', ok=m['pending'] == 0, required=False, label='Kontrol bekleyen fotoğraf kalmadı',
              hint=f"{m['pending']} fotoğraf onay bekliyor; yayına alınmadıkça sayfada görünmez." if m['pending'] else ''),
         dict(key='english', ok=bool(m['name_en'] and m['summary_en']), required=False, label='İngilizce ad ve özet',
@@ -531,17 +467,12 @@ async def visual_search_endpoint(request: Request, file: UploadFile = File(...),
                             headers={'Retry-After': '30'})
     slugs = [c['slug'] for c in r['candidates']]
     items = {row['slug']: list_item(row, lang) for row in db.query(
-<<<<<<< HEAD
         f'{item_select()} WHERE m.slug = ANY(%(slugs)s::text[])', dict(slugs=slugs, drafts=False))} if slugs else {}
-=======
-        f'{ITEM_SELECT} WHERE m.slug = ANY(%(slugs)s::text[])', dict(slugs=slugs, drafts=False))} if slugs else {}
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     candidates = [dict(item=items[c['slug']], score=c['score'],
                        photo=dict(src=f"/media/{c['file']}", thumb=f"/media/thumbs/{c['file']}"))
                   for c in r['candidates'] if c['slug'] in items]
     return dict(confident=r['confident'] and bool(candidates), match=candidates[0]['item'] if r['confident'] and candidates else None,
                 candidates=candidates)
-<<<<<<< HEAD
 
 
 # ------------------------------------------------------------------------------------------- tek adresten site
@@ -561,5 +492,3 @@ if PANEL_DIR:
     app.mount('/panel', StaticFiles(directory=PANEL_DIR, html=True), name='panel')
 if SITE_DIR:
     app.mount('/', StaticFiles(directory=SITE_DIR, html=True), name='site')
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

@@ -4,11 +4,8 @@ import type { GameKind, GameLevel } from './games';
 import { buildQuests, questRoutes } from './quests';
 import { answerableArtifacts } from './quiz';
 import { useContent } from './contentStore';
-<<<<<<< HEAD
 import { accountApi, useAccount } from './account';
 import { track } from './analytics';
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 // `previous` is the best result before this one; `unlocked` names the medals this result opened. The game shows both
 // inside its dialog, where the page toast does not reach screen readers.
@@ -47,7 +44,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     if (news.length) notify(news.join(' · '));
     previous.current = progress;
   }, [progress, notify, progressStorageKey]);
-<<<<<<< HEAD
   // Hesap: kullanıcı belli olunca (açılışta, girişte) bu tarayıcıdaki ilerleme sunucudakiyle birleştirilir; sonra her
   // değişiklik kısa bir gecikmeyle hesaba yazılır. Hesap yoksa pasaport yalnızca bu tarayıcıdadır.
   const { user } = useAccount();
@@ -68,8 +64,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     const t = setTimeout(() => { synced.current = JSON.stringify(progress); accountApi.syncProgress(progress).catch(() => {}); }, 1500);
     return () => clearTimeout(t);
   }, [progress, user]);
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   useEffect(() => {
     const sync = (event: StorageEvent) => {
       if (event.key === progressStorageKey) setProgress(parseProgress(event.newValue, known.current.map(a => a.id)));
@@ -78,24 +72,15 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', sync);
   }, [progressStorageKey]);
   return <Context.Provider value={{ progress, toast, storageAvailable, notify,
-<<<<<<< HEAD
     markDiscovered: id => { if (known.current.some(a => a.id === id)) { track('stamp', id); setProgress(p => discover(p, id)); } },
     toggleFavorite: id => { if (known.current.some(a => a.id === id)) { track('favorite', id, { on: !latest.current.favorites.includes(id) }); setProgress(p => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter(f => f !== id) : [...p.favorites, id] })); } },
     finishQuiz: score => { track('quiz_finish', undefined, { score }); setProgress(p => ({ ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, score) } })); },
-=======
-    markDiscovered: id => { if (known.current.some(a => a.id === id)) setProgress(p => discover(p, id)); },
-    toggleFavorite: id => { if (known.current.some(a => a.id === id)) setProgress(p => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter(f => f !== id) : [...p.favorites, id] })); },
-    finishQuiz: score => setProgress(p => ({ ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, score) } })),
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     answerCorrect: id => { if (known.current.some(a => a.id === id)) setProgress(p => p.answered.includes(id) ? p : { ...p, answered: [...p.answered, id] }); },
     finishGame: (game, id, level, result) => {
       const before = latest.current;
       const outcome: GameOutcome = { previous: before.games[game][id]?.[level], unlocked: [] };
       if (!known.current.some(a => a.id === id)) return outcome;
-<<<<<<< HEAD
       track('game_finish', id, { game, level, result });
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       const next = recordGame(before, game, id, level, result);
       if (next === before) return outcome;
       const old = achievements(before, known.current);

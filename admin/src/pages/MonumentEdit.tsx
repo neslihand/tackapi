@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowRightLeft, Ban, Check, Eye, EyeOff, ImagePlus, Rocket, RotateCcw, Save, Scissors, Star, Trash2, X } from 'lucide-react';
 import { api } from '../lib/api';
-<<<<<<< HEAD
 import { BASIS_LABELS, changedFields, DECISION_LABELS, decisionMessage, fieldsFromForm, formatDate, formFromDetail, geoStatus, KIND_LABELS, methodLabel, monumentIssues, RULE_LABELS, STATE_LABELS, toNumber, type MonumentForm } from '../lib/format';
-=======
-import { BASIS_LABELS, changedFields, DECISION_LABELS, decisionMessage, fieldsFromForm, formatDate, formFromDetail, KIND_LABELS, methodLabel, monumentIssues, RULE_LABELS, STATE_LABELS, type MonumentForm } from '../lib/format';
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { ParagraphActions, SplitForm, type Split } from '../components/ParagraphActions';
 import { ParagraphText } from '../components/ParagraphText';
 import { Link, navigate } from '../lib/navigation';
@@ -14,10 +10,7 @@ import { artworkLabel } from '../public/model';
 import { Field, Issues, PageHead, Status, useLoad, useToast } from '../components/UI';
 import { MonumentPicker } from '../components/MonumentPicker';
 import { PagePhotos } from '../components/PagePhotos';
-<<<<<<< HEAD
 import { LocationPicker } from '../components/LocationPicker';
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 export function MonumentEdit({ slug }: { slug: string }) {
   const detail = useLoad(() => api.monument(slug), [slug]);
@@ -104,11 +97,8 @@ function DetailsForm({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
       <Field label="Adres" wide><input maxLength={300} value={form.address} onChange={set('address')} /></Field>
       <Field label="Enlem" hint="Örn. 40.1835 — harita ve “Yakınımdakiler” için."><input inputMode="decimal" value={form.lat} onChange={set('lat')} /></Field>
       <Field label="Boylam" hint="Örn. 29.0612"><input inputMode="decimal" value={form.lon} onChange={set('lon')} /></Field>
-<<<<<<< HEAD
       <GeoSection d={d} form={form} moved={'lat' in diff || 'lon' in diff}
         onPick={(lat, lon) => setForm(f => ({ ...f, lat: String(lat), lon: String(lon) }))} onConfirmed={onSaved} />
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     </div></fieldset>
     <fieldset><legend>Tanıtım</legend><div className="admin-grid">
       <Field label="Kısa özet (Türkçe)" wide hint="Kartlarda görünür. Yalnızca kaynakta yazanları özetleyin."><textarea rows={4} maxLength={2000} value={form.summary_tr} onChange={set('summary_tr')} /></Field>
@@ -133,7 +123,6 @@ function DetailsForm({ d, onSaved }: { d: MonumentDetail; onSaved: () => void })
   </form>;
 }
 
-<<<<<<< HEAD
 /** Konum: durum (otomatik/doğrulanmış), onay düğmesi ve haritada seçme. Haritada taşınan konum kaydedilince doğrulanmış olur. */
 function GeoSection({ d, form, moved, onPick, onConfirmed }: {
   d: MonumentDetail; form: MonumentForm; moved: boolean; onPick: (lat: number, lon: number) => void; onConfirmed: () => void;
@@ -160,8 +149,6 @@ function GeoSection({ d, form, moved, onPick, onConfirmed }: {
   </div>;
 }
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 /** Numaralı kitap metni ve bölümleme kararları. Kitap metni değişmez; karar ziyaretçi metnini ve sohbet parçalarını etkiler. */
 function BookText({ d, onChange }: { d: MonumentDetail; onChange: () => void }) {
   const notify = useToast();

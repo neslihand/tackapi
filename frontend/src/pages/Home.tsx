@@ -11,11 +11,8 @@ import { Link } from '../lib/navigation';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import { quizPool } from '../lib/quiz';
-<<<<<<< HEAD
 import { Discoveries } from '../vakif/Discoveries';
 import { Agenda } from '../vakif/Agenda';
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 // The home page after the entrance: numbered chapters in the entrance's language, ivory and night in turn, each with
 // its own scene — the story ring, Divriği's pinned picture, a second threshold, the routes, the passport and the day's
@@ -66,10 +63,7 @@ export function Home() {
   }, []);
   return <div ref={ref} className="home-page"><HeroGate />
     <Chapter id="featured" tone="ivory" n={1} total={TOTAL} kicker="TAŞA İŞLENEN HİKÂYELER" titleId="featured-title" className="hp-featured" title={<>Bazı kapılar, <em>yüzyıllara açılır.</em></>} lede={<Statement />}>
-<<<<<<< HEAD
       <Agenda />
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       <StoryRing artifacts={artifacts} label="Öne çıkan hikâyeler" />
       <div className="hp-collection"><p>{pad(artifacts.length)} eser <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} şehir <span>·</span> <i>Birlikte koruduğumuz miras.</i></p><Link className="hp-link en-link" to="/kesfet"><span>Tüm eserleri keşfet</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
     </Chapter>
@@ -101,10 +95,7 @@ export function Home() {
           <span className="hp-exhibit-body"><small>MERAKINI BİLGİYE DÖNÜŞTÜR</small><b>Tarihin izini sürebilir misin?</b><span>{Math.min(4, quizPool(quizQuestions, artifacts).length)} soru, yepyeni bilgiler ve kazanılacak bir madalyon.</span><em>Yarışmaya başla <ArrowUpRight size={16} aria-hidden="true" /></em></span>
         </Link>
       </div>
-<<<<<<< HEAD
       <Discoveries />
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     </Chapter>
   </div>;
 }

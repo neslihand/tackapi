@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "esik-tarihe-acilan-kapi",
   "version": "0.1.0",
   "private": true,
@@ -12,12 +11,6 @@
     "doc": "docs",
     "test": "tests"
   },
-=======
-  "name": "esik-yonetim",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
@@ -25,16 +18,8 @@
     "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "dependencies": {
-<<<<<<< HEAD
     "framer-motion": "^14.6.0",
     "gsap": "3.14.2",
-=======
-<<<<<<<< HEAD:admin/package.json
-========
-    "framer-motion": "^14.6.0",
-    "gsap": "3.14.2",
->>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d:frontend/package.json
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     "leaflet": "1.9.4",
     "lenis": "1.3.26",
     "lucide-react": "0.561.0",
@@ -49,10 +34,6 @@
     "@vitejs/plugin-react": "5.1.2",
     "axe-core": "4.10.3",
     "typescript": "5.9.3",
-<<<<<<< HEAD
     "vite": "7.3.0"
-=======
-    "vite": "^7.3.7"
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   }
 }

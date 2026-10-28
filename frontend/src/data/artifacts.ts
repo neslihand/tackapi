@@ -12,12 +12,8 @@ export type Artifact = {
   image: string;
   // Text equivalent of what the illustration shows; used as alt text and as a visible image description.
   imageAlt?: string;
-<<<<<<< HEAD
   // url is missing for a book citation (an inventory book has no web address)
   sourceReferences: { title: string; url?: string }[];
-=======
-  sourceReferences: { title: string; url: string }[];
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   chapters: { title: string; short: string; story: string; child: string }[];
   // focus: the detail's position on the illustration, in percent [x, y]; the story stage zooms there.
   detail: { title: string; text: string; focus?: [number, number] };

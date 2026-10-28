@@ -20,11 +20,7 @@ import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-<<<<<<< HEAD
 import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes, quiz, insights
-=======
-import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 log_warn = logging.getLogger('vakif.admin').warning
 pilot_targets = pilot.TARGETS
@@ -91,10 +87,7 @@ class MonumentFields(Strict):
     source_note: str | None = Field(None, max_length=500)
     review_status: REVIEW | None = None
     pilot: bool | None = None                            # MVP pilot seçkisi (pilot.py)
-<<<<<<< HEAD
     geo_checked: bool | None = None                      # konum doğrulandı (geocode.py'nin bulduğu konumu onaylamak için)
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 
 class MonumentCreate(MonumentFields):
@@ -178,7 +171,6 @@ class NarrationEdit(Strict):
     answer: str = Field(min_length=50, max_length=20000)
 
 
-<<<<<<< HEAD
 class RouteFields(Strict):
     title: str | None = Field(None, min_length=3, max_length=120)
     kicker: str | None = Field(None, max_length=40)
@@ -222,8 +214,6 @@ class SettingsIn(Strict):
     featured_route: str | None = Field(None, max_length=120)      # 'auto', 'none' ya da rota kimliği
 
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 class CityCreate(Strict):
     slug: str = Field(pattern=r'^[a-z][a-z0-9-]{1,40}$')
     name_tr: str = Field(min_length=2, max_length=60)
@@ -292,11 +282,8 @@ def build_router(db, media_dir, save_webp):
                 sets.append(f'{k} = %({k})s')
                 params[k] = data[k]
                 changed[k] = (m.get(k), data[k])
-<<<<<<< HEAD
         if data.get('geo_checked') is not None or 'lat' in changed or 'lon' in changed:
             geo_fields(m, data, changed, sets, params)
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         if 'period' in data:
             pid = None
             if data['period']:
@@ -350,7 +337,6 @@ def build_router(db, media_dir, save_webp):
             forget_answers(m['slug'])
         return changed
 
-<<<<<<< HEAD
     def geo_fields(m, data, changed, sets, params):
         """Konumun kaynağı ve doğrulanması: elle girilen ya da haritada taşınan konum 'manual' ve doğrulanmış olur;
         silinen konumun kaynağı da silinir; geo_checked yalnızca konum varken değiştirilebilir."""
@@ -371,8 +357,6 @@ def build_router(db, media_dir, save_webp):
             sets.append('geo_checked = %(geo_checked)s'); params['geo_checked'] = data['geo_checked']
             changed['geo_checked'] = (m['geo_checked'], data['geo_checked'])
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     def panel_book(city_id, city_slug):
         slug = f'panel-{city_slug}'
         db.execute("""INSERT INTO source_book(slug, title, city_id, publisher, notes)
@@ -445,13 +429,10 @@ def build_router(db, media_dir, save_webp):
                                           WHERE monument_id IS NULL AND review_status <> 'rejected'""")[0]['n'],
             segmentation_pending=db.query("SELECT count(*) AS n FROM para_fix WHERE decision = 'pending'")[0]['n']
                                  if textfix_db.enabled(db) else 0,
-<<<<<<< HEAD
             contributions_pending=db.query("SELECT count(*) AS n FROM contribution WHERE status = 'pending'")[0]['n']
                                   if db.query("SELECT to_regclass('contribution') IS NOT NULL AS ok")[0]['ok'] else 0,
             agent_open=db.query("SELECT count(*) AS n FROM agent_suggestion WHERE status = 'open'")[0]['n']
                        if db.query("SELECT to_regclass('agent_suggestion') IS NOT NULL AS ok")[0]['ok'] else 0,
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'],
@@ -500,11 +481,8 @@ def build_router(db, media_dir, save_webp):
                    pages_auto=textfix_db.effective_pages(db, m['id']),
                    book=m['book_title'], from_panel=from_panel(m), text_editable=from_panel(m),
                    pilot=bool(m.get('pilot')), deletable=deletable(m),
-<<<<<<< HEAD
                    geo=dict(source=m['geo_source'], precision=m['geo_precision'], checked=m['geo_checked'],
                             detail=m['geo_detail']) if 'geo_checked' in m else None,
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
                    text_tr=m['text_tr'], text_en=m['text_en'], images=images_of(m['id']),
                    paragraphs=paragraphs_of(m['id']), artworks=artworks_of(m['id']),
                    artwork_photos=artwork_photos_of(m['id'], m['parent_id']),
@@ -1108,7 +1086,6 @@ def build_router(db, media_dir, save_webp):
                            FROM period p LEFT JOIN period pp ON pp.id = p.parent_id LEFT JOIN city c ON c.id = p.city_id
                            ORDER BY lower(p.years), p.slug""")
 
-<<<<<<< HEAD
     # ------------------------------------------------------------------------------------------ keşif rotaları
     def route_row(route_id):
         if not routes.enabled(db):
@@ -1318,8 +1295,6 @@ def build_router(db, media_dir, save_webp):
             log(user, 'settings.update', key, dict(value=value))
         return dict(stored=insights.get_settings(db), effective=insights.effective_settings(db))
 
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     @r.get('/log')
     def admin_log(target: str | None = None, limit: int = Query(100, ge=1, le=500), user: str = Depends(admin_user)):
         return db.query("""SELECT at, actor, action, target, detail FROM admin_log

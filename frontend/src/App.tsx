@@ -1,9 +1,5 @@
 import { Component, lazy, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-<<<<<<< HEAD
 import { ArrowRight, ArrowUpRight, Camera, Check, Menu, Stamp, UserRound, X } from 'lucide-react';
-=======
-import { ArrowRight, ArrowUpRight, Camera, Check, Menu, Stamp, X } from 'lucide-react';
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { ContentProvider, useContent } from './lib/contentStore';
 import { Brand, Scene } from './components/UI';
 import { Link, useRoute } from './lib/navigation';
@@ -15,7 +11,6 @@ import { Story } from './pages/Story';
 import { Achievements, Passport } from './pages/Collection';
 import { Play, playSections } from './pages/Play';
 import { chatEndpoint } from './lib/chatApi';
-<<<<<<< HEAD
 import { vakifApiEnabled } from './lib/vakifApi';
 import { AccountProvider, useAccount } from './lib/account';
 import { track } from './lib/analytics';
@@ -24,8 +19,6 @@ const AccountPages = () => import('./vakif/AccountPages');
 const LoginPage = lazy(() => AccountPages().then(m => ({ default: m.LoginPage })));
 const AccountPage = lazy(() => AccountPages().then(m => ({ default: m.AccountPage })));
 const PrivacyPage = lazy(() => AccountPages().then(m => ({ default: m.PrivacyPage })));
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 const MapPage = lazy(() => import('./pages/MapPage').then(m => ({ default: m.MapPage })));
 const CameraPage = lazy(() => import('./pages/Camera').then(m => ({ default: m.Camera })));
 const AdminPage = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
@@ -43,10 +36,7 @@ function Navigation({ route }: { route: string }) {
   // On a first visit to the home page the bar arrives last, after the entrance has drawn itself.
   const [intro] = useState(() => route === '/');
   const { progress } = useProgress();
-<<<<<<< HEAD
   const account = useAccount();
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   useEffect(() => { setOpen(false); }, [route]);
   useEffect(() => {
     if (!open) return;
@@ -80,19 +70,11 @@ function Navigation({ route }: { route: string }) {
     return () => { cancelAnimationFrame(frame); clearTimeout(late); swapped.disconnect(); window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule); };
   }, [route]);
   const links = [['/kesfet', 'Keşfet'], ['/harita', 'Miras Haritası'], ['/oyun', 'Oyna & Öğren'], ['/basarimlar', 'Madalyonlar']];
-<<<<<<< HEAD
   return <header className={`navigation ${dark ? 'nav-dark' : ''} ${scrolled ? 'scrolled' : ''} ${intro ? 'nav-intro' : ''}`}><Brand /><nav className="desktop-nav" aria-label="Ana menü">{links.map(([to, label], i) => <Link to={to} key={to} className={route.startsWith(to) ? 'active' : ''} aria-current={route.startsWith(to) ? 'page' : undefined}><span className="nav-num" aria-hidden="true">0{i + 1}</span><span className="nav-label">{label}</span></Link>)}</nav><div className="nav-actions"><Link to="/kamera" className="nav-camera" aria-label="Kamera ile keşfet"><Camera size={19} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'} className="nav-camera" aria-label={account.user ? `Hesabım${account.user.display_name ? `: ${account.user.display_name}` : ''}` : 'Giriş yap ya da hesap aç'} title={account.user ? 'Hesabım' : 'Giriş yap'}><UserRound size={19} /></Link>}<Link className="nav-passport" to="/pasaport"><Stamp size={17} /><span>Miras Pasaportum</span><small><span className="sr-only">, </span>{Object.keys(progress.discovered).length}<span className="sr-only"> keşif</span></small></Link><button className="mobile-toggle icon-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? 'Menüyü kapat' : 'Menüyü aç'}>{open ? <X /> : <Menu />}</button></div>{open && <nav id="mobile-menu" className="mobile-menu" aria-label="Mobil menü" onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); } }}>{links.map(([to, label]) => <Link key={to} to={to}>{label}<ArrowUpRight size={18} /></Link>)}<Link to="/pasaport">Miras Pasaportum<Stamp size={18} /></Link><Link to="/kamera">Kamera ile keşfet<Camera size={18} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'}>{account.user ? 'Hesabım' : 'Giriş yap'}<UserRound size={18} /></Link>}</nav>}</header>;
 }
 
 function Footer() {
   return <footer className="footer" data-nav-theme="dark"><div className="footer-top" data-curtain><div><Brand /><p>Geçmişin izinde.<br />Geleceğe birlikte.</p></div><div className="footer-discover"><span>BİR SONRAKİ HİKÂYEN SENİ BEKLİYOR.</span><Link to="/kesfet">Merak etmeye<br /><em>devam et.</em><ArrowUpRight /></Link></div><div className="footer-links"><Link to="/oyun">Oyna & Öğren</Link><Link to="/harita">Miras Haritası</Link><Link to="/pasaport">Miras Pasaportum</Link><Link to="/kamera">Kamera ile Keşfet</Link><Link to="/hakkinda">Proje & Kaynaklar</Link>{vakifApiEnabled() && <Link to="/gizlilik">Gizlilik ve veriler</Link>}<Link to="/yonetim">Demo Yönetim Paneli</Link></div></div><div className="footer-bottom" data-curtain><span>© {new Date().getFullYear()} EŞİK · Girls & Codes</span><span>KÜLTÜREL MİRASI MERAKLA YAŞATIYORUZ.</span><span>Bir Kök & Kod hackathon prototipi.</span></div></footer>;
-=======
-  return <header className={`navigation ${dark ? 'nav-dark' : ''} ${scrolled ? 'scrolled' : ''} ${intro ? 'nav-intro' : ''}`}><Brand /><nav className="desktop-nav" aria-label="Ana menü">{links.map(([to, label], i) => <Link to={to} key={to} className={route.startsWith(to) ? 'active' : ''} aria-current={route.startsWith(to) ? 'page' : undefined}><span className="nav-num" aria-hidden="true">0{i + 1}</span><span className="nav-label">{label}</span></Link>)}</nav><div className="nav-actions"><Link to="/kamera" className="nav-camera" aria-label="Kamera ile keşfet"><Camera size={19} /></Link><Link className="nav-passport" to="/pasaport"><Stamp size={17} /><span>Miras Pasaportum</span><small><span className="sr-only">, </span>{Object.keys(progress.discovered).length}<span className="sr-only"> keşif</span></small></Link><button className="mobile-toggle icon-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? 'Menüyü kapat' : 'Menüyü aç'}>{open ? <X /> : <Menu />}</button></div>{open && <nav id="mobile-menu" className="mobile-menu" aria-label="Mobil menü" onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); } }}>{links.map(([to, label]) => <Link key={to} to={to}>{label}<ArrowUpRight size={18} /></Link>)}<Link to="/pasaport">Miras Pasaportum<Stamp size={18} /></Link><Link to="/kamera">Kamera ile keşfet<Camera size={18} /></Link></nav>}</header>;
-}
-
-function Footer() {
-  return <footer className="footer" data-nav-theme="dark"><div className="footer-top" data-curtain><div><Brand /><p>Geçmişin izinde.<br />Geleceğe birlikte.</p></div><div className="footer-discover"><span>BİR SONRAKİ HİKÂYEN SENİ BEKLİYOR.</span><Link to="/kesfet">Merak etmeye<br /><em>devam et.</em><ArrowUpRight /></Link></div><div className="footer-links"><Link to="/oyun">Oyna & Öğren</Link><Link to="/harita">Miras Haritası</Link><Link to="/pasaport">Miras Pasaportum</Link><Link to="/kamera">Kamera ile Keşfet</Link><Link to="/hakkinda">Proje & Kaynaklar</Link><Link to="/yonetim">Demo Yönetim Paneli</Link></div></div><div className="footer-bottom" data-curtain><span>© {new Date().getFullYear()} EŞİK · Girls & Codes</span><span>KÜLTÜREL MİRASI MERAKLA YAŞATIYORUZ.</span><span>Bir Kök & Kod hackathon prototipi.</span></div></footer>;
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 }
 
 function About() {
@@ -112,7 +94,6 @@ function Router() {
   useSmoothScroll();
   useParallax(path);
   useEffect(() => {
-<<<<<<< HEAD
     const titles: Record<string, string> = { '/': 'Tarihe Açılan Kapı', '/kesfet': 'Eserleri Keşfet', '/harita': 'Miras Haritası', '/oyun': 'Oyna & Öğren', '/oyun/oyunlar': 'Mini Oyunlar', '/oyun/gorevler': 'Keşif Görevleri', '/oyun/quiz': 'Tarihin İzinde', '/oyun/bilgi-kartlari': 'Bilgi Kartları', '/oyun/kesif-defteri': 'Keşif Defteri', '/basarimlar': 'Miras Madalyonları', '/pasaport': 'Miras Pasaportum', '/kamera': 'Kamera ile Keşfet', '/hakkinda': 'Proje ve Kaynaklar', '/yonetim': 'Demo Yönetim Paneli', '/giris': 'Giriş yap', '/hesabim': 'Hesabım', '/gizlilik': 'Gizlilik ve veriler' };
     document.title = `${artifact?.name || titles[path] || 'Sayfa bulunamadı'} — EŞİK`;
     if (path !== '/') document.getElementById('main')?.focus({ preventScroll: true });
@@ -121,14 +102,6 @@ function Router() {
   let page: ReactNode;
   // The backend collection keeps the home page (the gate entrance); other read-only feeds open on the catalogue.
   if (path === '/') page = readOnly && !vakifApiEnabled() ? <Explore key={query} query={query} /> : <Home />;
-=======
-    const titles: Record<string, string> = { '/': 'Tarihe Açılan Kapı', '/kesfet': 'Eserleri Keşfet', '/harita': 'Miras Haritası', '/oyun': 'Oyna & Öğren', '/oyun/oyunlar': 'Mini Oyunlar', '/oyun/gorevler': 'Keşif Görevleri', '/oyun/quiz': 'Tarihin İzinde', '/oyun/bilgi-kartlari': 'Bilgi Kartları', '/oyun/kesif-defteri': 'Keşif Defteri', '/basarimlar': 'Miras Madalyonları', '/pasaport': 'Miras Pasaportum', '/kamera': 'Kamera ile Keşfet', '/hakkinda': 'Proje ve Kaynaklar', '/yonetim': 'Demo Yönetim Paneli' };
-    document.title = `${artifact?.name || titles[path] || 'Sayfa bulunamadı'} — EŞİK`;
-    if (path !== '/') document.getElementById('main')?.focus({ preventScroll: true });
-  }, [path, artifact]);
-  let page: ReactNode;
-  if (path === '/') page = readOnly ? <Explore key={query} query={query} /> : <Home />;
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   else if (path === '/kesfet') page = <Explore key={query} query={query} />;
   else if (artifact) page = <Story key={artifact.id} artifact={artifact} />;
   else if (path === '/basarimlar') page = <Achievements />;
@@ -138,16 +111,11 @@ function Router() {
   else if (path === '/kamera') page = <CameraPage />;
   else if (path === '/hakkinda') page = <About />;
   else if (path === '/yonetim') page = <AdminPage />;
-<<<<<<< HEAD
   else if (path === '/giris' && vakifApiEnabled()) page = <LoginPage query={query} />;
   else if (path === '/hesabim' && vakifApiEnabled()) page = <AccountPage />;
   else if (path === '/gizlilik' && vakifApiEnabled()) page = <PrivacyPage />;
   else page = <Scene><div className="empty-state page-shell"><p className="eyebrow">404 · BU KAPI HENÜZ AÇILMADI</p><h1>Başka bir iz sürelim.</h1><Link className="button dark" to="/kesfet">Eserlere dön <ArrowRight size={17} /></Link></div></Scene>;
   return <><a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>İçeriğe geç</a><Navigation route={path} /><main id="main" tabIndex={-1}><Suspense fallback={<div className="page-shell loading-state" role="status">Keşif haritan hazırlanıyor…</div>}>{page}</Suspense></main><Footer /><ConsentBanner /><div className={`toast ${toast ? 'visible' : ''}`} role="status" aria-live="polite">{toast && <><Check size={18} /><span>{toast}</span></>}</div>{!storageAvailable && <div className="storage-warning" role="status">Tarayıcı kaydı kapalı; ilerlemen bu oturumda tutuluyor.</div>}</>;
-=======
-  else page = <Scene><div className="empty-state page-shell"><p className="eyebrow">404 · BU KAPI HENÜZ AÇILMADI</p><h1>Başka bir iz sürelim.</h1><Link className="button dark" to="/kesfet">Eserlere dön <ArrowRight size={17} /></Link></div></Scene>;
-  return <><a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>İçeriğe geç</a><Navigation route={path} /><main id="main" tabIndex={-1}><Suspense fallback={<div className="page-shell loading-state" role="status">Keşif haritan hazırlanıyor…</div>}>{page}</Suspense></main><Footer /><div className={`toast ${toast ? 'visible' : ''}`} role="status" aria-live="polite">{toast && <><Check size={18} /><span>{toast}</span></>}</div>{!storageAvailable && <div className="storage-warning" role="status">Tarayıcı kaydı kapalı; ilerlemen bu oturumda tutuluyor.</div>}</>;
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 }
 function ContentReady() {
   const { artifacts, issues, progressStorageKey } = useContent();
@@ -155,11 +123,7 @@ function ContentReady() {
   // read collection is valid and nonempty. In particular, do not erase stamps.
   if (issues.length) return <main className="page-shell empty-state" role="alert"><h1>Eserler açılamadı.</h1><p>Koleksiyon verisi okunamadı. Lütfen veri kaynağını kontrol ederek yeniden dene.</p></main>;
   if (!artifacts.length) return <main className="page-shell empty-state" role="status"><h1>Koleksiyon henüz boş.</h1><p>Eserler eklendiğinde burada keşfedebileceksin.</p></main>;
-<<<<<<< HEAD
   return <AccountProvider><ProgressProvider key={progressStorageKey}><Router /></ProgressProvider></AccountProvider>;
-=======
-  return <ProgressProvider key={progressStorageKey}><Router /></ProgressProvider>;
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 }
 
 export function App({ artifactFeed }: { artifactFeed?: unknown } = {}) {

@@ -1,9 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-<<<<<<< HEAD
 import type { AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
-=======
-import type { AdminImage, Book, City, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -152,7 +148,6 @@ export const api = {
     form.append('lang', lang);
     return request<VisualSearchResult>('/api/visual-search', { method: 'POST', body: form });
   },
-<<<<<<< HEAD
   routes: () => request<{ enabled: boolean; routes: AdminRoute[]; auto: AutoRoute[] }>('/api/admin/routes'),
   createRoute: (body: { title: string; kicker?: string | null; description?: string | null; published?: boolean }) =>
     request<AdminRoute>('/api/admin/routes', json('POST', body)),
@@ -187,7 +182,5 @@ export const api = {
   createAnnouncement: (body: AnnouncementFields) => request<Announcement>('/api/admin/announcements', json('POST', body)),
   updateAnnouncement: (id: number, body: AnnouncementFields) => request<Announcement>(`/api/admin/announcements/${id}`, json('PATCH', body)),
   deleteAnnouncement: (id: number) => request<void>(`/api/admin/announcements/${id}`, { method: 'DELETE' }),
-=======
->>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };
