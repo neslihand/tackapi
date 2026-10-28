@@ -39,7 +39,7 @@ const PILLARS = [
 function Interior() {
   return <div className="fc-interior">
     <div className="fi-sky" />
-    <img className="fi-arches" src="/images/kemerler.webp" alt="" />
+    <img className="fi-arches" src="/images/avlu-kemer.webp" alt="" />
     <span className="fc-doorglow" />
   </div>;
 }
