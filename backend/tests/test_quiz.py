@@ -56,7 +56,8 @@ class QuizApiTest(unittest.TestCase):
         self.assertEqual(self.c.post('/api/admin/quiz', headers=NES, json=dict(GOOD, monument='yok-boyle')).status_code, 422)
 
     def test_site_and_panel_mounts_come_after_the_api(self):
-        paths = [getattr(r, 'path', '') for r in self.api.app.routes]
+        # Yeni FastAPI sürümlerinde include_router'ın eklediği nesnelerin 'path' alanı yok; '' sitenin mount yoluyla karışmasın.
+        paths = [getattr(r, 'path', None) for r in self.api.app.routes]
         for mount, folder in (('', self.api.SITE_DIR), ('/panel', self.api.PANEL_DIR)):
             if folder:
                 self.assertGreater(paths.index(mount), paths.index('/api/quiz'))
