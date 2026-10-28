@@ -34,12 +34,13 @@ const PILLARS = [
   ['Aktar', 'Rotalar, oyunlar ve pasaportla mirası yeni nesillere taşır.'],
 ];
 
-// Behind the door: a stone arcade a little way in, standing against the emerald night. The camera passes through the
-// door, then through the arcade's middle arch, into the courtyard.
+// Behind the door: a stone arcade a little way in, standing against a warm stone light that turns to the emerald night
+// as the camera passes through the door, then through the arcade's middle arch, into the courtyard.
 function Interior() {
   return <div className="fc-interior">
     <div className="fi-sky" />
-    <img className="fi-arches" src="/images/avlu-kemer.webp" alt="" />
+    <div className="fi-night" />
+    <img className="fi-arches" src="/images/avlu-tavan.webp" alt="" />
     <span className="fc-doorglow" />
   </div>;
 }
@@ -72,14 +73,15 @@ export function HeroGate() {
         .to('.fc-leaf-shade', { opacity: 0.7, ease: smooth, duration: 0.26 }, 0.1)
         .fromTo('.fc-doorglow', { opacity: 0 }, { opacity: 1, ease: smooth, duration: 0.26 }, 0.12)
         // The camera passes through the doorway, and the arcade behind it comes up to meet it.
-        .to('.fc-stage', { scale: small ? 3.4 : 4.6, ease: push, duration: 0.34 }, 0.22)
+        .to('.fc-stage', { scale: small ? 4.4 : 4.6, ease: push, duration: 0.34 }, 0.22)
         .to('.fc-shade', { opacity: 0, duration: 0.2 }, 0.22)
         .fromTo('.fi-sky', { scale: 1 }, { scale: 0.6, ease: push, duration: 0.34 }, 0.22)
         // Then through the arcade's middle arch: it grows past the camera and leaves the emerald night behind it.
         .fromTo('.fi-arches', { scale: 1 }, { scale: 7, ease: 'power2.in', duration: 0.24 }, 0.42)
+        .to('.fi-night', { opacity: 1, ease: 'power1.inOut', duration: 0.09 }, 0.51)
         .to('.fi-arches', { autoAlpha: 0, ease: 'power1.in', duration: 0.05 }, 0.61)
         .fromTo('.courtyard-scene', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.06 }, 0.62)
-        .set('.fc-frame', { autoAlpha: 0 }, 0.68)
+        .set('.fc-frame, .fc-fill', { autoAlpha: 0 }, 0.68)
         // Scene 3: the courtyard, on the entrance's own emerald.
         .fromTo('.cy-kitabe', { '--rule': 0 }, { '--rule': 1, ease: 'power2.out', duration: 0.14 }, 0.68)
         .to({}, { duration: 0.08 });
@@ -120,6 +122,7 @@ export function HeroGate() {
     <div className="hero-sticky" onPointerMove={parallax}>
       <div className="gate-scene">
         {/* The facade, sized to cover the screen at the photo's own proportions so the leaves stay on its doorway. */}
+        <div className="fc-fill" aria-hidden="true" />
         <div className="fc-frame" aria-hidden="true"><div className="fc-stage">
           <Interior />
           <img className="fc-facade" src="/images/cephe.webp" alt="" fetchPriority="high" draggable={false} />
