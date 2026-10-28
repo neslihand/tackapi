@@ -57,8 +57,18 @@ export function toRecord(item: VakifItem): ArtifactRecord {
   };
 }
 
+// Site health for the admin assistant: failed (5xx, no connection) and slow requests are reported by analytics.ts
+// (only with consent). Monument slugs are folded so the same endpoint is counted together.
+let reportApi: (endpoint: string, status: number, ms: number) => void = () => {};
+export function setApiReporter(fn: typeof reportApi) { reportApi = fn; }
+const endpointOf = (url: string) => url.split('?')[0].replace(/^(\/api\/monuments\/)[^/]+/, '$1:slug');
+
 async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { headers: { accept: 'application/json' }, ...init });
+  const started = typeof performance !== 'undefined' ? performance.now() : 0;
+  let response: Response;
+  try { response = await fetch(url, { headers: { accept: 'application/json' }, ...init }); }
+  catch (e) { reportApi(endpointOf(url), 0, 0); throw e; }
+  reportApi(endpointOf(url), response.status, typeof performance !== 'undefined' ? Math.round(performance.now() - started) : 0);
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
     throw new Error(typeof body?.detail === 'string' ? body.detail : `Sunucu ${response.status} döndü.`);

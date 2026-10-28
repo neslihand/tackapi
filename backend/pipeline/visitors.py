@@ -32,7 +32,9 @@ COOKIE = 'esik_oturum'
 EVENT_TYPES = {
     'page_view', 'monument_view', 'narration_mode', 'read_depth', 'read_time', 'photo_open', 'chat_question',
     'chat_answer', 'camera_search', 'search', 'filter', 'map_select', 'map_locate', 'route_open', 'quiz_finish',
-    'game_finish', 'stamp', 'favorite', 'contribution', 'recommendation_click', 'consent'}
+    'game_finish', 'stamp', 'favorite', 'contribution', 'recommendation_click', 'consent',
+    # site deneyimi (yönetici asistanı): tarayıcı hatası, sayfa açılış süresi, başarısız ve yavaş istek
+    'client_error', 'page_perf', 'api_error', 'api_slow'}
 SESSION_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 PROPS_MAX = 2000
 PHOTO_MAX = 10 * 1024 * 1024
@@ -99,7 +101,7 @@ class Limiter:
 
 
 # Panel sorgularının sayı ya da doğru/yanlış olarak okuduğu alanlar: tipi uymayan değer kaydedilmez
-NUMERIC = {'depth', 'seconds', 'results', 'score', 'radius'}
+NUMERIC = {'depth', 'seconds', 'results', 'score', 'radius', 'load_ms', 'ttfb_ms', 'ms', 'status'}
 BOOLEAN = {'on', 'no_info', 'granted'}
 
 
@@ -117,7 +119,10 @@ def clean_props(props):
             if isinstance(v, bool):
                 out[k] = v
             continue
-        if isinstance(v, str):
+        if k == 'message' and isinstance(v, str):
+            # tarayıcı hata metni: e-posta ve uzun sayılar (kimlik, telefon) saklanmaz
+            out[k] = re.sub(r'\d{6,}', '#', re.sub(r'[\w.+-]+@[\w-]+\.[\w.]+', '[e-posta]', v))[:200]
+        elif isinstance(v, str):
             out[k] = v[:500]
         elif isinstance(v, (bool, int, float)) or v is None:
             out[k] = v

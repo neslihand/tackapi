@@ -130,7 +130,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
-- **Testler:** `python -m unittest discover -s tests` (145 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (167 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
@@ -140,6 +140,13 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   `#/katkilar`, `#/analitik`. Ön yüz: `lib/analytics.ts`, `lib/account.tsx`, `vakif/AccountPages.tsx`, `Contributions.tsx`,
   `Discoveries.tsx`, izin bandı. Test veritabanıyla tarayıcıda denendi (olaylar, kayıt, hesabım, katkı, panel onayı ve
   analitik). README §7.12. `/media` onay bekleyen katkı fotoğrafını da sunar (adres rastgele; kitap taslaklarıyla aynı).
+- **Yönetici asistanı (28 Ekim 2026):** `agent.py`, panelde `#/asistan`, `#/takvim`, `#/gundem`; ana sayfada "Gündem"
+  bandı (`frontend/src/vakif/Agenda.tsx`). Göç `016_agent.sql` (gerçek veritabanında henüz uygulanmadı). Öneriyi açık
+  kurallar bulur (takvim, kitaptaki yıl dönümleri, `insights.py`, geri dönüş ve hemen çıkma, hata ve hız olayları);
+  günde bir tarar, yapay zekâ kullanmaz. Geliştirici kararı: yapay zekâ yalnızca yönetici "taslak" isteyince yazar
+  (rota, duyuru, eser özeti) ve hiçbir şey onaysız yayınlanmaz. Takvim hazır listeyle başlar; **dinî günler tahmini ve
+  "doğrulanmadı"**, Diyanet takviminden kontrol edilmeli. Yeni olaylar: `client_error`, `page_perf`, `api_error`,
+  `api_slow`. Taslak gerçek Gemini ile denenmedi (testler ve tarayıcı denemesi sahte modelle). README §7.13.
 
 ## Mimari özeti
 `segment → finalize → chunk` (çevrim dışı, deterministik) → `load_db` (yalnızca bir kez) → `extract_gemini` + `load_extractions` →

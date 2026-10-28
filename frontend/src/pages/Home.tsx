@@ -12,6 +12,7 @@ import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import { quizPool } from '../lib/quiz';
 import { Discoveries } from '../vakif/Discoveries';
+import { Agenda } from '../vakif/Agenda';
 
 // The home page after the entrance: numbered chapters in the entrance's language, ivory and night in turn, each with
 // its own scene — the story ring, Divriği's pinned picture, a second threshold, the routes, the passport and the day's
@@ -62,6 +63,7 @@ export function Home() {
   }, []);
   return <div ref={ref} className="home-page"><HeroGate />
     <Chapter id="featured" tone="ivory" n={1} total={TOTAL} kicker="TAŞA İŞLENEN HİKÂYELER" titleId="featured-title" className="hp-featured" title={<>Bazı kapılar, <em>yüzyıllara açılır.</em></>} lede={<Statement />}>
+      <Agenda />
       <StoryRing artifacts={artifacts} label="Öne çıkan hikâyeler" />
       <div className="hp-collection"><p>{pad(artifacts.length)} eser <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} şehir <span>·</span> <i>Birlikte koruduğumuz miras.</i></p><Link className="hp-link en-link" to="/kesfet"><span>Tüm eserleri keşfet</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
     </Chapter>

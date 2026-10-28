@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -167,5 +167,20 @@ export const api = {
   insights: (days: number, demo: boolean) => request<Insights>(`/api/admin/insights${qs({ days, demo })}`),
   settings: () => request<Insights['settings']>('/api/admin/settings'),
   saveSettings: (body: Partial<SiteSettings>) => request<Insights['settings']>('/api/admin/settings', json('PUT', body)),
+  agent: (status: 'open' | 'closed') => request<{ enabled: boolean; items: AgentSuggestion[]; counts: Record<string, number>;
+    last_scan: string | null; model?: string; fake?: boolean }>(`/api/admin/agent${qs({ status })}`),
+  agentScan: () => request<{ found: number; new: number; expired: number }>('/api/admin/agent/scan', { method: 'POST' }),
+  agentStatus: (id: number, status: 'open' | 'done' | 'dismissed') => request<AgentSuggestion>(`/api/admin/agent/${id}`, json('PATCH', { status })),
+  agentDraft: (id: number, kind: DraftKind) => request<AgentDraft>(`/api/admin/agent/${id}/draft`, json('POST', { kind })),
+  agentApply: (id: number, kind: DraftKind, draft: Record<string, unknown>) =>
+    request<{ id: number; result_ref: string }>(`/api/admin/agent/${id}/apply`, json('POST', { kind, draft })),
+  calendar: () => request<{ enabled: boolean; days: CalendarDay[]; horizon?: number }>('/api/admin/calendar'),
+  createCalendar: (body: CalendarFields) => request<CalendarDay>('/api/admin/calendar', json('POST', body)),
+  updateCalendar: (id: number, body: CalendarFields) => request<CalendarDay>(`/api/admin/calendar/${id}`, json('PATCH', body)),
+  deleteCalendar: (id: number) => request<void>(`/api/admin/calendar/${id}`, { method: 'DELETE' }),
+  announcements: () => request<{ enabled: boolean; items: Announcement[] }>('/api/admin/announcements'),
+  createAnnouncement: (body: AnnouncementFields) => request<Announcement>('/api/admin/announcements', json('POST', body)),
+  updateAnnouncement: (id: number, body: AnnouncementFields) => request<Announcement>(`/api/admin/announcements/${id}`, json('PATCH', body)),
+  deleteAnnouncement: (id: number) => request<void>(`/api/admin/announcements/${id}`, { method: 'DELETE' }),
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };

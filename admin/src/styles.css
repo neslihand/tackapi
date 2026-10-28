@@ -330,3 +330,33 @@ select{border:1px solid var(--line);padding:11px 30px 11px 12px;border-radius:0;
 .loop-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:14px}
 .admin-form.flat{padding:0;border:0;background:none;display:flex;flex-direction:column;gap:12px}
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}.insights-grid,.insights-grid.inner,.suggestions{grid-template-columns:1fr}.chart-bars li{grid-template-columns:minmax(90px,40%) 1fr 52px}}
+
+/* Yönetici asistanı, takvim ve gündem */
+.agent-group{margin:26px 0 8px}
+.agent-group h2{font-family:var(--serif);font-size:26px;font-weight:400;margin:0;color:var(--teal)}
+.agent-group h2 small{font-family:Inter,sans-serif;font-size:12px;margin-left:8px;padding:2px 8px;background:#e9dcc0;color:#6b4e1f;vertical-align:middle}
+.agent-list{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:12px}
+.agent-card{display:flex;flex-direction:column;gap:6px;padding:16px 18px;border:1px solid var(--line);border-left:3px solid var(--gold);background:#fbf9f3}
+.agent-card.experience{border-left-color:#8d3a30}.agent-card.engagement{border-left-color:#2f6b4f}.agent-card.content{border-left-color:#5b6f86}
+.agent-card h3{margin:0;font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.3}
+.agent-card p{margin:0;font-size:14px;line-height:1.6}
+.agent-card .agent-action{color:var(--teal);font-style:italic}
+.agent-meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--muted)}
+.agent-meta span{display:inline-flex;align-items:center;gap:5px}
+.agent-flag{padding:2px 8px;background:#efe4c7;color:#6b4e1f;font-size:11.5px;letter-spacing:.02em}
+.agent-flag.muted{background:#e6e4da;color:#5c6358}
+.agent-monuments{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;font-size:13px;border:1px solid var(--line);background:#fffdf8;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--gold)}.chip button{display:inline-flex;color:var(--muted)}
+.agent-draft{margin-top:8px;padding:14px 16px;border:1px dashed #c3a869;background:#fffdf8;display:flex;flex-direction:column;gap:12px}
+.agent-warnings{margin:0;padding:10px 14px 10px 30px;background:#f6ead0;font-size:13px;line-height:1.6}
+.agent-picks{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.agent-picks legend{font-size:13px;font-weight:500;margin-bottom:6px;padding:0}
+.agent-picks label{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:13.5px;border:1px solid var(--line);background:#fbf9f3;cursor:pointer}
+.agent-picks label.on{border-color:var(--teal);background:#e3ebe5}
+.agent-picks small{color:var(--muted)}
+.inline-pair{display:flex;gap:8px}.inline-pair input[type=number]{width:80px}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.calendar-table{margin-top:18px}.calendar-table small{display:block;font-size:12px;color:var(--muted);font-family:Inter,sans-serif}
+.calendar-table tr.muted{opacity:.55}
+.calendar-table td .admin-form{margin:4px 0}

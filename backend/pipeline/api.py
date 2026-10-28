@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent
 
 log = logging.getLogger('vakif.api')
 
@@ -53,6 +53,7 @@ PUBLISHED = "m.review_status = 'published'"
 # Yönetim uçları (/api/admin/*, bkz. admin.py)
 app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.save_webp(data, rel, MEDIA_DIR)))
 # Ziyaretçi uçları: hesap, pasaport, davranış olayları (visitors.py)
+app.include_router(agent.build_router(db))
 visitor_router = visitors.build_router(db, MEDIA_DIR)
 app.include_router(visitor_router)
 
@@ -261,6 +262,12 @@ def public_routes(pilot: bool | None = None, auto: bool = True):
     """Keşif rotaları: panelde yazılıp yayımlananlar, ardından şehir başına otomatik rotalar (auto=false ile yalnızca
     yazılanlar). Duraklar yalnızca yayındaki eserlerdir; pilot=true ise yalnızca pilot eserler."""
     return routes.public_routes(db, pilot, auto)
+
+
+@app.get('/api/announcements')
+def public_announcements(pilot: bool | None = None):
+    """Ana sayfadaki "Gündem": panelde yayımlanan ve tarihi süren duyurular (agent.py; en çok 3)."""
+    return agent.public_announcements(db, pilot)
 
 
 @app.get('/api/quiz')

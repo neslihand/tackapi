@@ -1,7 +1,7 @@
 // Davranış olayları ("Veriyle Gelişen Döngü"). Yalnızca ziyaretçi izin verdiyse ve site arka uca bağlıysa gönderilir.
 // Ziyaretçi bu tarayıcıda üretilen rastgele bir kimlikle tanınır; IP ya da ad tutulmaz. İzin geri alınınca kimlik ve
 // gönderilmemiş olaylar silinir. Olaylar biriktirilip birkaç saniyede bir, sayfa kapanırken de toplu gönderilir.
-import { vakifApiEnabled } from './vakifApi.ts';
+import { setApiReporter, vakifApiEnabled } from './vakifApi.ts';
 
 const CONSENT_KEY = 'esik:consent:v1';
 const SID_KEY = 'esik:sid:v1';
@@ -66,7 +66,31 @@ export function flush() {
   if (queue.length) timer = setTimeout(flush, FLUSH_MS);
 }
 
+// Site health (admin assistant: "Ziyaretçi deneyimi"): script errors, page load time, failed and slow requests.
+// Same consent and anonymity as every other event; at most 5 distinct errors per page load.
+const SLOW_API_MS = 4000;
+const seenErrors = new Set<string>();
+function reportError(message: string, source: string) {
+  const text = message.trim().slice(0, 200);
+  if (!text || seenErrors.size >= 5 || seenErrors.has(text)) return;
+  seenErrors.add(text);
+  track('client_error', undefined, { message: text, source });
+}
+setApiReporter((endpoint, status, ms) => {
+  if (status === 0 || status >= 500) track('api_error', undefined, { endpoint, status });
+  else if (ms > SLOW_API_MS) track('api_slow', undefined, { endpoint, ms });
+});
+
 if (typeof window !== 'undefined') {
+  window.addEventListener('error', e => reportError(e.message || 'Bilinmeyen hata', 'error'));
+  window.addEventListener('unhandledrejection', e => {
+    const reason = (e as PromiseRejectionEvent).reason;
+    reportError(String(reason instanceof Error ? reason.message : reason ?? 'Promise hatası'), 'promise');
+  });
+  window.addEventListener('load', () => setTimeout(() => {
+    const nav = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined;
+    if (nav && nav.loadEventEnd > 0) track('page_perf', undefined, { load_ms: Math.round(nav.loadEventEnd), ttfb_ms: Math.round(nav.responseStart) });
+  }, 0));
   window.addEventListener('pagehide', flush);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
 }

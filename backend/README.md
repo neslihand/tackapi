@@ -698,6 +698,44 @@ python demo_activity.py --clear                    # deneme verisini siler; ger�
   deneyim (`/api/site-settings`: anlatım biçimi ve öne çıkan rota; panelde elle ya da "veriye göre"). Deneme verisi
   bu üçünde hiç kullanılmaz; panoda "Deneme verisini göster" ile açılıp kapanır.
 
+### 7.13 Yönetici asistanı: `agent.py`
+Panelde `#/asistan`. Tarihleri ve ziyaretçi verisini tarar, yöneticiye ne yapılabileceğini gerekçesiyle önerir; istenirse
+rota, duyuru ya da eser özeti taslağı yazar. Göç `016_agent.sql` (`calendar_day`, `agent_suggestion`, `announcement`).
+
+```powershell
+python migrate.py --apply          # göç 016
+python agent.py --scan             # kuralları çalıştırır (yapay zekâ yok); panel de günde bir kendiliğinden tarar
+python agent.py --list             # açık öneriler
+```
+- **Öneriyi kurallar bulur, yapay zekâ değil.** Her önerinin gerekçesi ve dayandığı sayılar yazılır:
+  - *Yaklaşan tarihler* (`calendar_day`, 45 gün önceden; `VAKIF_AGENT_HORIZON`): bayramlar, milli günler, şehir
+    günleri. İlgili eserler şehir ve eser türüne göre seçilir, en çok bakılan önce.
+  - *Yıl dönümleri*: kitaptaki tek yıllık olayların (yapım, tamamlanış, vakıf, deprem) 50'nin katı yıl dönümleri, bu
+    yıl ve gelecek yıl. Kitapta gün ve ay olmadığı için yıl boyunca geçerlidir.
+  - *Ziyaretçi deneyimi*: tekrarlayan tarayıcı hatası, yavaş sayfa ve istek, başarısız istek, kameranın eser
+    bulamaması; ayrıca `insights.py`'nin cevapsız soru ve sonuçsuz arama önerileri.
+  - *Süreklilik*: geri dönen ziyaretçi payının düşmesi, hiç eser açmadan ayrılanlar, az ulaşılan profiller.
+  - *İçerik*: ilgi görüp eksik (fotoğraf, anlatım, konum) ya da okunmadan bırakılan eserler.
+- **Tarama günde birdir**: asistan sayfası açılınca son tarama 20 saatten eskiyse yeniden tarar; "Şimdi tara" ve
+  `--scan` de var. Yapıldı ya da gizlendi denen öneri bir daha açılmaz; kuralı artık tutmayan öneri süresi geçmiş olur.
+  Davranış önerilerinde deneme verisi de hesaba girdiyse "Deneme verisi dahil" yazılır.
+- **Taslak yalnızca istenince yazılır** (Gemini, tek çağrı, `VAKIF_AGENT_MODEL`, varsayılan hafif model). Model
+  yalnızca önerideki eserlerin künyesini, kitaptaki olaylarını ve metninin başını görür. Kaynakta olmayan yıl içeren
+  cümle çıkarılır, doğrulanamayan adlar uyarı olur, yalnızca verilen eserler seçilebilir. Yapay zekâ yanıt vermezse
+  (ya da `VAKIF_FAKE_LLM=1`) kayıttaki bilgiden şablon taslak hazırlanır.
+- **Hiçbir şey onaysız yayınlanmaz.** Yönetici taslağı düzenleyip uygular: rota yayında olmayan rota, duyuru yayında
+  olmayan "Gündem" kaydı olarak oluşur (yayına `#/rotalar`, `#/gundem`'den alınır); özet eser kartına yazılır ve o eserin
+  sohbet önbelleği silinir. Her adım değişiklik kaydına yazılır.
+- **Takvim** (`#/takvim`): ilk taramada hazır bir başlangıç listesi bir kez eklenir (milli günler, uluslararası günler,
+  Bursa, Konya ve Hatay günleri, 2026–2027 dinî günleri). **Dinî günlerin tarihi tahminidir ve "doğrulanmadı"
+  işaretlidir**; Diyanet takviminden kontrol edilip işaretlenmelidir. Her yıl tekrarlanan gün ya da tek tarih, süre,
+  şehir, öne çıkarılacak eser türleri ve taslağa not (ör. anma dili) girilir.
+- **Gündem** (`GET /api/announcements`): ana sayfada yayımlanan ve tarih aralığı süren en çok 3 duyuru; yayında
+  olmayan eser gösterilmez.
+- **Site deneyimi olayları** (yalnızca izin verenlerden, kimliksiz): `client_error` (hata metninden e-posta ve uzun
+  sayılar silinir, sayfa başına en çok 5), `page_perf` (açılış süresi), `api_error` (5xx ya da bağlantı yok),
+  `api_slow` (4 saniyeden uzun).
+
 ---
 
 ## 8. Ekonomik mod ve maliyet
@@ -965,6 +1003,8 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_VISUAL_MARGIN` | `0.03` | En iyi aday ikinciden en az bu kadar önde olmalı |
 | `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |
 | `VAKIF_MEDIA_DIR` | `backend/media` | WebP fotoğrafların yazıldığı ve `/media` adresinden sunulduğu klasör |
+| `VAKIF_AGENT_HORIZON` | `45` | Yönetici asistanı yaklaşan takvim günlerini kaç gün önceden önersin |
+| `VAKIF_AGENT_MODEL` | `VAKIF_LITE_MODEL` | Asistanın taslak yazdığı model (yalnızca "Taslak hazırla" ile çağrılır) |
 | `VAKIF_TEST_DSN` | — | Testlerin kullanacağı veritabanı; adı `_test` ile bitmeli, testler onu **sıfırdan kurar** |
 
 ---

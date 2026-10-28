@@ -72,6 +72,15 @@
 .v-tile-body b { font-family: var(--serif); font-size: 20px; font-weight: 400; line-height: 1.15; color: var(--teal); }
 .v-tile-body span { font-size: 13px; line-height: 1.45; color: var(--muted); }
 .v-tile-go { position: absolute; top: 12px; right: 12px; color: #8a6a2e; }
+/* Ana sayfa: Gündem (panelde yayımlanan duyurular) */
+.v-agenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 0 0 36px; }
+.v-agenda-item { display: flex; flex-direction: column; gap: 8px; padding: 20px 22px; border: 1px solid var(--line); border-left: 3px solid #c3a869; background: #fbf9f3; }
+.v-agenda-item h3 { margin: 0; font-family: var(--serif); font-size: clamp(24px, 2.4vw, 30px); font-weight: 400; line-height: 1.15; color: var(--teal); }
+.v-agenda-item p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--ink); }
+.v-agenda-item ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 6px 0 0; }
+.v-agenda-item a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 13.5px; color: var(--teal); text-decoration: none; border: 1px solid var(--line); background: #fffdf8; }
+.v-agenda-item a:hover { border-color: #c3a869; }
+.v-agenda-item a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 /* Keşfet sayfasının zemini koyu (sabit arka plan katmanı): başlıklar açık renk */
 .explore-page .v-discover h2, .explore-page .v-eyebrow { color: #f4f1eb; }
 .explore-page .v-discover h2 em { color: #e6d5ae; }

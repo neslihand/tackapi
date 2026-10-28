@@ -12,7 +12,7 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
 export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
-  segmentation_pending: number; contributions_pending?: number;
+  segmentation_pending: number; contributions_pending?: number; agent_open?: number;
   // MVP pilot seçkisi: şehir başına seçilen eser ve hedef (009 göçü yoksa boş)
   pilot?: { city: string; n: number; target: number | null }[] };
 
@@ -128,3 +128,21 @@ export type PagePhoto = { id: number; file: string; src: string; thumb: string; 
   alt_tr: string | null; printed_page: number; pdf_page: number | null; match_method: string | null; edited: boolean;
   width: number | null; height: number | null; monument: string | null; monument_name: string | null; here: boolean; in_range: boolean };
 export type PagePhotos = { book: string | null; book_title?: string | null; pages: [number, number] | null; photos: PagePhoto[] };
+
+// Yönetici asistanı (agent.py, göç 016)
+export type AgentKind = 'calendar' | 'anniversary' | 'experience' | 'content' | 'engagement';
+export type DraftKind = 'route' | 'announcement' | 'summary';
+export type AgentDraft = { kind: DraftKind; draft: Record<string, unknown>; ai: boolean; warnings: string[]; model: string | null };
+export type AgentSuggestion = { id: number; key: string; kind: AgentKind; title: string; detail: string; action: string | null;
+  evidence: Record<string, unknown>; monuments: string[]; monument_names: string[]; drafts: DraftKind[]; due_on: string | null;
+  priority: number; demo: boolean; status: 'open' | 'done' | 'dismissed' | 'expired'; draft_kind: DraftKind | null; draft: AgentDraft | null;
+  draft_at: string | null; result_ref: string | null; resolved_by: string | null; resolved_at: string | null; created_at: string; seen_at: string };
+export type CalendarKind = 'religious' | 'national' | 'city' | 'other';
+export type CalendarDay = { id: number; title: string; kind: CalendarKind; month: number | null; day: number | null; on_date: string | null;
+  days: number; city: string | null; city_name?: string | null; monument_kinds: string[]; note: string | null; source: string | null;
+  checked: boolean; active: boolean; next?: string | null; in_days?: number | null };
+export type CalendarFields = Partial<Omit<CalendarDay, 'id' | 'city_name' | 'next' | 'in_days'>>;
+export type Announcement = { id: number; title: string; body: string; monuments: string[]; monument_names?: string[]; route_slug: string | null;
+  starts_on: string | null; ends_on: string | null; published: boolean; ai_draft: boolean; suggestion_id: number | null;
+  created_by: string | null; updated_at: string };
+export type AnnouncementFields = Partial<Pick<Announcement, 'title' | 'body' | 'monuments' | 'route_slug' | 'starts_on' | 'ends_on' | 'published'>>;
