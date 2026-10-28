@@ -8,7 +8,8 @@
 .ask-button small { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #71603e; }
 .ask-button[aria-expanded='true'] { border-color: #0f2f26; background: #fdfaf4; }
 .artifact-summary .ask-button { margin: 12px 0 0 12px; }
-.ask-fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 150; display: none; align-items: center; gap: 9px; min-height: 50px; padding: 0 20px 0 16px; border: 1.5px solid #acaba8; border-radius: 999px; font-size: 14px; font-weight: 600; letter-spacing: .02em; color: #e7dcb9; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 4px #acaba826, 0 14px 30px -10px #000c; }
+/* --consent-space: the consent banner's height while it is shown (vakif/ConsentBanner.tsx), so the button rises above it. */
+.ask-fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom) + var(--consent-space, 0px)); z-index: 150; display: none; align-items: center; gap: 9px; min-height: 50px; padding: 0 20px 0 16px; border: 1.5px solid #acaba8; border-radius: 999px; font-size: 14px; font-weight: 600; letter-spacing: .02em; color: #e7dcb9; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 4px #acaba826, 0 14px 30px -10px #000c; }
 @media (max-width: 800px) {
   .ask-fab.visible { display: inline-flex; }
   .ask-button small { display: none; }

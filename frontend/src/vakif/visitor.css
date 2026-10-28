@@ -34,8 +34,9 @@
 .v-prose h2 { font-family: var(--serif); font-size: 28px; font-weight: 400; margin: 30px 0 8px; color: var(--teal); }
 .v-prose p { font-size: 16px; line-height: 1.8; color: var(--ink); }
 
-/* İzin bandı */
-.consent-banner { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 300; display: flex; gap: 18px; align-items: center; max-width: 920px; margin: 0 auto;
+/* İzin bandı: "Esere Sor" düğmesinin (150) üstünde, açık sohbet panelinin (160) altında. Panel açıkken bant çekilir,
+   kapanınca geri gelir (karar verilene kadar zaten hiçbir olay gönderilmez). */
+.consent-banner { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 155; display: flex; gap: 18px; align-items: center; max-width: 920px; margin: 0 auto;
   padding: 18px 22px; color: #f4f1eb; background: #0c241cf2; border: 1px solid #c3a86966; box-shadow: 0 24px 50px -24px #000; }
 .consent-banner strong { font-family: var(--serif); font-size: 22px; font-weight: 400; }
 .consent-banner p { margin: 4px 0 0; font-size: 14px; line-height: 1.6; color: #dcd8cc; }
@@ -43,6 +44,7 @@
 .consent-actions { display: flex; flex-direction: column; gap: 8px; flex: none; }
 .consent-banner .button.line { color: #f4f1eb; border-color: #f4f1eb66; }
 @media (max-width: 700px) { .consent-banner { flex-direction: column; align-items: stretch; } .consent-actions { flex-direction: row; } }
+body:has(.chat-panel.open) .consent-banner { display: none; }
 
 /* Eser sayfası: ziyaretçi katkıları */
 .v-contrib { padding-top: 60px; padding-bottom: 60px; border-top: 1px solid var(--line); background: var(--paper); }
