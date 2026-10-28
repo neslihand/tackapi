@@ -107,9 +107,9 @@ export function HeroGate() {
   }
   function skipIntro() {
     stopTravel(); settleScroll();
-    const next = document.getElementById('featured');
+    const next = document.getElementById('vizyon');
     window.scrollTo({ top: next ? next.offsetTop - 70 : (section.current?.offsetHeight ?? 0), behavior: 'instant' });
-    document.getElementById('featured-title')?.focus({ preventScroll: true });
+    document.getElementById('vision-title')?.focus({ preventScroll: true });
   }
   function parallax(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.pointerType !== 'mouse' || reduced()) return;
@@ -118,7 +118,7 @@ export function HeroGate() {
     event.currentTarget.style.setProperty('--mouse-x', x.toFixed(3));
     event.currentTarget.style.setProperty('--mouse-y', y.toFixed(3));
   }
-  return <section className="hero-scroll hero-facade" ref={section} data-nav-theme="dark" aria-label="Tarihe açılan kapı">
+  return <section id="giris" className="hero-scroll hero-facade" ref={section} data-nav-theme="dark" aria-label="Tarihe açılan kapı">
     <div className="hero-sticky" onPointerMove={parallax}>
       <div className="gate-scene">
         {/* The facade, sized to cover the screen at the photo's own proportions so the leaves stay on its doorway. */}

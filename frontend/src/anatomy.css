@@ -1,0 +1,104 @@
+/* ——— Bir eserin içi (ArtifactAnatomy.tsx) ———
+   An annotated plate: a parchment page drawn in the middle under nested arches, numbered gold marks on its parts, and
+   the notes on either side joined to it by fine rules. Everything settles in once, the first time it comes into view. */
+.aa { --gap: clamp(36px, 4.4vw, 84px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 430px) minmax(0, 1fr); grid-template-areas: 'left plate right' 'foot foot foot'; align-items: center; column-gap: var(--gap); }
+.aa-notes { display: flex; flex-direction: column; gap: clamp(40px, 7svh, 76px); margin: 0; padding: 0; list-style: none; }
+.aa-notes.left { grid-area: left; text-align: right; }
+.aa-notes.right { grid-area: right; }
+
+/* A note: number, icon, title and text, with a rule running to the page. */
+.aa-note { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 8px; }
+.aa-notes.left .aa-note { grid-template-columns: 1fr auto; }
+.aa-notes.left .aa-note-icon { grid-column: 2; grid-row: 1; }
+.aa-notes.left .aa-note b { grid-column: 1; grid-row: 1; }
+.aa-note p { grid-column: 1 / -1; max-width: 34ch; margin: 0; font-size: 14px; line-height: 1.7; color: #c9cfc8; }
+.aa-notes.left .aa-note p { justify-self: end; }
+.aa-note b { font-family: var(--serif); font-size: clamp(22px, 1.9vw, 28px); font-weight: 400; line-height: 1.1; color: #fbf7ee; }
+.aa-note-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: #e6d5ae; box-shadow: inset 0 0 0 1px #e6d5ae40; background: #e6d5ae0d; }
+.aa-note-num { position: absolute; top: -26px; font-family: var(--serif); font-size: 15px; font-style: italic; color: #c7a96b; }
+.aa-notes.left .aa-note-num { right: 0; }
+.aa-note::after { content: ''; position: absolute; top: 20px; width: calc(var(--gap) - 10px); height: 1px; background: linear-gradient(90deg, #e6d5ae00, #e6d5ae99); transform-origin: right; }
+.aa-note::before { content: ''; position: absolute; top: 17px; z-index: 1; width: 7px; height: 7px; border-radius: 50%; background: #e6d5ae; box-shadow: 0 0 0 4px #e6d5ae26; }
+.aa-notes.left .aa-note::after { left: calc(100% + 10px); }
+.aa-notes.left .aa-note::before { left: calc(100% + var(--gap) - 4px); }
+.aa-notes.right .aa-note::after { right: calc(100% + 10px); background: linear-gradient(270deg, #e6d5ae00, #e6d5ae99); transform-origin: left; }
+.aa-notes.right .aa-note::before { right: calc(100% + var(--gap) - 4px); }
+
+/* The plate: nested arches drawn behind a parchment page. */
+.aa-plate { position: relative; grid-area: plate; padding: 54px 0 28px; }
+.aa-arches { position: absolute; top: -30px; left: 50%; width: 150%; height: calc(100% + 60px); translate: -50% 0; overflow: visible; stroke: #e6d5ae; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.aa-arches path { opacity: .22; stroke-dasharray: 1; vector-effect: non-scaling-stroke; }
+.aa-arches path:nth-child(2) { opacity: .12; }
+.aa-arches .axis { opacity: .08; stroke-dasharray: .004 .012; }
+.aa-page { position: relative; padding: 22px 22px 24px; border-radius: 4px; color: #17201c; background: radial-gradient(ellipse 80% 50% at 50% 0, #fffdf8, transparent 70%), #f2ede3; box-shadow: 0 0 0 1px #8a6a3666, 0 60px 90px -40px #000; }
+.aa-page::before { content: ''; position: absolute; inset: 8px; border: 1px solid #8a6a3640; border-radius: 2px; pointer-events: none; }
+.aa-corner { position: absolute; z-index: 1; font-size: 11px; line-height: 1; color: #8a6a36; }
+.aa-corner.tl { top: 3px; left: 4px; } .aa-corner.tr { top: 3px; right: 4px; } .aa-corner.bl { bottom: 3px; left: 4px; } .aa-corner.br { right: 4px; bottom: 3px; }
+
+/* The building, kept small and toned so any photo reads well, in a pointed arch. */
+.aa-window { position: relative; aspect-ratio: 5 / 4; overflow: visible; }
+.aa-arch { position: absolute; inset: 0; overflow: hidden; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80V34C0 16 22 5 50 0C78 5 100 16 100 34V80Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80V34C0 16 22 5 50 0C78 5 100 16 100 34V80Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.aa-arch img { width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
+.aa-arch::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #0b232133, transparent 40%, #0b232159); }
+.aa-stamp { position: absolute; right: -14px; bottom: -16px; z-index: 2; display: grid; place-items: center; width: 64px; height: 64px; border: 2px dashed #8a6a36; border-radius: 50%; color: #8a6a36; background: #f2ede3; rotate: -12deg; }
+.aa-kicker { margin: 18px 0 6px; font-size: 10px; font-weight: 600; letter-spacing: .2em; color: #765b38; }
+.aa-page h3 { margin: 0; font-family: var(--serif); font-size: clamp(24px, 2vw, 30px); font-weight: 400; line-height: 1.08; letter-spacing: -.01em; }
+
+/* The narration switch and its sample, changing by themselves. */
+.aa-modes { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 16px 0 12px; padding: 3px; border-radius: 999px; background: #17201c0f; box-shadow: inset 0 0 0 1px #8a6a3633; }
+.aa-modes span { padding: 6px 4px; border-radius: 999px; font-size: 10.5px; font-weight: 600; text-align: center; color: #5b6359; transition: color .4s, background .4s; }
+.aa-modes span.on { color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); box-shadow: 0 4px 10px -6px #8a6a36; }
+.aa-sample { position: relative; min-height: 4.8em; font-size: 13px; line-height: 1.6; }
+.aa-sample p { position: absolute; inset: 0; margin: 0; color: #4b5448; opacity: 0; translate: 0 6px; transition: opacity .5s, translate .5s; }
+.aa-sample p.on { opacity: 1; translate: 0 0; }
+.aa-sample p.story { font-family: var(--serif); font-size: 15px; font-style: italic; line-height: 1.45; }
+.aa-sample p.child { font-weight: 500; color: #2f5547; }
+.aa-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #8a6a3659; }
+.aa-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: #17201c; background: #fffdf8; box-shadow: inset 0 0 0 1px #8a6a3640; }
+.aa-chip svg { color: #8a6a36; }
+.aa-chip.gold { background: linear-gradient(180deg, #f1e5c6, #d6bc89); box-shadow: none; }
+.aa-chip.gold svg { color: #15130d; }
+
+/* The numbered marks on the page's parts. */
+.aa-badge { position: absolute; z-index: 3; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-family: var(--serif); font-size: 11px; font-style: italic; font-weight: 600; color: #15130d; background: #e6d5ae; box-shadow: 0 0 0 3px #0b2321, 0 0 0 4px #e6d5ae80; }
+.aa-modes .aa-badge { top: -11px; left: -11px; }
+.aa-chip .aa-badge { top: -11px; right: -9px; }
+.aa-stamp .aa-badge { top: -8px; right: -8px; rotate: 12deg; }
+
+.aa-foot { grid-area: foot; display: flex; justify-content: center; margin-top: clamp(40px, 5vw, 64px); }
+
+/* Settling in: the arches draw, the page rises, the marks pop, the rules run out to the notes. */
+@media (prefers-reduced-motion: no-preference) {
+  .aa .aa-arches path { stroke-dashoffset: 1; transition: stroke-dashoffset 2.2s cubic-bezier(.6, 0, .2, 1); }
+  .aa .aa-page { opacity: 0; translate: 0 40px; transition: opacity 1s cubic-bezier(.2, .7, .2, 1), translate 1.2s cubic-bezier(.2, .7, .2, 1); }
+  .aa .aa-badge { scale: 0; transition: scale .5s cubic-bezier(.3, 1.6, .5, 1); }
+  .aa .aa-note { opacity: 0; translate: 0 18px; transition: opacity .8s, translate .8s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(.7s + var(--n) * .14s); }
+  .aa .aa-note::after { transform: scaleX(0); transition: transform .9s cubic-bezier(.6, 0, .2, 1) calc(.6s + var(--n) * .14s); }
+  .aa .aa-note::before { scale: 0; transition: scale .4s calc(1.2s + var(--n) * .14s); }
+  .aa.shown .aa-arches path { stroke-dashoffset: 0; }
+  .aa.shown .aa-page { opacity: 1; translate: 0 0; }
+  .aa.shown .aa-badge { scale: 1; transition-delay: .9s; }
+  .aa.shown .aa-note { opacity: 1; translate: 0 0; }
+  .aa.shown .aa-note::after { transform: scaleX(1); }
+  .aa.shown .aa-note::before { scale: 1; }
+  .aa-stamp { animation: aa-press 4s 2s ease-in-out infinite; }
+}
+@keyframes aa-press { 0%, 86%, 100% { scale: 1; } 92% { scale: .9; } }
+
+/* Narrow screens: the page first, the notes in one column below it, no rules. */
+@media (max-width: 1000px) {
+  .aa { grid-template-columns: 1fr; grid-template-areas: 'plate' 'left' 'right' 'foot'; row-gap: 34px; }
+  .aa-plate { width: min(430px, 100%); justify-self: center; }
+  .aa-notes { gap: 34px; }
+  .aa-notes.left { text-align: left; }
+  .aa-notes.left .aa-note { grid-template-columns: auto 1fr; }
+  .aa-notes.left .aa-note-icon { grid-column: 1; }
+  .aa-notes.left .aa-note b { grid-column: 2; }
+  .aa-notes.left .aa-note p { justify-self: start; }
+  .aa-notes.left .aa-note-num { right: auto; }
+  .aa-note::after, .aa-note::before { display: none; }
+  .aa-note-num { position: static; grid-column: 1 / -1; margin-bottom: -4px; }
+  .aa-notes.left .aa-note-icon, .aa-notes.left .aa-note b { grid-row: 2; }
+  .aa-note .aa-note-icon, .aa-note b { grid-row: 2; }
+  .aa-note p { grid-row: 3; }
+}

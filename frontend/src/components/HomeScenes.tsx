@@ -4,7 +4,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight, Compass, MapPin, Stamp } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import type { Season } from '../data/collections';
-import { settleScroll } from '../lib/motion';
 import { Link } from '../lib/navigation';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -78,57 +77,14 @@ export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Seaso
 // Swash: a statement whose words light up one after another as it is read down the page. The dim words still meet
 // the 3:1 contrast of large text.
 const STATEMENT: [string, boolean][] = [['Her vakıf eseri, bir şehre yüzyıllar önce verilmiş bir sözdür. Taşına bakan fark eder, hikâyesini okuyan merak eder, izini süren', false], ['keşfeder.', true]];
-export function Statement() {
+export function Statement({ parts = STATEMENT }: { parts?: [string, boolean][] }) {
   const ref = useScene<HTMLParagraphElement>(root => {
     gsap.fromTo(root.querySelectorAll('.word'), { color: '#857f71' }, { color: (_: number, word: Element) => word.closest('em') ? '#85653a' : '#1d2a25', ease: 'none', stagger: 1, duration: 1, scrollTrigger: { trigger: root, start: 'top 85%', end: 'bottom 45%', scrub: true } });
   });
-  return <p className="statement" ref={ref}>{STATEMENT.map(([text, em], i) => {
+  return <p className="statement" ref={ref}>{parts.map(([text, em], i) => {
     const words = text.split(' ').map((word, j) => <Fragment key={j}>{j > 0 && ' '}<span className="word">{word}</span></Fragment>);
     return <Fragment key={i}>{i > 0 && ' '}{em ? <em>{words}</em> : words}</Fragment>;
   })}</p>;
-}
-
-// Frentavo: the picture pins in the middle between two cards, grows until it fills the screen while the cards slide
-// away, then the story card slides in over it.
-export function PanoramaScene({ artifact }: { artifact: DiscoveryArtifact }) {
-  const active = useRef(false);
-  const ref = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const match = gsap.matchMedia();
-    match.add({ motion: MOTION, small: '(max-width: 800px)' }, conditions => {
-      if (!conditions.conditions?.motion) return;
-      const small = Boolean(conditions.conditions.small);
-      active.current = true;
-      const context = gsap.context(() => {
-        gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: ref.current, start: 'top top', end: 'bottom bottom', scrub: 0.6, invalidateOnRefresh: true } })
-          .fromTo('.panorama-media', { clipPath: small ? 'inset(18% 8% 30% 8% round 18px)' : 'inset(17% 34% 17% 34% round 22px)' }, { clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 0.5, ease: 'power1.inOut' }, 0.04)
-          .fromTo('.panorama-media img', { scale: 1.3 }, { scale: 1, duration: 0.6 }, 0)
-          .fromTo('.panorama-shade', { opacity: 0.1 }, { opacity: 1, duration: 0.3 }, 0.3)
-          .fromTo('.panorama-side.left', { xPercent: 0 }, { xPercent: -170, duration: 0.42, ease: 'power1.in' }, 0.06)
-          .fromTo('.panorama-side.right', { xPercent: 0 }, { xPercent: 170, duration: 0.42, ease: 'power1.in' }, 0.06)
-          .fromTo('.panorama-copy', { xPercent: small ? 0 : 130, yPercent: small ? 130 : 0 }, { xPercent: 0, yPercent: 0, duration: 0.3, ease: 'power3.out' }, 0.56)
-          .to({}, { duration: 0.14 });
-      }, ref);
-      return () => { active.current = false; context.revert(); };
-    });
-    return () => match.revert();
-  }, []);
-  // A keyboard user reaching the story link while its card is still off screen is taken to the end of the scene.
-  function follow() {
-    const section = ref.current;
-    if (!section || !active.current) return;
-    const end = section.offsetTop + section.offsetHeight - window.innerHeight;
-    if (Math.abs(window.scrollY - end) > 4) { settleScroll(); window.scrollTo({ top: end, behavior: 'instant' }); }
-  }
-  return <section className="story-panorama" ref={ref} data-nav-theme="dark" aria-labelledby="panorama-title" onFocus={follow}>
-    <div className="panorama-stage">
-      <div className="panorama-media"><img src={artifact.image} alt="Divriği'nin taş kapısından esinlenen özgün mimari illüstrasyon" loading="lazy" /><div className="panorama-shade" /></div>
-      <div className="panorama-side left" aria-hidden="true"><small>TAŞIN HAFIZASI</small><p>Bir ustanın sabrı,<br />bir çağın hayali.</p><span><MapPin size={14} />{artifact.city}</span></div>
-      <div className="panorama-side right" aria-hidden="true"><small>İNŞA</small><strong>{artifact.year}</strong>{artifact.architect && <><small>USTA</small><p>{artifact.architect}</p></>}</div>
-      <div className="panorama-copy"><p className="pl-index"><span>02</span><i aria-hidden="true" /><span>06</span><b>TAŞIN HAFIZASI</b></p><h2 id="panorama-title">Bir kapıya<br />kaç hikâye <em>sığar?</em></h2><p>Divriği’de taş, yalnızca bir yapı malzemesi değil. Bir ustanın sabrı, bir çağın hayali.</p><Link className="hp-cta en-key" to={`/eser/${artifact.slug}`}><span className="en-key-label">Hikâyenin içine gir</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link></div>
-      <div className="panorama-foot"><span>{artifact.name.toLocaleUpperCase('tr-TR')}</span><span>{artifact.city.toLocaleUpperCase('tr-TR')} · {artifact.year}</span></div>
-    </div>
-  </section>;
 }
 
 // Shopify Editions: stamps float around the passport at different depths; far ones are small, soft and slow, near
