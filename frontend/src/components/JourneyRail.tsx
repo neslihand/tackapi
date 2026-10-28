@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import '../journey.css';
 
 // The home page's four steps, after the entrance: be moved, understand, discover, take part. A slim rail on the right
-// marks the step being read and jumps to the start of any other; it stays out of the way during the entrance, whose
-// own scene rail is on screen then.
+// marks the step being read and jumps to the start of any other; it stays out of the way during the entrance.
 const STEPS: [string, string[]][] = [
   ['Etkilen', ['giris']],
   ['Anla', ['vizyon']],

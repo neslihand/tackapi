@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowDown, ArrowRight, ArrowUpRight, KeyRound } from 'lucide-react';
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
+import { ArrowDown, ArrowRight, ArrowUpRight, KeyRound, MapPin } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useContent } from '../lib/contentStore';
@@ -13,7 +13,8 @@ gsap.registerPlugin(ScrollTrigger);
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Share of the hero's scroll distance at which the courtyard copy is fully on screen. "Kapıyı Aç" travels here.
 const COURTYARD_AT = 0.9;
-const scenes = ['Kapının önünde', 'Eşikten geçiş', 'Avluya giriş'];
+// The index beside the door: what the platform holds, in three steps.
+const NOTE: [string, string, string][] = [['I', 'Hikâyesini', 'dinle.'], ['II', 'Haritada', 'bul.'], ['III', 'Pasaportuna', 'mühürle.']];
 // The carved stone facade (public/images/cephe.webp) fills the hero; its two wooden leaves are cut from the same photo
 // (kanat-sol / kanat-sag) and swing inward to 96° on a smoothstep, darkening as they turn from the light, while the
 // camera pushes into the doorway ever faster (t^2.2).
@@ -47,7 +48,6 @@ export function HeroGate() {
   const section = useRef<HTMLElement>(null);
   const courtyard = useRef<HTMLDivElement>(null);
   const travel = useRef<gsap.core.Tween | null>(null);
-  const [scene, setScene] = useState(0);
   // The courtyard at night: drone, wind and ney-like phrases (lib/ambience.ts), off until asked for.
   const sound = useAmbience('story', 0);
   const { artifacts } = useContent();
@@ -58,15 +58,14 @@ export function HeroGate() {
       const small = Boolean(context.conditions.small);
       const timeline = gsap.timeline({
         defaults: { ease: 'none' },
-        scrollTrigger: { trigger: section.current, start: 'top top', end: 'bottom bottom', scrub: small ? 0.6 : 1, invalidateOnRefresh: true, onUpdate: self => setScene(self.progress < 0.3 ? 0 : self.progress < 0.6 ? 1 : 2) },
+        scrollTrigger: { trigger: section.current, start: 'top top', end: 'bottom bottom', scrub: small ? 0.6 : 1, invalidateOnRefresh: true },
       });
       // Scene 1 → 2: the copy steps aside and the shade lifts off the facade, so the door stands in full light.
       timeline.to('.fc-copy', { y: -90, autoAlpha: 0, ease: 'power1.in', duration: 0.12 }, 0)
         .to('.fc-note', { y: -60, autoAlpha: 0, ease: 'power1.in', duration: 0.1 }, 0)
         .to('.hero-bottom, .en-lantern', { autoAlpha: 0, duration: 0.1 }, 0)
         .to('.fc-shade', { opacity: 0.35, duration: 0.2 }, 0)
-        .to('.en-fog', { opacity: 1, yPercent: -18, duration: 0.36 }, 0.04)
-        .fromTo('.scene-rail', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.06 }, 0.06);
+        .to('.en-fog', { opacity: 1, yPercent: -18, duration: 0.36 }, 0.04);
       // The leaves swing inward and the courtyard light spills through the doorway.
       timeline.fromTo('.fc-leaf.left', { rotateY: 0 }, { rotateY: OPEN_ANGLE, ease: smooth, duration: 0.26 }, 0.1)
         .fromTo('.fc-leaf.right', { rotateY: 0 }, { rotateY: -OPEN_ANGLE, ease: smooth, duration: 0.26 }, 0.1)
@@ -88,7 +87,6 @@ export function HeroGate() {
       // target only, so the others showed until the playhead reached them, then vanished and came back.
       gsap.utils.toArray<HTMLElement>('.cy-copy .reveal-line > span').forEach((word, i) => timeline.fromTo(word, { yPercent: 115 }, { yPercent: 0, ease: 'power3.out', duration: 0.12 }, 0.7 + i * 0.035));
       gsap.utils.toArray<HTMLElement>('.cy-copy .cy-fade').forEach((line, i) => timeline.fromTo(line, { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.1, ease: 'power2.out' }, 0.78 + i * 0.03));
-      return () => setScene(0);
     });
     return () => { match.revert(); travel.current?.kill(); };
   }, []);
@@ -132,15 +130,17 @@ export function HeroGate() {
         <div className="en-lantern" aria-hidden="true" />
         {/* The copy stands to the left of the door, over the shade, so the door keeps the centre of the picture. */}
         <div className="fc-copy">
-          <p className="en-index"><span>N° 01</span><i aria-hidden="true" /><span>Anadolu'nun vakıf mirası</span></p>
-          <h1 className="fc-title"><span className="fc-line"><span>Tarihin</span></span> <span className="fc-line"><span>Kapısını</span></span> <span className="fc-line"><span><em>Arala.</em></span></span></h1>
-          <div className="en-lede"><span className="en-rule" aria-hidden="true" /><p className="hero-description">Her vakıf eseri, keşfedilmeyi bekleyen bir hikâye taşır. Seninki bir adımla başlar.</p></div>
+          <p className="en-index"><span>N° 01</span><i aria-hidden="true" /><span>Anadolu’nun vakıf mirası</span></p>
+          <h1 className="fc-title"><span className="fc-line"><span>Taşa yazılmış</span></span> <span className="fc-line"><span>iyiliklerin</span></span> <span className="fc-line"><span><em>izini sür.</em></span></span></h1>
+          <div className="en-lede"><span className="en-rule" aria-hidden="true" /><p className="hero-description">Camiler, çeşmeler, hanlar… Yüzyıllardır şehirlere hizmet eden vakıf eserleri, hikâyelerini anlatmak için seni bekliyor.</p></div>
+          {/* Two ways in: the door itself for the curious, the map for whoever already stands before a building. */}
           <div className="hero-actions">
-            <button className="button gold en-key" onClick={openGate} onPointerMove={magnet} onPointerLeave={release}><span className="en-key-icon" aria-hidden="true"><KeyRound size={17} /></span><span className="en-key-label">Kapıyı Aç</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></button>
-            <Link className="hero-secondary en-link" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span>Eserleri Keşfet</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link>
+            <button className="button gold en-key" onClick={openGate} onPointerMove={magnet} onPointerLeave={release}><span className="en-key-icon" aria-hidden="true"><KeyRound size={17} /></span><span className="en-key-label">Kapıyı arala</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></button>
+            <Link className="hero-secondary en-link" to="/harita" onPointerMove={magnet} onPointerLeave={release}><span>Yakınındaki eseri bul</span><span className="en-link-arrow" aria-hidden="true"><MapPin size={16} /></span></Link>
           </div>
         </div>
-        <p className="fc-note"><span aria-hidden="true">✦</span>Her eşik, bir hikâyenin<br /><em>ilk cümlesidir.</em></p>
+        {/* What lies behind the door, as a small index on the other side of it. */}
+        <ol className="fc-note" aria-label="EŞİK’te seni neler bekliyor">{NOTE.map(([n, text, em]) => <li key={n}><span aria-hidden="true">{n}</span>{text} <em>{em}</em></li>)}</ol>
         <div className="hero-bottom en-bar">
           <button onClick={openGate} className="scroll-invite en-scroll"><span className="en-scroll-track" aria-hidden="true"><i /></span><span className="en-scroll-text"><b>Kaydır</b><small>kapı aralansın</small></span></button>
           <p className="hero-edition en-count"><span>ANADOLU KOLEKSİYONU</span><span className="en-ticks" aria-hidden="true">{artifacts.map(a => <i key={a.id} />)}</span><b>{String(artifacts.length).padStart(2, '0')} eser · {String(new Set(artifacts.map(a => a.city)).size).padStart(2, '0')} şehir</b></p>
@@ -159,12 +159,11 @@ export function HeroGate() {
           <p className="cy-fade cy-lead">Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli. EŞİK, Vakıf Katılım’ın kadim vakıf kültürünü yaşatmak, kayıt altına almak ve gelecek nesillere aktarmak için yürüttüğü <b>Vakıf Eserleri Envanter Projesi</b> kapsamında geliştirilen dijital keşif platformudur.</p>
           <div className="cy-label">
             <ol className="cy-pillars cy-fade">{PILLARS.map(([verb, text], i) => <li key={verb}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><b>{verb}</b><small>{text}</small></li>)}</ol>
-            <div className="cy-actions cy-fade"><Link className="button gold en-key" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span className="en-key-label">Eserleri keşfet</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hero-secondary en-link" to="/hakkinda" onPointerMove={magnet} onPointerLeave={release}><span>Projeyi tanı</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
+            <div className="cy-actions cy-fade"><Link className="button gold en-key" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span className="en-key-label">Koleksiyonu keşfet</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hero-secondary en-link" to="/hakkinda" onPointerMove={magnet} onPointerLeave={release}><span>Projeyi tanı</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
           </div>
         </div>
         <span className="cy-note">VAKIF KATILIM · VAKIF ESERLERİ ENVANTER PROJESİ</span>
       </div>
-      <ol className="scene-rail" aria-hidden="true">{scenes.map((label, i) => <li key={label} className={scene === i ? 'current' : ''}><i>{String(i + 1).padStart(2, '0')}</i><span>{label}</span></li>)}</ol>
     </div>
   </section>;
 }

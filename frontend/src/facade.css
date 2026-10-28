@@ -4,6 +4,8 @@
    runs from x 627 to 1040 and y 312 to 870; the leaves meet at x 834. A deep emerald shade frames the picture so the
    copy reads over the stone. The scroll timeline lives in HeroGate.tsx. */
 .hero-facade .gate-scene { display: block; padding: 0; container-type: size; background: var(--en-ink); }
+/* The room beside the door, on either side, for the copy and the index. */
+.hero-facade .gate-scene > * { --cw: calc(50cqw - max(100cqw + 28px, (100cqh + 28px) * 1.7768) * .125 - var(--en-left) - 32px); }
 .hero-facade .en-arches-layer { display: none; }
 
 /* The frame drifts a little against the pointer; the stage inside it is what the camera pushes into. */
@@ -38,9 +40,12 @@
 .hero-facade .en-lantern { inset: 0; z-index: 3; opacity: .42; background: radial-gradient(circle min(28vmax, 420px) at calc(50% + var(--mouse-x, 0) * 100vw) calc(56% + var(--mouse-y, 0) * 100svh), transparent 0, transparent 34%, #04130f 100%); }
 
 /* The copy, left of the door: three staggered lines, the last one in gold. */
-.fc-copy { position: absolute; top: calc(88px + 2svh); bottom: calc(84px + 3svh); left: var(--en-left); z-index: 6; display: flex; flex-direction: column; justify-content: center; width: min(36vw, 540px); }
-.fc-copy .en-index { margin-bottom: clamp(14px, 3svh, 30px); }
-.fc-title { margin: 0; font-family: var(--serif); font-size: clamp(54px, min(6.4vw, 11.4svh), 128px); font-weight: 300; line-height: .9; letter-spacing: -.03em; color: var(--en-ivory); text-shadow: 0 10px 50px #020806d9; }
+/* The copy, left of the door: its width runs up to the door's left edge, measured from the stage (the doorway starts
+   12.5% of the stage's width left of its centre), and the title scales with that width. */
+.fc-copy { position: absolute; top: calc(88px + 2svh); bottom: calc(84px + 3svh); left: var(--en-left); z-index: 6; display: flex; flex-direction: column; justify-content: center; width: min(var(--cw), 560px); }
+.fc-copy .en-index { gap: 10px; margin-bottom: clamp(14px, 3svh, 30px); white-space: nowrap; }
+.fc-copy .en-index > i { width: 28px; }
+.fc-title { margin: 0; font-family: var(--serif); font-size: clamp(40px, min(var(--cw) / 6.3, 11svh), 112px); font-weight: 300; line-height: .9; letter-spacing: -.03em; color: var(--en-ivory); text-shadow: 0 10px 50px #020806d9; }
 .fc-line { display: block; overflow: hidden; padding: .04em .12em .14em 0; margin-bottom: -.12em; }
 .fc-line > span { display: block; }
 .fc-line:nth-child(2) { padding-left: .42em; }
@@ -50,10 +55,11 @@
 .fc-copy .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: clamp(20px, 3.8svh, 40px); padding: 0; }
 .fc-copy :focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 10px; box-shadow: none; }
 
-/* A quiet line on the right, balancing the copy across the door. */
-.fc-note { position: absolute; right: var(--en-left); bottom: calc(96px + 10svh); z-index: 6; display: flex; flex-direction: column; gap: 10px; width: min(17vw, 240px); margin: 0; font-family: var(--serif); font-size: clamp(19px, 1.6vw, 26px); line-height: 1.22; text-align: right; color: var(--en-ivory); text-shadow: 0 6px 30px #020806e6; }
-.fc-note > span { color: var(--en-gold); font-size: 16px; }
-.fc-note em { color: var(--en-gold-light); }
+/* A small index on the right, balancing the copy across the door: what lies behind it, in three steps. */
+.fc-note { position: absolute; right: var(--en-left); bottom: calc(96px + 10svh); z-index: 6; display: flex; flex-direction: column; gap: 14px; width: min(var(--cw), 250px); margin: 0; padding: 18px 0 0; border-top: 1px solid #e6d5ae40; list-style: none; text-shadow: 0 6px 30px #020806e6; }
+.fc-note li { display: grid; grid-template-columns: 30px 1fr; align-items: baseline; font-family: var(--serif); font-size: clamp(16px, var(--cw) / 14, 22px); white-space: nowrap; line-height: 1.2; color: var(--en-ivory); }
+.fc-note li > span { font-size: 13px; font-style: italic; letter-spacing: .04em; color: var(--en-gold); }
+.fc-note em { font-style: italic; color: var(--en-gold-light); }
 
 /* The courtyard introduces the platform, on the entrance's own deep emerald. */
 .hero-scroll.hero-facade .courtyard-scene { background: radial-gradient(ellipse 44% 62% at 73% 55%, #1c3d35 0, #12302a40 50%, transparent 74%), radial-gradient(ellipse 50% 45% at 12% 8%, #0f2a2470, transparent 70%), linear-gradient(115deg, #040d0a 0%, #07181a 48%, #0b2321 100%); }
@@ -87,7 +93,7 @@
 }
 /* Short landscape screens: a smaller title and the buttons kept side by side. */
 @media (max-height: 760px) and (min-width: 801px) and (orientation: landscape) {
-  .fc-title { font-size: clamp(48px, min(6vw, 10.4svh), 96px); }
+  .fc-title { font-size: clamp(40px, min(var(--cw) / 6.3, 10svh), 96px); }
   .fc-copy .en-lede p { font-size: 14px; line-height: 1.6; }
 }
 /* Narrow and portrait screens: the door in the middle, the title above it and the buttons on the steps. */
