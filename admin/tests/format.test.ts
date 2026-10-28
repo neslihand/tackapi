@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+<<<<<<< HEAD
 import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, geoStatus, methodLabel, quizIssues, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
 import type { GeoInfo, MonumentDetail } from '../src/lib/types.ts';
+=======
+import { changedFields, decisionMessage, fieldsFromForm, formFromDetail, methodLabel, monumentIssues, slugPreview, toNumber } from '../src/lib/format.ts';
+import type { MonumentDetail } from '../src/lib/types.ts';
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 const detail = {
   slug: 'bursa-osmangazi-muradiye-camii', city: 'bursa', name_tr: 'Muradiye Camii', name_en: null, alt_names: null, kind: 'mosque',
@@ -60,6 +65,7 @@ test('Kaynak sayfaları: değişen aralık gönderilir, ters aralık reddedilir'
   assert.ok(monumentIssues({ page_from: 0 }).length > 0);
   assert.deepEqual(monumentIssues({ page_from: 120, page_to: null }), []);
 });
+<<<<<<< HEAD
 
 test('Konum durumu: otomatik konum onay bekler, doğrulanmış ve elle girilmiş konum onaylanmaz', () => {
   const auto = { source: 'nominatim', precision: 'building', checked: false,
@@ -83,3 +89,5 @@ test('Yarışma sorusu sitedeki kurallarla doğrulanır', () => {
   assert.ok(quizIssues({ ...ok, monument: '' }).some(m => m.includes('eseri')));
   assert.ok(quizIssues({ ...ok, explanation: '' }).some(m => m.includes('Açıklama')));
 });
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

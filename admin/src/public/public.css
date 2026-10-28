@@ -145,8 +145,11 @@
   .pv-segmented button{padding:10px 12px}
 }
 @media(prefers-reduced-motion:reduce){.pv *{transition:none!important}}
+<<<<<<< HEAD
 /* Eser haritası (Leaflet + OpenStreetMap). z-index: Leaflet katmanları sayfadaki açılır pencerelerin üstüne çıkmasın. */
 .pv-map{height:360px;width:100%;border:1px solid var(--line);background:#e9e3d2;position:relative;z-index:0}
 .pv-map-note{margin-top:12px;font-size:13px;line-height:1.7;color:#5f6b5a}
 .pv-map-note a{display:inline-flex;gap:5px;align-items:center;color:var(--teal);text-decoration:underline}
 @media (max-width:640px){.pv-map{height:280px}}
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

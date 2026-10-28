@@ -7,8 +7,11 @@
   refuse_ok    : kaynakta olmayan bir şey sorulduğunda 'bilgi yok' dendi mi
   grounded     : doğrulama adımında desteksiz yıl/ad bulunmadı mı
 Kullanım: python eval_rag.py --dsn ...   (sahte mod: VAKIF_FAKE_LLM=1)
+<<<<<<< HEAD
 Cevap önbelleği (answer_cache) ölçümde kullanılmaz ve ölçüm önbelleğe yazmaz: eski cevaplar ölçülmesin, ölçüm
 sitedeki önbelleği değiştirmesin. --use-cache sitedeki davranışı (önbellekli) ölçer.
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 """
 import json, os, sys, argparse
 sys.path.insert(0, os.path.dirname(__file__))
@@ -23,6 +26,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dsn', default=os.environ.get('DATABASE_URL'))
     ap.add_argument('--out', default=os.path.join(DATA, 'eval_results.json'))
+<<<<<<< HEAD
     ap.add_argument('--use-cache', action='store_true', help='cevap önbelleğini de kullan (sitedeki gibi)')
     ap.add_argument('--only', nargs='+', metavar='ID', help='yalnızca bu sorular (ör. --only q11); sonuç ayrı dosyaya yazılır')
     a = ap.parse_args()
@@ -33,6 +37,11 @@ def main():
         Q = [q for q in Q if q['id'] in a.only]
         if a.out == os.path.join(DATA, 'eval_results.json'):      # tam ölçümün sonucu ezilmesin
             a.out = os.path.join(DATA, 'eval_results_only.json')
+=======
+    a = ap.parse_args()
+    db = DB(a.dsn)
+    Q = json.load(open(os.path.join(DATA, 'eval_questions.json'), encoding='utf-8'))
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     res, agg = [], {}
     for q in Q:
         r = rag.answer(db, q['q'], q['slug'], q.get('mode', 'standard'), q.get('lang', 'tr'))
@@ -67,9 +76,12 @@ def main():
         summary['ort_llm_cagri'] = round(sum(calls) / len(calls), 2)
         summary['eco'] = rag.ECO
     print('ÖZET', summary)
+<<<<<<< HEAD
     bad = [r['id'] for r in res if any(r.get(k) is False for k in ('route_ok', 'page_ok', 'mention_ok', 'refuse_ok', 'grounded'))]
     if bad:
         print('Bakılacak sorular:', ', '.join(bad), f'(ayrıntı: {os.path.relpath(a.out)})')
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     json.dump(dict(summary=summary, results=res), open(a.out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 

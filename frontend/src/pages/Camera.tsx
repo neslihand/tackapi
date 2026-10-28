@@ -4,8 +4,11 @@ import { useContent } from '../lib/contentStore';
 import { Girih } from '../components/PlayArt';
 import { Link } from '../lib/navigation';
 import { demoRecognition } from '../lib/recognition';
+<<<<<<< HEAD
 import { findByPhoto, vakifApiEnabled, type VisualResult } from '../lib/vakifApi';
 import { track } from '../lib/analytics';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -20,11 +23,14 @@ function Step({ no, title, done, now, children }: { no: number; title: string; d
 
 export function Camera() {
   const { artifacts } = useContent();
+<<<<<<< HEAD
   // With the backend the photo is compared with the book photos (POST /api/visual-search) and is not stored; without
   // it the page is the demo where the visitor picks the artifact. An uncertain match is never shown as one answer.
   const api = vakifApiEnabled();
   const [found, setFound] = useState<VisualResult | null>(null);
   const [busy, setBusy] = useState(false);
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   const [preview, setPreview] = useState('');
   const [blob, setBlob] = useState<Blob | null>(null);
   const [selected, setSelected] = useState('');
@@ -39,6 +45,7 @@ export function Camera() {
   useEffect(() => { return () => { if (preview) URL.revokeObjectURL(preview); }; }, [preview]);
   useEffect(() => { if (streaming && video.current && stream.current) video.current.srcObject = stream.current; }, [streaming]);
   function stop() { stream.current?.getTracks().forEach(t => t.stop()); stream.current = null; setStreaming(false); }
+<<<<<<< HEAD
   function accept(file: Blob) { setBlob(file); setPreview(URL.createObjectURL(file)); setResult(''); setFound(null); setError(''); stop(); }
   async function search() {
     if (!blob) return;
@@ -53,6 +60,9 @@ export function Camera() {
     } catch (e) { if (alive.current) setError((e as Error).message || 'Fotoğraf karşılaştırılamadı. Biraz sonra yeniden dene.'); }
     finally { if (alive.current) setBusy(false); }
   }
+=======
+  function accept(file: Blob) { setBlob(file); setPreview(URL.createObjectURL(file)); setResult(''); setError(''); stop(); }
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   async function start() {
     setError(''); setRequesting(true);
     try {
@@ -70,20 +80,31 @@ export function Camera() {
     canvas.toBlob(file => { if (file && alive.current) accept(file); }, 'image/jpeg', 0.85);
   }
   const artifact = artifacts.find(a => a.id === result);
+<<<<<<< HEAD
   const current = !blob ? 0 : api ? (found ? -1 : 2) : !selected ? 1 : !artifact ? 2 : -1;
   const state = streaming ? 'Canlı' : busy ? 'Karşılaştırılıyor' : artifact ? (api ? 'Eşleşme' : 'Demo eşleşme') : found ? 'Sonuç' : preview ? 'Kare hazır' : 'Vizör bekliyor';
   // Only monuments in the collection on show (the pilot selection) are offered as candidates.
   const candidates = !found || artifact ? [] : found.candidates.flatMap(c => { const a = artifacts.find(x => x.id === c.slug); return a ? [{ ...c, artifact: a }] : []; }).slice(0, 3);
+=======
+  const current = !blob ? 0 : !selected ? 1 : !artifact ? 2 : -1;
+  const state = streaming ? 'Canlı' : artifact ? 'Demo eşleşme' : preview ? 'Kare hazır' : 'Vizör bekliyor';
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   return <div className="camera-scene" data-nav-theme="dark">
     <Girih className="cm-girih" />
     <div className="page-shell cm-page">
       <header className="cm-head">
         <p className="cm-index"><span>N° 01</span><i aria-hidden="true" />Bak, merak et, keşfet</p>
         <h1 className="cm-title"><span className="cm-line"><span>Bir kareden</span></span> <span className="cm-line"><em>bir hikâyeye.</em></span></h1>
+<<<<<<< HEAD
         <p className="cm-lede">{api ? 'Yapının fotoğrafını çek ya da yükle; envanter kitaplarındaki fotoğraflarla karşılaştırıp hangi eser olduğunu bulalım.' : 'Kamera veya fotoğrafla başlayan keşif akışını deneyimle.'}</p>
       </header>
       {api ? <div className="cm-notice"><ScanLine size={20} aria-hidden="true" /><strong>Fotoğrafla eser bulma</strong><p>Fotoğrafın yalnızca karşılaştırma için sunucuya gönderilir ve saklanmaz. Emin olamadığımızda tek bir eser söylemeyiz, en çok benzeyenleri gösteririz.</p></div>
         : <div className="cm-notice"><ScanLine size={20} aria-hidden="true" /><strong>Demo Tanıma Deneyimi</strong><p>Bu sürüm görüntü analizi yapmaz. Sonuç, aşağıda senin seçtiğin örnek esere göre gösterilir. Fotoğrafın cihazından ayrılmaz.</p></div>}
+=======
+        <p className="cm-lede">Kamera veya fotoğrafla başlayan keşif akışını deneyimle.</p>
+      </header>
+      <div className="cm-notice"><ScanLine size={20} aria-hidden="true" /><strong>Demo Tanıma Deneyimi</strong><p>Bu sürüm görüntü analizi yapmaz. Sonuç, aşağıda senin seçtiğin örnek esere göre gösterilir. Fotoğrafın cihazından ayrılmaz.</p></div>
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       <div className="cm-layout">
         {/* The viewfinder: corner marks and an arch to frame the building in; thirds while the camera is live. */}
         <div className={`cm-finder${streaming ? ' live' : preview ? ' framed' : ''}${artifact ? ' matched' : ''}`}>
@@ -101,7 +122,11 @@ export function Camera() {
           </span>
           <p className="cm-readout" aria-hidden="true"><i />{state}</p>
           {streaming && <><button type="button" className="cm-close" onClick={stop} aria-label="Kamerayı kapat"><X size={18} /></button><button type="button" className="cm-shutter" onClick={capture} aria-label="Fotoğraf çek" /></>}
+<<<<<<< HEAD
           {!streaming && preview && <button type="button" className="cm-close" onClick={() => { setPreview(''); setBlob(null); setResult(''); setFound(null); }} aria-label="Fotoğrafı kaldır"><X size={18} /></button>}
+=======
+          {!streaming && preview && <button type="button" className="cm-close" onClick={() => { setPreview(''); setBlob(null); setResult(''); }} aria-label="Fotoğrafı kaldır"><X size={18} /></button>}
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         </div>
         <ol className="cm-steps">
           <Step no={1} title="Bir görsel ekle" done={Boolean(blob)} now={current === 0}>
@@ -112,6 +137,7 @@ export function Camera() {
             <small>JPEG, PNG veya WebP · En fazla 10 MB</small>
             {error && <p className="cm-error" role="alert">{error}</p>}
           </Step>
+<<<<<<< HEAD
           {!api && <Step no={2} title="Demo için eseri sen seç" done={Boolean(selected)} now={current === 1}>
             <label className="cm-select"><span className="cm-label">Örnek eser</span><select value={selected} onChange={e => { setSelected(e.target.value); setResult(''); }}><option value="">Örnek eser seç…</option>{artifacts.map(a => <option value={a.id} key={a.id}>{a.name}</option>)}</select><ChevronDown size={18} aria-hidden="true" /></label>
           </Step>}
@@ -129,6 +155,18 @@ export function Camera() {
                 <span className="cm-result-copy"><small>Benzeyen kitap fotoğrafı</small><h3>{c.artifact.name}</h3><p>{c.artifact.city} · {c.artifact.period}</p><Link className="cm-result-link" to={`/eser/${c.artifact.slug}`}>Bu mu? Hikâyesine git <ArrowUpRight size={16} aria-hidden="true" /></Link></span>
               </div>)}</div>
               : <p className="cm-hint" role="status">Fotoğrafa benzeyen bir eser bulamadık. Yapının tamamını gösteren, net bir fotoğrafla yeniden dene.</p>)}
+=======
+          <Step no={2} title="Demo için eseri sen seç" done={Boolean(selected)} now={current === 1}>
+            <label className="cm-select"><span className="cm-label">Örnek eser</span><select value={selected} onChange={e => { setSelected(e.target.value); setResult(''); }}><option value="">Örnek eser seç…</option>{artifacts.map(a => <option value={a.id} key={a.id}>{a.name}</option>)}</select><ChevronDown size={18} aria-hidden="true" /></label>
+          </Step>
+          <Step no={3} title="Hikâyesini bul" done={Boolean(artifact)} now={current === 2}>
+            <button type="button" className="button en-key cm-key cm-show" disabled={!blob || !selected} aria-describedby={!blob || !selected ? 'cm-show-hint' : undefined} onClick={async () => { if (!blob) return; const response = await demoRecognition.recognize(blob, selected); if (alive.current) setResult(response.artifactId); }}><span className="en-key-label">Seçtiğim eseri göster</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></button>
+            {(!blob || !selected) && <p className="cm-hint" id="cm-show-hint">{!blob ? 'Önce bir görsel ekle.' : 'Şimdi bir örnek eser seç.'}</p>}
+            {artifact && <div className="cm-result" role="status">
+              <span className="cm-result-media"><img src={artifact.image} alt="" /></span>
+              <span className="cm-result-copy"><small>Seçimine dayalı demo sonucu · N° {pad(artifacts.indexOf(artifact) + 1)}</small><h3>{artifact.name}</h3><p>{artifact.city} · {artifact.period}</p><Link className="cm-result-link" to={`/eser/${artifact.slug}`}>Hikâyesine git <ArrowUpRight size={16} aria-hidden="true" /></Link></span>
+            </div>}
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
           </Step>
         </ol>
       </div>

@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 import { fromVakifChat, toVakifChat, VAKIF_CHAT_ENDPOINT, vakifApiEnabled } from './vakifApi.ts';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { answerFromJson, errorMessageFromJson, type ChatErrorCode, type ChatRequest, type ChatStreamEvent } from './chatContract.ts';
 
 // The only file that talks to the chat backend. If its API differs from docs/ai-sohbet-api.md, adapt it here.
 // The address comes from VITE_CHAT_API_URL; without it the panel is not offered at all.
+<<<<<<< HEAD
 // With the Vakıf backend (VITE_VAKIF_API=1) and no other address the panel uses its POST /api/chat.
 export function chatEndpoint(): string {
   const value = import.meta.env?.VITE_CHAT_API_URL;
@@ -10,6 +14,12 @@ export function chatEndpoint(): string {
   return own || (vakifApiEnabled() ? VAKIF_CHAT_ENDPOINT : '');
 }
 const isVakif = (endpoint: string) => endpoint === VAKIF_CHAT_ENDPOINT && vakifApiEnabled();
+=======
+export function chatEndpoint(): string {
+  const value = import.meta.env?.VITE_CHAT_API_URL;
+  return typeof value === 'string' ? value.trim() : '';
+}
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 export class ChatError extends Error {
   code: ChatErrorCode;
@@ -73,7 +83,11 @@ export async function sendChat(endpoint: string, request: ChatRequest, { signal,
     wait();
     let response: Response;
     try {
+<<<<<<< HEAD
       response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'text/event-stream, application/json;q=0.9, text/plain;q=0.8' }, body: JSON.stringify(isVakif(endpoint) ? toVakifChat(request) : request), signal: controller.signal });
+=======
+      response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'text/event-stream, application/json;q=0.9, text/plain;q=0.8' }, body: JSON.stringify(request), signal: controller.signal });
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     } catch (error) {
       if (signal.aborted || timedOut) throw error;
       throw new ChatError('network');
@@ -87,9 +101,13 @@ export async function sendChat(endpoint: string, request: ChatRequest, { signal,
     }
     if (type.includes('text/event-stream') && response.body) await readChatStream(response.body, relay);
     else if (type.includes('json')) {
+<<<<<<< HEAD
       const raw: unknown = await response.json().catch(() => null);
       // The Vakıf backend answers {answer, sources[{book, pages, heading}]}; its source marks are taken out of the text.
       const data: unknown = isVakif(endpoint) ? fromVakifChat(raw) : raw;
+=======
+      const data: unknown = await response.json().catch(() => null);
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       const answer = answerFromJson(data);
       if (!answer) throw new ChatError('unavailable', 'Yanıt biçimi anlaşılamadı.');
       relay({ type: 'text', text: answer });

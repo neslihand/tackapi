@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
+<<<<<<< HEAD
 import { loadPilotFeed, vakifApiEnabled } from './lib/vakifApi';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import './styles.css';
 import './play.css';
 import './explore.css';
@@ -23,6 +26,7 @@ import './catalogue.css';
 import './atlas.css';
 import './camera.css';
 
+<<<<<<< HEAD
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 // The collection comes from the backend: wait for it once, then the site runs as a read-only feed.
 // If the backend cannot be reached the page says so (and how to start it) instead of falling back to demo data.
@@ -36,3 +40,6 @@ function start() {
 }
 if (vakifApiEnabled()) start();
 else root.render(<React.StrictMode><App /></React.StrictMode>);
+=======
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

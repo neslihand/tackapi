@@ -251,6 +251,7 @@ select{border:1px solid var(--line);padding:11px 30px 11px 12px;border-radius:0;
 .pdf-viewer-bar .button{background:#f4efe5}
 .pdf-viewer img{max-width:min(1400px,100%);height:auto;background:#fff;box-shadow:0 10px 50px #0008}
 .pdf-viewer .form-error{color:#f3c2b8}
+<<<<<<< HEAD
 /* Konum seçme haritası (Leaflet). z-index: Leaflet katmanları açılır pencerelerin üstüne çıkmasın. */
 .geo-map{height:340px;width:100%;border:1px solid var(--line);background:#e9e3d2;position:relative;z-index:0}
 .geo-pin{background:none;border:0}
@@ -360,3 +361,5 @@ select{border:1px solid var(--line);padding:11px 30px 11px 12px;border-radius:0;
 .calendar-table{margin-top:18px}.calendar-table small{display:block;font-size:12px;color:var(--muted);font-family:Inter,sans-serif}
 .calendar-table tr.muted{opacity:.55}
 .calendar-table td .admin-form{margin:4px 0}
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

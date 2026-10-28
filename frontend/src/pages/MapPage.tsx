@@ -6,8 +6,11 @@ import { Girih } from '../components/PlayArt';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
 import { distanceKm, normalize } from '../lib/progress';
+<<<<<<< HEAD
 import { ANATOLIA, GEO_LABELS, THRACE } from '../lib/turkeyOutline';
 import { track } from '../lib/analytics';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 const TURKEY: L.LatLngBoundsExpression = [[35.8, 25.9], [42.1, 44.6]];
 const SVG = 'http://www.w3.org/2000/svg';
@@ -32,7 +35,11 @@ export function MapPage({ query = '' }: { query?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const userMarker = useRef<L.CircleMarker | null>(null);
+<<<<<<< HEAD
   const schematic = useRef<L.LayerGroup | null>(null);
+=======
+  const schematic = useRef<L.ImageOverlay | null>(null);
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   const markers = useRef(new Map<string, L.Marker>());
   const sidebar = useRef<HTMLDivElement>(null);
   const chosen = useRef('');
@@ -58,6 +65,7 @@ export function MapPage({ query = '' }: { query?: string }) {
     mapRef.current = map;
     if (linked?.coordinates) show(linked.coordinates, 7, false); else map.fitBounds(TURKEY, { paddingTopLeft: [overlayInset(), 0] });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+<<<<<<< HEAD
     // The night map: Türkiye's outline drawn in real coordinates, so the pins sit where the works are.
     const outline = { className: 'mp-land', interactive: false, color: '#e6d5ae', weight: 1.6, opacity: .85, fillColor: '#1d4636', fillOpacity: 1, smoothFactor: 0.6 };
     schematic.current = L.layerGroup([
@@ -66,6 +74,10 @@ export function MapPage({ query = '' }: { query?: string }) {
         icon: L.divIcon({ className: `mp-geo-label ${label.className}`, html: `<span>${label.text}</span>`, iconSize: [0, 0] }) })),
     ]).addTo(map);
     map.attributionControl.addAttribution('EŞİK · Sadeleştirilmiş Türkiye haritası');
+=======
+    schematic.current = L.imageOverlay('/images/turkiye-gece.svg', [[35.2, 24.8], [42.7, 45.0]], { interactive: false }).addTo(map);
+    map.attributionControl.addAttribution('EŞİK · Şematik harita · Konumlar yaklaşık');
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     const resize = new ResizeObserver(() => map.invalidateSize()); resize.observe(ref.current);
     setReady(true);
     return () => { alive.current = false; resize.disconnect(); map.remove(); mapRef.current = null; userMarker.current = null; };
@@ -80,8 +92,12 @@ export function MapPage({ query = '' }: { query?: string }) {
     artifacts.forEach((a, i) => {
       if (!a.coordinates) return;
       // Built as DOM nodes so names from the content feed never pass through innerHTML.
+<<<<<<< HEAD
       // An unverified location (found automatically) is drawn as an approximate area, not as an exact pin.
       const pin = node('span', a.coordinatesApproximate ? 'map-pin approx' : 'map-pin');
+=======
+      const pin = node('span', 'map-pin');
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       pin.style.setProperty('--rise-delay', `${i * 140}ms`);
       const rings = node('span', 'map-pin-rings'); rings.append(node('i'), node('i'), node('i'));
       const model = node('span', 'map-pin-model'); const picture = node('img'); picture.src = a.image; picture.alt = ''; picture.decoding = 'async'; model.append(picture);
@@ -92,7 +108,11 @@ export function MapPage({ query = '' }: { query?: string }) {
       pin.setAttribute('aria-hidden', 'true');
       const icon = L.divIcon({ className: 'heritage-marker', html: pin, iconSize: [44, 44], iconAnchor: [22, 22] });
       const marker = L.marker(a.coordinates, { icon, title: a.name, alt: a.name }).addTo(map);
+<<<<<<< HEAD
       const tooltip = document.createElement('span'); tooltip.textContent = a.coordinatesApproximate ? `${a.name} · yaklaşık konum` : a.name; marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -20] });
+=======
+      const tooltip = document.createElement('span'); tooltip.textContent = a.name; marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -20] });
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       marker.on('click', () => setSelected(a.id));
       placed.set(a.id, marker);
     });
@@ -146,14 +166,22 @@ export function MapPage({ query = '' }: { query?: string }) {
     const target = shift ? map.unproject(map.project(coords, zoom).subtract([shift, 0]), zoom) : coords;
     if (!glide || reducedMotion()) map.setView(target, zoom, { animate: false }); else map.flyTo(target, zoom, { duration: 1.2, easeLinearity: .2 });
   }
+<<<<<<< HEAD
   function focus(id: string) { const a = artifacts.find(a => a.id === id); if (!a) return; setSelected(id); track('map_select', a.slug); if (a.coordinates) show(a.coordinates, online ? 12 : 7); }
+=======
+  function focus(id: string) { const a = artifacts.find(a => a.id === id); if (!a) return; setSelected(id); if (a.coordinates) show(a.coordinates, online ? 12 : 7); }
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   function locate() {
     if (!navigator.geolocation) { setStatus('Bu cihazda konum desteği yok. Şehir seçerek keşfedebilirsin.'); return; }
     setLocating(true); setStatus('Konum iznin bekleniyor…');
     navigator.geolocation.getCurrentPosition(position => {
       if (!alive.current) return;
       const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
+<<<<<<< HEAD
       setLocation(coords); setCity(''); setLocating(false); track('map_locate', undefined, { radius }); setStatus('Eserler kuş uçuşu mesafeye göre sıralandı. Konumun kaydedilmez.');
+=======
+      setLocation(coords); setCity(''); setLocating(false); setStatus('Eserler kuş uçuşu mesafeye göre sıralandı. Konumun kaydedilmez.');
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       if (mapRef.current) { userMarker.current?.remove(); userMarker.current = L.circleMarker(coords, { radius: 8, fillColor: '#7beeba', color: '#f3eee5', weight: 3, fillOpacity: 1, className: 'map-user' }).addTo(mapRef.current); show(coords, 7); }
     }, error => { if (!alive.current) return; setLocating(false); setStatus(error.code === 1 ? 'Konum izni verilmedi. Şehir seçerek keşfetmeye devam edebilirsin.' : 'Konum alınamadı. Şehir seçimiyle devam edebilirsin.'); }, { timeout: 12000, maximumAge: 60000, enableHighAccuracy: false });
   }
@@ -176,7 +204,11 @@ export function MapPage({ query = '' }: { query?: string }) {
         <div className="map-sidebar" ref={sidebar}>
           <span className="map-result-count">{visible.length} ESER · {location ? 'MESAFEYE GÖRE' : 'İLK KOLEKSİYON'}</span>
           <label className="search-field"><Search size={17} aria-hidden="true" /><input placeholder="Eser veya şehir ara" aria-label="Haritada eser veya şehir ara" value={search} onChange={e => setSearch(e.target.value)} /></label>
+<<<<<<< HEAD
           <div className="map-artifact-list">{visible.map(a => <button type="button" key={a.id} className={selected === a.id ? 'active' : ''} aria-current={selected === a.id ? 'true' : undefined} onClick={() => focus(a.id)}><span className="mp-no" aria-hidden="true">{pad(artifacts.findIndex(x => x.id === a.id) + 1)}</span><img src={a.image} alt="" loading="lazy" /><span><strong>{a.name}</strong><small><MapPin size={11} aria-hidden="true" /> {a.city}{a.distance !== null && ` · ${a.distance.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} km`}{!a.coordinates && ' · Konum bilgisi yok'}{a.coordinatesApproximate && ' · Yaklaşık konum'}</small></span><ArrowUpRight size={16} aria-hidden="true" /></button>)}{!visible.length && <p className="map-empty">Bu aralıkta koleksiyona eklenmiş eser yok. Mesafeyi artırabilir veya filtreyi kaldırabilirsin.</p>}</div>
+=======
+          <div className="map-artifact-list">{visible.map(a => <button type="button" key={a.id} className={selected === a.id ? 'active' : ''} aria-current={selected === a.id ? 'true' : undefined} onClick={() => focus(a.id)}><span className="mp-no" aria-hidden="true">{pad(artifacts.findIndex(x => x.id === a.id) + 1)}</span><img src={a.image} alt="" loading="lazy" /><span><strong>{a.name}</strong><small><MapPin size={11} aria-hidden="true" /> {a.city}{a.distance !== null && ` · ${a.distance.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} km`}{!a.coordinates && ' · Konum bilgisi yok'}</small></span><ArrowUpRight size={16} aria-hidden="true" /></button>)}{!visible.length && <p className="map-empty">Bu aralıkta koleksiyona eklenmiş eser yok. Mesafeyi artırabilir veya filtreyi kaldırabilirsin.</p>}</div>
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         </div>
         <div className="map-container">
           <div ref={ref} className="interactive-map" role="region" aria-label="Türkiye miras haritası. Eserleri yanındaki listeden de seçebilirsin." />

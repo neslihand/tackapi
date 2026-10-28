@@ -204,6 +204,7 @@
   .map-scene .map-controls, .map-scene .map-sidebar, .map-scene .selected-map-artifact { border: 1px solid CanvasText; }
   .map-scene .map-online input { forced-color-adjust: auto; appearance: auto; -webkit-appearance: auto; }
 }
+<<<<<<< HEAD
 /* A long list (the backend collection) scrolls: rows keep their height instead of being squeezed on top of each other. */
 .map-scene .map-artifact-list > button { flex-shrink: 0; }
 /* The night map drawn in coordinates (lib/turkeyOutline.ts): sea and grid behind, the outline glowing in gold. */
@@ -213,3 +214,5 @@
 .map-scene .mp-geo-label span { display: block; width: max-content; white-space: nowrap; font-family: Georgia, serif; font-style: italic; font-size: 17px; letter-spacing: .3em; color: #dbc099b3; transform: translate(-50%, -50%); }
 .map-scene .mp-geo-label.vertical span { writing-mode: vertical-rl; transform: translate(-50%, -50%) rotate(180deg); }
 .map-scene .mp-geo-label.land span { font-style: normal; font-size: 30px; letter-spacing: .5em; color: #dbc0995c; }
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

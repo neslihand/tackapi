@@ -15,7 +15,10 @@ data/eval_results.json
 # Gizli bilgiler
 .env
 *.env
+<<<<<<< HEAD
 ./claude
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 # Python
 __pycache__/
@@ -28,5 +31,8 @@ venv/
 # Kitaplardan çıkarılan görseller (telifli; yerelde üretilir: python pipeline/images.py --write)
 media/
 data/images.jsonl
+<<<<<<< HEAD
 data/geocode_cache.json
 data/backup/
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

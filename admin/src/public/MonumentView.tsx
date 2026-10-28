@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Pencil, Sparkles, X } from 'lucide-react';
+<<<<<<< HEAD
 import { MonumentMap } from './MonumentMap';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { artworkLabel, eventLabel, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
 
 type Mode = 'detail' | NarrationMode;
@@ -81,8 +84,11 @@ export function MonumentView({ item, detail, lang, generate, edit, backHref }: {
         {c.children.length > 0 && <><h2>{s.children}</h2><ul className="pv-list">{c.children.map(ch => <li key={ch.name_tr}><strong>{ch.name_tr}</strong></li>)}</ul></>}
       </section>}
 
+<<<<<<< HEAD
       {detail.location && <MonumentMap location={detail.location} name={item.name} lang={lang} />}
 
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       {c.current_state && <section className="pv-section pv-visit"><MapPin size={20} /><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
 
       <section className="pv-sources"><div><h3>{s.sources}</h3>

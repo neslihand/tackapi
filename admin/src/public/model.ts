@@ -11,8 +11,11 @@ export type PublicItem = {
   built: { from: number | null; to: number | null; label: string | null; basis: string | null; basis_label: string | null };
   parent: { slug: string; name: string } | null; children_count: number; summary: string | null; status: string | null;
   has_artworks: boolean; image: PublicImage | null; source: { book: string | null; pages: [number, number] | null };
+<<<<<<< HEAD
   // kitaptaki sırayla, virgülle; bânî (patron) mimar diye gösterilmez
   architect?: string | null; builder?: string | null; patron?: string | null;
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 };
 
 export type Card = {
@@ -32,11 +35,16 @@ export type NarrationSource = { book: string; pages: string; heading: string };
 export type Narration = { answer: string; sources: NarrationSource[]; generated_at?: string };
 export type NarrationMode = 'story' | 'child';
 
+<<<<<<< HEAD
 /** Eserin konumu. approximate: otomatik bulundu, henüz doğrulanmadı; nokta değil belirsizlik dairesi (radius_m) gösterilir. */
 export type PublicLocation = { lat: number; lon: number; approximate: boolean; radius_m: number | null };
 
 export type PublicDetail = {
   card: Card; text: string | null; text_note: string | null; images: PublicImage[]; location?: PublicLocation | null;
+=======
+export type PublicDetail = {
+  card: Card; text: string | null; text_note: string | null; images: PublicImage[];
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   narrations: Record<NarrationMode, Narration | null>;
   source: { book: string | null; pages: [number | null, number | null]; credits: { authors?: string[] | null; editor?: string | null } | null };
   alt_names: string[] | null; status: string | null; review_status: string;
@@ -63,8 +71,11 @@ const T = {
     sourceBook: 'Kaynak kitap', pages: 'sayfa', authors: 'Yazarlar', photoSource: 'Fotoğraf', today: 'Bugünkü durumu',
     loading: 'Anlatım hazırlanıyor…', card: 'ESER', discover: 'Hikâyeyi keşfet', pending: 'onay bekliyor', noImage: 'GÖRSEL HAZIRLANIYOR',
     close: 'Kapat', prev: 'Önceki', next: 'Sonraki',
+<<<<<<< HEAD
     map: 'Haritada', mapApprox: 'Yaklaşık konum: otomatik bulundu, henüz doğrulanmadı. Yapı bu dairenin içinde bir yerde olmalı.',
     mapOpen: 'OpenStreetMap’te aç', mapLabel: 'Eserin haritadaki konumu',
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     vsTitle: 'Fotoğrafla eser bul', vsUpload: 'Fotoğraf seç', vsChange: 'Başka fotoğraf seç', vsSearching: 'Fotoğraf eserlerle karşılaştırılıyor…',
     vsHint: 'JPEG, PNG ya da WebP · en fazla 10 MB. Fotoğrafın saklanmaz; yalnızca karşılaştırma için kullanılır.',
     vsMatch: 'Fotoğraftaki eser büyük olasılıkla bu:', vsUnsure: 'Emin olamadık. Fotoğrafına en çok benzeyen eserler:',
@@ -82,8 +93,11 @@ const T = {
     sourceBook: 'Source book', pages: 'pages', authors: 'Authors', photoSource: 'Photo', today: 'Current state',
     loading: 'Preparing the narration…', card: 'MONUMENT', discover: 'Explore the story', pending: 'awaiting review', noImage: 'IMAGE IN PREPARATION',
     close: 'Close', prev: 'Previous', next: 'Next',
+<<<<<<< HEAD
     map: 'On the map', mapApprox: 'Approximate location: found automatically, not yet verified. The building should be somewhere within this circle.',
     mapOpen: 'Open in OpenStreetMap', mapLabel: 'Location of the monument on the map',
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     vsTitle: 'Find a monument by photo', vsUpload: 'Choose a photo', vsChange: 'Choose another photo', vsSearching: 'Comparing your photo with the monuments…',
     vsHint: 'JPEG, PNG or WebP · up to 10 MB. Your photo is not stored; it is only used for the comparison.',
     vsMatch: 'The monument in your photo is most likely:', vsUnsure: 'We are not sure. The monuments most similar to your photo:',
@@ -118,6 +132,7 @@ export const roleLabel = (role: string, lang: Lang) => (ROLES[role] ?? ['', ''])
 export const artworkLabel = (kind: string, lang: Lang) => (ARTWORKS[kind] ?? ARTWORKS.other)[lang === 'en' ? 1 : 0];
 export const eventLabel = (kind: string, lang: Lang) => (EVENTS[kind] ?? EVENTS.other)[lang === 'en' ? 1 : 0];
 
+<<<<<<< HEAD
 /** Haritanın yakınlığı: kesin konumda yapı görünür, yaklaşık konumda daire tamamen sığar. */
 export function mapZoom(loc: PublicLocation): number {
   if (!loc.approximate || !loc.radius_m) return 17;
@@ -131,6 +146,8 @@ export function osmLink(loc: PublicLocation): string {
     : `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=${z}/${lat}/${lon}`;
 }
 
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 /** '[1425,1427)' → '1425–1426' */
 export function rangeText(r: string | null | undefined): string {
   const m = /^\[(-?\d+),(-?\d+)\)$/.exec(r ?? '');

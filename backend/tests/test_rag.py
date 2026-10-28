@@ -51,10 +51,14 @@ class CacheTest(unittest.TestCase):
     def test_unsupported_year_retried_and_not_cached(self):
         r, calls = self.ask('Cami 1550 yılında yapıldı [S1].')
         self.assertEqual(calls, 2)                       # bir kez yeniden üretildi
+<<<<<<< HEAD
         # yeniden yazımda da kalan yıl: o cümle ziyaretçiye gösterilmez, cevap önbelleğe girmez
         self.assertEqual(r['verification']['removed_years'], ['1550'])
         self.assertNotIn('1550', r['answer'])
         self.assertEqual(r['answer'], rag.NO_INFO['tr'])
+=======
+        self.assertEqual(r['verification']['unsupported_years'], ['1550'])
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         self.assertEqual(self.cached_rows(), 0)
 
     def test_history_bypasses_cache(self):
@@ -116,6 +120,7 @@ class VerifyTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+<<<<<<< HEAD
 
 
 class DropYearsTest(unittest.TestCase):
@@ -132,3 +137,5 @@ class DropYearsTest(unittest.TestCase):
     def test_nothing_left_means_no_information(self):
         self.assertEqual(rag.drop_years('Cami 848 yılında yapıldı.', ['848']), (rag.NO_INFO['tr'], 1))
         self.assertEqual(rag.drop_years('Built in 848.', ['848'], 'en')[0], rag.NO_INFO['en'])
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

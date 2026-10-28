@@ -10,17 +10,33 @@
     "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "dependencies": {
+<<<<<<< HEAD
+<<<<<<<< HEAD:admin/package.json
+========
+    "framer-motion": "^14.6.0",
+    "gsap": "3.14.2",
+>>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d:frontend/package.json
     "leaflet": "1.9.4",
+    "lenis": "1.3.26",
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     "lucide-react": "0.561.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@types/leaflet": "1.9.21",
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     "@types/node": "24.10.4",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.2",
+<<<<<<< HEAD
+    "axe-core": "4.10.3",
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     "typescript": "5.9.3",
     "vite": "^7.3.7"
   }

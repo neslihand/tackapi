@@ -120,6 +120,7 @@ CREATE TABLE monument (
     source_note         text,                          -- panelden eklenen eserin kaynağı (kitap dışı)
     created_by          text,                          -- panelden ekleyen kişi (kitap kayıtlarında boş)
     updated_at          timestamptz,                   -- son panel değişikliği
+<<<<<<< HEAD
     pilot               boolean NOT NULL DEFAULT false, -- MVP pilot seçkisi (pilot.py): embedding ve anlatımlar önce bunlara
     -- konumun kaynağı ve doğrulanması (geocode.py, panel). Doğrulanmamış konum sitede "yaklaşık" gösterilir.
     geo_source          text CONSTRAINT monument_geo_source_check CHECK (geo_source IN ('nominatim','manual')),
@@ -127,6 +128,9 @@ CREATE TABLE monument (
                           CHECK (geo_precision IN ('exact','building','street','neighborhood')),
     geo_checked         boolean NOT NULL DEFAULT false,
     geo_detail          jsonb                          -- sorgu, OSM'de bulunan yer, uyarılar (denetim izi)
+=======
+    pilot               boolean NOT NULL DEFAULT false -- MVP pilot seçkisi (pilot.py): embedding ve anlatımlar önce bunlara
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 );
 CREATE INDEX ON monument USING gin (qa_flags);
 CREATE INDEX monument_pilot ON monument (city_id) WHERE pilot;
@@ -385,6 +389,7 @@ CREATE TABLE artwork_image (
 CREATE INDEX artwork_image_image ON artwork_image (image_id);
 
 -- Uygulanan göç (migration) dosyaları: pipeline/migrate.py
+<<<<<<< HEAD
 -- Keşif rotaları (göç 013): yöneticinin panelde yazdığı sıralı eser listeleri; sitede "Keşif Sezonları".
 -- Şehir başına otomatik rotalar tabloya yazılmaz, routes.py üretir.
 CREATE TABLE route (
@@ -570,6 +575,8 @@ CREATE TABLE announcement (
     CHECK (ends_on IS NULL OR starts_on IS NULL OR ends_on >= starts_on)
 );
 
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 CREATE TABLE schema_migration (
     name                text PRIMARY KEY,
     applied_at          timestamptz NOT NULL DEFAULT now()
@@ -580,9 +587,13 @@ INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_im
                                          ('003_admin.sql'), ('004_para_fix.sql'), ('005_narration.sql'),
                                          ('006_narration_edit.sql'), ('007_artwork_image.sql'),
                                          ('008_image_embedding.sql'), ('009_pilot.sql'),
+<<<<<<< HEAD
                                          ('010_monument_removed.sql'), ('011_para_split.sql'), ('012_geo.sql'),
                                          ('013_route.sql'), ('014_quiz.sql'),
                                          ('015_visitors.sql'), ('016_agent.sql');
+=======
+                                         ('010_monument_removed.sql'), ('011_para_split.sql');
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (

@@ -37,7 +37,11 @@ export function ArtifactSummary({ artifact }: { artifact: DiscoveryArtifact }) {
           {artifact.chapters.map((chapter, index) => <section key={index} id={`chapter-${index}`}><h2>{chapter.title}</h2><p className="artifact-summary-text">{chapter[activeMode]}</p></section>)}
         </> : <p className="page-note">Bu eser için bölüm bölüm anlatım henüz eklenmedi. Mevcut açıklamayı okuyabilir ve aşağıdaki kaynakları inceleyebilirsin.</p>}
         {artifact.detail && <section><h2>{artifact.detail.title}</h2><p className="artifact-summary-text">{artifact.detail.text}</p></section>}
+<<<<<<< HEAD
         <section><h2>Eserin kaynakları</h2><ul className="artifact-summary-sources">{artifact.sourceReferences.map((source, index) => <li key={index}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title} <ArrowUpRight size={16} /></a> : source.title}</li>)}</ul></section>
+=======
+        <section><h2>Eserin kaynakları</h2><ul className="artifact-summary-sources">{artifact.sourceReferences.map((source, index) => <li key={index}><a href={source.url} target="_blank" rel="noreferrer">{source.title} <ArrowUpRight size={16} /></a></li>)}</ul></section>
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
         <section className="artifact-summary-stamp"><span className={`story-seal ${stamped ? 'on' : ''}`} aria-hidden="true"><Stamp size={26} /></span><h2>Bu keşif senin olsun.</h2><p>Bu mühür dijital keşfini temsil eder; fiziksel ziyaret kaydı değildir.</p><button className="button dark" disabled={stamped} onClick={() => { markDiscovered(artifact.id); notify('Keşfin miras pasaportuna mühürlendi.'); }}>{stamped ? <><Check size={17} /> Pasaportuna mühürlendi</> : <><Stamp size={17} /> Pasaportuma mühürle</>}</button>{stamped && <Link className="text-link" to="/pasaport">Pasaportumu gör <ArrowUpRight size={16} /></Link>}</section>
       </div>
     </div>

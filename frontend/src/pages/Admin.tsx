@@ -7,7 +7,10 @@ import { baseContent, useContent, useLocalContent } from '../lib/contentStore';
 import { achievements, emptyProgress } from '../lib/progress';
 import { useProgress } from '../lib/store';
 import { Link } from '../lib/navigation';
+<<<<<<< HEAD
 import { vakifApiEnabled } from '../lib/vakifApi';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { PageHeading, Scene } from '../components/UI';
 
 type Tab = 'artifacts' | 'quiz' | 'seasons' | 'achievements' | 'data';
@@ -210,11 +213,14 @@ function DataPanel({ onReplaced }: { onReplaced: () => void }) {
 
 export function Admin() {
   const { readOnly } = useContent();
+<<<<<<< HEAD
   if (readOnly && vakifApiEnabled()) {
     // The backend's works are managed in the admin panel (../admin), a separate app with its own sign-in.
     const panel = String(import.meta.env.VITE_ADMIN_URL ?? '').trim() || 'http://127.0.0.1:5174';
     return <Scene><div className="page-shell empty-state"><h1>Eserler yönetim panelinden düzenlenir.</h1><p>Bu koleksiyon arka uçtan gelir. Eserleri, fotoğrafları, anlatımları ve konumları yönetim panelinde düzenleyebilirsin; panel yönetici anahtarı ister.</p><a className="button dark" href={panel}>Yönetim paneline git</a></div></Scene>;
   }
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   return readOnly ? <Scene><div className="page-shell empty-state"><h1>Bu koleksiyon salt okunur.</h1><p>Bu koleksiyondaki eserler yerel yönetim panelinden düzenlenemez.</p><Link className="button dark" to="/kesfet">Eserleri keşfet</Link></div></Scene> : <LocalAdmin />;
 }
 

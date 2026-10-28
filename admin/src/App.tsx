@@ -1,5 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
+<<<<<<< HEAD
 import { BarChart3, Building2, CalendarDays, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareHeart, Plus, Route, ScanSearch, Sparkles, SplitSquareVertical } from 'lucide-react';
+=======
+import { Building2, History, Images, LayoutDashboard, LogOut, MapPinned, Plus, ScanSearch, SplitSquareVertical } from 'lucide-react';
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { api, getToken, handleUnauthorized, setToken } from './lib/api';
 import { Link, useRoute } from './lib/navigation';
 import { Brand, ToastProvider } from './components/UI';
@@ -14,6 +18,7 @@ import { AuditLog } from './pages/AuditLog';
 import { PreviewPage } from './pages/Preview';
 import { Segmentation } from './pages/Segmentation';
 import { VisualSearchPage } from './pages/VisualSearchPage';
+<<<<<<< HEAD
 import { RoutesPage } from './pages/Routes';
 import { QuizPage } from './pages/Quiz';
 import { ContributionsPage } from './pages/Contributions';
@@ -32,6 +37,17 @@ const NAV: [string, string, ReactNode][] = [
 ];
 
 type Pending = { images: number; segmentation: number; contributions: number; agent: number } | null;
+=======
+
+const NAV: [string, string, ReactNode][] = [
+  ['/', 'Pano', <LayoutDashboard size={17} />], ['/fotograflar', 'Fotoğraflar', <Images size={17} />],
+  ['/eserler', 'Eserler', <Building2 size={17} />], ['/bolumleme', 'Bölümleme', <SplitSquareVertical size={17} />], ['/yeni-eser', 'Yeni eser', <Plus size={17} />],
+  ['/gorsel-arama', 'Görselle arama', <ScanSearch size={17} />],
+  ['/sehirler', 'Şehirler', <MapPinned size={17} />], ['/kayit', 'Değişiklik kaydı', <History size={17} />],
+];
+
+type Pending = { images: number; segmentation: number } | null;
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 
 function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void; pending: Pending }) {
   const { path, params } = useRoute();
@@ -46,6 +62,7 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (path === '/bolumleme') page = <Segmentation params={params} />;
   else if (path === '/kayit') page = <AuditLog params={params} />;
   else if (path === '/gorsel-arama') page = <VisualSearchPage />;
+<<<<<<< HEAD
   else if (path === '/rotalar') page = <RoutesPage />;
   else if (path === '/sorular') page = <QuizPage />;
   else if (path === '/katkilar') page = <ContributionsPage params={params} />;
@@ -53,12 +70,18 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (path === '/asistan') page = <AssistantPage params={params} />;
   else if (path === '/takvim') page = <CalendarPage />;
   else if (path === '/gundem') page = <AgendaPage />;
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   else page = <div className="empty">Bu sayfa bulunamadı. <Link className="text-link" to="/">Panoya dön</Link></div>;
   useEffect(() => { document.getElementById('main')?.focus({ preventScroll: true }); }, [path]);
   return <div className="shell">
     <a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>İçeriğe geç</a>
     <aside className="sidebar"><Brand />
+<<<<<<< HEAD
       <nav aria-label="Yönetim menüsü">{NAV.map(([to, label, icon]) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>{icon}{label}{to === '/fotograflar' && pending?.images ? <b title="Kontrol bekleyen fotoğraf">{pending.images}</b> : null}{to === '/bolumleme' && pending?.segmentation ? <b title="Bakılacak paragraf">{pending.segmentation}</b> : null}{to === '/katkilar' && pending?.contributions ? <b title="Onay bekleyen katkı">{pending.contributions}</b> : null}{to === '/asistan' && pending?.agent ? <b title="Asistanın açık önerisi">{pending.agent}</b> : null}</Link>)}</nav>
+=======
+      <nav aria-label="Yönetim menüsü">{NAV.map(([to, label, icon]) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>{icon}{label}{to === '/fotograflar' && pending?.images ? <b title="Kontrol bekleyen fotoğraf">{pending.images}</b> : null}{to === '/bolumleme' && pending?.segmentation ? <b title="Bakılacak paragraf">{pending.segmentation}</b> : null}</Link>)}</nav>
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
       <div className="sidebar-foot"><span>Giriş: <strong>{user}</strong></span><button onClick={onLogout}><LogOut size={15} /> Çıkış yap</button></div>
     </aside>
     <main id="main" tabIndex={-1} className="content">{page}</main>
@@ -79,7 +102,11 @@ export function App() {
   useEffect(() => {
     if (!user) return;
     api.stats().then(s => setPending({ images: s.images.find(c => c.review_status === 'draft')?.n ?? 0,
+<<<<<<< HEAD
       segmentation: s.segmentation_pending ?? 0, contributions: s.contributions_pending ?? 0, agent: s.agent_open ?? 0 })).catch(() => {});
+=======
+      segmentation: s.segmentation_pending ?? 0 })).catch(() => {});
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   }, [user, path]);
   useEffect(() => { document.title = 'EŞİK — Yönetim Paneli'; }, []);
   if (checking) return <div className="login" role="status"><p style={{ color: '#f4efe5' }}>Oturum denetleniyor…</p></div>;

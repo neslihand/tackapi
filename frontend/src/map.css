@@ -133,6 +133,9 @@
   .map-select, .map-locate, .map-scene .map-sidebar, .map-scene .map-container, .map-scene .selected-map-artifact { border: 1px solid CanvasText; }
   .map-star-main { forced-color-adjust: none; }
 }
+<<<<<<< HEAD
 /* Doğrulanmamış (otomatik bulunmuş) konum: kesin bir nokta gibi görünmesin; kesik çizgili, soluk bir alan. */
 .map-pin.approx .map-pin-model{opacity:.72;outline:1.5px dashed #e6d5ae;outline-offset:5px;border-radius:50%}
 .map-pin.approx .map-pin-beam{display:none}
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d

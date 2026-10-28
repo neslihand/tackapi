@@ -2,7 +2,10 @@ import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, typ
 import { createPortal } from 'react-dom';
 import { ArrowUp, ArrowUpRight, BookOpen, Check, Copy, RotateCcw, Square, Trash2, X } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
+<<<<<<< HEAD
 import { track } from '../lib/analytics';
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
 import { CHAT_LIMITS, parseSources, type ChatErrorCode, type ChatSource, type ChatTurn } from '../lib/chatContract';
 import { ChatError, sendChat } from '../lib/chatApi';
 import { chatStorageKey, chatSuggestions, loadHistory, parseRichText, plainText, requestTurns, saveHistory, welcomeMessage, type Inline, type RichAllow } from '../lib/chat';
@@ -68,7 +71,11 @@ export function ArtifactChat({ id, artifact, mode, chapter, endpoint, open, onCl
   const trash = useRef<HTMLButtonElement>(null);
   const keep = useRef<HTMLButtonElement>(null);
   const stick = useRef(true);
+<<<<<<< HEAD
   const allow = useMemo<RichAllow>(() => ({ chapters, slugs: new Set(artifacts.map(a => a.slug)), urls: new Set(artifact.sourceReferences.flatMap(s => s.url ? [s.url] : [])) }), [chapters, artifacts, artifact.sourceReferences]);
+=======
+  const allow = useMemo<RichAllow>(() => ({ chapters, slugs: new Set(artifacts.map(a => a.slug)), urls: new Set(artifact.sourceReferences.map(s => s.url)) }), [chapters, artifacts, artifact.sourceReferences]);
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
   const suggestions = useMemo(() => chatSuggestions(artifact, chapter), [artifact, chapter]);
   // Edits made in the local admin panel exist only in this browser; the backend answers from the published record.
   const localEdited = !readOnly && Boolean(overrides.artifacts) && JSON.stringify(baseContent.artifacts.find(a => a.id === artifact.id)) !== JSON.stringify(artifacts.find(a => a.id === artifact.id));
@@ -124,9 +131,12 @@ export function ArtifactChat({ id, artifact, mode, chapter, endpoint, open, onCl
       const answer: ChatTurn = { role: 'assistant', content: text.trim() + (truncated ? '\n\n_(Yanıt uzunluk sınırına ulaştı.)_' : ''), ...(sources.length ? { sources } : {}) };
       commit([...turns, answer]);
       setAnnouncement(`Rehber yanıtladı. ${plainText(answer.content)}`);
+<<<<<<< HEAD
       const asked = [...turns].reverse().find(t => t.role === 'user')?.content ?? '';
       track('chat_question', artifact.slug, { question: asked.slice(0, 300), mode });
       track('chat_answer', artifact.slug, { no_info: /bilgi\s+yok|bilgi\s+bulunmuyor|yer\s+almıyor/i.test(text), chars: text.length });
+=======
+>>>>>>> a7c8a0fe3a38724fb9ab1d30e17f1da754fde53d
     } catch (failure) {
       if (controller.signal.aborted) {
         // Stopped by the user: keep what arrived. Cleared or closed for good: request.current was let go first.
