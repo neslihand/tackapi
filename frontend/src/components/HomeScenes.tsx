@@ -41,6 +41,8 @@ export function Manifesto() {
 }
 
 // Monoform: numbered cards that pin one after another and pile up, the ones underneath shrinking into the shade.
+// A long route names its first stops and counts the rest, so every card stays the same size.
+const STOPS_SHOWN = 6;
 export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Season[]; artifacts: DiscoveryArtifact[]; discovered: Record<string, unknown> }) {
   const ref = useScene<HTMLOListElement>(root => {
     const cards = gsap.utils.toArray<HTMLElement>('.season-card', root);
@@ -60,7 +62,7 @@ export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Seaso
         <Link to={`/kesfet?season=${season.id}`} className="season-link">
           <span className="season-top"><small>{season.kicker}</small><small>{season.artifactIds.length} DURAK{found ? ` · ${found} MÜHÜR` : ''}</small></span>
           <span className="season-number" aria-hidden="true">{pad(i + 1)}</span>
-          <span className="season-body"><h3>{season.title}</h3><span className="season-text">{season.description}</span><span className="season-stops">{stops.map(a => <span key={a.id}>{a.name}</span>)}</span></span>
+          <span className="season-body"><h3>{season.title}</h3><span className="season-text">{season.description}</span><span className="season-stops">{stops.slice(0, STOPS_SHOWN).map(a => <span key={a.id}>{a.name}</span>)}{stops.length > STOPS_SHOWN && <span className="more">+{stops.length - STOPS_SHOWN} durak</span>}</span></span>
           <span className="season-pics" aria-hidden="true">{stops.slice(0, 4).map((a, k) => <span key={a.id} style={{ '--k': k } as CSSProperties}><img src={a.image} alt="" loading="lazy" /></span>)}</span>
           <span className="season-go" aria-hidden="true"><ArrowUpRight size={22} /></span>
         </Link>

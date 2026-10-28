@@ -1,0 +1,57 @@
+/* ——— Kapı galerisi (DoorGallery.tsx) ———
+   A sideways row of round-topped doors (the shape of the route cards' pictures) on the night chapter, drifting left in
+   an endless loop (moved by DoorGallery.tsx); --t (0 in the middle, 1 far off) shrinks and dims the doors. */
+.dg { --card: clamp(170px, min(17vw, 30svh), 250px); --door: 50% 50% 4px 4px / 32% 32% 4px 4px; position: relative; }
+.dg-frame { margin: 0 calc(var(--pl-left, 0px) * -1); overflow: hidden; touch-action: pan-y; cursor: grab; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.dg-frame.dragging { cursor: grabbing; }
+.dg-frame.dragging a { pointer-events: none; }
+.dg-track { display: flex; align-items: flex-end; gap: clamp(18px, 2.6vw, 44px); width: max-content; margin: 0; padding: 26px 0 12px; list-style: none; will-change: transform; }
+.dg-card { --t: 1; flex: none; width: var(--card); }
+.dg-card a { display: flex; flex-direction: column; align-items: center; gap: 14px; color: inherit; user-select: none; -webkit-user-drag: none; scale: calc(1 - var(--t) * .2); opacity: calc(1 - var(--t) * .45); transform-origin: 50% 100%; }
+
+/* The door: the picture in the round-topped frame, a fine gold outline set just outside it. */
+.dg-door { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; }
+.dg-door::before { content: ''; position: absolute; inset: -7px; border: 1px solid #e6d5ae; border-radius: var(--door); opacity: 0; transition: opacity .4s, inset .4s; }
+.dg-card.on .dg-door::before { opacity: .55; }
+.dg-window { position: absolute; inset: 0; display: grid; place-content: center; overflow: hidden; border-radius: var(--door); background: #0c241c; box-shadow: 0 0 0 1px #e6d5ae40, 0 24px 40px -24px #000; }
+.dg-window img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(calc(.85 - var(--t) * .4)) contrast(1.04) brightness(calc(1 - var(--t) * .35)); }
+.dg-window::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, #061410b3); }
+.dg-door > i { position: absolute; bottom: 12px; left: 50%; z-index: 1; translate: -50% 0; font-family: var(--serif); font-size: 15px; font-style: italic; color: #e6d5ae; }
+.dg-city { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; color: #d9c9a5; }
+.dg-card a:focus-visible { outline: none; }
+.dg-card a:focus-visible .dg-door::before { opacity: 1; inset: -5px; }
+
+/* The last door opens onto the whole collection. */
+.dg-all .dg-window { background: radial-gradient(ellipse 80% 60% at 50% 30%, #1d4538, #0b2321); text-align: center; }
+.dg-all .dg-window::after { display: none; }
+.dg-all b { font-family: var(--serif); font-size: clamp(44px, 4vw, 64px); font-weight: 300; line-height: 1; color: #fbf7ee; }
+.dg-all small { font-family: var(--serif); font-size: 18px; font-style: italic; color: #e6d5ae; }
+.dg-all .dg-door::before { opacity: .35; }
+
+/* The story of the door in the middle, and the controls. */
+.dg-info { display: grid; grid-template-columns: minmax(0, 1.2fr) auto; align-items: end; gap: 18px clamp(24px, 4vw, 70px); margin-top: clamp(22px, 3svh, 36px); padding-top: 22px; border-top: 1px solid #e6d5ae2e; }
+.dg-kicker { margin: 0 0 8px; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; color: #d9c9a5; }
+.dg-kicker span { font-family: var(--serif); font-size: 16px; font-style: italic; letter-spacing: 0; color: #e6d5ae; }
+.dg-info h3 { margin: 0; font-family: var(--serif); font-size: clamp(30px, 3vw, 46px); font-weight: 400; line-height: 1.04; letter-spacing: -.015em; color: #fbf7ee; }
+.dg-text { display: -webkit-box; max-width: 62ch; margin: 10px 0 0; overflow: hidden; font-size: 14.5px; line-height: 1.65; color: #c9cfc8; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.dg-controls { display: flex; align-items: center; gap: 12px; }
+.dg-controls .hp-cta { margin-right: 10px; }
+.dg-step { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #e6d5ae59; border-radius: 50%; color: #e6d5ae; background: #ffffff08; cursor: pointer; transition: background .3s, border-color .3s, opacity .3s; }
+.dg-step:hover:not(:disabled) { border-color: #e6d5ae; background: #e6d5ae1a; }
+.dg-step:disabled { opacity: .3; cursor: default; }
+.dg-step:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 2px; }
+.dg-dots { display: flex; gap: 6px; margin: 0 4px; padding: 0; list-style: none; }
+.dg-dots li { width: 12px; height: 2px; border-radius: 2px; background: #e6d5ae40; transition: width .4s, background .4s; }
+.dg-dots li.on { width: 28px; background: #e6d5ae; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .dg-info-body { animation: dg-in .5s cubic-bezier(.2, .7, .2, 1); }
+}
+@keyframes dg-in { from { opacity: 0; translate: 0 10px; } }
+
+@media (max-width: 900px) {
+  .dg { --card: min(54vw, 230px); }
+  .dg-info { grid-template-columns: 1fr; }
+  .dg-controls { flex-wrap: wrap; }
+  .dg-controls .hp-cta { flex-basis: 100%; justify-content: space-between; margin: 0 0 6px; }
+}

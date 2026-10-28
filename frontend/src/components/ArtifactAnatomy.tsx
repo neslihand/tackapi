@@ -8,8 +8,8 @@ import { narrationModes } from '../lib/preferences';
 import { vakifApiEnabled } from '../lib/vakifApi';
 import '../anatomy.css';
 
-// "Bir eserin içi": an artifact's page drawn as an annotated plate. A parchment page in the middle (the building in an
-// arch, its name, the narration switch turning by itself, the sources, the assistant, visitors' photos, the stamp)
+// "Bir eserin içi": an artifact's page drawn as an annotated plate. A parchment page in the middle (the building in a
+// round-topped door, its name, the narration switch turning by itself, the sources, the assistant, visitors' photos, the stamp)
 // carries numbered marks; the notes around it explain each mark, joined to the page by fine gold rules. The page is a
 // drawing, not the real page, so it is hidden from assistive technology; the notes carry the same information.
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -57,8 +57,8 @@ export function ArtifactAnatomy({ artifact }: { artifact: DiscoveryArtifact }) {
     <ol className="aa-notes left">{notes.slice(0, half).map(note)}</ol>
     <div className="aa-plate" aria-hidden="true">
       <svg className="aa-arches" viewBox="0 0 600 700" fill="none">
-        <path pathLength="1" d="M60 700V300C60 160 180 70 300 30C420 70 540 160 540 300V700" />
-        <path pathLength="1" d="M20 700V290C20 130 160 34 300 -8C440 34 580 130 580 290V700" />
+        <path pathLength="1" d="M60 700V250A240 210 0 0 1 540 250V700" />
+        <path pathLength="1" d="M20 700V240A280 245 0 0 1 580 240V700" />
         <path pathLength="1" d="M300 -20V700" className="axis" />
       </svg>
       <div className="aa-page">

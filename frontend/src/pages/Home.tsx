@@ -7,7 +7,7 @@ import { Manifesto, PassportVisual, SeasonStack } from '../components/HomeScenes
 import { ArtifactAnatomy, known } from '../components/ArtifactAnatomy';
 import { Chapter } from '../components/PlayScenes';
 import { QuizMark } from '../components/PlayArt';
-import { StoryRing } from '../components/StoryRing';
+import { DoorGallery } from '../components/DoorGallery';
 import { ToolsShowcase } from '../components/ToolsShowcase';
 import { Vision } from '../components/Vision';
 import { JourneyRail } from '../components/JourneyRail';
@@ -19,7 +19,7 @@ import { Discoveries } from '../vakif/Discoveries';
 import { Agenda } from '../vakif/Agenda';
 
 // The home page after the entrance: numbered chapters in the entrance's language, ivory and night in turn, each with
-// its own scene — the vision, the story ring, the tools, an artifact from the inside, the routes, the passport, the
+// its own scene — the vision, the door gallery, the tools, an artifact from the inside, the routes, the passport, the
 // day's discovery and a last threshold.
 const pad = (n: number) => String(n).padStart(2, '0');
 const TOTAL = 10;
@@ -48,7 +48,7 @@ function Threshold({ artifact, done, n }: { artifact: { name: string; city: stri
     <nav className="hp-doors" aria-label="Başka bir kapıdan gir">
       <p>Ya da başka bir kapıdan gir</p>
       <ol>{DOORS.map(([to, title, note], i) => <li key={to}><Link to={to}>
-        <svg viewBox="0 0 60 76" aria-hidden="true"><path d="M4 76V34C4 18 16 8 30 2C44 8 56 18 56 34V76" /><path d="M12 76V36C12 24 20 16 30 11C40 16 48 24 48 36V76" /></svg>
+        <svg viewBox="0 0 60 76" aria-hidden="true"><path d="M4 76V26A26 22 0 0 1 56 26V76" /><path d="M12 76V30A18 15 0 0 1 48 30V76" /></svg>
         <i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><small>{note}</small><ArrowUpRight size={16} aria-hidden="true" />
       </Link></li>)}</ol>
     </nav>
@@ -83,7 +83,7 @@ export function Home() {
     </Chapter>
     <Chapter id="featured" tone="night" n={4} total={TOTAL} kicker="TAŞA İŞLENEN HİKÂYELER" titleId="featured-title" className="hp-featured" title={<>Bazı kapılar, <em>yüzyıllara açılır.</em></>} lede={<p>Koleksiyondaki her eser, kendi hikâyesiyle seni bekliyor. Birini seç, kapısını arala.</p>}>
       <Agenda />
-      <StoryRing artifacts={artifacts} label="Öne çıkan hikâyeler" />
+      <DoorGallery artifacts={artifacts} />
       <div className="hp-collection"><p>{pad(artifacts.length)} eser <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} şehir <span>·</span> <i>Birlikte koruduğumuz miras.</i></p><Link className="hp-link en-link" to="/kesfet"><span>Tüm eserleri keşfet</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
     </Chapter>
     <Chapter id="araclar" tone="ivory" n={5} total={TOTAL} kicker="KEŞFİN ARAÇLARI" titleId="tools-title" className="hp-tools" title={<>Bir eser, <em>birçok kapı.</em></>} lede={<p>Haritadan kameraya, yapay zekâ rehberinden oyunlara; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.</p>}>

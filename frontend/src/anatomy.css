@@ -1,5 +1,5 @@
 /* ——— Bir eserin içi (ArtifactAnatomy.tsx) ———
-   An annotated plate: a parchment page drawn in the middle under nested arches, numbered gold marks on its parts, and
+   An annotated plate: a parchment page drawn in the middle under nested door outlines, numbered gold marks on its parts, and
    the notes on either side joined to it by fine rules. Everything settles in once, the first time it comes into view. */
 .aa { --gap: clamp(36px, 4.4vw, 84px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 430px) minmax(0, 1fr); grid-template-areas: 'left plate right' 'foot foot foot'; align-items: center; column-gap: var(--gap); }
 .aa-notes { display: flex; flex-direction: column; gap: clamp(40px, 7svh, 76px); margin: 0; padding: 0; list-style: none; }
@@ -35,9 +35,10 @@
 .aa-corner { position: absolute; z-index: 1; font-size: 11px; line-height: 1; color: #8a6a36; }
 .aa-corner.tl { top: 3px; left: 4px; } .aa-corner.tr { top: 3px; right: 4px; } .aa-corner.bl { bottom: 3px; left: 4px; } .aa-corner.br { right: 4px; bottom: 3px; }
 
-/* The building, kept small and toned so any photo reads well, in a pointed arch. */
+/* The building, kept small and toned so any photo reads well, in the round-topped door of the route cards. */
 .aa-window { position: relative; aspect-ratio: 5 / 4; overflow: visible; }
-.aa-arch { position: absolute; inset: 0; overflow: hidden; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80V34C0 16 22 5 50 0C78 5 100 16 100 34V80Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80V34C0 16 22 5 50 0C78 5 100 16 100 34V80Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.aa-window::before { content: ''; position: absolute; inset: -6px; border: 1px solid #8a6a3659; border-radius: 50% 50% 6px 6px / 32% 32% 6px 6px; pointer-events: none; }
+.aa-arch { position: absolute; inset: 0; overflow: hidden; border-radius: 50% 50% 4px 4px / 32% 32% 4px 4px; box-shadow: inset 0 0 0 1px #8a6a3640; }
 .aa-arch img { width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
 .aa-arch::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #0b232133, transparent 40%, #0b232159); }
 .aa-stamp { position: absolute; right: -14px; bottom: -16px; z-index: 2; display: grid; place-items: center; width: 64px; height: 64px; border: 2px dashed #8a6a36; border-radius: 50%; color: #8a6a36; background: #f2ede3; rotate: -12deg; }

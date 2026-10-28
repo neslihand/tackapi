@@ -156,11 +156,11 @@
 .hp-passport-steps b { margin-top: 6px; font-family: var(--serif); font-size: clamp(24px, 2vw, 30px); font-weight: 400; color: #fbf7ee; }
 .hp-passport-steps span { max-width: 26ch; font-size: 14px; line-height: 1.6; color: #c9cfc8; }
 
-/* ——— 09 Today: framed cards in the plate's language, the building small in a pointed arch ——— */
+/* ——— 09 Today: framed cards in the plate's language, the building small in a round-topped door ——— */
 .hp-exhibit { position: relative; }
 .hp-exhibit::before { content: ''; position: absolute; inset: 9px; z-index: 2; border: 1px solid #8a6a3640; border-radius: 2px; pointer-events: none; }
 .hp-exhibit.today .hp-exhibit-art { display: grid; place-items: end center; aspect-ratio: auto; height: clamp(220px, 22vw, 300px); padding: 26px 0 0; background: radial-gradient(ellipse 70% 80% at 50% 100%, #1d4538, transparent 75%), linear-gradient(180deg, #0d2723, #061410); }
-.hp-exhibit-arch { position: relative; display: block; width: min(62%, 300px); height: 100%; overflow: hidden; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80V34C0 16 22 5 50 0C78 5 100 16 100 34V80Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80V34C0 16 22 5 50 0C78 5 100 16 100 34V80Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.hp-exhibit-arch { position: relative; display: block; width: min(52%, 250px); height: 100%; overflow: hidden; border-radius: 50% 50% 4px 4px / 32% 32% 4px 4px; box-shadow: 0 0 0 1px #e6d5ae40; }
 .hp-exhibit-arch img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
 .hp-exhibit.today .hp-exhibit-art::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 59px, #e6d5ae0d 59px 60px); pointer-events: none; }
 
@@ -190,3 +190,17 @@
   .hp-doors { grid-row: auto; }
   .hp-doors ol { grid-template-columns: 1fr; }
 }
+
+/* ——— 07 Routes, thinner: shorter cards closer together, the photos toned and a fine inner frame ——— */
+.hp-routes .season-stack { gap: 6vh; }
+.hp-routes .season-card { height: auto; min-height: min(52vh, 440px); }
+.hp-routes .season-pics { padding: 16px 0; }
+.hp-routes .season-pics > span { max-width: 124px; }
+.hp-routes .season-card::before { content: ''; position: absolute; inset: 10px; z-index: 2; border: 1px solid #e6d5ae1f; border-radius: 2px; pointer-events: none; }
+.hp-routes .season-pics img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.92); }
+/* The pictures on the left and the route's name beside them, both from the top of the card; the number below. */
+@media (min-width: 801px) {
+  .hp-routes .season-pics { grid-column: 1; grid-row: 2; align-self: start; }
+  .hp-routes .season-body { grid-column: 2; grid-row: 2 / 4; align-self: start; padding: 16px 64px 6px 0; }
+}
+.hp-routes .season-stops .more { color: #15130d; border-color: transparent; background: #e6d5aecc; }
