@@ -8,13 +8,16 @@ const fmt = (n: number) => n.toLocaleString('tr-TR');
 export type BarRow = { key: string; label: ReactNode; value: number; detail?: string; muted?: boolean };
 
 /** Yatay çubuk listesi (sıralama, büyüklük): etiket, çubuk, değer ucunda; ayrıntı üzerine gelince ve tabloda. */
-export function BarList({ rows, title, unit = '', max, empty = 'Henüz veri yok.' }: {
-  rows: BarRow[]; title: string; unit?: string; max?: number; empty?: string;
+export function BarList({ rows, title, unit = '', max, empty = 'Henüz veri yok.', showTitle = false }: {
+  rows: BarRow[]; title: string; unit?: string; max?: number; empty?: string; showTitle?: boolean;
 }) {
   const top = max ?? Math.max(1, ...rows.map(r => r.value));
   const [hover, setHover] = useState<string | null>(null);
-  if (!rows.length) return <p className="admin-help">{empty}</p>;
+  // showTitle: birkaç liste aynı kartı paylaşıyorsa (beyan) her birinin görünür başlığı olur
+  const caption = showTitle && <figcaption className="chart-caption">{title}</figcaption>;
+  if (!rows.length) return showTitle ? <figure className="chart-bars">{caption}<p className="admin-help">{empty}</p></figure> : <p className="admin-help">{empty}</p>;
   return <figure className="chart-bars" aria-label={title}>
+    {caption}
     <ul>{rows.map(r => <li key={r.key} onMouseEnter={() => setHover(r.key)} onMouseLeave={() => setHover(h => h === r.key ? null : h)}
       className={hover === r.key ? 'hover' : ''} title={r.detail}>
       <span className="chart-bar-label">{r.label}</span>

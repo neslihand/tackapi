@@ -102,6 +102,8 @@ class InsightsApiTest(unittest.TestCase):
         self.assertTrue(any(q['no_info'] for q in d['questions']))
         self.assertIn('kervansaray', [s['q'] for s in d['searches']])
         self.assertTrue(any(s['kind'] == 'search' for s in d['suggestions']))   # sonuçsuz arama önerisi
+        for kind in ('question', 'search'):                                    # biri ötekileri dışarı itmez
+            self.assertLessEqual(sum(s['kind'] == kind for s in d['suggestions']), I.PER_KIND)
         self.assertIn('effective', d['settings'])
 
 

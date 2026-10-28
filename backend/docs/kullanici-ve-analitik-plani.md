@@ -40,7 +40,8 @@ Hikâye sever (hikâye modu ağırlıklı) · Ailece keşif (çocuk modu, oyunla
 - **Varsayılan deneyim:** varsayılan anlatım biçimi ve öne çıkan rota; panelde elle ya da "veriye göre (otomatik)".
 
 ## Yönetim paneli
-- **Katkılar:** onay kuyruğu (fotoğraf ve metin), onayla/reddet (gerekçe), onaylanan fotoğraf eserin galerisine girer.
+- **Katkılar:** onay kuyruğu (fotoğraf ve metin), onayla/reddet (gerekçe), onaylanan fotoğraf ve metin eser sayfasının
+  "Ziyaretçi katkıları" bölümünde, kitap fotoğraflarından ve metninden ayrı görünür (galeriye karışmaz).
 - **Analitik:** ziyaretçi/oturum/olay sayıları ve zamana göre; en çok bakılan eserler; anlatım biçimi tercihleri;
   keşif hunisi (eser açma → okuma → soru → mühür); arama terimleri; en çok sorulan ve "bilgi yok" kalan sorular;
   kamera sonuçları; profil dağılımı ve profillere göre ilgi; kayıtlı kullanıcıların beyan bilgileri (yaş, şehir, amaç,
@@ -61,3 +62,8 @@ yüklenen fotoğrafların konum bilgisi (EXIF) silinir · şifreler özetli · o
    ve "En çok merak edilenler", pasaport eşitleme, varsayılan anlatım biçimi.
 5. Demo verisi: sunumda panonun boş görünmemesi için deneme ziyaretleriyle doldurma aracı (gerçek veriden ayrı
    işaretli, istenirse silinir).
+
+## Durum (28 Ekim 2026)
+Beş aşama da yazıldı ve test edildi (arka uç 157, panel 20, ön yüz 72 test). Tarayıcıda, test veritabanıyla tek
+adresten denendi: izin bandı ve olaylar, kayıt ve "Hesabım", eser sayfasında metin ve fotoğraf katkısı, panelde
+onay ve gerekçeli red, analitik panosu (deneme verisiyle). Gerçek veritabanında göç 015 henüz uygulanmadı.

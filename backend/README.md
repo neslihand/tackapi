@@ -668,6 +668,36 @@ python ingest.py --add-book hatay-1             # en son yedekten, aynı kimlikl
 - **Henüz yok:** yedeği olmayan, ilk kez eklenecek bir kitap (bölümleme → parçalama → çıkarım → embedding → fotoğraf).
   Mevcut `load_db.py` ve `load_extractions.py` bütün kitapları birlikte yüklediği için tek kitaplık sürümleri yazılmalı.
 
+### 7.12 Ziyaretçiler, katkılar ve "Veriyle Gelişen Döngü": `visitors.py`, `insights.py`
+Sunum vaadi: Etkileşim → Analiz → İçgörü → Yeni Keşif → Etkileşim. Kararlar ve kapsam: `docs/kullanici-ve-analitik-plani.md`.
+Göç `015_visitors.sql` (`app_user`, `user_session`, `user_progress`, `contribution`, `analytics_event`, `site_setting`).
+
+```powershell
+python migrate.py --apply                          # göç 015
+python demo_activity.py --write                    # sunum için deneme ziyaretleri (demo = true; varsayılan 400 ziyaret, 30 gün)
+python demo_activity.py --clear                    # deneme verisini siler; gerçek olaylara dokunmaz
+```
+- **Hesap** (`users.py`, `visitors.py`): e-posta + şifre (`scrypt`), httpOnly çerez `esik_oturum` (30 gün,
+  SameSite=Lax; veritabanında anahtarın özeti). Kayıt bilgileri (takma ad, yaş aralığı, şehir, amaç, ilgi alanları)
+  isteğe bağlı; aydınlatma onayı ve sürümü saklanır. Hesap silinince kişisel alanlar, oturumlar ve katkılar silinir.
+- **Pasaport:** giriş yapınca tarayıcıdaki ilerleme hesaptakiyle birleştirilir (`users.merge_progress`; mühür ve
+  favoriler birleşir, oyunlarda daha az hamle kazanır), değişiklikler `PUT /api/me/progress` ile kaydedilir.
+- **Katkılar:** fotoğraf (JPEG/PNG/WebP, en çok 10 MB; WebP'ye çevrilir, EXIF ve konum bilgisi atılır,
+  `media/contrib/<slug>/`) ya da metin (anı, bilgi, düzeltme önerisi). Panelde `#/katkilar` onayından geçer; red
+  gerekçesi zorunlu ve katkıyı yapan görür. Onaylananlar eser sayfasında kitaptan ayrı "Ziyaretçi katkıları"
+  bölümünde görünür. **Sohbet asistanı ve anlatımlar katkıları kaynak olarak kullanmaz.** Not: `/media` düz bir
+  dosya sunucusudur; onay bekleyen fotoğrafın adresi rastgele olduğu için listelenmez ama adresini bilen açabilir
+  (taslak kitap fotoğraflarında da durum aynıdır).
+- **Olaylar** (`POST /api/events`): yalnızca izin bandında onay verenlerden, rastgele bir tarayıcı kimliğiyle; IP
+  saklanmaz. Olay türleri ve ek alanlar izin listesiyle süzülür (`visitors.EVENT_TYPES`, `clean_props`).
+- **Analiz ve içgörü** (`insights.py`, panelde `#/analitik`): ziyaretçi ve etkileşim sayıları, günlük seyir, keşif
+  hunisi, anlatım biçimi tercihi, davranış profilleri (`SEGMENTS`: açık kurallar, yapay zekâ yok), en çok bakılan
+  eserler, kamera sonuçları, aramalar, "Esere Sor" soruları, kayıtlı kullanıcıların beyanı ve içerik önerileri
+  (eksik içerik, yarım bırakılan eser, cevapsız soru, sonuçsuz arama, az ulaşılan kesim; her türden en çok 5).
+- **Yeni keşif:** "Senin için" (`/api/recommendations`), "En çok merak edilenler" (`/api/popular`) ve varsayılan
+  deneyim (`/api/site-settings`: anlatım biçimi ve öne çıkan rota; panelde elle ya da "veriye göre"). Deneme verisi
+  bu üçünde hiç kullanılmaz; panoda "Deneme verisini göster" ile açılıp kapanır.
+
 ---
 
 ## 8. Ekonomik mod ve maliyet

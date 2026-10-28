@@ -260,6 +260,9 @@ def dashboard(db, days=30, demo=True, pilot=True):
                 settings=dict(stored=get_settings(db), effective=effective_settings(db)))
 
 
+PER_KIND = 5
+
+
 def suggestions(db, monuments, questions, seg_count, total, searches, pilot=True):
     """İçgörü → yeni keşif: verilere göre ne geliştirilmeli. Her öneri bir gerekçe ve bir eylem taşır."""
     out = []
@@ -284,16 +287,16 @@ def suggestions(db, monuments, questions, seg_count, total, searches, pilot=True
             out.append(dict(kind='drop', slug=m['slug'], title=f"{i['name_tr']}: açılıyor ama okunmadan bırakılıyor",
                             detail=f"{m['visitors']} ziyaretçinin {m['deep'] or 0} tanesi metni sonuna yakın okudu.",
                             action='Kısa özet, kapak fotoğrafı ve hikâye anlatımını gözden geçirin.'))
-    for q in questions:
-        if q['no_info'] and q['no_info'] * 2 >= q['n'] and q['n'] >= 2:
-            name = info.get(q['slug'], {}).get('name_tr', q['slug'])
-            out.append(dict(kind='question', slug=q['slug'], title=f'"{q["question"]}" sorusu cevapsız kalıyor ({name})',
-                            detail=f"{q['n']} kez soruldu, {q['no_info']} kez kaynakta bilgi bulunamadı.",
-                            action='Kaynakta varsa paragraf düzeltmesini, yoksa bir yarışma sorusu ya da rota açıklamasını düşünün.'))
-    for s in searches:
-        if s['empty'] and s['empty'] * 2 >= s['n']:
-            out.append(dict(kind='search', slug=None, title=f'"{s["q"]}" aranıyor ama sonuç çıkmıyor',
-                            detail=f"{s['n']} arama, {s['empty']} tanesi sonuçsuz.", action='Eserin diğer adlarını ekleyin ya da pilot seçkiyi genişletin.'))
+    # Soru ve arama önerileri en çok PER_KIND tane: çok olunca diğer türlerin (profil, arama) önüne geçiyorlardı.
+    asked = [q for q in questions if q['no_info'] and q['no_info'] * 2 >= q['n'] and q['n'] >= 2]
+    for q in asked[:PER_KIND]:
+        name = info.get(q['slug'], {}).get('name_tr', q['slug'])
+        out.append(dict(kind='question', slug=q['slug'], title=f'"{q["question"]}" sorusu cevapsız kalıyor ({name})',
+                        detail=f"{q['n']} kez soruldu, {q['no_info']} kez kaynakta bilgi bulunamadı.",
+                        action='Kaynakta varsa paragraf düzeltmesini, yoksa bir yarışma sorusu ya da rota açıklamasını düşünün.'))
+    for s in [s for s in searches if s['empty'] and s['empty'] * 2 >= s['n']][:PER_KIND]:
+        out.append(dict(kind='search', slug=None, title=f'"{s["q"]}" aranıyor ama sonuç çıkmıyor',
+                        detail=f"{s['n']} arama, {s['empty']} tanesi sonuçsuz.", action='Eserin diğer adlarını ekleyin ya da pilot seçkiyi genişletin.'))
     if total >= 20:
         for k, name, _ in SEGMENTS[:-1]:
             share = seg_count.get(k, 0) / total

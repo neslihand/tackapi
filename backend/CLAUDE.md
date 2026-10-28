@@ -138,7 +138,8 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   httpOnly çerez), pasaport eşitleme, katkılar (onaylı, kitaptan ayrı, sohbet kaynağı değil), izinli olay kaydı
   (`/api/events`), profiller/öneriler/pano (`insights.py`), deneme verisi (`demo_activity.py`, demo=true). Panel:
   `#/katkilar`, `#/analitik`. Ön yüz: `lib/analytics.ts`, `lib/account.tsx`, `vakif/AccountPages.tsx`, `Contributions.tsx`,
-  `Discoveries.tsx`, izin bandı. Tarayıcıda yalnızca olay akışı denendi; kayıt/katkı/panel sayfaları tarayıcıda denenmedi.
+  `Discoveries.tsx`, izin bandı. Test veritabanıyla tarayıcıda denendi (olaylar, kayıt, hesabım, katkı, panel onayı ve
+  analitik). README §7.12. `/media` onay bekleyen katkı fotoğrafını da sunar (adres rastgele; kitap taslaklarıyla aynı).
 
 ## Mimari özeti
 `segment → finalize → chunk` (çevrim dışı, deterministik) → `load_db` (yalnızca bir kez) → `extract_gemini` + `load_extractions` →

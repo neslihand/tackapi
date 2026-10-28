@@ -19,9 +19,10 @@ export function InsightsPage() {
   const [days, setDays] = useState(30);
   const [demo, setDemo] = useState(true);
   const data = useLoad(() => api.insights(days, demo), [days, demo]);
-  const options = useLoad(() => fetch('/api/profile-options').then(r => r.json()) as Promise<{ purposes: { id: string; label: string }[]; interests: { id: string; label: string }[] }>, []);
+  type Option = { id: string; label: string };
+  const options = useLoad(() => fetch('/api/profile-options').then(r => r.json()) as Promise<{ age_ranges: Option[]; purposes: Option[]; interests: Option[] }>, []);
   const d = data.data;
-  const label = (list: 'purposes' | 'interests', id: string) => options.data?.[list].find(o => o.id === id)?.label ?? id;
+  const label = (list: 'age_ranges' | 'purposes' | 'interests', id: string) => options.data?.[list].find(o => o.id === id)?.label ?? id;
   return <>
     <PageHead kicker="VERİYLE GELİŞEN DÖNGÜ" title="Ziyaretçi analitiği"
       actions={<div className="insights-filters">
@@ -83,10 +84,10 @@ export function InsightsPage() {
           </Card>
           <Card title="Kayıtlı kullanıcıların beyanı" wide note="İsteğe bağlı kayıt bilgileri; boş bırakanlar “belirtilmedi”">
             <div className="insights-grid inner">
-              <BarList title="Yaş aralığı" rows={d.profile.age_range.map(r => ({ key: r.value, label: r.value, value: r.n }))} empty="Kayıtlı kullanıcı yok." />
-              <BarList title="Yaşadığı şehir" rows={d.profile.home_city.map(r => ({ key: r.value, label: r.value, value: r.n }))} empty="—" />
-              <BarList title="Ziyaret amacı" rows={d.profile.purposes.map(r => ({ key: r.value, label: label('purposes', r.value), value: r.n }))} empty="—" />
-              <BarList title="İlgi alanları" rows={d.profile.interests.map(r => ({ key: r.value, label: label('interests', r.value), value: r.n }))} empty="—" />
+              <BarList showTitle title="Yaş aralığı" rows={d.profile.age_range.map(r => ({ key: r.value, label: label('age_ranges', r.value), value: r.n }))} empty="Kayıtlı kullanıcı yok." />
+              <BarList showTitle title="Yaşadığı şehir" rows={d.profile.home_city.map(r => ({ key: r.value, label: r.value, value: r.n }))} empty="—" />
+              <BarList showTitle title="Ziyaret amacı" rows={d.profile.purposes.map(r => ({ key: r.value, label: label('purposes', r.value), value: r.n }))} empty="—" />
+              <BarList showTitle title="İlgi alanları" rows={d.profile.interests.map(r => ({ key: r.value, label: label('interests', r.value), value: r.n }))} empty="—" />
             </div>
           </Card>
         </div>
