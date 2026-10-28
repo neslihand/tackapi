@@ -7,6 +7,7 @@ import { Manifesto, PanoramaScene, PassportVisual, SeasonStack, Statement } from
 import { Chapter } from '../components/PlayScenes';
 import { QuizMark } from '../components/PlayArt';
 import { StoryRing } from '../components/StoryRing';
+import { ToolsShowcase } from '../components/ToolsShowcase';
 import { Link } from '../lib/navigation';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
@@ -69,6 +70,9 @@ export function Home() {
     </Chapter>
     {divrigi && <PanoramaScene artifact={divrigi} />}
     <Manifesto />
+    <Chapter id="araclar" tone="ivory" n={4} total={TOTAL} kicker="KEŞFİN ARAÇLARI" titleId="tools-title" className="hp-tools" title={<>Bir eser, <em>birçok kapı.</em></>} lede={<p>Haritadan kameraya, yapay zekâ rehberinden oyunlara; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.</p>}>
+      <ToolsShowcase artifacts={artifacts} />
+    </Chapter>
     <Threshold artifact={nextDoor} done={Boolean(progress.discovered[nextDoor.id])} />
     <Chapter id="rotalar" tone="ivory" n={4} total={TOTAL} kicker="KEŞİF SEZONLARI" titleId="routes-title" className="hp-routes" title={<>Kendi izini <em>bul.</em></>} lede={<p>Bir şehir, bir dönem, bir ustanın dokunuşu. Bu kez hangi rotanın peşindesin? Her rota bir avuç eserden kurulur; haritada da yürüyebilirsin.</p>}>
       <SeasonStack seasons={seasons} artifacts={artifacts} discovered={progress.discovered} />

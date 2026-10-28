@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend-demo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host", "127.0.0.1", "--port", "5199", "--strictPort"],
+      "env": { "VITE_VAKIF_API": "0" },
+      "port": 5199
+    }
+  ]
+}
