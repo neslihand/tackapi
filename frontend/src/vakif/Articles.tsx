@@ -51,7 +51,7 @@ export function ArticlesPage({ query }: { query: string }) {
   const showLead = !filtered && lead;
   const kinds = data?.facets.kinds ?? [];
   const total = kinds.reduce((n, k) => n + k.n, 0);
-  return <Scene className="rr-scene"><div className="page-shell rr-shell">
+  return <Scene className="rr-scene"><section className="rr-band" data-nav-theme="dark"><div className="page-shell rr-band-inner">
     <ReadingTabs current="articles" />
     <header className="rr-head">
       <div>
@@ -65,6 +65,7 @@ export function ArticlesPage({ query }: { query: string }) {
         <p>{t('Bir eserin hikâyesini mi biliyorsun? Yazını gönder; editörlerimiz okuyup yayımlasın.', 'Do you know the story of a work? Send your article; our editors will read and publish it.')}</p>
       </aside>
     </header>
+  </div></section><div className="page-shell rr-shell rr-after">
 
     <div className="rr-filters">
       <div className="rr-chips" role="group" aria-label={t('Tür', 'Kind')}>

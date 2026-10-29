@@ -277,3 +277,23 @@
 @media (prefers-reduced-motion: reduce) {
   .rr-card-cover img, .rr-progress i, .rr-skeleton { transition: none; animation: none; }
 }
+
+/* Okuma odasının girişi: diğer sayfalar gibi zümrüt yeşili bir bantla başlar, krem sayfa altında sürer */
+.rr-band { position: relative; overflow: hidden; color: #f3ecdf;
+  background: radial-gradient(ellipse 45% 70% at 78% 40%, #1c3d35 0, #0c2420 48%, transparent 76%), radial-gradient(ellipse 50% 60% at 6% 0%, #0f2a2480, transparent 70%), #030a08; }
+.rr-band::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, #c3a86966, transparent); }
+.rr-band-inner { position: relative; padding-top: 132px !important; padding-bottom: 64px !important; }
+.rr-band .rr-tabs { background: #ffffff0d; border-color: #f3ecdf26; }
+.rr-band .rr-tabs a { color: #cfcabd; }
+.rr-band .rr-tabs a:hover { color: #fff; }
+.rr-band .rr-tabs a[aria-current='page'] { background: var(--gold); color: #0c241c; }
+.rr-band .rr-head { margin-bottom: 0; }
+.rr-band .eyebrow { color: #e6d5ae; }
+.rr-band .eyebrow > span:first-child { background: #c3a869; }
+.rr-band .rr-head h1 { color: #f6f1e4; }
+.rr-band .rr-head h1 em { color: #e2c98f; }
+.rr-band .rr-lede { color: #cfd3c7; }
+.rr-band .rr-head-side { background: #ffffff0a; border-color: #f3ecdf26; }
+.rr-band .rr-head-side p { color: #b9bfb2; }
+.rr-after { padding-top: 34px !important; }
+@media (max-width: 760px) { .rr-band-inner { padding-top: 108px !important; padding-bottom: 44px !important; } }

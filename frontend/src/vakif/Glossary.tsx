@@ -47,7 +47,7 @@ export function GlossaryPage({ query }: { query: string }) {
   const letters = new Set(groups.map(([l]) => l));
   if (!enabled) return <Scene className="rr-scene"><div className="page-shell rr-shell"><ReadingTabs current="terms" />
     <div className="rr-empty"><BookA size={30} strokeWidth={1.2} aria-hidden="true" /><h2>{t('Sözlük arka uç bağlantısıyla gelir.', 'The glossary comes with the backend connection.')}</h2></div></div></Scene>;
-  return <Scene className="rr-scene"><div className="page-shell rr-shell">
+  return <Scene className="rr-scene"><section className="rr-band" data-nav-theme="dark"><div className="page-shell rr-band-inner">
     <ReadingTabs current="terms" />
     <header className="rr-head">
       <div>
@@ -61,6 +61,7 @@ export function GlossaryPage({ query }: { query: string }) {
         <p>{t('Sözlükte olmayan bir terim mi gördün? Öner; editörlerimiz bakıp eklesin.', 'Spotted a term that is missing? Suggest it; our editors will check and add it.')}</p>
       </aside>
     </header>
+  </div></section><div className="page-shell rr-shell rr-after">
 
     <div className="rr-filters">
       <form className="rr-search wide" role="search" onSubmit={(e: FormEvent) => { e.preventDefault(); track('term_search', undefined, { q: q.trim() }); }}>
