@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import '../journey.css';
+import { t } from '../lib/i18n';
 
 // The home page's four steps, after the entrance: be moved, understand, discover, take part. A slim rail on the right
 // marks the step being read and jumps to the start of any other; it stays out of the way during the entrance.
-const STEPS: [string, string[]][] = [
-  ['Etkilen', ['giris']],
-  ['Anla', ['vizyon']],
-  ['Keşfet', ['featured', 'araclar', 'eserin-ici', 'rotalar']],
-  ['Katıl', ['pasaport', 'gunun-kesfi', 'kapanis']],
+const STEPS: [() => string, string[]][] = [
+  [() => t('Etkilen', 'Be moved'), ['giris']],
+  [() => t('Anla', 'Understand'), ['vizyon']],
+  [() => t('Keşfet', 'Discover'), ['featured', 'araclar', 'eserin-ici', 'rotalar']],
+  [() => t('Katıl', 'Take part'), ['pasaport', 'gunun-kesfi', 'kapanis']],
 ];
 
 export function JourneyRail() {
@@ -45,9 +46,9 @@ export function JourneyRail() {
     const el = STEPS[i][1].map(id => document.getElementById(id)).find(Boolean);
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
   }
-  return <nav className={`journey ${step === 0 ? 'away' : ''} ${flash ? 'flash' : ''}`} aria-label="Sayfa yolculuğu">
-    <ol>{STEPS.map(([label], i) => <li key={label} className={i === step ? 'on' : i < step ? 'done' : ''}>
-      <button onClick={() => go(i)} aria-current={i === step ? 'step' : undefined}><i aria-hidden="true" /><span>{label}</span></button>
+  return <nav className={`journey ${step === 0 ? 'away' : ''} ${flash ? 'flash' : ''}`} aria-label={t('Sayfa yolculuğu', 'Page journey')}>
+    <ol>{STEPS.map(([label], i) => <li key={i} className={i === step ? 'on' : i < step ? 'done' : ''}>
+      <button onClick={() => go(i)} aria-current={i === step ? 'step' : undefined}><i aria-hidden="true" /><span>{label()}</span></button>
     </li>)}</ol>
   </nav>;
 }

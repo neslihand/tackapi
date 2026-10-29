@@ -69,6 +69,11 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   `fix_titles.py --report/--apply` ile onarıldı; gerçek veritabanında 24 Ekim 2026'da uygulandı (14 ad, 7 birleştirme,
   2 kırıntı; yayındaki eser 753 → 744, `duplicate_title` 27 → 7). Mevcut kitaplar için segment/finalize çıktısını
   `data/`'ya yeniden yazma (slug'lar değişir).
+- **İngilizce eser adları (29 Ekim 2026):** `fix_titles.py` yalnızca Türkçe adları onarmıştı; `name_en` eski yarım
+  başlıktan çevrildiği için kesikti ('Ecezade Masjid)') ve 200'ü aşkın adda parantez içi küçük harf ve silinmiş Türkçe
+  harf vardı ('Kasim Efendi (yenice) Mosque'). `fix_names_en.py --report/--apply` onarır (Gemini yok, Türkçe ada ve
+  metne dokunmaz): kesik adlar Türkçe addan kurulur, diğerlerinde çeviri korunup yalnızca yazım düzelir. Yayındaki
+  750 eserde 300 ad (6'sı kesik); ikinci çalıştırma bir şey değiştirmez. Gerçek veritabanında henüz uygulanmadı.
 - **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
   `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
 - **Anlatımlar (24 Ekim 2026):** Eser sayfasındaki "Kısa ve Öz" kaldırıldı; yerine "Detaylı Anlatım" (kitaptaki

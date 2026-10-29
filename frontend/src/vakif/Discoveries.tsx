@@ -5,6 +5,7 @@ import { useAccount } from '../lib/account';
 import { sessionId, track } from '../lib/analytics';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
+import { locale, t } from '../lib/i18n';
 import { vakifApiEnabled } from '../lib/vakifApi';
 import './visitor.css';
 
@@ -34,15 +35,15 @@ export function Discoveries({ limit = 4 }: { limit?: number }) {
   if (!personal.length && !trending.length) return null;
   const upper = (s: string) => s[0].toLocaleUpperCase('tr-TR') + s.slice(1);
   return <div className="v-discover">
-    {personal.length > 0 && <section aria-labelledby="for-you"><p className="v-eyebrow">SENİN İÇİN</p>
-      <h2 id="for-you">Keşfine göre <em>sıradaki kapılar</em>{mine?.segments[0] && <small> · {mine.segments[0].name}</small>}</h2>
+    {personal.length > 0 && <section aria-labelledby="for-you"><p className="v-eyebrow">{t('SENİN İÇİN', 'FOR YOU')}</p>
+      <h2 id="for-you">{t('Keşfine göre', 'Next doors')} <em>{t('sıradaki kapılar', 'for your discovery')}</em>{mine?.segments[0] && <small> · {mine.segments[0].name}</small>}</h2>
       <ul className="v-tiles">{personal.map((r, i) => <li key={r.slug}>
-        <Tile artifact={find(r.slug)!} note={r.reason ? upper(r.reason) : 'Önerilen'}
+        <Tile artifact={find(r.slug)!} note={r.reason ? upper(r.reason) : t('Önerilen', 'Recommended')}
           onOpen={() => track('recommendation_click', r.slug, { list: 'for_you', rank: i + 1 })} /></li>)}</ul></section>}
-    {trending.length > 0 && <section aria-labelledby="popular"><p className="v-eyebrow">EN ÇOK MERAK EDİLENLER</p>
-      <h2 id="popular">Bu hafta <em>en çok bakılanlar</em></h2>
+    {trending.length > 0 && <section aria-labelledby="popular"><p className="v-eyebrow">{t('EN ÇOK MERAK EDİLENLER', 'MOST WONDERED ABOUT')}</p>
+      <h2 id="popular">{t('Bu hafta', 'Most viewed')} <em>{t('en çok bakılanlar', 'this week')}</em></h2>
       <ul className="v-tiles">{trending.map((p, i) => <li key={p.slug}>
-        <Tile artifact={find(p.slug)!} rank={i + 1} note={`${p.visitors.toLocaleString('tr-TR')} ziyaretçi baktı`}
+        <Tile artifact={find(p.slug)!} rank={i + 1} note={t(`${p.visitors.toLocaleString('tr-TR')} ziyaretçi baktı`, `${p.visitors.toLocaleString('en-GB')} visitors looked`)}
           onOpen={() => track('recommendation_click', p.slug, { list: 'popular', rank: i + 1 })} /></li>)}</ul></section>}
   </div>;
 }
@@ -51,7 +52,7 @@ function Tile({ artifact, note, rank, onOpen }: { artifact: DiscoveryArtifact; n
   return <Link className="v-tile" to={`/eser/${artifact.slug}`} onClick={onOpen}>
     <span className="v-tile-art" aria-hidden="true">{artifact.image && <img src={artifact.image} alt="" loading="lazy" />}</span>
     <span className="v-tile-body">
-      <small>{rank ? `${rank}. · ` : ''}{artifact.city.toLocaleUpperCase('tr-TR')}</small>
+      <small>{rank ? `${rank}. · ` : ''}{artifact.city.toLocaleUpperCase(locale())}</small>
       <b>{artifact.name}</b>
       <span>{note}</span>
     </span>

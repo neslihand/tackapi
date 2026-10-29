@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { Link } from '../lib/navigation';
+import { locale, t } from '../lib/i18n';
 import { known } from './ArtifactAnatomy';
 import '../gallery.css';
 
@@ -109,13 +110,13 @@ export function DoorGallery({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   const row = (copy: number) => [...doors.map((a, i) => <li key={`${copy}-${a.id}`} className={`dg-card ${i === active ? 'on' : ''}`} style={{ '--i': i } as CSSProperties} aria-hidden={copy !== 1 || undefined}>
     <Link to={`/eser/${a.slug}`} tabIndex={copy === 1 ? undefined : -1} onFocus={event => bring(event.currentTarget.parentElement ?? undefined)} aria-label={`${a.name}, ${a.city}`} draggable={false}>
       <span className="dg-door" aria-hidden="true"><span className="dg-window"><img src={a.image} alt="" loading="lazy" draggable={false} /></span><i>{pad(i + 1)}</i></span>
-      <span className="dg-city" aria-hidden="true">{a.city.toLocaleUpperCase('tr-TR')}</span>
+      <span className="dg-city" aria-hidden="true">{a.city.toLocaleUpperCase(locale())}</span>
     </Link>
   </li>),
   <li key={`${copy}-all`} className="dg-card dg-all" aria-hidden={copy !== 1 || undefined}>
     <Link to="/kesfet" tabIndex={copy === 1 ? undefined : -1} draggable={false}>
-      <span className="dg-door" aria-hidden="true"><span className="dg-window"><b>{pad(artifacts.length)}</b><small>eser</small></span></span>
-      <span className="dg-city">TÜM KOLEKSİYON <ArrowUpRight size={13} aria-hidden="true" /></span>
+      <span className="dg-door" aria-hidden="true"><span className="dg-window"><b>{pad(artifacts.length)}</b><small>{t('eser', 'works')}</small></span></span>
+      <span className="dg-city">{t('TÜM KOLEKSİYON', 'THE WHOLE COLLECTION')} <ArrowUpRight size={13} aria-hidden="true" /></span>
     </Link>
   </li>];
   return <div className="dg">
@@ -129,15 +130,15 @@ export function DoorGallery({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
     </div>
     <div className="dg-info">
       <div key={current.id} className="dg-info-body">
-        <p className="dg-kicker"><span>{pad(active + 1)}</span> / {pad(doors.length)} · {facts.join(' · ').toLocaleUpperCase('tr-TR')}</p>
+        <p className="dg-kicker"><span>{pad(active + 1)}</span> / {pad(doors.length)} · {facts.join(' · ').toLocaleUpperCase(locale())}</p>
         <h3>{current.name}</h3>
         <p className="dg-text">{current.description}</p>
       </div>
       <div className="dg-controls">
-        <Link className="hp-cta en-key" to={`/eser/${current.slug}`}><span className="en-key-label">Hikâyeyi oku</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link>
-        <button className="dg-step" onClick={() => step(-1)} aria-label="Önceki eser"><ArrowLeft size={18} /></button>
+        <Link className="hp-cta en-key" to={`/eser/${current.slug}`}><span className="en-key-label">{t('Hikâyeyi oku', 'Read the story')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link>
+        <button className="dg-step" onClick={() => step(-1)} aria-label={t('Önceki eser', 'Previous work')}><ArrowLeft size={18} /></button>
         <ol className="dg-dots" aria-hidden="true">{doors.map((a, i) => <li key={a.id} className={i === active ? 'on' : ''} />)}</ol>
-        <button className="dg-step" onClick={() => step(1)} aria-label="Sonraki eser"><ArrowRight size={18} /></button>
+        <button className="dg-step" onClick={() => step(1)} aria-label={t('Sonraki eser', 'Next work')}><ArrowRight size={18} /></button>
       </div>
     </div>
   </div>;

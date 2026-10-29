@@ -3,6 +3,7 @@
 // Requests are same-origin (/api, /media): in development vite.config.ts proxies them to VAKIF_API_PROXY.
 // For now only the MVP pilot selection is shown (GET /api/monuments?pilot=true).
 import type { ArtifactFeed, ArtifactRecord } from './artifactContract.ts';
+import { currentLang, t } from './i18n.ts';
 import type { ChatRequest } from './chatContract.ts';
 import type { Season } from '../data/collections.ts';
 import type { QuizQuestion } from '../data/artifacts.ts';
@@ -71,7 +72,7 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   reportApi(endpointOf(url), response.status, typeof performance !== 'undefined' ? Math.round(performance.now() - started) : 0);
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
-    throw new Error(typeof body?.detail === 'string' ? body.detail : `Sunucu ${response.status} döndü.`);
+    throw new Error(typeof body?.detail === 'string' ? body.detail : t(`Sunucu ${response.status} döndü.`, `The server returned ${response.status}.`));
   }
   return response.json() as Promise<T>;
 }
@@ -79,7 +80,7 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
 export async function loadPilotFeed(): Promise<ArtifactFeed> {
   // Routes ("Keşif Sezonları") and written quiz questions are optional: without them the collection still opens.
   const [data, routes, quizQuestions, site] = await Promise.all([
-    getJson<{ items: VakifItem[] }>('/api/monuments?pilot=true&page_size=200&lang=tr'),
+    getJson<{ items: VakifItem[] }>(`/api/monuments?pilot=true&page_size=200&lang=${currentLang()}`),
     getJson<Season[]>('/api/routes?pilot=true').catch(() => [] as Season[]),
     getJson<QuizQuestion[]>('/api/quiz?pilot=true').catch(() => [] as QuizQuestion[]),
     getJson<typeof settings>('/api/site-settings').catch(() => settings),
@@ -87,13 +88,13 @@ export async function loadPilotFeed(): Promise<ArtifactFeed> {
   if (['short', 'story', 'child'].includes(site.default_mode)) settings = site;
   // the featured route (panel setting, or the most opened one) leads the "Keşif Sezonları"
   const featured = routes.find(r => r.id === settings.featured_route);
-  const seasons = featured ? [{ ...featured, kicker: 'ÖNE ÇIKAN ROTA' }, ...routes.filter(r => r !== featured)] : routes;
+  const seasons = featured ? [{ ...featured, kicker: t('ÖNE ÇIKAN ROTA', 'FEATURED ROUTE') }, ...routes.filter(r => r !== featured)] : routes;
   items.clear();
   data.items.forEach(item => items.set(item.slug, item));
   return { schemaVersion: 1, items: data.items.map(toRecord), seasons, quizQuestions };
 }
 
-export const fetchMonument = <T,>(slug: string) => getJson<T>(`/api/monuments/${encodeURIComponent(slug)}?lang=tr`);
+export const fetchMonument = <T,>(slug: string) => getJson<T>(`/api/monuments/${encodeURIComponent(slug)}?lang=${currentLang()}`);
 
 // ---------------------------------------------------------------------------------------------- "Esere Sor"
 // The site's chat request (chatContract) → POST /api/chat {slug, question, mode, lang, history}.
@@ -103,7 +104,7 @@ export function toVakifChat(request: ChatRequest) {
   const last = turns.length - 1 - [...turns].reverse().findIndex(m => m.role === 'user');
   return {
     slug: request.artifactId, question: (turns[last]?.content ?? '').trim().slice(0, 1000), mode: MODES[request.mode] ?? 'standard',
-    lang: 'tr', history: turns.slice(0, Math.max(last, 0)).slice(-20).map(m => ({ role: m.role, content: m.content.slice(0, 4000) })),
+    lang: currentLang(), history: turns.slice(0, Math.max(last, 0)).slice(-20).map(m => ({ role: m.role, content: m.content.slice(0, 4000) })),
   };
 }
 
@@ -128,7 +129,7 @@ export type VisualResult = { confident: boolean; match: string | null; candidate
 export async function findByPhoto(photo: Blob): Promise<VisualResult> {
   const form = new FormData();
   form.append('file', photo, 'foto.jpg');
-  form.append('lang', 'tr');
+  form.append('lang', currentLang());
   const data = await getJson<{ confident: boolean; match: VakifItem | null; candidates: { item: VakifItem; score: number; photo: { thumb: string } }[] }>(
     '/api/visual-search', { method: 'POST', body: form });
   return {

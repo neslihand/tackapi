@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { track } from '../lib/analytics';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
+import { t } from '../lib/i18n';
 import { vakifApiEnabled } from '../lib/vakifApi';
 import './visitor.css';
 
@@ -21,9 +22,9 @@ export function Agenda() {
   }, []);
   if (!items.length) return null;
   const find = (slug: string) => artifacts.find(a => a.slug === slug);
-  return <section className="v-agenda" aria-label="Gündem">
+  return <section className="v-agenda" aria-label={t('Gündem', 'Agenda')}>
     {items.map(a => <article key={a.id} className="v-agenda-item">
-      <p className="v-eyebrow">GÜNDEM</p>
+      <p className="v-eyebrow">{t('GÜNDEM', 'AGENDA')}</p>
       <h3>{a.title}</h3>
       <p>{a.body}</p>
       {a.monuments.some(find) && <ul>{a.monuments.map(find).filter(Boolean).map(m => <li key={m!.slug}>
