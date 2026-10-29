@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { vakifApiEnabled } from '../lib/vakifApi';
 import gsap from 'gsap';
 import { ArrowRight, ArrowUpRight, Stamp } from 'lucide-react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
@@ -87,7 +88,7 @@ export function Home() {
       <DoorGallery artifacts={artifacts} />
       <div className="hp-collection"><p>{pad(artifacts.length)} {t('eser', 'works')} <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} {t('şehir', 'cities')} <span>·</span> <i>{t('Birlikte koruduğumuz miras.', 'A heritage we keep together.')}</i></p><Link className="hp-link en-link" to="/kesfet"><span>{t('Tüm eserleri keşfet', 'Explore every work')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
     </Chapter>
-    <Chapter id="araclar" tone="ivory" n={5} total={TOTAL} kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" title={<>{t('Bir eser,', 'One work,')} <em>{t('birçok kapı.', 'many doors.')}</em></>} lede={<p>{t('Haritadan kameraya, yapay zekâ rehberinden oyunlara; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.')}</p>}>
+    <Chapter id="araclar" tone="ivory" n={5} total={TOTAL} kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" title={<>{t('Bir eser,', 'One work,')} <em>{t('birçok kapı.', 'many doors.')}</em></>} lede={<p>{vakifApiEnabled() ? t('Haritadan kameraya, yapay zekâ rehberinden oyunlara ve okuma odasına; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games and the reading room: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.') : t('Haritadan kameraya, yapay zekâ rehberinden oyunlara; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.')}</p>}>
       <ToolsShowcase artifacts={artifacts} />
     </Chapter>
     <Chapter id="eserin-ici" tone="night" n={6} total={TOTAL} kicker={t('BİR ESERİN İÇİ', 'INSIDE A WORK')} titleId="inside-title" className="hp-inside" title={<>{t('Bir kapıya kaç hikâye', 'How many stories fit')} <em>{t('sığar?', 'behind one door?')}</em></>} lede={<p>{t('Her eserin kendi sayfası var. Hikâyesini sana uyan biçimde oku, kaynaklarına bak, merak ettiğini sor; okuduğun her eser pasaportuna işlensin.', 'Every work has a page of its own. Read its story the way that suits you, look at its sources, ask what you wonder about; every work you read is stamped into your passport.')}</p>}>

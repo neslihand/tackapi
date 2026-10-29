@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowUpRight, Camera, Check, Compass, HelpCircle, ImagePlus, Layers, MapPin, MessageCircle, Puzzle, ScanLine, Search, Sparkles, Stamp } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Camera, Check, Compass, HelpCircle, ImagePlus, Layers, MapPin, MessageCircle, Puzzle, ScanLine, Search, Sparkles, Stamp } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { chatEndpoint } from '../lib/chatApi';
 import { Link } from '../lib/navigation';
@@ -52,6 +52,21 @@ function PlayScene() {
   </div>;
 }
 
+// An open page of the reading room: a city history with a term underlined and its explanation open beside it.
+function ReadingScene() {
+  return <div className="ts-read">
+    <span className="ts-page">
+      <small>{t('ŞEHİR TARİHİ · BURSA', 'CITY HISTORY · BURSA')}</small>
+      <b>{t('Bir şehrin hafızası', 'The memory of a city')}</b>
+      <span className="ts-line" /><span className="ts-line" />
+      <span className="ts-line ts-has-term"><i>{t('mukarnas', 'muqarnas')}</i></span>
+      <span className="ts-line short" />
+    </span>
+    <span className="ts-term"><b>{t('Mukarnas', 'Muqarnas')}</b><small>{t('Bal peteğini andıran kademeli süsleme.', 'A tiered, honeycomb-like decoration.')}</small></span>
+    <p className="ts-chip"><BookOpen size={14} />{t('Makaleler · Terimler sözlüğü', 'Articles · Glossary')}</p>
+  </div>;
+}
+
 function PassportScene({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   return <div className="ts-passport">
     <span className="ts-book"><small>{t('MİRAS PASAPORTU', 'HERITAGE PASSPORT')}</small><Compass size={46} strokeWidth={.9} /><b>EŞİK</b></span>
@@ -72,15 +87,17 @@ const allTools = (): Tool[] => [
   { id: 'kamera', name: t('Kamera ile Keşfet', 'Discover with the Camera'), title: <>{t('Önündeki esere', 'Look at the work')} <em>{t('bak, tanı.', 'before you.')}</em></>, text: t('Bir eserin önündeyken kamerayı aç, fotoğrafını çek; EŞİK seni doğrudan o eserin hikâyesine götürsün.', 'Standing before a work, open the camera and take a photo; EŞİK takes you straight to that work’s story.'), tags: [t('Fotoğrafla keşif', 'Discovery by photo'), t('Doğrudan hikâyeye', 'Straight to the story')], to: '/kamera', cta: t('Kamerayı dene', 'Try the camera'), scene: artifacts => <CameraScene artifacts={artifacts} /> },
   { id: 'sor', name: t('Esere Sor', 'Ask the Work'), title: <>{t('Merak ettiğini', 'Ask the work')} <em>{t('esere sor.', 'what you wonder.')}</em></>, text: t('Her eserin sayfasında bir yapay zekâ rehberi seni bekler. Kim yaptırdı, neden yapıldı, bugün ne anlatıyor; sorunu yaz, eserin bilgisine dayanarak yanıtlasın.', 'An AI guide waits on every work’s page. Who had it built, why it was made, what it tells us today: write your question and it answers from what is known about the work.'), tags: [t('Yapay zekâ rehberi', 'AI guide'), t('Eserin bilgisine dayalı', 'Based on the work’s record')], to: '/kesfet', cta: t('Bir eser seç', 'Choose a work'), scene: () => <AskScene /> },
   { id: 'oyun', name: t('Oyna & Öğren', 'Play & Learn'), title: <>{t('Öğrenmenin en', 'The most enjoyable')} <em>{t('keyifli hâli.', 'way to learn.')}</em></>, text: t('Yapbozda bir kapıyı yeniden birleştir, dedektif oyununda ipuçlarını izle, bilgi yarışmasında kendini sına. Keşif görevleri ve bilgi kartları da seni bekliyor.', 'Put a door back together in the puzzle, follow the clues in the detective game, test yourself in the quiz. Discovery quests and knowledge cards are waiting for you too.'), tags: [t('Mini oyunlar', 'Mini games'), t('Keşif görevleri', 'Discovery quests'), t('Bilgi yarışması', 'Quiz'), t('Bilgi kartları', 'Knowledge cards'), t('Keşif defteri', 'Discovery journal')], to: '/oyun', cta: t('Oyunlara gir', 'Go to the games'), scene: () => <PlayScene /> },
+  { id: 'okuma', name: t('Okuma Odası', 'Reading Room'), title: <>{t('Şehirlerin hafızasını', 'Read the memory')} <em>{t('oku.', 'of cities.')}</em></>, text: t('Envanter kitaplarının şehir tarihlerini, vakıf eserleri ve vakıf kültürü üzerine yazıları oku. Metinde altı noktalı bir sözcüğe dokun, terimler sözlüğü anlamını açsın; bildiğin bir hikâyeyi de yazıp gönder.', 'Read the city histories from the inventory books and writing on foundation works and waqf culture. Tap a word with a dotted underline and the glossary opens its meaning; you can write and send a story you know, too.'), tags: [t('Şehir tarihleri', 'City histories'), t('Makaleler', 'Articles'), t('Terimler sözlüğü', 'Glossary'), t('Yazı gönder', 'Send an article')], to: '/makaleler', cta: t('Okuma odasına gir', 'Enter the reading room'), scene: () => <ReadingScene /> },
   { id: 'pasaport', name: t('Miras Pasaportu', 'Heritage Passport'), title: <>{t('Her keşif', 'Every discovery')} <em>{t('bir mühür.', 'a stamp.')}</em></>, text: t('Okuduğun her hikâye pasaportuna bir mühür basar. Mühürler biriktikçe madalyonlar kazan, kendi miras yolculuğunu oluştur.', 'Every story you read presses a stamp into your passport. As the stamps gather, earn medallions and build your own heritage journey.'), tags: [t('Mühürler', 'Stamps'), t('Madalyonlar', 'Medallions')], to: '/pasaport', cta: t('Pasaportumu aç', 'Open my passport'), scene: artifacts => <PassportScene artifacts={artifacts} /> },
   { id: 'katki', name: t('Hafızaya Katkı', 'Add to the Memory'), title: <>{t('Senin anın da', 'Your memory is part')} <em>{t('bu mirasın parçası.', 'of this heritage too.')}</em></>, text: t('Bir esere dair fotoğrafını ya da anını paylaş. Onaylanan katkılar eserin sayfasında, kitaptaki bilginin yanında yer alır.', 'Share a photo or a memory of a work. Approved contributions appear on the work’s page, beside the record.'), tags: [t('Fotoğraf', 'Photo'), t('Anı ve bilgi', 'Memories and facts'), t('Onaylı katkılar', 'Approved contributions')], to: '/giris', cta: t('Katkıda bulun', 'Contribute'), scene: artifacts => <ShareScene artifacts={artifacts} /> },
 ];
 
-const icons: Record<string, ReactNode> = { harita: <MapPin size={16} />, kamera: <Camera size={16} />, sor: <MessageCircle size={16} />, oyun: <Puzzle size={16} />, pasaport: <Stamp size={16} />, katki: <ImagePlus size={16} /> };
+const icons: Record<string, ReactNode> = { harita: <MapPin size={16} />, kamera: <Camera size={16} />, sor: <MessageCircle size={16} />, oyun: <Puzzle size={16} />, okuma: <BookOpen size={16} />, pasaport: <Stamp size={16} />, katki: <ImagePlus size={16} /> };
 
 export function ToolsShowcase({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
-  // Tools that this build cannot offer are left out: the assistant needs its service, contributions need accounts.
-  const tools = allTools().filter(t => (t.id !== 'sor' || chatEndpoint()) && (t.id !== 'katki' || vakifApiEnabled()));
+  // Tools that this build cannot offer are left out: the assistant needs its service, contributions and the reading
+  // room need the backend.
+  const tools = allTools().filter(t => (t.id !== 'sor' || chatEndpoint()) && ((t.id !== 'katki' && t.id !== 'okuma') || vakifApiEnabled()));
   const [active, setActive] = useState(0);
   const items = useRef<(HTMLLIElement | null)[]>([]);
   useEffect(() => {

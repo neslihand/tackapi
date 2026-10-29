@@ -130,3 +130,18 @@
   .ts-text { margin-top: 16px; font-size: 14.5px; line-height: 1.7; }
   .ts-tags { margin: 16px 0 18px; }
 }
+
+/* Okuma odası: açık bir sayfa, altı noktalı bir terim ve yanında açılan açıklaması */
+.ts-read { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 30px 30px 80px; }
+.ts-page { position: relative; display: flex; flex-direction: column; gap: 11px; width: min(78%, 330px); padding: 26px 26px 30px; border-radius: 4px; background: linear-gradient(180deg, #f3ecdf, #e6dcc8); color: #15130d; box-shadow: 0 24px 60px #0008; transform: rotate(-2.5deg); }
+.ts-page small { font-size: 10px; font-weight: 600; letter-spacing: .16em; color: #8a6a2e; }
+.ts-page b { font-family: var(--serif); font-weight: 500; font-size: 26px; line-height: 1.1; color: #0c241c; margin-bottom: 4px; }
+.ts-line { display: block; height: 7px; border-radius: 7px; background: #15130d26; }
+.ts-line.short { width: 55%; }
+.ts-has-term { position: relative; background: linear-gradient(90deg, #15130d26 0 34%, transparent 34% 62%, #15130d26 62%); }
+.ts-has-term i { position: absolute; left: 36%; top: -8px; font-family: var(--serif); font-style: normal; font-size: 16px; line-height: 1; color: #8a6a2e; text-decoration: underline dotted; text-underline-offset: 3px; }
+.ts-term { position: absolute; right: 7%; top: 9%; display: flex; flex-direction: column; gap: 6px; max-width: 200px; padding: 14px 16px; border: 1px solid #e6d5ae40; border-radius: 6px; color: #f3ecdf; background: #061410e6; box-shadow: 0 14px 40px #0009; animation: ts-term 4s ease-in-out infinite; }
+.ts-term b { font-family: var(--serif); font-weight: 500; font-size: 19px; color: #e6d5ae; }
+.ts-term small { font-size: 12.5px; line-height: 1.45; color: #cfcabd; }
+@keyframes ts-term { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .ts-term { animation: none; } }
