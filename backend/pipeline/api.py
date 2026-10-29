@@ -12,6 +12,10 @@ Uç noktalar
   GET  /api/monuments/{slug}?lang=tr|en
   GET  /api/routes?pilot=true&auto=true   → keşif rotaları [{id, kicker, title, description, artifactIds, auto}]
   GET  /api/quiz?pilot=true               → panelde yazılan yarışma soruları [{id, question, options, answer, explanation, artifactId}]
+  GET  /api/articles?kind=&city=&q=&lang=&page=   → yayındaki makaleler {total, items, facets}
+  GET  /api/articles/{slug}?lang=          → makale: metin, kaynakça, bağlı eserler, ilgili makaleler
+  GET  /api/terms?q=&category=&lang=       → terimler sözlüğü (Türk alfabesine göre) · GET /api/terms/{slug}
+  POST /api/articles, POST /api/terms      → ziyaretçi gönderimi (oturum gerekli, onay bekler); /api/me/articles, /api/me/terms
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
@@ -32,7 +36,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles
 
 log = logging.getLogger('vakif.api')
 
@@ -56,6 +60,9 @@ app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.sa
 app.include_router(agent.build_router(db))
 visitor_router = visitors.build_router(db, MEDIA_DIR)
 app.include_router(visitor_router)
+# Makaleler ve terimler sözlüğü: herkese açık, ziyaretçi ve yönetim uçları (articles.py)
+articles_router = articles.build_router(db, MEDIA_DIR, visitor_router)
+app.include_router(articles_router)
 
 
 @app.on_event('startup')

@@ -73,7 +73,8 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   başlıktan çevrildiği için kesikti ('Ecezade Masjid)') ve 200'ü aşkın adda parantez içi küçük harf ve silinmiş Türkçe
   harf vardı ('Kasim Efendi (yenice) Mosque'). `fix_names_en.py --report/--apply` onarır (Gemini yok, Türkçe ada ve
   metne dokunmaz): kesik adlar Türkçe addan kurulur, diğerlerinde çeviri korunup yalnızca yazım düzelir. Yayındaki
-  750 eserde 300 ad (6'sı kesik); ikinci çalıştırma bir şey değiştirmez. Gerçek veritabanında henüz uygulanmadı.
+  750 eserde 300 ad (6'sı kesik); ikinci çalıştırma bir şey değiştirmez. Gerçek veritabanında 29 Ekim 2026'da
+  uygulandı (yedek: `yedek_ad_en.dump`).
 - **Göçler:** Mevcut veritabanı `python migrate.py --apply` ile güncellenir (`migrations/NNN_*.sql`). Yeni göç eklerken
   `schema.sql`'i de güncelle ve göç adını oradaki `INSERT INTO schema_migration` satırına ekle.
 - **Anlatımlar (24 Ekim 2026):** Eser sayfasındaki "Kısa ve Öz" kaldırıldı; yerine "Detaylı Anlatım" (kitaptaki
@@ -135,7 +136,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
-- **Testler:** `python -m unittest discover -s tests` (167 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (190 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
@@ -145,6 +146,20 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   `#/katkilar`, `#/analitik`. Ön yüz: `lib/analytics.ts`, `lib/account.tsx`, `vakif/AccountPages.tsx`, `Contributions.tsx`,
   `Discoveries.tsx`, izin bandı. Test veritabanıyla tarayıcıda denendi (olaylar, kayıt, hesabım, katkı, panel onayı ve
   analitik). README §7.12. `/media` onay bekleyen katkı fotoğrafını da sunar (adres rastgele; kitap taslaklarıyla aynı).
+- **Makaleler ve terimler sözlüğü (29 Ekim 2026):** `articles.py`, göç `017_articles.sql` (gerçek veritabanında
+  29 Ekim 2026'da uygulandı; öncesinde `term` tablosu yedeklendi: `data/backup/yedek_term_017.dump`). Sitede `#/makaleler`,
+  `#/makale/<slug>`, `#/terimler`, `#/makale-yaz`; Hesabım'da "Yazıların ve terim önerilerin". Panelde `#/makaleler`,
+  `#/makale/<id>`, `#/makale-aktar` (kitabın şehir tarihi/giriş/değerlendirme bölümünden paragraf aralığı seçip parça
+  parça taslak; kaynakça, sayfalar ve kitabın yazarları yazılır), `#/terimler`. Makale türleri: şehir tarihi, vakıf
+  eserleri, vakıf kültürü; kökenleri `book`/`editorial`/`visitor`. Ziyaretçi makalesi ve terim önerisi `pending` başlar,
+  yönetici düzeltip yayımlar ya da gerekçeyle reddeder; reddedileni ziyaretçi düzeltip yeniden gönderir, yayındakini
+  yalnızca geri çekebilir; hesap silinince yazıları ve önerileri de silinir. Var olan 55 terim yayında kaldı ve adres
+  (`slug`, tetikleyiciyle) aldı. **Sohbet ve anlatım yalnızca yayındaki kitap/editör terimlerini kullanır** (`rag.term_filter`);
+  ziyaretçi terimleri ve makaleler sohbet kaynağı değildir. Metin biçimi: boş satır paragraf, `## ` ara başlık, `> `
+  alıntı; sitede yayındaki terimler makalede ilk geçtikleri yerde açıklamalı işaretlenir. Kitap sözlüğünde yinelenen ya
+  da İngilizce kalmış terimler var (Hünkar mahfili/Hünkâr Mahfili, Kitabe/kitâbe, Lectern, Plaster) ve çoğunun kategorisi
+  boş; panelin Terimler sayfasından düzeltilebilir. Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
+  paragraflar Türkçeyle hizalı değil); İngilizce başlık ve metin elle yazılırsa İngilizce sitede gösterilir.
 - **Yönetici asistanı (28 Ekim 2026):** `agent.py`, panelde `#/asistan`, `#/takvim`, `#/gundem`; ana sayfada "Gündem"
   bandı (`frontend/src/vakif/Agenda.tsx`). Göç `016_agent.sql` (gerçek veritabanında henüz uygulanmadı). Öneriyi açık
   kurallar bulur (takvim, kitaptaki yıl dönümleri, `insights.py`, geri dönüş ve hemen çıkma, hata ve hız olayları);

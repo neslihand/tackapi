@@ -1,4 +1,5 @@
 import { gameLevels, type GameKind, type GameLevel, type GameRecords } from './games.ts';
+import { t } from './i18n.ts';
 
 export type Progress = {
   version: 1;
@@ -74,14 +75,14 @@ export function achievements(progress: Progress, entries: { id: string; city: st
   const count = entries.filter(a => progress.discovered[a.id]).length;
   const cities = new Set(entries.filter(a => progress.discovered[a.id]).map(a => a.city)).size;
   return [
-    { id: 'first', name: 'İlk Adım', description: 'İlk eserinin hikâyesini keşfet ve pasaportuna mühürle.', required: 1, value: count, metal: 'bronze', symbol: 'door' },
-    { id: 'architect', name: 'Mimari Kâşif', description: 'Üç farklı mimari eseri keşfet.', required: 3, value: count, metal: 'silver', symbol: 'building' },
-    { id: 'traveler', name: 'Tarih Yolcusu', description: 'Beş eserin hikâyesini pasaportunda biriktir.', required: 5, value: count, metal: 'gold', symbol: 'compass' },
-    { id: 'cities', name: 'Şehir Gezgini', description: 'Üç farklı şehirdeki eserleri keşfet.', required: 3, value: cities, metal: 'silver', symbol: 'map' },
-    { id: 'guardian', name: 'Miras Koruyucusu', description: 'İlk koleksiyondaki altı eserin tamamını keşfet.', required: 6, value: count, metal: 'gold', symbol: 'shield' },
-    { id: 'quiz', name: 'Bilgi Avcısı', description: 'Tarihin İzinde bilgi yarışmasının ilk turunu tamamla.', required: 1, value: progress.quiz.completed, metal: 'bronze', symbol: 'sparkles' },
-    { id: 'puzzler', name: 'Usta Eller', description: 'Üç farklı eserin yapbozunu tamamla.', required: 3, value: Object.keys(progress.games.puzzle).length, metal: 'bronze', symbol: 'puzzle' },
-    { id: 'detective', name: 'Dosya Çözücü', description: 'Üç farklı eserin gizli dosyasını çöz.', required: 3, value: Object.keys(progress.games.detective).length, metal: 'silver', symbol: 'search' },
-    { id: 'sharp', name: 'Keskin Göz', description: 'Zor seviyede bir yapbozu ve bir dosyayı tamamla.', required: 2, value: hard(progress.games.puzzle) + hard(progress.games.detective), metal: 'gold', symbol: 'eye' },
+    { id: 'first', name: t('İlk Adım', 'First Step'), description: t('İlk eserinin hikâyesini keşfet ve pasaportuna mühürle.', 'Discover the story of your first work and stamp it in your passport.'), required: 1, value: count, metal: 'bronze', symbol: 'door' },
+    { id: 'architect', name: t('Mimari Kâşif', 'Architecture Explorer'), description: t('Üç farklı mimari eseri keşfet.', 'Discover three different works of architecture.'), required: 3, value: count, metal: 'silver', symbol: 'building' },
+    { id: 'traveler', name: t('Tarih Yolcusu', 'History Traveller'), description: t('Beş eserin hikâyesini pasaportunda biriktir.', 'Collect the stories of five works in your passport.'), required: 5, value: count, metal: 'gold', symbol: 'compass' },
+    { id: 'cities', name: t('Şehir Gezgini', 'City Wanderer'), description: t('Üç farklı şehirdeki eserleri keşfet.', 'Discover works in three different cities.'), required: 3, value: cities, metal: 'silver', symbol: 'map' },
+    { id: 'guardian', name: t('Miras Koruyucusu', 'Heritage Guardian'), description: t('İlk koleksiyondaki altı eserin tamamını keşfet.', 'Discover all six works of the first collection.'), required: 6, value: count, metal: 'gold', symbol: 'shield' },
+    { id: 'quiz', name: t('Bilgi Avcısı', 'Knowledge Hunter'), description: t('Tarihin İzinde bilgi yarışmasının ilk turunu tamamla.', 'Complete your first round of the On the Trail of History quiz.'), required: 1, value: progress.quiz.completed, metal: 'bronze', symbol: 'sparkles' },
+    { id: 'puzzler', name: t('Usta Eller', 'Master Hands'), description: t('Üç farklı eserin yapbozunu tamamla.', 'Complete the puzzles of three different works.'), required: 3, value: Object.keys(progress.games.puzzle).length, metal: 'bronze', symbol: 'puzzle' },
+    { id: 'detective', name: t('Dosya Çözücü', 'File Solver'), description: t('Üç farklı eserin gizli dosyasını çöz.', 'Crack the secret files of three different works.'), required: 3, value: Object.keys(progress.games.detective).length, metal: 'silver', symbol: 'search' },
+    { id: 'sharp', name: t('Keskin Göz', 'Sharp Eye'), description: t('Zor seviyede bir yapbozu ve bir dosyayı tamamla.', 'Complete a puzzle and a file at the hard level.'), required: 2, value: hard(progress.games.puzzle) + hard(progress.games.detective), metal: 'gold', symbol: 'eye' },
   ];
 }

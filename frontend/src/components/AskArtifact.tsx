@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { MessageCircle } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { chatEndpoint } from '../lib/chatApi';
+import { t } from '../lib/i18n';
 import type { NarrationMode } from '../lib/preferences';
 
 // The panel's code loads on the first click, so the story page does not pay for it up front.
@@ -42,10 +43,10 @@ export function AskArtifact({ artifact, mode, chapter }: { artifact: DiscoveryAr
   const props = { 'aria-expanded': open, 'aria-controls': loaded ? panelId : undefined, 'aria-haspopup': 'dialog' as const };
   return <>
     <button ref={inline} className="ask-button" onClick={e => show(e.currentTarget)} {...props}>
-      <span className="ask-button-icon" aria-hidden="true"><MessageCircle size={16} /></span><span>Esere Sor</span><small>Yapay zekâ</small>
+      <span className="ask-button-icon" aria-hidden="true"><MessageCircle size={16} /></span><span>{t('Esere Sor', 'Ask the Work')}</span><small>{t('Yapay zekâ', 'AI')}</small>
     </button>
     {mounted && createPortal(<button className={`ask-fab ${!inlineVisible && !open ? 'visible' : ''}`} onClick={e => show(e.currentTarget)} {...props} tabIndex={inlineVisible || open ? -1 : undefined} aria-hidden={inlineVisible || open ? true : undefined}>
-      <MessageCircle size={18} aria-hidden="true" /><span>Esere Sor</span>
+      <MessageCircle size={18} aria-hidden="true" /><span>{t('Esere Sor', 'Ask the Work')}</span>
     </button>, document.body)}
     {loaded && <Suspense fallback={null}><ArtifactChat id={panelId} artifact={artifact} mode={mode} chapter={chapter} endpoint={endpoint} open={open} onClose={close} /></Suspense>}
   </>;

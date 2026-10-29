@@ -24,5 +24,5 @@ export function Modal({ title, children, onClose, className = '' }: { title: str
     const before = document.body.style.overflow; document.body.style.overflow = 'hidden';
     return () => { dialog?.close(); document.body.style.overflow = before; if (previous?.isConnected) previous.focus(); };
   }, []);
-  return <dialog ref={ref} className={`modal ${className}`} onCancel={e => { e.preventDefault(); close.current(); }} onClick={e => { if (e.target === e.currentTarget) close.current(); }} aria-labelledby={titleId}><div className="modal-content"><button className="icon-button modal-close" onClick={onClose} aria-label="Kapat" autoFocus><X aria-hidden="true" /></button><h2 id={titleId}>{title}</h2>{children}</div></dialog>;
+  return <dialog ref={ref} className={`modal ${className}`} onCancel={e => { e.preventDefault(); close.current(); }} onClick={e => { if (e.target === e.currentTarget) close.current(); }} aria-labelledby={titleId}><div className="modal-content"><button className="icon-button modal-close" onClick={onClose} aria-label={t('Kapat', 'Close')} autoFocus><X aria-hidden="true" /></button><h2 id={titleId}>{title}</h2>{children}</div></dialog>;
 }

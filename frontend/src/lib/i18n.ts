@@ -19,6 +19,10 @@ export const currentLang = () => current;
 export const t = (tr: string, en: string) => current === 'en' ? en : tr;
 /** The locale for upper-casing, numbers and dates. */
 export const locale = () => current === 'en' ? 'en-GB' : 'tr-TR';
+/** 1st, 2nd, 3rd, 4th… */
+export const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+/** '16. yüzyıl' / '16th century'. */
+export const centuryName = (n: number) => t(`${n}. yüzyıl`, `${ordinal(n)} century`);
 
 export function setLang(lang: Lang) {
   if (lang === current) return;

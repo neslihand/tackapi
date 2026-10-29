@@ -421,6 +421,7 @@ def build_router(db, media_dir, save_webp):
 
     @r.get('/stats')
     def stats(user: str = Depends(admin_user)):
+        import articles   # döngüsel içe aktarmayı önler (articles, admin_user'ı kullanır)
         return dict(
             monuments=db.query("""SELECT review_status, count(*) AS n FROM monument WHERE NOT is_synthetic
                                   GROUP BY 1 ORDER BY 1"""),
@@ -433,6 +434,7 @@ def build_router(db, media_dir, save_webp):
                                   if db.query("SELECT to_regclass('contribution') IS NOT NULL AS ok")[0]['ok'] else 0,
             agent_open=db.query("SELECT count(*) AS n FROM agent_suggestion WHERE status = 'open'")[0]['n']
                        if db.query("SELECT to_regclass('agent_suggestion') IS NOT NULL AS ok")[0]['ok'] else 0,
+            **articles.pending_counts(db),
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'],

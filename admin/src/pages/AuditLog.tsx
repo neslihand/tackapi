@@ -6,6 +6,12 @@ import type { LogRow } from '../lib/types';
 import { Field, PageHead, useLoad } from '../components/UI';
 
 const ACTIONS: Record<string, string> = {
+  'article.create': 'makale yazdı', 'article.import': 'kitaptan makale aktardı', 'article.update': 'makaleyi düzenledi',
+  'article.published': 'makaleyi yayımladı', 'article.draft': 'makaleyi yayından kaldırdı', 'article.rejected': 'makaleyi reddetti',
+  'article.pending': 'makaleyi onay kuyruğuna aldı', 'article.delete': 'makaleyi sildi', 'article.cover': 'makale kapağı yükledi',
+  'article.cover_remove': 'makale kapağını kaldırdı', 'term.create': 'terim ekledi', 'term.update': 'terimi düzenledi',
+  'term.published': 'terimi yayımladı', 'term.draft': 'terimi yayından kaldırdı', 'term.rejected': 'terim önerisini reddetti',
+  'term.delete': 'terimi sildi',
   'monument.update': 'eseri düzenledi', 'monument.create': 'eser ekledi', 'monument.text': 'eser metnini kaydetti',
   'monument.delete': 'eseri sildi', 'image.update': 'fotoğrafı düzenledi', 'image.upload': 'fotoğraf yükledi',
   'image.delete': 'fotoğrafı sildi', 'image.reject': 'fotoğrafı attı', 'image.bulk_published': 'fotoğrafları toplu onayladı',
@@ -20,7 +26,10 @@ const ACTIONS: Record<string, string> = {
 export function describe(r: LogRow) {
   const eser = (slug: unknown) => slug ? <Link className="text-link" to={`/eser/${encodeURIComponent(String(slug))}`}>{String(slug)}</Link> : <>esere bağlı değil</>;
   const moved = r.detail?.monument;  // fotoğraf düzenlemesinde [eski, yeni], yüklemede tek slug
+  const title = r.detail?.title ?? r.detail?.term;
   const target = r.target === 'image:*' ? <>fotoğraflar</>
+    : r.target.startsWith('article:') ? (r.action === 'article.delete' ? <>{String(title ?? r.target)}</> : <Link className="text-link" to={`/makale/${r.target.slice(8)}`}>{String(title ?? r.target)}</Link>)
+    : r.target.startsWith('term:') ? <>{String(title ?? r.target)}</>
     : r.target.startsWith('image:') ? (Array.isArray(moved) ? <>{eser(moved[0])} → {eser(moved[1])}</> : moved ? eser(moved) : r.target)
     : r.action.startsWith('city.') ? r.target : eser(r.target);
   const fields = r.action === 'monument.update' || r.action === 'image.update' ? Object.keys(r.detail ?? {}).join(', ') : '';

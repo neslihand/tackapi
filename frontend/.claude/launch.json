@@ -7,6 +7,20 @@
       "runtimeArgs": ["vite", "--host", "127.0.0.1", "--port", "5199", "--strictPort"],
       "env": { "VITE_VAKIF_API": "0" },
       "port": 5199
+    },
+    {
+      "name": "frontend-api",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host", "127.0.0.1", "--port", "5198", "--strictPort"],
+      "env": { "VITE_VAKIF_API": "1", "VAKIF_API_PROXY": "http://127.0.0.1:8010" },
+      "port": 5198
+    },
+    {
+      "name": "admin-api",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "../admin", "--host", "127.0.0.1", "--port", "5176", "--strictPort"],
+      "env": { "VAKIF_API_URL": "http://127.0.0.1:8010" },
+      "port": 5176
     }
   ]
 }
