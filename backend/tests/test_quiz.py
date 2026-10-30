@@ -65,6 +65,23 @@ class QuizApiTest(unittest.TestCase):
             self.assertIn('text/html', self.c.get('/').headers['content-type'])
         self.assertEqual(self.c.get('/api/cities').headers['content-type'], 'application/json')
 
+    def test_built_files_cache_by_name_and_responses_are_compressed(self):
+        import os, tempfile
+        from fastapi.testclient import TestClient
+        from starlette.applications import Starlette
+        from starlette.routing import Mount
+        with tempfile.TemporaryDirectory() as site:
+            os.makedirs(os.path.join(site, 'assets'))
+            for name in ('index.html', 'favicon.svg', os.path.join('assets', 'index-ECxR6Jdm.js')):
+                with open(os.path.join(site, name), 'w') as fh:
+                    fh.write('x')
+            c = TestClient(Starlette(routes=[Mount('/', self.api.AppFiles(directory=site, html=True))]))
+            self.assertIn('immutable', c.get('/assets/index-ECxR6Jdm.js').headers['cache-control'])  # adı içerikle değişir
+            self.assertEqual(c.get('/').headers['cache-control'], 'no-cache')                        # yeni sürüm hemen görülür
+            self.assertEqual(c.get('/favicon.svg').headers['cache-control'], 'no-cache')
+        self.assertEqual(self.c.get('/api/monuments').headers.get('content-encoding'), 'gzip')
+        self.assertIsNone(self.c.get('/api/monuments', headers={'Accept-Encoding': 'identity'}).headers.get('content-encoding'))
+
 
 if __name__ == '__main__':
     unittest.main()

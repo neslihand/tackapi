@@ -31,6 +31,7 @@ from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -45,6 +46,9 @@ app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST', 'PATCH', 'PUT',
                    allow_headers=['Content-Type', 'Authorization'],
                    allow_origins=[o.strip() for o in os.environ.get(
                        'VAKIF_CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if o.strip()])
+# JS, CSS, HTML ve JSON sıkıştırılır (ana JS 682 KB → 224 KB); fotoğraf ve fontlar zaten sıkışık olduğu için atlanır.
+# Seviye 6, 9 ile aynı boyutu daha az işlemciyle verir.
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 db = DB()
 
 # Fotoğraflar: images.py'nin ürettiği WebP dosyaları (media/<file>, küçükleri media/thumbs/<file>).
@@ -493,9 +497,21 @@ def static_dir(env, default):
     return path if path != 'off' and os.path.isfile(os.path.join(path, 'index.html')) else None
 
 
+class AppFiles(StaticFiles):
+    """Vite, assets/ altındaki dosyaların adına içerik özeti koyar (index-ECxR6Jdm.js): içerik değişince ad da değişir,
+    tarayıcı bir yıl saklayabilir. Geri kalanı (index.html, fonts/, images/) her açılışta sunucuya sorulur; değişmediyse
+    304 döner. Böylece yeni sürüm yayımlanınca tarayıcı eski index.html'i (ve artık olmayan eski JS'i) kullanmaz."""
+
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        response = super().file_response(full_path, stat_result, scope, status_code)
+        hashed = os.path.relpath(full_path, os.path.realpath(self.directory)).split(os.sep)[0] == 'assets'
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable' if hashed else 'no-cache'
+        return response
+
+
 PANEL_DIR = static_dir('VAKIF_PANEL_DIR', os.path.join('admin', 'dist'))
 SITE_DIR = static_dir('VAKIF_SITE_DIR', os.path.join('frontend', 'dist'))
 if PANEL_DIR:
-    app.mount('/panel', StaticFiles(directory=PANEL_DIR, html=True), name='panel')
+    app.mount('/panel', AppFiles(directory=PANEL_DIR, html=True), name='panel')
 if SITE_DIR:
-    app.mount('/', StaticFiles(directory=SITE_DIR, html=True), name='site')
+    app.mount('/', AppFiles(directory=SITE_DIR, html=True), name='site')
