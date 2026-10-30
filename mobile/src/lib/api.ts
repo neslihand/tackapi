@@ -29,7 +29,7 @@ export type Detail = {
   narrations: { story: Narration; child: Narration };
   images: (Image & { caption: string | null; source: { book: string; page: number | null } | null })[];
   location: Location | null;
-  source: { book: string | null; pages: [number | null, number | null]; credits: string | null };
+  source: { book: string | null; pages: [number | null, number | null]; credits: { authors?: string[] | null; editor?: string | null; translator?: string | null } | null };
 };
 export type Season = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
 export type Feed = { items: Item[]; seasons: Season[]; stale: boolean };

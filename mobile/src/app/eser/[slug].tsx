@@ -134,7 +134,8 @@ export default function Work() {
     <View style={s.section}>
       <Eyebrow>{t('KAYNAK', 'SOURCE')}</Eyebrow>
       <Text style={s.muted}>{item ? sourceTitle(item.source) : detail.source.book}</Text>
-      {!!detail.source.credits && <Text style={s.small}>{detail.source.credits}</Text>}
+      {!!detail.source.credits?.authors?.length && <Text style={s.small}>{t('Yazarlar', 'Authors')}: {detail.source.credits.authors.join(', ')}</Text>}
+      {!!detail.source.credits?.editor && <Text style={s.small}>{t('Editör', 'Editor')}: {detail.source.credits.editor}</Text>}
     </View>
   </ScrollView>;
 }
