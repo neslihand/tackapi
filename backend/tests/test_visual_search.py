@@ -1,7 +1,7 @@
 """Görselle arama: fotoğraf embedding'leri, /api/visual-search ve ölçüm (sahte Gemini: görselin küçük hâlinden vektör)."""
 import io, os, unittest
 from unittest import mock
-from _testdb import needs_db, fresh_db, MEDIA, ADMINS
+from _testdb import needs_db, fresh_db, png_header, MEDIA, ADMINS
 
 NES = {'Authorization': f"Bearer {ADMINS['neslihan']}"}
 CAMI = 'bursa-osmangazi-muradiye-camii'
@@ -110,6 +110,12 @@ class VisualSearchTest(unittest.TestCase):
         with mock.patch.object(self.api, 'VISUAL_MAX', 1000):
             self.assertEqual(self.post(picture('cami', fmt='JPEG')).status_code, 413)
         self.assertEqual(self.c.post('/api/visual-search').status_code, 422)          # dosya yok
+
+    def test_pixel_bomb_is_refused_before_decoding(self):
+        for side in (12000, 20000):   # bizim sınırımızın ve Pillow'un kendi sınırının üstü: pikseller açılmaz
+            r = self.post(png_header(side), 'dev.png', 'image/png')
+            self.assertEqual(r.status_code, 422)
+            self.assertIn('megapiksel', r.json()['detail'])
 
     def test_llm_error_becomes_503(self):
         with mock.patch.object(self.VS, 'embed', side_effect=self.G.LLMError('429 RESOURCE_EXHAUSTED')):

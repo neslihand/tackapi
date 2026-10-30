@@ -41,6 +41,7 @@ SESSION_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 PROPS_MAX = 2000
 PHOTO_MAX = 10 * 1024 * 1024
 PHOTO_TYPES = {'JPEG', 'PNG', 'WEBP'}
+PHOTO_PIXELS = 50_000_000  # küçük dosyalı dev görsel (görsel bombası) açılmadan reddedilir
 TEXT_KINDS = {'memory': 'Anı', 'info': 'Bilgi', 'correction': 'Düzeltme önerisi'}
 
 
@@ -359,8 +360,12 @@ def build_router(db, media_dir):
             try:
                 probe = Image.open(io.BytesIO(data))
                 fmt = probe.format
+                if probe.width * probe.height > PHOTO_PIXELS:
+                    raise Image.DecompressionBombError(probe.size)
                 probe.verify()
-            except (UnidentifiedImageError, OSError, SyntaxError):
+            except Image.DecompressionBombError:
+                raise HTTPException(413, f'Fotoğraf en çok {PHOTO_PIXELS // 1_000_000} megapiksel olabilir.')
+            except (UnidentifiedImageError, OSError, SyntaxError, IndexError):  # IndexError: piksel verisi olmayan PNG
                 raise HTTPException(415, 'Dosya okunamadı. JPEG, PNG ya da WebP bir fotoğraf seçin.')
             if fmt not in PHOTO_TYPES:
                 raise HTTPException(415, 'Yalnızca JPEG, PNG ya da WebP yüklenebilir.')

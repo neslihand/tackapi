@@ -36,6 +36,7 @@ CATEGORY_LABELS = {'architecture': ('Mimari', 'Architecture'), 'decoration': ('S
 SOURCE_KINDS = {'city_history': 'city_history', 'chapter_intro': 'heritage', 'conclusion': 'culture', 'other': 'heritage'}
 COVER_MAX = 10 * 1024 * 1024
 COVER_TYPES = {'JPEG', 'PNG', 'WEBP'}
+COVER_PIXELS = 50_000_000  # küçük dosyalı dev görsel (görsel bombası) açılmadan reddedilir
 TITLE = (5, 160)
 SUMMARY_MAX = 400
 BODY_VISITOR = (400, 40000)     # ziyaretçi makalesi: en az birkaç paragraf
@@ -162,8 +163,12 @@ def check_image(data):
     try:
         probe = Image.open(io.BytesIO(data))
         fmt = probe.format
+        if probe.width * probe.height > COVER_PIXELS:
+            raise Image.DecompressionBombError(probe.size)
         probe.verify()
-    except (UnidentifiedImageError, OSError, SyntaxError):
+    except Image.DecompressionBombError:
+        raise HTTPException(413, f'Fotoğraf en çok {COVER_PIXELS // 1_000_000} megapiksel olabilir.')
+    except (UnidentifiedImageError, OSError, SyntaxError, IndexError):  # IndexError: piksel verisi olmayan PNG
         raise HTTPException(415, 'Dosya okunamadı. JPEG, PNG ya da WebP bir fotoğraf seçin.')
     if fmt not in COVER_TYPES:
         raise HTTPException(415, 'Yalnızca JPEG, PNG ya da WebP yüklenebilir.')

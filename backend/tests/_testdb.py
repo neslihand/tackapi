@@ -23,6 +23,14 @@ DSN = os.environ.get('VAKIF_TEST_DSN')
 needs_db = unittest.skipUnless(DSN, 'VAKIF_TEST_DSN tanımlı değil')
 
 
+def png_header(side):
+    """Yalnızca başlığı olan side×side PNG, piksel verisi yok. Büyük side "görsel bombası" gibidir: birkaç bayt, ama
+    açılsa side² piksel bellek ister."""
+    import struct, zlib
+    chunk = lambda kind, data: struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data))
+    return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', side, side, 8, 2, 0, 0, 0)) + chunk(b'IEND', b'')
+
+
 def fresh_db():
     """Şemayı kurar, örnek veriyi yükler, parçalara sahte embedding yazar. DATABASE_URL'i test veritabanına çevirir."""
     name = urlparse(DSN).path.lstrip('/')

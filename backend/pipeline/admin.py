@@ -31,6 +31,7 @@ BASES = Literal['inscription', 'waqfiyya', 'archive', 'literature', 'style', 'tr
 REVIEW = Literal['draft', 'reviewed', 'published']
 UPLOAD_MAX = 15 * 1024 * 1024
 UPLOAD_TYPES = {'JPEG', 'PNG', 'WEBP'}
+UPLOAD_PIXELS = 50_000_000  # küçük dosyalı dev görsel (görsel bombası) açılmadan reddedilir
 
 
 def load_tokens(warn=False):
@@ -744,8 +745,12 @@ def build_router(db, media_dir, save_webp):
         try:
             im = Image.open(io.BytesIO(data))
             fmt = im.format
+            if im.width * im.height > UPLOAD_PIXELS:
+                raise Image.DecompressionBombError(im.size)
             im.verify()  # bozuk ya da görsel olmayan dosyayı reddet
-        except (UnidentifiedImageError, OSError, SyntaxError):
+        except Image.DecompressionBombError:
+            raise HTTPException(413, f'Fotoğraf en çok {UPLOAD_PIXELS // 1_000_000} megapiksel olabilir.')
+        except (UnidentifiedImageError, OSError, SyntaxError, IndexError):  # IndexError: piksel verisi olmayan PNG
             raise HTTPException(415, 'Dosya okunabilir bir görsel değil.')
         if fmt not in UPLOAD_TYPES:
             raise HTTPException(415, 'Yalnızca JPEG, PNG ya da WebP yüklenebilir.')

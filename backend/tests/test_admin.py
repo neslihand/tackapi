@@ -1,6 +1,6 @@
 """Yönetim API'si (/api/admin/*) testleri: test veritabanı + sahte Gemini + geçici medya klasörü."""
 import io, os, unittest
-from _testdb import needs_db, fresh_db, MEDIA, ADMINS
+from _testdb import needs_db, fresh_db, png_header, MEDIA, ADMINS
 
 NES = {'Authorization': f"Bearer {ADMINS['neslihan']}"}
 FAT = {'Authorization': f"Bearer {ADMINS['fatmanur']}"}
@@ -226,6 +226,10 @@ class AdminTest(unittest.TestCase):
         gif = io.BytesIO(); Image.new('RGB', (8, 8)).save(gif, 'GIF')
         self.assertEqual(self.c.post(f'/api/admin/monuments/{slug}/images', headers=NES,
                                      files={'file': ('a.gif', gif.getvalue(), 'image/gif')}, data={'alt_tr': 'Gif dosyası'}).status_code, 415)
+        self.assertEqual(self.c.post(f'/api/admin/monuments/{slug}/images', headers=NES,                  # görsel bombası
+                                     files={'file': ('dev.png', png_header(12000), 'image/png')}, data={'alt_tr': 'Dev görsel'}).status_code, 413)
+        self.assertEqual(self.c.post(f'/api/admin/monuments/{slug}/images', headers=NES,                  # piksel verisi yok
+                                     files={'file': ('bos.png', png_header(300), 'image/png')}, data={'alt_tr': 'Boş görsel'}).status_code, 415)
         # yüklenen fotoğraf silinince dosyası da gider
         self.assertEqual(self.c.delete(f"/api/admin/images/{d['id']}", headers=NES).status_code, 204)
         self.assertFalse(os.path.exists(os.path.join(MEDIA, d['file'])))

@@ -1,6 +1,6 @@
 """Makaleler ve terimler sözlüğü (articles.py, göç 017): herkese açık, ziyaretçi ve yönetim uçları."""
 import io, os, json, unittest
-from _testdb import needs_db, fresh_db, ADMINS, MEDIA, ROOT
+from _testdb import needs_db, fresh_db, png_header, ADMINS, MEDIA, ROOT
 import articles as A
 
 NES = {'Authorization': f"Bearer {ADMINS['neslihan']}"}
@@ -225,6 +225,10 @@ class ArticlesApiTest(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(MEDIA, first)))                         # eskisi silinir
         bad = self.c.post(f"/api/admin/articles/{a['id']}/cover", headers=NES, files={'file': ('x.png', b'not an image', 'image/png')})
         self.assertEqual(bad.status_code, 415)
+        bomb = self.c.post(f"/api/admin/articles/{a['id']}/cover", headers=NES, files={'file': ('dev.png', png_header(12000), 'image/png')})
+        self.assertEqual(bomb.status_code, 413)
+        empty = self.c.post(f"/api/admin/articles/{a['id']}/cover", headers=NES, files={'file': ('bos.png', png_header(300), 'image/png')})
+        self.assertEqual(empty.status_code, 415)
         self.assertIsNone(self.c.delete(f"/api/admin/articles/{a['id']}/cover", headers=NES).json()['cover_file'])
         self.assertFalse(os.path.exists(os.path.join(MEDIA, second)))
         self.c.post(f"/api/admin/articles/{a['id']}/cover", headers=NES, files={'file': ('k.png', png(), 'image/png')})

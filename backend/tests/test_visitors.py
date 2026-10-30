@@ -1,6 +1,6 @@
 """Ziyaretçi hesapları, pasaport eşitleme ve davranış olayları (visitors.py, users.py)."""
 import uuid, unittest
-from _testdb import needs_db, fresh_db
+from _testdb import needs_db, fresh_db, png_header
 import users as U
 import visitors as V
 
@@ -172,6 +172,8 @@ class ContributionTest(unittest.TestCase):
             self.assertEqual(saved.format, 'WEBP')
             self.assertFalse(saved.getexif())                        # konum ve cihaz bilgisi silindi
         self.assertEqual(self.c.post(url, data=dict(kind='photo'), files={'file': ('a.txt', b'metin', 'text/plain')}).status_code, 415)
+        self.assertEqual(self.c.post(url, data=dict(kind='photo'), files={'file': ('dev.png', png_header(12000), 'image/png')}).status_code, 413)
+        self.assertEqual(self.c.post(url, data=dict(kind='photo'), files={'file': ('bos.png', png_header(300), 'image/png')}).status_code, 415)
         self.assertEqual(self.c.get(url).json(), [])                 # onaydan önce görünmez
         queue = self.c.get('/api/admin/contributions', headers=nes).json()
         self.assertEqual(queue['total'], 2)

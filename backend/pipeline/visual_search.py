@@ -33,6 +33,7 @@ MIN_SIM = float(os.environ.get('VAKIF_VISUAL_MIN', '0.70' if BACKEND == 'local' 
 MARGIN = float(os.environ.get('VAKIF_VISUAL_MARGIN', '0.03'))
 MAX_SIDE = 1024          # embedding için görsel bu boyuta küçültülür (istek boyutu ve hız)
 MIN_SIDE = 200           # bundan küçük görsel eşleştirme için yetersiz
+MAX_PIXELS = 50_000_000  # 48-50 MP telefon fotoğrafı geçer; küçük dosyalı dev PNG belleği doldurmadan reddedilir
 UPLOAD_TYPES = {'JPEG', 'PNG', 'WEBP'}
 MODEL_TAG = (f'local:{LV.MODEL}' if BACKEND == 'local' else f'{G.EMBED_MODEL}@{G.EMBED_DIM}') + ':image' + (
     '-FAKE' if G.FAKE else '')
@@ -46,9 +47,13 @@ def prepare(data):
     """Görsel baytları → embedding'e gidecek JPEG baytları. EXIF yönü düzeltilir, RGB'ye çevrilir, küçültülür."""
     from PIL import Image, ImageOps, UnidentifiedImageError
     try:
-        im = Image.open(io.BytesIO(data))
+        im = Image.open(io.BytesIO(data))  # yalnızca başlığı okur; pikseller load() ile açılır
         fmt = im.format
+        if im.width * im.height > MAX_PIXELS:
+            raise Image.DecompressionBombError(im.size)
         im.load()
+    except Image.DecompressionBombError as e:
+        raise BadImage(f'Fotoğraf çok büyük; en çok {MAX_PIXELS // 1_000_000} megapiksel olabilir.') from e
     except (UnidentifiedImageError, OSError) as e:
         raise BadImage('Görsel okunamadı. JPEG, PNG ya da WebP bir fotoğraf seçin.') from e
     if fmt not in UPLOAD_TYPES:
