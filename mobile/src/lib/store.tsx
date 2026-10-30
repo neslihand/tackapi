@@ -2,7 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { loadFeed, type Feed, type Item } from './api';
+import { loadFeed, setServerOverride, type Feed, type Item } from './api';
 import { useLang } from './i18n';
 import { buildQuests } from './quests';
 import { answerable } from './quiz';
@@ -13,7 +13,10 @@ type Content = Feed & { loading: boolean; error: string | null; reload: () => vo
 const ContentContext = createContext<Content | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const { lang, ready } = useLang();
+  const { lang, ready: langReady } = useLang();
+  // the collection waits for the settings too: they may name another server
+  const { settings, ready: settingsReady } = useSettings();
+  const ready = langReady && settingsReady;
   const [feed, setFeed] = useState<Feed>({ items: [], seasons: [], quiz: [], stale: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +28,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     loadFeed().then(f => { if (live) { setFeed(f); setError(null); } }, e => { if (live) setError(String(e?.message ?? e)); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [lang, ready, round]);
+  }, [lang, ready, round, settings.server]);
   const value = useMemo<Content>(() => {
     const map = new Map(feed.items.map(i => [i.slug, i]));
     return { ...feed, loading, error, reload: () => setRound(r => r + 1), bySlug: slug => map.get(slug) };
@@ -84,21 +87,28 @@ export function usePassport() {
 }
 
 // ------------------------------------------------------------------------------------------------ settings
-export type Settings = { dailyWork: boolean; dailyHour: number; streakReminder: boolean };
+// server: the backend address typed in Ayarlar ('' = the built-in one)
+export type Settings = { dailyWork: boolean; dailyHour: number; streakReminder: boolean; server: string };
 const SETTINGS_KEY = 'esik:settings:v1';
-const defaults: Settings = { dailyWork: false, dailyHour: 9, streakReminder: false };
+const defaults: Settings = { dailyWork: false, dailyHour: 9, streakReminder: false, server: '' };
 const SettingsContext = createContext<{ settings: Settings; ready: boolean; change: (s: Partial<Settings>) => void } | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(defaults);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    AsyncStorage.getItem(SETTINGS_KEY).then(v => { if (v) setSettings({ ...defaults, ...JSON.parse(v) }); }).catch(() => {}).finally(() => setReady(true));
+    AsyncStorage.getItem(SETTINGS_KEY).then(v => {
+      if (!v) return;
+      const saved: Settings = { ...defaults, ...JSON.parse(v) };
+      setServerOverride(saved.server);
+      setSettings(saved);
+    }).catch(() => {}).finally(() => setReady(true));
   }, []);
   const value = useMemo(() => ({
     settings, ready,
     change: (s: Partial<Settings>) => setSettings(prev => {
       const next = { ...prev, ...s };
+      if (s.server !== undefined) setServerOverride(next.server);
       AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
       return next;
     }),

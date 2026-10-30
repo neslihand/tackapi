@@ -39,6 +39,33 @@ Uygulama `http://localhost:8081` adresinde açılır. Arka uç bu adrese varsay�
 (`src/lib/notify.web.ts` boş işlem yapar; ayarlar yine kaydedilir). Konum, kamera (dosya seçici) ve sesli rehber
 tarayıcının kendi olanaklarıyla çalışır. Titreşim ve gerçek bildirimler için telefonda dene.
 
+## Kurulabilir APK (demo için)
+
+`eas.json` içindeki `preview` profili, telefona doğrudan kurulan bir APK üretir. Derleme Expo'nun bulutunda yapılır;
+bilgisayarda Android Studio gerekmez, ama bir Expo hesabı gerekir (ücretsiz katman yeter).
+
+```bash
+npx eas-cli@latest login
+```
+
+```bash
+npx eas-cli@latest init
+```
+
+```bash
+npx eas-cli@latest build -p android --profile preview
+```
+
+`init` projeyi hesaba bağlar ve `app.json`'a `extra.eas.projectId` yazar (bir kez). Derleme bitince verilen bağlantıdan
+APK indirilip telefona kurulur.
+
+- **Sunucu adresi:** APK'ye gömülü bir adres yoktur. Uygulamada **Ayarlar → Sunucu** alanına bilgisayarın yerel ağ
+  adresini yaz (ör. `http://192.168.1.20:8000`) ve "Kaydet ve bağlantıyı dene"ye bas. Salonda Wi-Fi değişirse yalnızca
+  bu alan güncellenir. Arka uç `--host 0.0.0.0` ile başlatılmalı.
+- **http:** Android yayın derlemeleri şifresiz `http://` trafiğini engeller. Demo yerel ağda http ile çalıştığı için
+  `expo-build-properties` ile `usesCleartextTraffic` açıldı. Gerçek yayında https kullanılmalı ve bu ayar kapatılmalı.
+- **Simge ve açılış ekranı:** `assets/` altındaki görseller `scripts/make_icons.py` ile web'deki kapı kemerinden üretilir.
+
 ## Denetim
 
 ```bash

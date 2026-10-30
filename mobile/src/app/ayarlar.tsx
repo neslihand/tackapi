@@ -1,10 +1,11 @@
 // Ayarlar: language, the two local notifications (both off until the visitor turns them on) and what stays where.
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Eyebrow, Notice } from '@/components/UI';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Button, Eyebrow, Notice } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
-import { apiBase } from '@/lib/api';
+import { apiBase, request } from '@/lib/api';
 import { t, useLang, type Lang } from '@/lib/i18n';
 import { allowNotifications, notificationsSupported } from '@/lib/notify';
 import { useSettings } from '@/lib/store';
@@ -16,6 +17,19 @@ export default function Settings() {
   const { lang, setLang } = useLang();
   const { settings, change } = useSettings();
   const account = useAccount();
+  const [server, setServer] = useState(settings.server);
+  const [check, setCheck] = useState<{ busy?: boolean; ok?: boolean; text?: string }>({});
+
+  async function tryServer() {
+    const url = server.trim();
+    if (url && !/^https?:\/\/[^\s/]+/.test(url)) { setCheck({ ok: false, text: t('Adres http:// ya da https:// ile başlamalı.', 'The address must start with http:// or https://.') }); return; }
+    change({ server: url });
+    setCheck({ busy: true });
+    try {
+      const cities = await request<unknown[]>('/api/cities');
+      setCheck({ ok: true, text: t(`Bağlandı: ${apiBase()} (${cities.length} şehir).`, `Connected: ${apiBase()} (${cities.length} cities).`) });
+    } catch (e) { setCheck({ ok: false, text: String((e as Error)?.message ?? e) }); }
+  }
 
   async function toggle(key: 'dailyWork' | 'streakReminder', on: boolean) {
     // in the browser the choice is only saved (nothing can be scheduled there)
@@ -55,7 +69,14 @@ export default function Settings() {
         value={settings.streakReminder} onChange={v => toggle('streakReminder', v)} />
     </View>
     <Notice icon="lock-closed-outline">{t('Bildirimler telefonunda kurulur; sunucuya bir şey gönderilmez. Konumun ve ayarların bu cihazda kalır; pasaportun yalnızca giriş yaptıysan hesabınla eşitlenir.', 'Notifications are set up on your phone; nothing is sent to the server. Your location and settings stay on this device; your passport is synced with your account only if you sign in.')}</Notice>
-    <Text style={s.small}>{t('Sunucu', 'Server')}: {apiBase()}</Text>
+    <Eyebrow>{t('SUNUCU', 'SERVER')}</Eyebrow>
+    <View style={s.card}>
+      <Text style={s.small}>{t('Uygulamanın bağlandığı arka uç. Boş bırakırsan yerleşik adres kullanılır. Demoda bilgisayarın yerel ağ adresini yaz, ör. http://192.168.1.20:8000.', 'The backend the app talks to. Leave it empty for the built-in address. At a demo, type the laptop’s local address, e.g. http://192.168.1.20:8000.')}</Text>
+      <TextInput value={server} onChangeText={setServer} placeholder={apiBase()} placeholderTextColor={colors.soft} autoCapitalize="none" autoCorrect={false}
+        keyboardType="url" style={s.input} accessibilityLabel={t('Sunucu adresi', 'Server address')} />
+      <Button kind="plain" icon="pulse-outline" label={t('Kaydet ve bağlantıyı dene', 'Save and test the connection')} onPress={tryServer} busy={check.busy} />
+      {check.text && <Notice tone={check.ok ? 'info' : 'warn'} icon={check.ok ? 'checkmark-circle-outline' : 'alert-circle-outline'}>{check.text}</Notice>}
+    </View>
   </ScrollView>;
 }
 
@@ -75,5 +96,6 @@ const s = StyleSheet.create({
   line: { flexDirection: 'row', alignItems: 'center', gap: space.m },
   title: { color: colors.ink, fontSize: 16, fontWeight: '600' },
   small: { color: colors.soft, fontSize: 12, lineHeight: 17 },
+  input: { minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: colors.goldLine, paddingHorizontal: 14, color: colors.ink, fontSize: 15 },
   divider: { height: 1, backgroundColor: colors.line, marginVertical: space.s },
 });

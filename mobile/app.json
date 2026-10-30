@@ -50,8 +50,27 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F2F26",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
-    "scheme": "esik"
+    "scheme": "esik",
+    "backgroundColor": "#0F2F26",
+    "description": "EŞİK — Tarihe Açılan Kapı: vakıf eserlerini kaynağıyla keşfet, yerinde mühürle."
   }
 }

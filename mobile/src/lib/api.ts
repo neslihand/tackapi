@@ -5,8 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { currentLang, t } from './i18n';
 
-/** EXPO_PUBLIC_API_URL, otherwise the computer running the Expo dev server, on the backend's port 8000. */
+// The address typed in Ayarlar (an installed APK at the demo: the laptop's address changes with the Wi-Fi).
+let serverOverride: string | null = null;
+export const setServerOverride = (url: string | null) => { serverOverride = url?.trim().replace(/\/+$/, '') || null; };
+
+/** The Ayarlar address, then EXPO_PUBLIC_API_URL, otherwise the computer running the Expo dev server, on port 8000. */
 export function apiBase(): string {
+  if (serverOverride) return serverOverride;
   const own = process.env.EXPO_PUBLIC_API_URL?.trim();
   if (own) return own.replace(/\/+$/, '');
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
