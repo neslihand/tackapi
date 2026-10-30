@@ -19,7 +19,7 @@ Uç noktalar
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
-VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite geliştirme sunucusu)
+VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite ve mobilin Expo web geliştirme sunucuları)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
 VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında sunulur; 'off' kapatır
@@ -45,7 +45,8 @@ app = FastAPI(title='Vakıf Eserleri API')
 app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
                    allow_headers=['Content-Type', 'Authorization'],
                    allow_origins=[o.strip() for o in os.environ.get(
-                       'VAKIF_CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if o.strip()])
+                       'VAKIF_CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173,'
+                       'http://localhost:8081,http://127.0.0.1:8081').split(',') if o.strip()])   # 8081: mobil, Expo web
 # JS, CSS, HTML ve JSON sıkıştırılır (ana JS 682 KB → 224 KB); fotoğraf ve fontlar zaten sıkışık olduğu için atlanır.
 # Seviye 6, 9 ile aynı boyutu daha az işlemciyle verir.
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)

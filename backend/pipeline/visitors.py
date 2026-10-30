@@ -17,7 +17,8 @@
   GET    /api/popular?days=7                  en çok merak edilenler ve trend
   GET    /api/site-settings                   varsayılan anlatım biçimi, öne çıkan rota (veriden ya da elle)
 
-Oturum: httpOnly çerez (esik_oturum), 30 gün; veritabanında anahtarın yalnızca özeti tutulur. Durum değiştiren
+Oturum: httpOnly çerez (esik_oturum), 30 gün; veritabanında anahtarın yalnızca özeti tutulur. Mobil uygulama
+giriş/kayıtta token=true gönderir, anahtarı yanıttan alır ve `Authorization: Bearer <anahtar>` ile kullanır. Durum değiştiren
 uçlar yalnızca JSON kabul eder (başka sitelerden form gönderimiyle tetiklenemez) ve çerez SameSite=Lax'tır.
 """
 import os, io, re, json, time, uuid, threading
@@ -62,12 +63,14 @@ class Register(ProfileFields):
     password: str = Field(min_length=U.PASSWORD_MIN, max_length=200)
     consent: bool
     progress: dict | None = None
+    token: bool = False     # mobil uygulama: oturum anahtarı yanıtta da gelsin (Bearer ile kullanılır)
 
 
 class Login(Strict):
     email: str = Field(max_length=254)
     password: str = Field(max_length=200)
     progress: dict | None = None
+    token: bool = False
 
 
 class ProgressIn(Strict):
@@ -160,9 +163,16 @@ def build_router(db, media_dir):
     def ip(request):
         return request.client.host if request.client else '-'
 
+    def session_token(request):
+        """Oturum anahtarı: sitede çerezden, mobil uygulamada `Authorization: Bearer` başlığından."""
+        auth = request.headers.get('authorization', '')
+        if auth[:7].lower() == 'bearer ' and auth[7:].strip():
+            return auth[7:].strip()
+        return request.cookies.get(COOKIE)
+
     def user_of(request):
-        """Çerezdeki oturumun kullanıcısı ya da None."""
-        token = request.cookies.get(COOKIE)
+        """Oturumun (çerez ya da Bearer) kullanıcısı ya da None."""
+        token = session_token(request)
         if not token:
             return None
         rows = db.query("""SELECT u.* FROM user_session s JOIN app_user u ON u.id = s.user_id
@@ -199,6 +209,12 @@ def build_router(db, media_dir):
                        VALUES (%(h)s, %(u)s, now() + interval '{U.SESSION_DAYS} days')""", dict(h=U.token_hash(token), u=uid))
         db.execute('UPDATE app_user SET last_seen_at = now() WHERE id = %(u)s', dict(u=uid))
         response.set_cookie(COOKIE, token, max_age=U.SESSION_DAYS * 86400, httponly=True, samesite='lax', path='/')
+        return token
+
+    def signed_in(body, token, user, progress):
+        """Giriş/kayıt yanıtı. Anahtar gövdede yalnızca isteyen istemciye (mobil uygulama, token=true) döner; site
+        yalnızca httpOnly çereze güvenir ve JavaScript anahtarı görmez."""
+        return dict(user=user, progress=progress, **({'token': token} if body.token else {}))
 
     def profile_values(body):
         data = body.model_dump(exclude_unset=True)
@@ -232,9 +248,9 @@ def build_router(db, media_dir):
                        dict(e=email, h=U.hash_password(body.password), n=p.get('display_name'), a=p.get('age_range'),
                             c=p.get('home_city'), pu=p.get('purposes') or [], i=p.get('interests') or [],
                             v=U.CONSENT_VERSION))[0]['id']
-        start_session(response, uid)
+        token = start_session(response, uid)
         merged = save_progress(uid, body.progress)
-        return dict(user=public(db.query('SELECT * FROM app_user WHERE id = %(u)s', dict(u=uid))[0]), progress=merged)
+        return signed_in(body, token, public(db.query('SELECT * FROM app_user WHERE id = %(u)s', dict(u=uid))[0]), merged)
 
     @r.post('/auth/login')
     def login(body: Login, request: Request, response: Response):
@@ -243,12 +259,12 @@ def build_router(db, media_dir):
         rows = db.query('SELECT * FROM app_user WHERE email = %(e)s AND deleted_at IS NULL', dict(e=U.normalize_email(body.email)))
         if not rows or not U.verify_password(body.password, rows[0]['password_hash']):
             raise HTTPException(401, 'E-posta ya da şifre hatalı.')
-        start_session(response, rows[0]['id'])
-        return dict(user=public(rows[0]), progress=save_progress(rows[0]['id'], body.progress))
+        token = start_session(response, rows[0]['id'])
+        return signed_in(body, token, public(rows[0]), save_progress(rows[0]['id'], body.progress))
 
     @r.post('/auth/logout', status_code=204)
     def logout(request: Request):
-        token = request.cookies.get(COOKIE)
+        token = session_token(request)
         if token:
             db.execute('DELETE FROM user_session WHERE token_hash = %(h)s', dict(h=U.token_hash(token)))
         out = Response(status_code=204)
