@@ -32,7 +32,9 @@ export type Detail = {
   source: { book: string | null; pages: [number | null, number | null]; credits: { authors?: string[] | null; editor?: string | null; translator?: string | null } | null };
 };
 export type Season = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
-export type Feed = { items: Item[]; seasons: Season[]; stale: boolean };
+// written in the panel (GET /api/quiz); answer is the index of the right option
+export type QuizQuestion = { id: string; question: string; options: string[]; answer: number; explanation: string; artifactId: string };
+export type Feed = { items: Item[]; seasons: Season[]; quiz: QuizQuestion[]; stale: boolean };
 
 export const makers = (item: Pick<Item, 'architect' | 'builder'>) => item.architect?.trim() || item.builder?.trim() || null;
 export function sourceTitle(source: Item['source']): string {
@@ -73,11 +75,13 @@ export async function cachedGet<T>(path: string): Promise<{ data: T; stale: bool
 
 export async function loadFeed(): Promise<Feed> {
   const lang = currentLang();
-  const [list, routes] = await Promise.all([
+  // routes and written questions are optional: without them the collection still opens
+  const [list, routes, quiz] = await Promise.all([
     cachedGet<{ items: Item[] }>(`/api/monuments?pilot=true&page_size=200&lang=${lang}`),
     cachedGet<Season[]>('/api/routes?pilot=true').catch(() => ({ data: [] as Season[], stale: true })),
+    cachedGet<QuizQuestion[]>('/api/quiz?pilot=true').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
   ]);
-  return { items: list.data.items, seasons: routes.data, stale: list.stale };
+  return { items: list.data.items, seasons: routes.data, quiz: quiz.data, stale: list.stale };
 }
 
 export const loadMonument = (slug: string) => cachedGet<Detail>(`/api/monuments/${encodeURIComponent(slug)}?lang=${currentLang()}`);

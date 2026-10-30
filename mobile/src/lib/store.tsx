@@ -4,7 +4,9 @@ import * as Haptics from 'expo-haptics';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { loadFeed, type Feed, type Item } from './api';
 import { useLang } from './i18n';
-import { discover, emptyProgress, parseProgress, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
+import { buildQuests } from './quests';
+import { answerable } from './quiz';
+import { discover, emptyProgress, parseProgress, recordQuiz, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
 
 // ------------------------------------------------------------------------------------------------ collection
 type Content = Feed & { loading: boolean; error: string | null; reload: () => void; bySlug: (slug: string) => Item | undefined };
@@ -12,7 +14,7 @@ const ContentContext = createContext<Content | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const { lang, ready } = useLang();
-  const [feed, setFeed] = useState<Feed>({ items: [], seasons: [], stale: false });
+  const [feed, setFeed] = useState<Feed>({ items: [], seasons: [], quiz: [], stale: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState(0);
@@ -40,6 +42,7 @@ export function useContent() {
 type Passport = {
   progress: Progress; ready: boolean;
   discover: (slug: string) => void; visit: (slug: string, approximate: boolean) => void; toggleFavorite: (slug: string) => void;
+  recordQuiz: (score: number, rightAbout: string[]) => void;
 };
 const PassportContext = createContext<Passport | null>(null);
 
@@ -64,6 +67,7 @@ export function PassportProvider({ children }: { children: ReactNode }) {
     discover: slug => update(p => discover(p, slug), true),
     visit: (slug, approximate) => update(p => visit(p, slug, approximate), true),
     toggleFavorite: slug => update(p => toggleFavorite(p, slug)),
+    recordQuiz: (score, rightAbout) => update(p => recordQuiz(p, score, rightAbout)),
   }), [progress, ready, update]);
   return <PassportContext.Provider value={value}>{children}</PassportContext.Provider>;
 }
@@ -99,4 +103,13 @@ export function useSettings() {
   const ctx = useContext(SettingsContext);
   if (!ctx) throw new Error('SettingsProvider eksik');
   return ctx;
+}
+
+// ------------------------------------------------------------------------------------------------ quests
+/** The routes as quests, with the passport's progress. */
+export function useQuests() {
+  const { items, seasons, quiz } = useContent();
+  const { progress } = usePassport();
+  const canAsk = useMemo(() => answerable(quiz, items), [quiz, items]);
+  return useMemo(() => buildQuests(seasons, items, progress, canAsk), [seasons, items, progress, canAsk]);
 }

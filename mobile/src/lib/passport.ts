@@ -73,6 +73,12 @@ export function toggleFavorite(p: Progress, slug: string): Progress {
   return { ...p, favorites: p.favorites.includes(slug) ? p.favorites.filter(s => s !== slug) : [...p.favorites, slug] };
 }
 
+/** A finished quiz round: the count, the best score (percent) and the works with a question answered right. */
+export function recordQuiz(p: Progress, score: number, rightAbout: string[]): Progress {
+  return { ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, Math.min(100, Math.max(0, Math.round(score)))) },
+    answered: [...new Set([...p.answered, ...rightAbout])] };
+}
+
 /** Consecutive days with a discovery, ending today (or yesterday, when today is still open). */
 export function streak(p: Progress, now = new Date()) {
   const days = new Set(p.days);
@@ -110,6 +116,7 @@ export function medals(p: Progress, items: { slug: string; city: { slug: string 
     { id: 'first', name: t('İlk Adım', 'First Step'), description: t('İlk eserinin hikâyesini keşfet ve pasaportuna mühürle.', 'Discover the story of your first work and stamp it in your passport.'), required: 1, value: found.length, metal: 'bronze' },
     { id: 'traveler', name: t('Tarih Yolcusu', 'History Traveller'), description: t('Beş eserin hikâyesini pasaportunda biriktir.', 'Collect the stories of five works in your passport.'), required: 5, value: found.length, metal: 'gold' },
     { id: 'cities', name: t('Şehir Gezgini', 'City Wanderer'), description: t('Üç farklı şehirdeki eserleri keşfet.', 'Discover works in three different cities.'), required: 3, value: cities, metal: 'silver' },
+    { id: 'quiz', name: t('Bilgi Avcısı', 'Knowledge Hunter'), description: t('Tarihin İzinde bilgi yarışmasının ilk turunu tamamla.', 'Complete your first round of the On the Trail of History quiz.'), required: 1, value: p.quiz.completed, metal: 'bronze' },
     { id: 'witness', name: t('Yerinde Tanık', 'On-the-Spot Witness'), description: t('Bir eserin önünde durup yerinde mühür bas.', 'Stand in front of a work and take its on-the-spot stamp.'), required: 1, value: visits, metal: 'bronze', mobile: true },
     { id: 'pilgrim', name: t('Eşik Gezgini', 'Threshold Walker'), description: t('Beş eseri yerinde ziyaret et.', 'Visit five works on the spot.'), required: 5, value: visits, metal: 'gold', mobile: true },
     { id: 'companion', name: t('Yol Arkadaşı', 'Travel Companion'), description: t('Yedi gün art arda en az bir eser keşfet.', 'Discover at least one work seven days in a row.'), required: 7, value: best, metal: 'silver', mobile: true },

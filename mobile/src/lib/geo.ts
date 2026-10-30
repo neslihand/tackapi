@@ -13,6 +13,15 @@ export async function whereAmI(): Promise<Here> {
   return { lat: fix.coords.latitude, lon: fix.coords.longitude, accuracy: fix.coords.accuracy };
 }
 
+/** Follows the phone while a route is walked (about every 10 m); returns the function that stops it. */
+export async function followMe(onMove: (here: Here) => void): Promise<() => void> {
+  const permission = await Location.requestForegroundPermissionsAsync();
+  if (!permission.granted) throw new Error(t('Konum izni verilmedi. Ayarlardan izin verebilirsin.', 'Location permission was not given. You can allow it in Settings.'));
+  const sub = await Location.watchPositionAsync({ accuracy: Location.Accuracy.High, distanceInterval: 10, timeInterval: 5000 },
+    fix => onMove({ lat: fix.coords.latitude, lon: fix.coords.longitude, accuracy: fix.coords.accuracy }));
+  return () => sub.remove();
+}
+
 /** Directions in the phone's own maps app. */
 export function openDirections(lat: number, lon: number, label: string) {
   const name = encodeURIComponent(label);

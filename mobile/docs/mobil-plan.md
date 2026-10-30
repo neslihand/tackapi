@@ -17,7 +17,7 @@ Yol gösteren ilke: eşik metaforu. Web'de kapıyı ekrandan açarsın; mobilde 
 | E | **Sesli Rehber** | Detaylı anlatım, hikâye ve çocuk anlatımı cihazın sesiyle (TTS, çevrimdışı, ücretsiz) okunur. Gezerken telefona bakmadan dinlenir. | Şartname 5.1.4 (görme engelli erişimi) ve gezi deneyimi. Gemini kotası harcamaz. | 1 ✅ |
 | F | **Çevrimdışı okuma** | Açılan her eser (metin, anlatım, fotoğraf) ve koleksiyon cihazda saklanır; internet yokken son hali gösterilir. | Cami avlusunda, kırsalda çekim zayıf olabilir. | 1 ✅ (otomatik önbellek) · 2: şehir/rota paketi indirme |
 | G | **Kamera ile Tanı** | Telefon kamerası ya da galeri → `POST /api/visual-search`. Emin değilse 3 aday "emin değiliz" diye gösterilir. | Yerinde merak anı: "bu bina ne?" | 1 ✅ |
-| H | **Rota Yürüyüşü** | Keşif Sezonu rotasının durakları sırayla; sıradaki durağa mesafe; varınca yerinde mühür. | Görevleri (Quests) gerçek bir gezintiye çevirir. | 2 |
+| H | **Rota Yürüyüşü** | Keşif Sezonu rotasının durakları sırayla; konum canlı izlenir, sıradaki durağa kalan mesafe ve yol tarifi; varınca yerinde mühür kendiliğinden basılır. | Görevleri (Quests) gerçek bir gezintiye çevirir. | 2 ✅ |
 | I | **Hatıra Defteri** | Ziyaretinde kendi fotoğrafını ve notunu esere iliştir; yalnızca cihazda kalır. | Kişisel bağ; pasaport bir anı defterine dönüşür. | 2 |
 | J | **Mühür kartı paylaşımı** | Kazanılan mühür/madalyon görsel kart olarak sistem paylaşım menüsüyle. | Doğal yayılım. | 2 |
 | K | **Yakınlık bildirimi** | (İzin verilirse) bir eserin yakınından geçince "Bu kapının ardında bir hikâye var". Arka plan konumu + geofence. | En güçlü "yerinde" an; ama izin ve pil hassas olduğu için sona bırakıldı. | 3 |
@@ -37,7 +37,8 @@ Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarınd
 | Kamera ile keşfet | Kamera sekmesi | 1 ✅ |
 | TR/EN | Ayarlar | 1 ✅ |
 | Miras Haritası | Yakınımda listesi; gerçek harita (`react-native-maps`) | 2 |
-| Bilgi yarışması, bilgi kartları, keşif görevleri | Oyna sekmesi | 2 |
+| Bilgi yarışması, keşif görevleri | Oyna sekmesi | 2 ✅ |
+| Bilgi kartları | Oyna sekmesi | 2 |
 | Mini oyunlar (yapboz, dosya) | Oyna sekmesi | 2 |
 | Hesap, pasaport eşitleme | Ayarlar → Hesap | 2 |
 | Okuma Odası (makaleler, sözlük), yazı/terim gönderme | Okuma sekmesi | 2 |

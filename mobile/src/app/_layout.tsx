@@ -39,6 +39,8 @@ function Screens() {
     <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('Geri', 'Back') }} />
     <Stack.Screen name="eser/[slug]" options={{ title: '' }} />
     <Stack.Screen name="sor/[slug]" options={{ title: t('Esere Sor', 'Ask the Work'), presentation: 'modal' }} />
+    <Stack.Screen name="quiz" options={{ title: t('Tarihin İzinde', 'On the Trail of History') }} />
+    <Stack.Screen name="rota/[id]" options={{ title: t('Rota Yürüyüşü', 'Route Walk') }} />
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
   </Stack>;
 }
