@@ -18,7 +18,7 @@ export default function TabsLayout() {
       <Ionicons name="settings-outline" size={22} color={colors.goldSoft} /></Pressable></Link>,
   }}>
     <Tabs.Screen name="index" options={{ title: t('Keşfet', 'Explore'), headerTitle: 'EŞİK', tabBarIcon: icon('compass-outline') }} />
-    <Tabs.Screen name="yakin" options={{ title: t('Yakınımda', 'Near Me'), tabBarIcon: icon('navigate-outline') }} />
+    <Tabs.Screen name="yakin" options={{ title: t('Harita', 'Map'), headerTitle: t('Miras Haritası', 'Heritage Map'), tabBarIcon: icon('map-outline') }} />
     <Tabs.Screen name="kamera" options={{ title: t('Kamera', 'Camera'), tabBarIcon: icon('camera-outline') }} />
     <Tabs.Screen name="oyna" options={{ title: t('Oyna', 'Play'), headerTitle: t('Oyna & Öğren', 'Play & Learn'), tabBarIcon: icon('extension-puzzle-outline') }} />
     <Tabs.Screen name="pasaport" options={{ title: t('Pasaport', 'Passport'), tabBarIcon: icon('ribbon-outline') }} />
