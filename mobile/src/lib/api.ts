@@ -70,7 +70,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (response.status === 204 ? undefined : response.json()) as Promise<T>;
 }
 
-const cacheKey = (path: string) => `esik:cache:${path}`;
+export const cacheKey = (path: string) => `esik:cache:${path}`;
 
 /** GET with the device copy as the fallback; `stale` says the answer came from the copy. */
 export async function cachedGet<T>(path: string): Promise<{ data: T; stale: boolean }> {

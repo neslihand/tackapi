@@ -15,7 +15,7 @@ Yol gösteren ilke: eşik metaforu. Web'de kapıyı ekrandan açarsın; mobilde 
 | C | **Günün Eşiği** bildirimi | Her sabah (yerel, sunucusuz) bir eser ve kitaptan kısa bir cümle. Dokununca eser açılır. Bir haftalık içerik önceden kurulur, internet gerekmez. | Uygulamaya her gün küçük bir dönüş nedeni. "Bunu biliyor muydun?" vaadinin mobil hali. | 1 ✅ |
 | D | **Keşif Serisi** | Her gün en az bir eser mühürlemek seriyi sürdürür. Seri tehlikedeyse akşam tek, nazik bir hatırlatma (kapatılabilir). 7 günde "Yol Arkadaşı" madalyonu. | Süreklilik. Bildirim yalnızca gerektiğinde gider, rahatsız etmez. | 1 ✅ |
 | E | **Sesli Rehber** | Detaylı anlatım, hikâye ve çocuk anlatımı cihazın sesiyle (TTS, çevrimdışı, ücretsiz) okunur. Gezerken telefona bakmadan dinlenir. | Şartname 5.1.4 (görme engelli erişimi) ve gezi deneyimi. Gemini kotası harcamaz. | 1 ✅ |
-| F | **Çevrimdışı okuma** | Açılan her eser (metin, anlatım, fotoğraf) ve koleksiyon cihazda saklanır; internet yokken son hali gösterilir. | Cami avlusunda, kırsalda çekim zayıf olabilir. | 1 ✅ (otomatik önbellek) · 2: şehir/rota paketi indirme |
+| F | **Çevrimdışı okuma** | Açılan her eser (metin, anlatım, fotoğraf) ve koleksiyon cihazda saklanır; internet yokken son hali gösterilir. | Cami avlusunda, kırsalda çekim zayıf olabilir. | 1 ✅ (otomatik önbellek) · 2 ✅ rota paketi indirme |
 | G | **Kamera ile Tanı** | Telefon kamerası ya da galeri → `POST /api/visual-search`. Emin değilse 3 aday "emin değiliz" diye gösterilir. | Yerinde merak anı: "bu bina ne?" | 1 ✅ |
 | H | **Rota Yürüyüşü** | Keşif Sezonu rotasının durakları sırayla; konum canlı izlenir, sıradaki durağa kalan mesafe ve yol tarifi; varınca yerinde mühür kendiliğinden basılır. | Görevleri (Quests) gerçek bir gezintiye çevirir. | 2 ✅ |
 | I | **Hatıra Defteri** | Ziyaretinde kendi fotoğrafını ve notunu esere iliştir; yalnızca cihazda kalır. | Kişisel bağ; pasaport bir anı defterine dönüşür. | 2 |
@@ -36,7 +36,7 @@ Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarınd
 | Miras Pasaportu, madalyonlar | Pasaport sekmesi | 1 ✅ (yerel) |
 | Kamera ile keşfet | Kamera sekmesi | 1 ✅ |
 | TR/EN | Ayarlar | 1 ✅ |
-| Miras Haritası | Yakınımda listesi; gerçek harita (`react-native-maps`) | 2 |
+| Miras Haritası | Harita sekmesi: Leaflet + OpenStreetMap (WebView, anahtarsız), şehir/tür süzgeci | 2 ✅ |
 | Bilgi yarışması, keşif görevleri | Oyna sekmesi | 2 ✅ |
 | Bilgi kartları | Oyna sekmesi | 2 |
 | Mini oyunlar (yapboz, dosya) | Oyna sekmesi | 2 |
