@@ -5,11 +5,13 @@ import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AddMemory, MemoryCard } from '@/components/Journal';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { ApiError, loadMonument, makers, mediaUrl, sourceTitle, type Detail } from '@/lib/api';
 import { openDirections, whereAmI } from '@/lib/geo';
 import { t, useLang } from '@/lib/i18n';
+import { useJournal } from '@/lib/journal';
 import { distanceM, formatDistance, stampRadius } from '@/lib/passport';
 import { speak, stopSpeaking } from '@/lib/speech';
 import { useContent, usePassport } from '@/lib/store';
@@ -31,6 +33,8 @@ export default function Work() {
   const [checking, setChecking] = useState(false);
   const [placeNote, setPlaceNote] = useState<string | null>(null);
   const [shared, setShared] = useState<Shared | null>(null);
+  const [adding, setAdding] = useState(false);
+  const memories = useJournal().of(slug);
 
   useEffect(() => {
     let live = true;
@@ -136,6 +140,14 @@ export default function Work() {
         </View>)}
       </ScrollView>
     </View>}
+
+    <View style={s.section}>
+      <Eyebrow>✦ {t('HATIRA DEFTERİM', 'MY MEMORY BOOK')}</Eyebrow>
+      {memories.length ? memories.map(m => <MemoryCard key={m.id} m={m} />)
+        : <Text style={s.small}>{t('Bu esere kendi fotoğrafını ve notunu ekle; yalnızca bu telefonda kalır.', 'Add your own photo and note to this work; it stays on this phone only.')}</Text>}
+      <Button kind="plain" icon="add-circle-outline" label={t('Hatıra ekle', 'Add a memory')} onPress={() => setAdding(true)} />
+    </View>
+    <AddMemory slug={slug} name={name} onSpot={Boolean(visited)} visible={adding} onClose={() => setAdding(false)} />
 
     <View style={s.section}>
       <Eyebrow>{t('KAYNAK', 'SOURCE')}</Eyebrow>

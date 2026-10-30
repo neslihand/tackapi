@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountProvider } from '@/lib/account';
 import { LangProvider, t, useLang } from '@/lib/i18n';
+import { JournalProvider } from '@/lib/journal';
 import { scheduleDailyWork, scheduleStreakReminder, setupNotifications, useNotificationTaps } from '@/lib/notify';
 import { ContentProvider, PassportProvider, SettingsProvider, useContent, usePassport, useSettings } from '@/lib/store';
 import { colors, serif } from '@/lib/theme';
@@ -45,6 +46,7 @@ function Screens() {
     <Stack.Screen name="okuma" options={{ title: t('Okuma Odası', 'Reading Room') }} />
     <Stack.Screen name="makale/[slug]" options={{ title: t('Makale', 'Article') }} />
     <Stack.Screen name="terim/[slug]" options={{ title: t('Terim', 'Term') }} />
+    <Stack.Screen name="hatira" options={{ title: t('Hatıra Defterim', 'My Memory Book') }} />
     <Stack.Screen name="giris" options={{ title: t('Giriş yap', 'Sign in') }} />
     <Stack.Screen name="hesap" options={{ title: t('Hesabım', 'My account') }} />
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
@@ -53,10 +55,10 @@ function Screens() {
 
 export default function RootLayout() {
   return <SafeAreaProvider>
-    <LangProvider><SettingsProvider><ContentProvider><PassportProvider><AccountProvider>
+    <LangProvider><SettingsProvider><ContentProvider><PassportProvider><AccountProvider><JournalProvider>
       <StatusBar style="light" />
       <NotificationSync />
       <Screens />
-    </AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
+    </JournalProvider></AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
   </SafeAreaProvider>;
 }

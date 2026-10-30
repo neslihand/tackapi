@@ -8,6 +8,7 @@ import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Empty, Eyebrow, Title, WorkCard } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
+import { useJournal } from '@/lib/journal';
 import { longestStreak, medals, streak } from '@/lib/passport';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
@@ -19,6 +20,7 @@ export default function Passport() {
   const { progress } = usePassport();
   const account = useAccount();
   const [shared, setShared] = useState<Shared | null>(null);
+  const memories = useJournal().memories.length;
   const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => progress.discovered[b.slug].localeCompare(progress.discovered[a.slug])), [items, progress]);
   const visits = Object.keys(progress.visits).length;
   const cities = new Set(found.map(i => i.city.slug)).size;
@@ -62,6 +64,8 @@ export default function Passport() {
       extra={new Date(progress.visits[i.slug]?.date ?? progress.discovered[i.slug]).toLocaleDateString()} />)
       : <Empty title={t('Pasaportun seni bekliyor.', 'Your passport is waiting.')} body={t('Bir eserin hikâyesini oku ve “Pasaportuma mühürle”ye dokun.', 'Read a work’s story and tap “Stamp my passport”.')} />}
 
+    <Button kind="plain" icon="images-outline" onPress={() => router.push('/hatira')}
+      label={memories ? t(`Hatıra Defterim (${memories})`, `My Memory Book (${memories})`) : t('Hatıra Defterim', 'My Memory Book')} />
     {!!favorites.length && <><Eyebrow>{t('FAVORİLER', 'FAVOURITES')}</Eyebrow>{favorites.map(i => <WorkCard key={i.slug} item={i} />)}</>}
     {account.user ? <Text style={s.small}>{t('Pasaportun hesabınla eşitleniyor.', 'Your passport is synced with your account.')} {syncLabel(account.sync, account.lastSync)}</Text>
       : <Button kind="plain" icon="person-circle-outline" label={t('Giriş yap, pasaportun kaybolmasın', 'Sign in so your passport is never lost')} onPress={() => router.push('/giris')} />}
