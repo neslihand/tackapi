@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { Eyebrow, Notice } from '@/components/UI';
 import { apiBase } from '@/lib/api';
 import { t, useLang, type Lang } from '@/lib/i18n';
-import { allowNotifications } from '@/lib/notify';
+import { allowNotifications, notificationsSupported } from '@/lib/notify';
 import { useSettings } from '@/lib/store';
 import { colors, space } from '@/lib/theme';
 
@@ -14,7 +14,8 @@ export default function Settings() {
   const { settings, change } = useSettings();
 
   async function toggle(key: 'dailyWork' | 'streakReminder', on: boolean) {
-    if (on && !(await allowNotifications())) {
+    // in the browser the choice is only saved (nothing can be scheduled there)
+    if (on && notificationsSupported && !(await allowNotifications())) {
       change({ [key]: false });
       return;
     }
@@ -28,6 +29,7 @@ export default function Settings() {
         <Text style={[s.chipText, lang === id && { color: colors.goldSoft }]}>{label}</Text></Pressable>)}</View>
 
     <Eyebrow>{t('BİLDİRİMLER', 'NOTIFICATIONS')}</Eyebrow>
+    {!notificationsSupported && <Notice icon="phone-portrait-outline">{t('Tarayıcı sürümünde bildirim kurulmaz; ayarlar kaydedilir ve telefonda çalışır.', 'The browser version sets up no notifications; the settings are saved and work on the phone.')}</Notice>}
     <View style={s.card}>
       <Line title={t('Günün Eşiği', 'Today’s Threshold')} body={t('Her gün bir eser ve kitabından kısa bir cümle.', 'One work a day with a short line from its book.')}
         value={settings.dailyWork} onChange={v => toggle('dailyWork', v)} />

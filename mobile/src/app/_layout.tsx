@@ -1,10 +1,9 @@
-import * as Notifications from 'expo-notifications';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LangProvider, t, useLang } from '@/lib/i18n';
-import { scheduleDailyWork, scheduleStreakReminder, setupNotifications } from '@/lib/notify';
+import { scheduleDailyWork, scheduleStreakReminder, setupNotifications, useNotificationTaps } from '@/lib/notify';
 import { ContentProvider, PassportProvider, SettingsProvider, useContent, usePassport, useSettings } from '@/lib/store';
 import { colors, serif } from '@/lib/theme';
 
@@ -29,12 +28,7 @@ function NotificationSync() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, passportReady, settings.streakReminder, days, lang]);
 
-  // a tapped notification opens its work
-  const response = Notifications.useLastNotificationResponse();
-  useEffect(() => {
-    const data = response?.notification.request.content.data as { slug?: unknown } | undefined;
-    if (response?.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER && typeof data?.slug === 'string') router.push(`/eser/${data.slug}`);
-  }, [response]);
+  useNotificationTaps();
   return null;
 }
 

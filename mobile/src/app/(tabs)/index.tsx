@@ -7,7 +7,7 @@ import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, Text
 import { Button, Empty, Eyebrow, Loading, Notice, Title, WorkCard } from '@/components/UI';
 import { mediaUrl } from '@/lib/api';
 import { t } from '@/lib/i18n';
-import { dailyPicks, teaser } from '@/lib/notify';
+import { dailyPicks, teaser } from '@/lib/daily';
 import { normalize, streak } from '@/lib/passport';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';

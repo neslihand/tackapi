@@ -28,6 +28,17 @@ npx expo start
 Telefondaki **Expo Go** ile QR kodu okut (telefon ve bilgisayar aynı Wi-Fi'da olmalı). Aşama 1'deki her şey (konum,
 yerel bildirimler, sesli rehber, kamera) Expo Go'da çalışır.
 
+### Bilgisayarda (tarayıcıda) takip
+
+```bash
+npm run web
+```
+
+Uygulama `http://localhost:8081` adresinde açılır. Arka uç bu adrese varsayılan olarak CORS izni verir
+(`VAKIF_CORS_ORIGINS` tanımlıysa ona `http://localhost:8081` eklenmeli). Tarayıcıda bildirim kurulmaz
+(`src/lib/notify.web.ts` boş işlem yapar; ayarlar yine kaydedilir). Konum, kamera (dosya seçici) ve sesli rehber
+tarayıcının kendi olanaklarıyla çalışır. Titreşim ve gerçek bildirimler için telefonda dene.
+
 ## Denetim
 
 ```bash
