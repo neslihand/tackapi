@@ -67,7 +67,8 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "scheme": "esik",
     "backgroundColor": "#0F2F26",

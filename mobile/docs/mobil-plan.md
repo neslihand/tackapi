@@ -19,7 +19,7 @@ Yol gösteren ilke: eşik metaforu. Web'de kapıyı ekrandan açarsın; mobilde 
 | G | **Kamera ile Tanı** | Telefon kamerası ya da galeri → `POST /api/visual-search`. Emin değilse 3 aday "emin değiliz" diye gösterilir. | Yerinde merak anı: "bu bina ne?" | 1 ✅ |
 | H | **Rota Yürüyüşü** | Keşif Sezonu rotasının durakları sırayla; konum canlı izlenir, sıradaki durağa kalan mesafe ve yol tarifi; varınca yerinde mühür kendiliğinden basılır. | Görevleri (Quests) gerçek bir gezintiye çevirir. | 2 ✅ |
 | I | **Hatıra Defteri** | Ziyaretinde kendi fotoğrafını ve notunu esere iliştir; yalnızca cihazda kalır. | Kişisel bağ; pasaport bir anı defterine dönüşür. | 2 |
-| J | **Mühür kartı paylaşımı** | Kazanılan mühür/madalyon görsel kart olarak sistem paylaşım menüsüyle. | Doğal yayılım. | 2 |
+| J | **Mühür kartı paylaşımı** | Kazanılan mühür/madalyon görsel kart olarak sistem paylaşım menüsüyle. | Doğal yayılım. | 2 ✅ |
 | K | **Yakınlık bildirimi** | (İzin verilirse) bir eserin yakınından geçince "Bu kapının ardında bir hikâye var". Arka plan konumu + geofence. | En güçlü "yerinde" an; ama izin ve pil hassas olduğu için sona bırakıldı. | 3 |
 | L | **Gündem / Sezon bildirimi** | Panelde yayımlanan duyurular ve yeni Keşif Sezonları push ile. | Yönetim paneli ile mobil arasında canlı bağ. | 3 |
 | M | **Ana ekran widget'ı** | "Günün Eşiği" ana ekranda. | Uygulamayı açmadan temas. | 3 |

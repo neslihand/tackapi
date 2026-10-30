@@ -2,8 +2,9 @@
 // three of its own: on-the-spot visits and the seven-day streak).
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Empty, Eyebrow, Title, WorkCard } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
@@ -17,6 +18,7 @@ export default function Passport() {
   const { items } = useContent();
   const { progress } = usePassport();
   const account = useAccount();
+  const [shared, setShared] = useState<Shared | null>(null);
   const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => progress.discovered[b.slug].localeCompare(progress.discovered[a.slug])), [items, progress]);
   const visits = Object.keys(progress.visits).length;
   const cities = new Set(found.map(i => i.city.slug)).size;
@@ -41,14 +43,17 @@ export default function Passport() {
     <View style={s.medals}>
       {list.map(m => {
         const done = m.value >= m.required;
-        return <View key={m.id} style={[s.medal, !done && { opacity: 0.6 }]} accessible
-          accessibilityLabel={`${m.name}. ${m.description} ${done ? t('Kazanıldı.', 'Earned.') : `${Math.min(m.value, m.required)}/${m.required}`}`}>
+        // an earned medallion opens its shareable card
+        return <Pressable key={m.id} style={[s.medal, !done && { opacity: 0.6 }]} disabled={!done} accessibilityRole={done ? 'button' : undefined}
+          onPress={() => setShared({ kind: 'medal', name: m.name, description: m.description, metal: m.metal })}
+          accessibilityLabel={`${m.name}. ${m.description} ${done ? t('Kazanıldı. Paylaşmak için dokun.', 'Earned. Tap to share.') : `${Math.min(m.value, m.required)}/${m.required}`}`}>
           <View style={[s.disc, { borderColor: METAL[m.metal], backgroundColor: done ? METAL[m.metal] : 'transparent' }]}>
             <Ionicons name={done ? 'medal' : 'lock-closed-outline'} size={22} color={done ? colors.emeraldDeep : METAL[m.metal]} />
           </View>
           <Text style={s.medalName}>{m.name}</Text>
           <Text style={s.medalText}>{done ? t('Kazanıldı', 'Earned') : `${Math.min(m.value, m.required)}/${m.required}`}{m.mobile ? ` · ${t('mobil', 'mobile')}` : ''}</Text>
-        </View>;
+          {done && <Ionicons name="share-social-outline" size={13} color={colors.goldText} />}
+        </Pressable>;
       })}
     </View>
 
@@ -60,6 +65,7 @@ export default function Passport() {
     {!!favorites.length && <><Eyebrow>{t('FAVORİLER', 'FAVOURITES')}</Eyebrow>{favorites.map(i => <WorkCard key={i.slug} item={i} />)}</>}
     {account.user ? <Text style={s.small}>{t('Pasaportun hesabınla eşitleniyor.', 'Your passport is synced with your account.')} {syncLabel(account.sync, account.lastSync)}</Text>
       : <Button kind="plain" icon="person-circle-outline" label={t('Giriş yap, pasaportun kaybolmasın', 'Sign in so your passport is never lost')} onPress={() => router.push('/giris')} />}
+    <ShareSheet shared={shared} onClose={() => setShared(null)} />
   </ScrollView>;
 }
 

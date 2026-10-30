@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { ApiError, loadMonument, makers, mediaUrl, sourceTitle, type Detail } from '@/lib/api';
 import { openDirections, whereAmI } from '@/lib/geo';
@@ -29,6 +30,7 @@ export default function Work() {
   const [speaking, setSpeaking] = useState(false);
   const [checking, setChecking] = useState(false);
   const [placeNote, setPlaceNote] = useState<string | null>(null);
+  const [shared, setShared] = useState<Shared | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -104,7 +106,11 @@ export default function Work() {
         <Button kind="plain" icon="map-outline" label={t('Yol tarifi al', 'Get directions')} onPress={() => openDirections(location.lat, location.lon, name)} />
         {location.approximate && <Text style={s.small}>{t('Konum otomatik bulundu ve henüz doğrulanmadı; yaklaşık bir alanı gösterir.', 'The location was found automatically and is not yet verified; it marks an approximate area.')}</Text>}
       </> : <Text style={s.small}>{t('Bu eserin konumu henüz yok; yerinde mühür açılmaz.', 'This work has no location yet, so there is no on-the-spot stamp.')}</Text>}
+      {discovered && <Button kind="plain" icon="share-social-outline" label={t('Mührünü paylaş', 'Share your stamp')}
+        onPress={() => setShared({ kind: 'stamp', name, place: [item?.district, item?.city.name].filter(Boolean).join(', '), onSpot: Boolean(visited),
+          date: new Date(visited?.date ?? discovered).toLocaleDateString(), photo: mediaUrl(cover?.src) })} />}
     </View>
+    <ShareSheet shared={shared} onClose={() => setShared(null)} />
 
     <View style={s.section}>
       <View style={s.modes} accessibilityRole="tablist">
