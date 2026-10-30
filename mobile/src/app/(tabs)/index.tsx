@@ -46,6 +46,10 @@ export default function Explore() {
         ? (run.today ? t(`${run.days} gündür her gün bir kapı açtın.`, `You have opened a door every day for ${run.days} days.`) : t(`${run.days} günlük serin bugün bir hikâye bekliyor.`, `Your ${run.days}-day streak is waiting for today’s story.`))
         : t('Her gün bir hikâye mühürle, serin büyüsün.', 'Stamp one story a day and watch your streak grow.')}</Text>
     </View>
+    <View style={{ flexDirection: 'row', gap: space.s }}>
+      <Shortcut icon="newspaper-outline" label={t('Okuma Odası', 'Reading Room')} onPress={() => router.push('/okuma')} />
+      <Shortcut icon="book-outline" label={t('Terimler sözlüğü', 'Glossary')} onPress={() => router.push('/okuma?bolum=terimler')} />
+    </View>
     <TextInput value={query} onChangeText={setQuery} placeholder={t('Eser, şehir ya da tür ara', 'Search a work, city or type')} placeholderTextColor={colors.soft}
       style={s.search} accessibilityLabel={t('Eserlerde ara', 'Search the works')} returnKeyType="search" clearButtonMode="while-editing" />
     {cities.length > 1 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.s }}>
@@ -63,7 +67,15 @@ export default function Explore() {
     renderItem={({ item }) => <WorkCard item={item} stamped={progress.visits[item.slug] ? 'visit' : progress.discovered[item.slug] ? 'digital' : undefined} />} />;
 }
 
+function Shortcut({ icon, label, onPress }: { icon: 'newspaper-outline' | 'book-outline'; label: string; onPress: () => void }) {
+  return <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [s.shortcut, pressed && { opacity: 0.85 }]}>
+    <Ionicons name={icon} size={20} color={colors.goldText} /><Text style={s.shortcutText}>{label}</Text>
+  </Pressable>;
+}
+
 const s = StyleSheet.create({
+  shortcut: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 12, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
+  shortcutText: { color: colors.ink, fontSize: 14, fontWeight: '600', flexShrink: 1 },
   today: { minHeight: 220, borderRadius: 18, overflow: 'hidden', backgroundColor: colors.emerald, justifyContent: 'flex-end', borderWidth: 1, borderColor: colors.goldLine },
   todayShade: { ...StyleSheet.absoluteFill, backgroundColor: '#082119b3' },
   todayBody: { padding: space.m + 2, gap: 6 },

@@ -41,7 +41,8 @@ Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarınd
 | Bilgi kartları | Oyna sekmesi | 2 |
 | Mini oyunlar (yapboz, dosya) | Oyna sekmesi | 2 |
 | Hesap, pasaport eşitleme | Ayarlar → Hesap | 2 ✅ |
-| Okuma Odası (makaleler, sözlük), yazı/terim gönderme | Okuma sekmesi | 2 |
+| Okuma Odası (makaleler, sözlük) | Keşfet → Okuma Odası (okuma, sesli dinleme, terim kartları, çevrimdışı kopya) | 2 ✅ |
+| Yazı/terim gönderme | Okuma Odası | 2 |
 | Katkılar, öneriler ("Senin için") | Eser ekranı / ana sayfa | 2 |
 | Analitik olayları (izinli) | `platform: mobile` alanıyla | 2 |
 

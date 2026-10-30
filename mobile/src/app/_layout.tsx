@@ -42,6 +42,9 @@ function Screens() {
     <Stack.Screen name="sor/[slug]" options={{ title: t('Esere Sor', 'Ask the Work'), presentation: 'modal' }} />
     <Stack.Screen name="quiz" options={{ title: t('Tarihin İzinde', 'On the Trail of History') }} />
     <Stack.Screen name="rota/[id]" options={{ title: t('Rota Yürüyüşü', 'Route Walk') }} />
+    <Stack.Screen name="okuma" options={{ title: t('Okuma Odası', 'Reading Room') }} />
+    <Stack.Screen name="makale/[slug]" options={{ title: t('Makale', 'Article') }} />
+    <Stack.Screen name="terim/[slug]" options={{ title: t('Terim', 'Term') }} />
     <Stack.Screen name="giris" options={{ title: t('Giriş yap', 'Sign in') }} />
     <Stack.Screen name="hesap" options={{ title: t('Hesabım', 'My account') }} />
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
