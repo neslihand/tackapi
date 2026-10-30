@@ -2,6 +2,7 @@ import type { Season } from '../data/collections';
 import type { DiscoveryArtifact } from './artifactContract';
 import { PLACEHOLDER_IMAGE, slugify } from './content.ts';
 import type { Progress } from './progress';
+import { t } from './i18n.ts';
 
 // Interactive quests: each discovery route becomes a set of steps across its artifacts — read and stamp every story,
 // solve one artifact's puzzle, answer a question about another. Steps can be done in any order; progress comes from
@@ -11,7 +12,7 @@ export type QuestStep = { kind: QuestStepKind; artifactId: string; label: string
 export type Quest = { id: string; kicker: string; title: string; description: string; steps: QuestStep[]; done: number; complete: boolean };
 export type QuestRoute = Pick<Season, 'id' | 'kicker' | 'title' | 'description' | 'artifactIds'>;
 
-const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && value !== 'Bilinmiyor');
+const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
 const firstYear = (artifact: DiscoveryArtifact) => Number(artifact.year?.match(/\d{3,4}/)?.[0] ?? 9999);
 
 // The editors' discovery seasons are the routes. A collection without seasons (an external feed has none) gets routes
@@ -24,8 +25,8 @@ export function questRoutes(seasons: readonly Season[], artifacts: readonly Disc
     return [...map].filter(([, list]) => list.length >= 2).map(([value, list]) => [value, [...list].sort((a, b) => firstYear(a) - firstYear(b))] as const);
   };
   return [
-    ...groups('architect').map(([architect, list]) => ({ id: `usta-${slugify(architect)}`, kicker: 'USTA ROTASI', title: `Usta rotası: ${architect}`, description: `${architect} ile anılan ${list.length} eser, tarih sırasıyla.`, artifactIds: list.map(a => a.id) })),
-    ...groups('city').map(([city, list]) => ({ id: `sehir-${slugify(city)}`, kicker: 'ŞEHİR ROTASI', title: `Şehir rotası: ${city}`, description: `${city} şehrindeki ${list.length} eser.`, artifactIds: list.map(a => a.id) })),
+    ...groups('architect').map(([architect, list]) => ({ id: `usta-${slugify(architect)}`, kicker: t('USTA ROTASI', 'MASTER ROUTE'), title: t(`Usta rotası: ${architect}`, `Master route: ${architect}`), description: t(`${architect} ile anılan ${list.length} eser, tarih sırasıyla.`, `${list.length} works linked with ${architect}, in date order.`), artifactIds: list.map(a => a.id) })),
+    ...groups('city').map(([city, list]) => ({ id: `sehir-${slugify(city)}`, kicker: t('ŞEHİR ROTASI', 'CITY ROUTE'), title: t(`Şehir rotası: ${city}`, `City route: ${city}`), description: t(`${city} şehrindeki ${list.length} eser.`, `${list.length} works in ${city}.`), artifactIds: list.map(a => a.id) })),
   ].slice(0, 4);
 }
 
@@ -41,9 +42,9 @@ export function buildQuests(routes: readonly QuestRoute[], artifacts: readonly D
     const steps: QuestStep[] = [];
     for (const a of stops) {
       const id = encodeURIComponent(a.id);
-      steps.push({ kind: 'read', artifactId: a.id, label: `${a.name}: hikâyeyi oku ve pasaportuna mühürle`, to: `/eser/${a.slug}`, done: Boolean(progress.discovered[a.id]) });
-      if (a === puzzleStop) steps.push({ kind: 'puzzle', artifactId: a.id, label: `${a.name}: yapbozunu çöz`, to: `/oyun/oyunlar?oyun=yapboz&eser=${id}`, done: progress.games.puzzle[a.id] !== undefined });
-      if (a === quizStop) steps.push({ kind: 'quiz', artifactId: a.id, label: `${a.name}: bir soruyu doğru yanıtla`, to: `/oyun/quiz?eser=${id}`, done: progress.answered.includes(a.id) });
+      steps.push({ kind: 'read', artifactId: a.id, label: t(`${a.name}: hikâyeyi oku ve pasaportuna mühürle`, `${a.name}: read the story and stamp your passport`), to: `/eser/${a.slug}`, done: Boolean(progress.discovered[a.id]) });
+      if (a === puzzleStop) steps.push({ kind: 'puzzle', artifactId: a.id, label: t(`${a.name}: yapbozunu çöz`, `${a.name}: solve its puzzle`), to: `/oyun/oyunlar?oyun=yapboz&eser=${id}`, done: progress.games.puzzle[a.id] !== undefined });
+      if (a === quizStop) steps.push({ kind: 'quiz', artifactId: a.id, label: t(`${a.name}: bir soruyu doğru yanıtla`, `${a.name}: answer a question right`), to: `/oyun/quiz?eser=${id}`, done: progress.answered.includes(a.id) });
     }
     const done = steps.filter(step => step.done).length;
     return [{ id: route.id, kicker: route.kicker, title: route.title, description: route.description, steps, done, complete: done === steps.length }];

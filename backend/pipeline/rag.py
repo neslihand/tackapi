@@ -210,6 +210,18 @@ def rng_text(r):
     return str(a) if a == b else f'{a}-{b}'
 
 
+_term_status = []
+
+
+def term_filter(db):
+    """Sohbete ve anlatıma giden terimler: yalnızca yayındakiler, ziyaretçi önerileri hiçbir zaman (göç 017; yoksa hepsi).
+    Yalnızca olumlu sonuç saklanır."""
+    if not _term_status and db.query("""SELECT 1 FROM information_schema.columns
+                                        WHERE table_name = 'term' AND column_name = 'status'"""):
+        _term_status.append(True)
+    return "AND status = 'published' AND origin <> 'visitor'" if _term_status else ''
+
+
 def build_context(f, chunks, question='', full=False):
     """full=True: ekonomik modda da parçalar kısaltılmaz ve olgu kartı tam verilir (kayıtlı anlatım üretimi)."""
     eco = ECO and not full
@@ -509,8 +521,8 @@ def answer(db, question, slug, mode='standard', lang='tr', history=None):
         notes += [n['model_instruction'] for n in db.query(
             "SELECT DISTINCT model_instruction FROM editorial_note WHERE model_instruction IS NOT NULL AND chunk_ids && %(ids)s::bigint[]",
             dict(ids=ids))]
-    terms = db.query("""SELECT term_tr, term_en, definition_tr, definition_child_tr, origin FROM term
-                         WHERE position(lower(term_tr) IN lower(%(ctx)s)) > 0 LIMIT %(n)s""",
+    terms = db.query(f"""SELECT term_tr, term_en, definition_tr, definition_child_tr, origin FROM term
+                         WHERE position(lower(term_tr) IN lower(%(ctx)s)) > 0 {term_filter(db)} LIMIT %(n)s""",
                      dict(ctx=context, n=6 if ECO else 12))
     if terms:
         context += '\n\nTERİMLER (kavram açıklaması; tarihî bilgi değildir):\n' + '\n'.join(
@@ -576,8 +588,8 @@ def narrate(db, slug, mode, lang='tr', model=None):
         notes += [n['model_instruction'] for n in db.query(
             "SELECT DISTINCT model_instruction FROM editorial_note WHERE model_instruction IS NOT NULL AND chunk_ids && %(ids)s::bigint[]",
             dict(ids=[c['id'] for c in chunks]))]
-    terms = db.query("""SELECT term_tr, term_en, definition_tr, definition_child_tr FROM term
-                         WHERE position(lower(term_tr) IN lower(%(ctx)s)) > 0 LIMIT 12""", dict(ctx=context))
+    terms = db.query(f"""SELECT term_tr, term_en, definition_tr, definition_child_tr FROM term
+                         WHERE position(lower(term_tr) IN lower(%(ctx)s)) > 0 {term_filter(db)} LIMIT 12""", dict(ctx=context))
     if terms:
         context += '\n\nTERİMLER (kavram açıklaması; tarihî bilgi değildir):\n' + '\n'.join(
             f"- {t['term_tr']} ({t['term_en']}): {(t['definition_child_tr'] if mode == 'child' and t['definition_child_tr'] else t['definition_tr'])}"

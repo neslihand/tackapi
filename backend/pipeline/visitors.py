@@ -33,6 +33,8 @@ EVENT_TYPES = {
     'page_view', 'monument_view', 'narration_mode', 'read_depth', 'read_time', 'photo_open', 'chat_question',
     'chat_answer', 'camera_search', 'search', 'filter', 'map_select', 'map_locate', 'route_open', 'quiz_finish',
     'game_finish', 'stamp', 'favorite', 'contribution', 'recommendation_click', 'consent',
+    # makaleler ve terimler sözlüğü
+    'article_view', 'article_submit', 'term_submit', 'term_search',
     # site deneyimi (yönetici asistanı): tarayıcı hatası, sayfa açılış süresi, başarısız ve yavaş istek
     'client_error', 'page_perf', 'api_error', 'api_slow'}
 SESSION_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
@@ -274,6 +276,8 @@ def build_router(db, media_dir):
         u = require(request)
         files = [c['file'] for c in db.query("SELECT file FROM contribution WHERE user_id = %(u)s AND file IS NOT NULL", dict(u=u['id']))]
         db.execute('DELETE FROM contribution WHERE user_id = %(u)s', dict(u=u['id']))
+        import articles   # döngüsel içe aktarmayı önler (articles, visitors.Limiter'ı kullanır)
+        articles.forget_user(db, u['id'], media_dir)
         db.execute('DELETE FROM user_session WHERE user_id = %(u)s', dict(u=u['id']))
         db.execute('DELETE FROM user_progress WHERE user_id = %(u)s', dict(u=u['id']))
         db.execute('UPDATE analytics_event SET user_id = NULL WHERE user_id = %(u)s', dict(u=u['id']))

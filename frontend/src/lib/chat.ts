@@ -1,5 +1,6 @@
 import type { DiscoveryArtifact } from './artifactContract';
 import { CHAT_LIMITS, parseSources, type ChatTurn } from './chatContract.ts';
+import { t } from './i18n.ts';
 
 // History lives in this browser only, one list per artifact, kept apart for the local demo and an external feed
 // the same way the passport is (esik:passport:v1 / esik:passport:feed:v1).
@@ -38,20 +39,20 @@ export function requestTurns(history: ChatTurn[]) {
   return start < 0 ? [] : recent.slice(start).map(turn => ({ role: turn.role, content: turn.content.slice(0, CHAT_LIMITS.assistantMessage) }));
 }
 
-const known = (value: string | undefined) => Boolean(value && value !== 'Bilinmiyor');
+const known = (value: string | undefined) => Boolean(value && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
 
 // Welcome text and suggestions come from the record itself, so opening the panel costs no model call.
 export function welcomeMessage(artifact: DiscoveryArtifact) {
-  return `Merhaba! **${artifact.name}** hakkında merak ettiklerini sorabilirsin: kim yaptırdı, nasıl bir mimarisi var, hangi dönemin izlerini taşıyor… Cevaplarımı bu sayfadaki bilgilere ve kaynaklara dayandırırım.`;
+  return t(`Merhaba! **${artifact.name}** hakkında merak ettiklerini sorabilirsin: kim yaptırdı, nasıl bir mimarisi var, hangi dönemin izlerini taşıyor… Cevaplarımı bu sayfadaki bilgilere ve kaynaklara dayandırırım.`, `Hello! Ask me anything you wonder about **${artifact.name}**: who had it built, what its architecture is like, which era it bears the marks of… I base my answers on the information and sources on this page.`);
 }
 export function chatSuggestions(artifact: DiscoveryArtifact, chapter?: number) {
-  const list = ['Bu eseri üç cümlede anlat'];
+  const list = [t('Bu eseri üç cümlede anlat', 'Describe this work in three sentences')];
   const index = chapter ?? 0;
   const current = artifact.chapters[index];
-  if (current) list.push(`Bölüm ${index + 1}: “${current.title}” bölümünü açar mısın?`);
-  if (artifact.detail) list.push(`“${artifact.detail.title}” ayrıntısını açıkla`);
-  if (known(artifact.architect)) list.push(`${artifact.architect} kimdir, bu eserde ne yaptı?`);
-  list.push('Bu yapı ne için kullanılıyordu?', 'Bunu bir çocuğa anlatır gibi anlat');
+  if (current) list.push(t(`Bölüm ${index + 1}: “${current.title}” bölümünü açar mısın?`, `Chapter ${index + 1}: could you explain “${current.title}”?`));
+  if (artifact.detail) list.push(t(`“${artifact.detail.title}” ayrıntısını açıkla`, `Explain the detail “${artifact.detail.title}”`));
+  if (known(artifact.architect)) list.push(t(`${artifact.architect} kimdir, bu eserde ne yaptı?`, `Who was ${artifact.architect}, and what did they do in this work?`));
+  list.push(t('Bu yapı ne için kullanılıyordu?', 'What was this building used for?'), t('Bunu bir çocuğa anlatır gibi anlat', 'Tell it as you would to a child'));
   return list;
 }
 

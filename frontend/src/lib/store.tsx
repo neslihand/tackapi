@@ -6,6 +6,7 @@ import { answerableArtifacts } from './quiz';
 import { useContent } from './contentStore';
 import { accountApi, useAccount } from './account';
 import { track } from './analytics';
+import { t } from './i18n';
 
 // `previous` is the best result before this one; `unlocked` names the medals this result opened. The game shows both
 // inside its dialog, where the page toast does not reach screen readers.
@@ -40,7 +41,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     const answerable = answerableArtifacts(quizQuestions, known.current);
     const wasDone = new Set(buildQuests(routes, known.current, previous.current, answerable).filter(q => q.complete).map(q => q.id));
     const quests = buildQuests(routes, known.current, progress, answerable).filter(q => q.complete && !wasDone.has(q.id));
-    const news = [...(unlocked.length ? [`Yeni madalyon: ${unlocked.map(a => a.name).join(' · ')}`] : []), ...(quests.length ? [`Görev tamamlandı: ${quests.map(q => q.title).join(' · ')}`] : [])];
+    const news = [...(unlocked.length ? [`${t('Yeni madalyon', 'New medallion')}: ${unlocked.map(a => a.name).join(' · ')}`] : []), ...(quests.length ? [`${t('Görev tamamlandı', 'Quest complete')}: ${quests.map(q => q.title).join(' · ')}`] : [])];
     if (news.length) notify(news.join(' · '));
     previous.current = progress;
   }, [progress, notify, progressStorageKey]);

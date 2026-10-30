@@ -1,6 +1,7 @@
 import type { Artifact, QuizQuestion } from '../data/artifacts';
 import type { Season } from '../data/collections';
 import { normalize } from './progress.ts';
+import { t } from './i18n.ts';
 
 // Local admin edits live in the browser only. Each key replaces the matching base list as a whole.
 export const CONTENT_KEY = 'esik:content:v1';
@@ -97,7 +98,7 @@ export function pickRound<T>(pool: T[], size = 5, random = Math.random): T[] {
 }
 // Alt text for an artifact image. Without a description the name is used so the image is never unlabeled.
 export const imageAlt = (artifact: { name: string; image: string; imageAlt?: string }) =>
-  artifact.image === PLACEHOLDER_IMAGE ? 'Görsel hazırlanıyor' : artifact.imageAlt ?? `${artifact.name} görseli`;
+  artifact.image === PLACEHOLDER_IMAGE ? t('Görsel hazırlanıyor', 'Image in preparation') : artifact.imageAlt ?? t(`${artifact.name} görseli`, `Picture of ${artifact.name}`);
 export const roundScore = (correct: number, total: number) => total ? Math.round(correct / total * 100) : 0;
 
 export function blankArtifact(name: string): Artifact {

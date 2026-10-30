@@ -4,6 +4,7 @@ import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { useContent } from '../lib/contentStore';
 import { useProgress } from '../lib/store';
 import { Link } from '../lib/navigation';
+import { currentLang, t } from '../lib/i18n';
 import { fetchMonument, vakifItem } from '../lib/vakifApi';
 import { AskArtifact } from '../components/AskArtifact';
 import { NextDoor } from '../components/ArtifactCard';
@@ -39,17 +40,17 @@ export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
   const stamped = Boolean(progress.discovered[artifact.id]);
   const favorite = progress.favorites.includes(artifact.id);
   const next = artifacts[(artifacts.findIndex(a => a.id === artifact.id) + 1) % artifacts.length];
-  if (error || !item) return <div className="page-shell empty-state" role="alert"><h1>Eser açılamadı.</h1><p>{error || 'Bu eserin bilgisi bulunamadı.'}</p><Link className="button dark" to="/kesfet">Eserlere dön</Link></div>;
-  if (!detail) return <div className="page-shell loading-state" role="status">{artifact.name} hazırlanıyor…</div>;
+  if (error || !item) return <div className="page-shell empty-state" role="alert"><h1>{t('Eser açılamadı.', 'The work could not be opened.')}</h1><p>{error || t('Bu eserin bilgisi bulunamadı.', 'No information was found for this work.')}</p><Link className="button dark" to="/kesfet">{t('Eserlere dön', 'Back to the collection')}</Link></div>;
+  if (!detail) return <div className="page-shell loading-state" role="status">{t(`${artifact.name} hazırlanıyor…`, `Preparing ${artifact.name}…`)}</div>;
   const immersive = toImmersive(item, detail);
   if (immersive) return <ImmersiveStory artifact={immersive}
-    extras={<><section className="vakif-extras pv" aria-label="Eserin fotoğrafları, tarihçesi ve konumu"><div className="pv-body"><MonumentSections item={item} detail={detail} lang="tr" /></div></section>
+    extras={<><section className="vakif-extras pv" aria-label={t('Eserin fotoğrafları, tarihçesi ve konumu', 'The work’s photos, history and location')}><div className="pv-body"><MonumentSections item={item} detail={detail} lang={currentLang()} /></div></section>
       <Contributions slug={artifact.slug} name={artifact.name} /></>} />;
   const actions = <>
     <AskArtifact artifact={artifact} mode="short" />
-    <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>Favori</span></button>
-    <button className={`button ${stamped ? 'stamped' : 'gold'}`} disabled={stamped} onClick={() => { markDiscovered(artifact.id); notify('Keşfin miras pasaportuna mühürlendi.'); }}>
-      {stamped ? <><Check size={17} /> Pasaportuna mühürlendi</> : <><Stamp size={17} /> Pasaportuma mühürle</>}</button>
+    <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>{t('Favori', 'Favourite')}</span></button>
+    <button className={`button ${stamped ? 'stamped' : 'gold'}`} disabled={stamped} onClick={() => { markDiscovered(artifact.id); notify(t('Keşfin miras pasaportuna mühürlendi.', 'Your discovery is stamped into your heritage passport.')); }}>
+      {stamped ? <><Check size={17} /> {t('Pasaportuna mühürlendi', 'Stamped into your passport')}</> : <><Stamp size={17} /> {t('Pasaportuma mühürle', 'Stamp my passport')}</>}</button>
   </>;
   return <div className="vakif-story">
     <MonumentView item={item} detail={detail} lang="tr" backHref="#/kesfet" actions={actions} />

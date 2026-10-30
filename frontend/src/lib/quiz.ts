@@ -2,12 +2,13 @@ import type { QuizQuestion } from '../data/artifacts';
 import type { DiscoveryArtifact } from './artifactContract';
 import { centuryOf, maskNames, shuffle, type Random } from './games.ts';
 import { normalize } from './progress.ts';
+import { centuryName, t } from './i18n.ts';
 
 // Quiz questions built from the artifact records, so every collection (an external feed too) has a quiz.
 // The right answer is the record's own value; the wrong ones are other artifacts' values for the same field, never
 // made up. A question needs at least three distinct choices, otherwise it is not asked.
 export type GeneratedKind = 'city' | 'architect' | 'century' | 'period' | 'detail';
-const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && value !== 'Bilinmiyor');
+const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
 const MAX_OPTIONS = 4;
 const MIN_OPTIONS = 3;
 
@@ -22,10 +23,10 @@ function brief(text: string) {
 
 type Template = { kind: GeneratedKind; value: (a: DiscoveryArtifact) => string | null; question: (a: DiscoveryArtifact) => string; explanation: (a: DiscoveryArtifact, answer: string) => string };
 const templates: Template[] = [
-  { kind: 'city', value: a => known(a.city) ? a.city : null, question: a => `${a.name} hangi şehirde yer alır?`, explanation: (a, city) => `${a.name}, ${city} şehrindedir.` },
-  { kind: 'architect', value: a => known(a.architect) ? a.architect : null, question: a => `${a.name} hangi mimarın ya da ustanın eseridir?`, explanation: (a, who) => `Eser sayfasına göre ${a.name} eserinin mimarı ya da ustası ${who}.` },
-  { kind: 'century', value: a => { const c = centuryOf(a.year); return c ? `${c}. yüzyıl` : null; }, question: a => `${a.name} hangi yüzyıla tarihlenir?`, explanation: (a, century) => `${a.name} için verilen tarih ${a.year}; bu, ${century}a denk gelir.` },
-  { kind: 'period', value: a => known(a.period) ? a.period : null, question: a => `${a.name} hangi döneme aittir?`, explanation: (a, period) => `${a.name}, ${period} dönemine aittir.` },
+  { kind: 'city', value: a => known(a.city) ? a.city : null, question: a => t(`${a.name} hangi şehirde yer alır?`, `In which city is ${a.name}?`), explanation: (a, city) => t(`${a.name}, ${city} şehrindedir.`, `${a.name} is in ${city}.`) },
+  { kind: 'architect', value: a => known(a.architect) ? a.architect : null, question: a => t(`${a.name} hangi mimarın ya da ustanın eseridir?`, `Which architect or master built ${a.name}?`), explanation: (a, who) => t(`Eser sayfasına göre ${a.name} eserinin mimarı ya da ustası ${who}.`, `According to its page, the architect or master of ${a.name} is ${who}.`) },
+  { kind: 'century', value: a => { const c = centuryOf(a.year); return c ? centuryName(c) : null; }, question: a => t(`${a.name} hangi yüzyıla tarihlenir?`, `To which century does ${a.name} date?`), explanation: (a, century) => t(`${a.name} için verilen tarih ${a.year}; bu, ${century}a denk gelir.`, `The date given for ${a.name} is ${a.year}, which falls in the ${century}.`) },
+  { kind: 'period', value: a => known(a.period) ? a.period : null, question: a => t(`${a.name} hangi döneme aittir?`, `Which era does ${a.name} belong to?`), explanation: (a, period) => t(`${a.name}, ${period} dönemine aittir.`, `${a.name} belongs to the ${period} era.`) },
 ];
 
 function choices(correct: string, others: string[], random: Random) {
@@ -56,7 +57,7 @@ export function generateQuestions(artifacts: readonly DiscoveryArtifact[], rando
     // The detail question asks which artifact a documented detail belongs to; its text never names the artifact.
     if (artifact.detail) {
       const picked = choices(artifact.name, artifacts.filter(a => a.id !== artifact.id).map(a => a.name), random);
-      if (picked) questions.push({ id: `veri:detail:${artifact.id}`, question: `“${maskNames(artifact.detail.title, artifact)}” hangi eserin mimari ayrıntısıdır?`, ...picked, explanation: brief(artifact.detail.text), artifactId: artifact.id });
+      if (picked) questions.push({ id: `veri:detail:${artifact.id}`, question: t(`“${maskNames(artifact.detail.title, artifact)}” hangi eserin mimari ayrıntısıdır?`, `Which work is “${maskNames(artifact.detail.title, artifact)}” an architectural detail of?`), ...picked, explanation: brief(artifact.detail.text), artifactId: artifact.id });
     }
   }
   return questions;

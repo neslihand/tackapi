@@ -1,4 +1,5 @@
 import type { DiscoveryArtifact } from './artifactContract';
+import { centuryName, currentLang, t } from './i18n.ts';
 
 // Rules for the two mini games (Kayıp Parçalar, Miras Dedektifi), kept free of React so they can be tested.
 // See oyun/oyunlar.md for the design.
@@ -8,7 +9,7 @@ export type GameLevel = 'kolay' | 'orta' | 'zor';
 export type GameRecords = Record<string, Partial<Record<GameLevel, number>>>;
 export const gameLevels = [['kolay', 'Kolay'], ['orta', 'Orta'], ['zor', 'Zor']] as const;
 export const isGameLevel = (value: unknown): value is GameLevel => gameLevels.some(([level]) => level === value);
-export const levelName = (level: GameLevel) => gameLevels.find(([value]) => value === level)![1];
+export const levelName = (level: GameLevel) => level === 'kolay' ? t('Kolay', 'Easy') : level === 'orta' ? t('Orta', 'Medium') : t('Zor', 'Hard');
 export const nextLevel = (level: GameLevel): GameLevel | undefined => ({ kolay: 'orta', orta: 'zor', zor: undefined } as const)[level];
 export const puzzleSize: Record<GameLevel, number> = { kolay: 3, orta: 4, zor: 5 };
 export const detectiveOptions: Record<GameLevel, number> = { kolay: 4, orta: 5, zor: 6 };
@@ -73,7 +74,7 @@ const clueOrder: Record<GameLevel, ClueKind[]> = {
   orta: ['era', 'detail', 'chapter', 'architect'],
   zor: ['era', 'chapter', 'detail', 'region', 'architect'],
 };
-const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && value !== 'Bilinmiyor');
+const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
 
 export const clueCount = (level: GameLevel) => clueOrder[level].length;
 
@@ -85,6 +86,8 @@ export function centuryOf(year: string | null | undefined) {
 export function regionOf(coordinates: [number, number] | null) {
   if (!coordinates) return null;
   const [lat, lng] = coordinates;
+  const ns = lat - 39 > 1 ? 'north' : lat - 39 < -1 ? 'south' : '', ew = lng - 35 < -3 ? 'west' : lng - 35 > 3 ? 'east' : '';
+  if (currentLang() === 'en') return ns || ew ? `In the ${[ns, ew].filter(Boolean).join('-')} of Türkiye` : 'In central Türkiye';
   const direction = (lat - 39 > 1 ? 'kuzey' : lat - 39 < -1 ? 'güney' : '') + (lng - 35 < -3 ? 'batı' : lng - 35 > 3 ? 'doğu' : '');
   if (!direction) return 'Türkiye\'nin iç kesimlerinde';
   const ending = direction.endsWith('batı') ? 'sında' : direction.endsWith('doğu') ? 'sunda' : 'inde';
@@ -104,7 +107,7 @@ export function revealingWords(artifact: Pick<DiscoveryArtifact, 'name' | 'city'
 // Replaces each revealing word, with any suffix after an apostrophe, by "[gizli]": "Edirne'ye bir armağan" → "[gizli] bir armağan".
 export function maskNames(text: string, artifact: Pick<DiscoveryArtifact, 'name' | 'city'>, withCity = true) {
   const hidden = revealingWords(artifact, withCity);
-  return text.replace(/[\p{L}\p{N}]+(?:['’][\p{L}]+)?/gu, token => hidden.has(lower(token.split(/['’]/)[0])) ? '[gizli]' : token);
+  return text.replace(/[\p{L}\p{N}]+(?:['’][\p{L}]+)?/gu, token => hidden.has(lower(token.split(/['’]/)[0])) ? t('[gizli]', '[hidden]') : token);
 }
 
 function clueFacts(artifact: DiscoveryArtifact): Partial<Record<ClueKind, { label: string; text: string }>> {
@@ -113,17 +116,17 @@ function clueFacts(artifact: DiscoveryArtifact): Partial<Record<ClueKind, { labe
   const detail = artifact.detail?.title ?? artifact.chapters[2]?.title;
   const chapter = artifact.chapters[1]?.title ?? artifact.chapters[0]?.title;
   return {
-    era: { label: century ? 'Yüzyıl ve tür' : 'Tür', text: century ? `${century}. yüzyıl · ${artifact.category}` : artifact.category },
-    detail: detail ? { label: 'Mimari ayrıntı', text: detail } : undefined,
-    chapter: chapter ? { label: 'Hikâyeden bir bölüm', text: chapter } : undefined,
-    region: region ? { label: 'Bölge', text: region } : undefined,
+    era: { label: century ? t('Yüzyıl ve tür', 'Century and type') : t('Tür', 'Type'), text: century ? `${centuryName(century)} · ${artifact.category}` : artifact.category },
+    detail: detail ? { label: t('Mimari ayrıntı', 'Architectural detail'), text: detail } : undefined,
+    chapter: chapter ? { label: t('Hikâyeden bir bölüm', 'A part of the story'), text: chapter } : undefined,
+    region: region ? { label: t('Bölge', 'Region'), text: region } : undefined,
     architect: known(artifact.architect) ? { label: 'Usta', text: artifact.architect } : undefined,
-    place: { label: known(artifact.architect) ? 'Şehir ve usta' : 'Şehir', text: known(artifact.architect) ? `${artifact.city} · ${artifact.architect}` : artifact.city },
+    place: { label: known(artifact.architect) ? t('Şehir ve usta', 'City and master') : t('Şehir', 'City'), text: known(artifact.architect) ? `${artifact.city} · ${artifact.architect}` : artifact.city },
   };
 }
 // Kolay keeps the first clue as it was: "Klasik Osmanlı · Cami · 1568–1575".
 function kolayEra(artifact: DiscoveryArtifact) {
-  return { label: 'Dönem ve tür', text: [artifact.period, artifact.category, known(artifact.year) ? artifact.year : ''].filter(Boolean).join(' · ') };
+  return { label: t('Dönem ve tür', 'Era and type'), text: [artifact.period, artifact.category, known(artifact.year) ? artifact.year : ''].filter(Boolean).join(' · ') };
 }
 
 export function detectiveClues(artifact: DiscoveryArtifact, level: GameLevel): Clue[] {

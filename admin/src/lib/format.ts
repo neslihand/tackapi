@@ -1,5 +1,5 @@
 // Saf yardımcılar: etiketler, form doğrulama, değişen alanları bulma. React'e bağlı değildir (node:test ile sınanır).
-import type { DateBasis, GeoInfo, GeoPrecision, ImageStatus, Kind, MonumentDetail, MonumentFields, MonumentState } from './types';
+import type { ArticleKind, ArticleOrigin, ArticleStatus, DateBasis, GeoInfo, GeoPrecision, ImageStatus, Kind, MonumentDetail, MonumentFields, MonumentState, TermCategory } from './types';
 
 export const KIND_LABELS: Record<Kind, string> = {
   complex: 'Külliye', mosque: 'Cami', masjid: 'Mescit', madrasa: 'Medrese', tomb: 'Türbe', imaret: 'İmaret', bath: 'Hamam',
@@ -153,4 +153,61 @@ export function fieldsFromForm(f: MonumentForm): MonumentFields {
 export function slugPreview(...parts: (string | null | undefined)[]): string {
   const fold = (s: string) => s.replace(/ı/g, 'i').replace(/İ/g, 'I').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
   return parts.filter(Boolean).map(p => fold(p!).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')).filter(Boolean).join('-').slice(0, 120);
+}
+
+// ------------------------------------------------------------------ makaleler ve terimler (articles.py ile aynı kurallar)
+export const ARTICLE_KIND_LABELS: Record<ArticleKind, string> = { city_history: 'Şehir tarihi', heritage: 'Vakıf eserleri', culture: 'Vakıf kültürü' };
+export const ARTICLE_STATUS_LABELS: Record<ArticleStatus, string> = { draft: 'Taslak', pending: 'Onay bekliyor', published: 'Yayında', rejected: 'Reddedildi' };
+export const ARTICLE_ORIGIN_LABELS: Record<ArticleOrigin, string> = { book: 'Kitaptan', editorial: 'Editör', visitor: 'Ziyaretçi' };
+export const TERM_CATEGORY_LABELS: Record<TermCategory, string> = {
+  architecture: 'Mimari', decoration: 'Süsleme', waqf: 'Vakıf', title: 'Unvan ve görev', daily_life: 'Gündelik hayat', other: 'Diğer',
+};
+
+export type ArticleBlock = { type: 'h' | 'p' | 'q'; text: string };
+/** Makale metni → bloklar: boş satır paragrafı ayırır, '## ' ara başlık, '> ' alıntı (sitedeki okuma sayfasıyla aynı). */
+export function articleBlocks(body: string): ArticleBlock[] {
+  const out: ArticleBlock[] = [];
+  for (const block of (body ?? '').replace(/\r\n/g, '\n').split(/\n\s*\n/)) {
+    let buf: string[] = [];
+    const flush = () => { if (buf.length) { const text = buf.join(' '); out.push(text.startsWith('> ') ? { type: 'q', text: text.slice(2).trim() } : { type: 'p', text }); buf = []; } };
+    for (const raw of block.split('\n')) {
+      const line = raw.trim();
+      if (!line) continue;
+      if (line.startsWith('## ')) { flush(); out.push({ type: 'h', text: line.slice(3).trim() }); }
+      else buf.push(line);
+    }
+    flush();
+  }
+  return out;
+}
+export const wordCount = (text: string) => (text.match(/[\p{L}\p{N}_]+/gu) ?? []).length;
+export const readingMinutes = (text: string) => Math.max(1, Math.round(wordCount(text) / 200));
+
+/** Kaydetmeden önce (sunucudaki article_issues ile aynı): yönetici taslağı boş olabilir, yayın için en az 100 karakter. */
+export function articleIssues(f: { title_tr: string; body_tr: string; summary_tr?: string | null; summary_en?: string | null }, publishing = false): string[] {
+  const out: string[] = [];
+  const title = f.title_tr.trim();
+  if (title.length < 5 || title.length > 160) out.push('Başlık 5–160 karakter olmalı.');
+  if ((f.summary_tr ?? '').length > 400 || (f.summary_en ?? '').length > 400) out.push('Özet en çok 400 karakter olabilir.');
+  if (f.body_tr.length > 80000) out.push('Makale metni en çok 80.000 karakter olabilir.');
+  if (publishing && f.body_tr.trim().length < 100) out.push('Yayımlamak için metin en az 100 karakter olmalı.');
+  return out;
+}
+export function termIssues(f: { term_tr: string; definition_tr: string; definition_child_tr?: string | null }): string[] {
+  const out: string[] = [];
+  const term = f.term_tr.trim(), def = f.definition_tr.trim();
+  if (term.length < 2 || term.length > 80) out.push('Terim 2–80 karakter olmalı.');
+  if (def.length < 10 || def.length > 1200) out.push('Tanım 10–1200 karakter olmalı.');
+  if ((f.definition_child_tr ?? '').length > 600) out.push('Çocuklar için tanım en çok 600 karakter olabilir.');
+  return out;
+}
+/** Seçilen paragrafların kapsadığı basılı sayfalar: "s. 24–26" (sayfa bilgisi yoksa boş). */
+export function pagesLabel(paragraphs: { pages: number[] }[]): string {
+  const pages = [...new Set(paragraphs.flatMap(p => p.pages))].sort((a, b) => a - b);
+  if (!pages.length) return '';
+  return pages[0] === pages[pages.length - 1] ? `s. ${pages[0]}` : `s. ${pages[0]}–${pages[pages.length - 1]}`;
+}
+/** Bir paragraf aralığı daha önce içe aktarılanlarla çakışıyor mu? Çakışan makaleleri döndürür. */
+export function overlapping<T extends { from_para: number; to_para: number }>(used: T[], from: number, to: number): T[] {
+  return used.filter(u => u.from_para <= to && from <= u.to_para);
 }

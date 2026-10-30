@@ -4,7 +4,9 @@ import { accountApi, useAccount, type ProfileFields, type ProfileOptions } from 
 import { consent, setConsent } from '../lib/analytics';
 import { Link, navigate } from '../lib/navigation';
 import { useProgress } from '../lib/store';
+import { t } from '../lib/i18n';
 import { Scene } from '../components/UI';
+import { MyWriting } from './WriteArticle';
 import './visitor.css';
 
 function useOptions() {
@@ -17,15 +19,15 @@ const toggle = (list: string[], id: string) => list.includes(id) ? list.filter(x
 
 /** İsteğe bağlı profil alanları (kayıt ve "Hesabım"). Ad-soyad ve doğum tarihi istenmez. */
 function ProfileInputs({ value, onChange, options }: { value: ProfileFields; onChange: (v: ProfileFields) => void; options: ProfileOptions | null }) {
-  return <fieldset className="v-fieldset"><legend>Seni biraz tanıyalım <small>(hepsi isteğe bağlı)</small></legend>
-    <label className="v-field"><span>Takma ad</span><input maxLength={40} value={value.display_name ?? ''} onChange={e => onChange({ ...value, display_name: e.target.value })} placeholder="Katkılarında görünür" /></label>
-    <label className="v-field"><span>Yaş aralığı</span><select value={value.age_range ?? ''} onChange={e => onChange({ ...value, age_range: e.target.value || null })}>
-      <option value="">Belirtmek istemiyorum</option>{options?.age_ranges.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
-    <label className="v-field"><span>Yaşadığın şehir</span><input maxLength={60} value={value.home_city ?? ''} onChange={e => onChange({ ...value, home_city: e.target.value })} /></label>
-    <div className="v-field" role="group" aria-labelledby="v-purposes"><span id="v-purposes">Bu siteye neden geldin?</span>
+  return <fieldset className="v-fieldset"><legend>{t('Seni biraz tanıyalım', 'Tell us a little about you')} <small>{t('(hepsi isteğe bağlı)', '(all optional)')}</small></legend>
+    <label className="v-field"><span>{t('Takma ad', 'Nickname')}</span><input maxLength={40} value={value.display_name ?? ''} onChange={e => onChange({ ...value, display_name: e.target.value })} placeholder={t('Katkılarında görünür', 'Shown on your contributions')} /></label>
+    <label className="v-field"><span>{t('Yaş aralığı', 'Age range')}</span><select value={value.age_range ?? ''} onChange={e => onChange({ ...value, age_range: e.target.value || null })}>
+      <option value="">{t('Belirtmek istemiyorum', 'I would rather not say')}</option>{options?.age_ranges.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+    <label className="v-field"><span>{t('Yaşadığın şehir', 'Your home city')}</span><input maxLength={60} value={value.home_city ?? ''} onChange={e => onChange({ ...value, home_city: e.target.value })} /></label>
+    <div className="v-field" role="group" aria-labelledby="v-purposes"><span id="v-purposes">{t('Bu siteye neden geldin?', 'Why did you come to this site?')}</span>
       <div className="v-chips">{options?.purposes.map(o => <label key={o.id} className={value.purposes?.includes(o.id) ? 'on' : ''}>
         <input type="checkbox" checked={value.purposes?.includes(o.id) ?? false} onChange={() => onChange({ ...value, purposes: toggle(value.purposes ?? [], o.id) })} />{o.label}</label>)}</div></div>
-    <div className="v-field" role="group" aria-labelledby="v-interests"><span id="v-interests">En çok neyi merak ediyorsun?</span>
+    <div className="v-field" role="group" aria-labelledby="v-interests"><span id="v-interests">{t('En çok neyi merak ediyorsun?', 'What are you most curious about?')}</span>
       <div className="v-chips">{options?.interests.map(o => <label key={o.id} className={value.interests?.includes(o.id) ? 'on' : ''}>
         <input type="checkbox" checked={value.interests?.includes(o.id) ?? false} onChange={() => onChange({ ...value, interests: toggle(value.interests ?? [], o.id) })} />{o.label}</label>)}</div></div>
   </fieldset>;
@@ -47,7 +49,7 @@ export function LoginPage({ query }: { query: string }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
-    if (mode === 'register' && !agreed) { setError('Hesap açmak için aydınlatma metnini onaylaman gerekiyor.'); return; }
+    if (mode === 'register' && !agreed) { setError(t('Hesap açmak için aydınlatma metnini onaylaman gerekiyor.', 'To open an account you need to accept the privacy notice.')); return; }
     setBusy(true);
     try {
       if (mode === 'login') await login({ email, password, progress });
@@ -56,25 +58,25 @@ export function LoginPage({ query }: { query: string }) {
     finally { setBusy(false); }
   }
   return <Scene className="visitor-scene"><div className="page-shell v-page">
-    <p className="eyebrow">MİRAS PASAPORTUN HER CİHAZDA</p>
-    <h1>{mode === 'login' ? <>Tekrar <em>hoş geldin.</em></> : <>Keşfine <em>bir ad ver.</em></>}</h1>
-    <p className="v-lede">Hesabınla pasaportun ve madalyonların her cihazda seninle gelir; eserlere fotoğraf, anı ya da bilgi ekleyebilirsin.</p>
+    <p className="eyebrow">{t('MİRAS PASAPORTUN HER CİHAZDA', 'YOUR HERITAGE PASSPORT ON EVERY DEVICE')}</p>
+    <h1>{mode === 'login' ? <>{t('Tekrar', 'Welcome')} <em>{t('hoş geldin.', 'back.')}</em></> : <>{t('Keşfine', 'Give your discovery')} <em>{t('bir ad ver.', 'a name.')}</em></>}</h1>
+    <p className="v-lede">{t('Hesabınla pasaportun ve madalyonların her cihazda seninle gelir; eserlere fotoğraf, anı ya da bilgi ekleyebilirsin.', 'With an account, your passport and medallions come with you on every device, and you can add photos, memories or facts to the works.')}</p>
     <div className="v-tabs" role="tablist">
-      <button role="tab" aria-selected={mode === 'login'} onClick={() => { setMode('login'); setError(''); }}>Giriş yap</button>
-      <button role="tab" aria-selected={mode === 'register'} onClick={() => { setMode('register'); setError(''); }}>Hesap aç</button>
+      <button role="tab" aria-selected={mode === 'login'} onClick={() => { setMode('login'); setError(''); }}>{t('Giriş yap', 'Sign in')}</button>
+      <button role="tab" aria-selected={mode === 'register'} onClick={() => { setMode('register'); setError(''); }}>{t('Hesap aç', 'Open an account')}</button>
     </div>
     <form className="v-form" onSubmit={submit} noValidate>
-      <label className="v-field"><span>E-posta</span><input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>
-      <label className="v-field"><span>Şifre</span><input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={options?.password_min ?? 8} value={password} onChange={e => setPassword(e.target.value)} />
-        {mode === 'register' && <small>En az {options?.password_min ?? 8} karakter.</small>}</label>
+      <label className="v-field"><span>{t('E-posta', 'Email')}</span><input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>
+      <label className="v-field"><span>{t('Şifre', 'Password')}</span><input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={options?.password_min ?? 8} value={password} onChange={e => setPassword(e.target.value)} />
+        {mode === 'register' && <small>{t(`En az ${options?.password_min ?? 8} karakter.`, `At least ${options?.password_min ?? 8} characters.`)}</small>}</label>
       {mode === 'register' && <>
         <ProfileInputs value={profile} onChange={setProfile} options={options} />
         <label className="v-check"><input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
-          <span><Link to="/gizlilik">Aydınlatma metnini</Link> okudum; e-postamın ve isteğe bağlı profil bilgilerimin hesabım için işlenmesini kabul ediyorum. 13 yaşından büyüğüm.</span></label>
+          <span>{t('', 'I have read the ')}<Link to="/gizlilik">{t('Aydınlatma metnini', 'privacy notice')}</Link>{t(' okudum; e-postamın ve isteğe bağlı profil bilgilerimin hesabım için işlenmesini kabul ediyorum. 13 yaşından büyüğüm.', ' and agree that my email and optional profile details are processed for my account. I am over 13.')}</span></label>
       </>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="button dark" disabled={busy}>{busy ? 'Bekleyin…' : mode === 'login' ? 'Giriş yap' : 'Hesabımı aç'}</button>
-      {mode === 'login' && <p className="v-note">Hesabın yok mu? <button type="button" className="text-link" onClick={() => setMode('register')}>Hemen aç</button></p>}
+      <button className="button dark" disabled={busy}>{busy ? t('Bekleyin…', 'Please wait…') : mode === 'login' ? t('Giriş yap', 'Sign in') : t('Hesabımı aç', 'Open my account')}</button>
+      {mode === 'login' && <p className="v-note">{t('Hesabın yok mu?', 'No account yet?')} <button type="button" className="text-link" onClick={() => setMode('register')}>{t('Hemen aç', 'Open one now')}</button></p>}
     </form>
   </div></Scene>;
 }
@@ -90,34 +92,35 @@ export function AccountPage() {
   useEffect(() => { if (ready && !user) navigate('/giris?sonra=/hesabim'); }, [ready, user]);
   useEffect(() => { if (user) setProfile({ display_name: user.display_name, age_range: user.age_range, home_city: user.home_city, purposes: user.purposes, interests: user.interests }); }, [user]);
   useEffect(() => { if (user) fetch('/api/me/contributions', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : []).then(setMine, () => {}); }, [user]);
-  if (!user || !profile) return <div className="page-shell loading-state" role="status">Hesabın açılıyor…</div>;
+  if (!user || !profile) return <div className="page-shell loading-state" role="status">{t('Hesabın açılıyor…', 'Opening your account…')}</div>;
   async function save(event: FormEvent) {
     event.preventDefault();
-    try { await update({ ...profile, display_name: profile?.display_name?.trim() || null, home_city: profile?.home_city?.trim() || null }); setMessage('Bilgilerin kaydedildi.'); }
+    try { await update({ ...profile, display_name: profile?.display_name?.trim() || null, home_city: profile?.home_city?.trim() || null }); setMessage(t('Bilgilerin kaydedildi.', 'Your details have been saved.')); }
     catch (e) { setMessage((e as Error).message); }
   }
-  const STATUS: Record<string, string> = { pending: 'Onay bekliyor', approved: 'Yayında', rejected: 'Yayınlanmadı' };
+  const STATUS: Record<string, string> = { pending: t('Onay bekliyor', 'Awaiting review'), approved: t('Yayında', 'Published'), rejected: t('Yayınlanmadı', 'Not published') };
   return <Scene className="visitor-scene"><div className="page-shell v-page">
-    <p className="eyebrow">HESABIM</p>
-    <h1>Merhaba{user.display_name ? `, ${user.display_name}` : ''}.</h1>
-    <p className="v-lede">{user.email} · Pasaportunda {Object.keys(progress.discovered).length} mühür, {progress.favorites.length} favori var; her cihazda aynı.</p>
+    <p className="eyebrow">{t('HESABIM', 'MY ACCOUNT')}</p>
+    <h1>{t('Merhaba', 'Hello')}{user.display_name ? `, ${user.display_name}` : ''}.</h1>
+    <p className="v-lede">{user.email} · {t(`Pasaportunda ${Object.keys(progress.discovered).length} mühür, ${progress.favorites.length} favori var; her cihazda aynı.`, `Your passport holds ${Object.keys(progress.discovered).length} stamps and ${progress.favorites.length} favourites, the same on every device.`)}</p>
     <form className="v-form" onSubmit={save}>
       <ProfileInputs value={profile} onChange={setProfile} options={options} />
       {message && <p className="v-note" role="status">{message}</p>}
-      <button className="button dark">Kaydet</button>
+      <button className="button dark">{t('Kaydet', 'Save')}</button>
     </form>
-    <section className="v-section"><h2>Katkıların</h2>
+    <section className="v-section"><h2>{t('Katkıların', 'Your contributions')}</h2>
       {mine.length ? <ul className="v-mine">{mine.map(c => <li key={c.id}><Link to={`/eser/${c.monument}`}>{c.monument_name}</Link>
-        <span>{c.kind === 'photo' ? 'Fotoğraf' : c.text_kind_label}</span><strong className={`v-status ${c.status}`}>{STATUS[c.status]}</strong>
-        {c.reject_reason && <small>Gerekçe: {c.reject_reason}</small>}</li>)}</ul>
-        : <p className="v-note">Henüz katkın yok. Bir eser sayfasının sonundaki “Ziyaretçi katkıları” bölümünden fotoğraf, anı ya da bilgi ekleyebilirsin.</p>}
+        <span>{c.kind === 'photo' ? t('Fotoğraf', 'Photo') : c.text_kind_label}</span><strong className={`v-status ${c.status}`}>{STATUS[c.status]}</strong>
+        {c.reject_reason && <small>{t('Gerekçe', 'Reason')}: {c.reject_reason}</small>}</li>)}</ul>
+        : <p className="v-note">{t('Henüz katkın yok. Bir eser sayfasının sonundaki “Ziyaretçi katkıları” bölümünden fotoğraf, anı ya da bilgi ekleyebilirsin.', 'No contributions yet. You can add a photo, memory or fact from the “Visitor contributions” section at the end of a work’s page.')}</p>}
     </section>
-    <section className="v-section"><h2>Gizlilik</h2>
+    <MyWriting />
+    <section className="v-section"><h2>{t('Gizlilik', 'Privacy')}</h2>
       <label className="v-check"><input type="checkbox" checked={tracking === 'granted'} onChange={e => { const v = e.target.checked ? 'granted' : 'denied'; setConsent(v); setTracking(v); }} />
-        <span>Keşfimin (baktığım eserler, anlatım biçimi, arama) adım olmadan kaydedilmesine izin veriyorum. <Link to="/gizlilik">Ayrıntılar</Link></span></label>
+        <span>{t('Keşfimin (baktığım eserler, anlatım biçimi, arama) adım olmadan kaydedilmesine izin veriyorum.', 'I allow my discovery (the works I view, narration style, searches) to be recorded without my name.')} <Link to="/gizlilik">{t('Ayrıntılar', 'Details')}</Link></span></label>
       <div className="v-actions">
-        <button className="button line" onClick={() => logout().then(() => navigate('/'))}><LogOut size={16} /> Çıkış yap</button>
-        <button className="button line danger" onClick={() => { if (confirm('Hesabın, pasaportun ve katkıların silinsin mi? Bu geri alınamaz.')) remove().then(() => navigate('/')); }}><Trash2 size={16} /> Hesabımı sil</button>
+        <button className="button line" onClick={() => logout().then(() => navigate('/'))}><LogOut size={16} /> {t('Çıkış yap', 'Sign out')}</button>
+        <button className="button line danger" onClick={() => { if (confirm(t('Hesabın, pasaportun, katkıların ve yazıların silinsin mi? Bu geri alınamaz.', 'Delete your account, passport, contributions and articles? This cannot be undone.'))) remove().then(() => navigate('/')); }}><Trash2 size={16} /> {t('Hesabımı sil', 'Delete my account')}</button>
       </div>
     </section>
   </div></Scene>;
@@ -126,17 +129,17 @@ type MyContribution = { id: number; kind: string; text_kind_label: string | null
 
 export function PrivacyPage() {
   return <Scene className="visitor-scene"><div className="page-shell v-page v-prose">
-    <p className="eyebrow">AYDINLATMA METNİ · SÜRÜM 2026-10-28</p>
-    <h1>Verilerin ve <em>senin hakların</em></h1>
-    <p>EŞİK, vakıf eserlerini tanıtan bir hackathon prototipidir. Verilerin yalnızca bu sitenin sunucusunda tutulur; reklam ya da dış analitik servisi kullanılmaz.</p>
-    <h2>Hesap açarsan</h2>
-    <p>E-posta adresin ve şifren (yalnızca geri çözülemeyen bir özeti) hesabın için saklanır. Takma ad, yaş aralığı, yaşadığın şehir, ziyaret amacın ve ilgi alanların isteğe bağlıdır; sana eser önermek ve sitenin kimlere ulaştığını toplu olarak görmek için kullanılır. Ad-soyad ve doğum tarihi istemeyiz. 13 yaşından küçükler hesap açamaz.</p>
-    <h2>İzin verirsen</h2>
-    <p>Baktığın eserler, seçtiğin anlatım biçimi, okuma süren, aramaların, “Esere Sor”a yazdığın sorular, harita ve kamera kullanımın bu tarayıcıda üretilen rastgele bir kimlikle kaydedilir. IP adresin ve cihaz bilgin saklanmaz. Bunlarla sana öneriler hazırlar, sitenin hangi bölümlerinin işe yaradığını anlarız. İzin vermezsen hiçbir şey kaydedilmez; site aynen çalışır. İznini “Hesabım” sayfasından ya da tarayıcı verilerini silerek geri alabilirsin.</p>
-    <h2>Katkı yaparsan</h2>
-    <p>Gönderdiğin fotoğraf ve metinler yönetici onayından sonra eser sayfasında takma adınla görünür. Fotoğrafların içindeki konum ve cihaz bilgisi (EXIF) kaydetmeden önce silinir. Katkılar kitaptaki bilgiden ayrı gösterilir ve sohbet asistanının kaynağı olarak kullanılmaz.</p>
-    <h2>Silme hakkın</h2>
-    <p>“Hesabım → Hesabımı sil” ile e-postan, şifren, profil bilgilerin, pasaportun ve katkıların silinir; daha önceki keşif kayıtların hesabından ayrılır ve kimliksiz kalır.</p>
-    <Link className="button dark" to="/">Keşfe dön</Link>
+    <p className="eyebrow">{t('AYDINLATMA METNİ · SÜRÜM 2026-10-28', 'PRIVACY NOTICE · VERSION 2026-10-28')}</p>
+    <h1>{t('Verilerin ve', 'Your data and')} <em>{t('senin hakların', 'your rights')}</em></h1>
+    <p>{t('EŞİK, vakıf eserlerini tanıtan bir hackathon prototipidir. Verilerin yalnızca bu sitenin sunucusunda tutulur; reklam ya da dış analitik servisi kullanılmaz.', 'EŞİK is a hackathon prototype that introduces foundation (vakıf) works. Your data is kept only on this site’s server; no advertising or outside analytics service is used.')}</p>
+    <h2>{t('Hesap açarsan', 'If you open an account')}</h2>
+    <p>{t('E-posta adresin ve şifren (yalnızca geri çözülemeyen bir özeti) hesabın için saklanır. Takma ad, yaş aralığı, yaşadığın şehir, ziyaret amacın ve ilgi alanların isteğe bağlıdır; sana eser önermek ve sitenin kimlere ulaştığını toplu olarak görmek için kullanılır. Ad-soyad ve doğum tarihi istemeyiz. 13 yaşından küçükler hesap açamaz.', 'Your email address and password (only a hash that cannot be reversed) are kept for your account. Nickname, age range, home city, reason for visiting and interests are optional; they are used to suggest works to you and to see, in aggregate, whom the site reaches. We do not ask for your full name or date of birth. Children under 13 cannot open an account.')}</p>
+    <h2>{t('İzin verirsen', 'If you give permission')}</h2>
+    <p>{t('Baktığın eserler, seçtiğin anlatım biçimi, okuma süren, aramaların, “Esere Sor”a yazdığın sorular, harita ve kamera kullanımın bu tarayıcıda üretilen rastgele bir kimlikle kaydedilir. IP adresin ve cihaz bilgin saklanmaz. Bunlarla sana öneriler hazırlar, sitenin hangi bölümlerinin işe yaradığını anlarız. İzin vermezsen hiçbir şey kaydedilmez; site aynen çalışır. İznini “Hesabım” sayfasından ya da tarayıcı verilerini silerek geri alabilirsin.', 'The works you view, the narration style you choose, your reading time, your searches, the questions you write to “Ask the Work” and your use of the map and camera are recorded under a random ID created in this browser. Your IP address and device details are not kept. We use this to prepare suggestions for you and to learn which parts of the site are useful. If you do not give permission, nothing is recorded and the site works just the same. You can withdraw permission on the “My account” page or by clearing your browser’s data.')}</p>
+    <h2>{t('Katkı yaparsan', 'If you contribute')}</h2>
+    <p>{t('Gönderdiğin fotoğraf ve metinler yönetici onayından sonra eser sayfasında, makalelerin ve terim önerilerin “Makaleler” ile “Terimler” sayfalarında takma adınla görünür. Fotoğrafların içindeki konum ve cihaz bilgisi (EXIF) kaydetmeden önce silinir. Katkılar kitaptaki bilgiden ayrı gösterilir ve sohbet asistanının kaynağı olarak kullanılmaz.', 'Once an administrator approves them, the photos and texts you send appear on the work’s page, and your articles and term suggestions on the “Articles” and “Glossary” pages, under your nickname. Location and device details (EXIF) inside your photos are removed before saving. Contributions are shown apart from the book’s information and are not used as a source for the chat assistant.')}</p>
+    <h2>{t('Silme hakkın', 'Your right to deletion')}</h2>
+    <p>{t('“Hesabım → Hesabımı sil” ile e-postan, şifren, profil bilgilerin, pasaportun ve katkıların silinir; daha önceki keşif kayıtların hesabından ayrılır ve kimliksiz kalır.', '“My account → Delete my account” deletes your email, password, profile details, passport and contributions; your earlier discovery records are separated from your account and stay anonymous.')}</p>
+    <Link className="button dark" to="/">{t('Keşfe dön', 'Back to discovering')}</Link>
   </div></Scene>;
 }

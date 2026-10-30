@@ -1,0 +1,147 @@
+/* ——— Keşfin araçları (ToolsShowcase.tsx) ———
+   Wide screens: a sticky stage on the left (a dark emerald frame with the active tool's scene, a counter and dots) and
+   the tools' texts on the right, each brightening as it crosses the middle of the screen. Narrow screens: each tool
+   carries its own scene above its text. The scenes only move while they are on stage. */
+.ts { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(40px, 6vw, 110px); }
+.ts-stage { position: sticky; top: calc(50svh - min(33svh, 290px)); display: flex; flex-direction: column; gap: 18px; height: min(66svh, 580px); align-self: start; }
+.ts-frame { position: relative; flex: 1; overflow: hidden; border-radius: 26px; color: #f3ecdf; background: radial-gradient(ellipse 70% 60% at 30% 10%, #1d4538, transparent 70%), linear-gradient(160deg, #0d2723, #061410); box-shadow: 0 50px 90px -50px #061410b3, inset 0 0 0 1px #e6d5ae26; }
+.ts-scene { position: absolute; inset: 0; opacity: 0; transform: scale(.96); filter: blur(8px); transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .9s cubic-bezier(.2, .7, .2, 1), filter .7s; }
+.ts-scene.on { opacity: 1; transform: none; filter: none; }
+.ts-count { display: flex; align-items: baseline; gap: 10px; margin: 0; font-family: var(--serif); color: #17201c; }
+.ts-count b { font-size: 34px; font-weight: 400; }
+.ts-count span { font-size: 18px; font-style: italic; color: #8a6a36; }
+.ts-count i { margin-left: 14px; font-family: var(--sans, inherit); font-size: 11px; font-style: normal; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #5b6359; }
+.ts-dots { position: absolute; right: 0; bottom: 14px; display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ts-dots li { width: 22px; height: 2px; border-radius: 2px; background: #17201c26; transition: width .5s, background .5s; }
+.ts-dots li.on { width: 44px; background: #8a6a36; }
+
+.ts-list { margin: 0; padding: 8svh 0; list-style: none; }
+.ts-item { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-height: 64svh; opacity: .32; transition: opacity .6s; }
+.ts-item.on { opacity: 1; }
+.ts-inline { display: none; }
+.ts-kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #765b38; }
+.ts-kicker > span { margin-right: 6px; font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; }
+.ts-item h3 { margin: 0; font-family: var(--serif); font-size: clamp(34px, 3.6vw, 60px); font-weight: 400; line-height: 1; letter-spacing: -.02em; color: #17201c; }
+.ts-item h3 em { font-style: italic; color: #8a6a36; }
+.ts-text { max-width: 46ch; margin: 22px 0 0; font-size: 15.5px; line-height: 1.8; color: #4b5448; }
+.ts-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 26px; padding: 0; list-style: none; }
+.ts-tags li { padding: 7px 14px; border: 1px solid #8a6a3640; border-radius: 999px; font-size: 12px; font-weight: 500; color: #4b5448; background: #fffdf8a6; }
+.ts-item .hp-link.en-link { color: #17201c; }
+
+/* Shared pieces of the scenes. */
+.ts-chip { position: absolute; bottom: 22px; left: 22px; z-index: 3; display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 15px; border: 1px solid #e6d5ae40; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: #f3ecdf; background: #061410b3; backdrop-filter: blur(8px); }
+.ts-chip svg { color: #e6d5ae; }
+.ts-chip.ok svg { color: #9fd3b0; }
+.ts-bubble { max-width: 78%; margin: 0; padding: 14px 18px; border-radius: 18px; font-size: 14.5px; line-height: 1.5; }
+.ts-bubble.q { align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); }
+.ts-bubble.a { align-self: flex-start; display: flex; flex-direction: column; gap: 8px; min-width: 58%; border: 1px solid #e6d5ae2e; border-bottom-left-radius: 4px; color: #f3ecdf; background: #f3ecdf14; }
+.ts-bubble.a > span { height: 8px; border-radius: 8px; background: #f3ecdf33; }
+.ts-bubble.a > span.short { width: 60%; }
+
+/* Map: the country at night, pins dropping onto it one after another. */
+.ts-map img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.ts-pin { position: absolute; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; margin: -34px 0 0 -17px; color: #15130d; }
+.ts-pin svg { position: relative; z-index: 1; fill: #e6d5ae; stroke: #15130d; }
+.ts-pin::after { content: ''; position: absolute; bottom: -4px; left: 50%; width: 10px; height: 4px; margin-left: -5px; border-radius: 50%; background: #e6d5ae; box-shadow: 0 0 0 0 #e6d5ae80; }
+
+/* Camera: a building in the viewfinder, a scan line passing over it. */
+.ts-camera img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; filter: brightness(.62) saturate(.85); }
+.ts-finder { position: absolute; inset: 18% 20%; }
+.ts-finder i { position: absolute; width: 34px; height: 34px; border: 0 solid #e6d5ae; }
+.ts-finder i:nth-child(1) { top: 0; left: 0; border-width: 2px 0 0 2px; border-top-left-radius: 10px; }
+.ts-finder i:nth-child(2) { top: 0; right: 0; border-width: 2px 2px 0 0; border-top-right-radius: 10px; }
+.ts-finder i:nth-child(3) { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-bottom-left-radius: 10px; }
+.ts-finder i:nth-child(4) { right: 0; bottom: 0; border-width: 0 2px 2px 0; border-bottom-right-radius: 10px; }
+.ts-scan { position: absolute; right: 20%; left: 20%; top: 18%; height: 2px; background: linear-gradient(90deg, transparent, #e6d5ae, transparent); box-shadow: 0 0 18px 4px #e6d5ae59; }
+
+/* Ask: a short conversation. */
+.ts-ask { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 40px clamp(24px, 4vw, 52px) 80px; }
+.ts-typing { align-self: flex-start; display: flex; gap: 5px; margin: 0; padding: 14px 18px; border-radius: 18px; background: #f3ecdf14; }
+.ts-typing i { width: 7px; height: 7px; border-radius: 50%; background: #e6d5ae; opacity: .4; }
+
+/* Play: four game cards fanned out. */
+.ts-play { position: absolute; inset: 0; display: grid; place-items: center; }
+.ts-card { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; width: clamp(120px, 34%, 170px); aspect-ratio: 3 / 4; border: 1px solid #e6d5ae40; border-radius: 16px; color: #e6d5ae; background: linear-gradient(170deg, #1d4538, #0b2321); box-shadow: 0 30px 50px -24px #000c; }
+.ts-card b { font-family: var(--serif); font-size: 19px; font-weight: 400; color: #f3ecdf; }
+.ts-card.c1 { rotate: -16deg; translate: -78% 6%; }
+.ts-card.c2 { rotate: -5deg; translate: -26% -3%; }
+.ts-card.c3 { rotate: 6deg; translate: 26% -3%; color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); }
+.ts-card.c3 b { color: #15130d; }
+.ts-card.c4 { rotate: 16deg; translate: 78% 6%; }
+
+/* Passport: the booklet, stamps pressed around it. */
+.ts-passport { position: absolute; inset: 0; display: grid; place-items: center; }
+.ts-book { display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: clamp(140px, 36%, 190px); aspect-ratio: 3 / 4.2; padding: 22px 12px; border-radius: 8px 14px 14px 8px; color: #e6d5ae; background: linear-gradient(160deg, #6b3328, #3e1c16); box-shadow: inset 6px 0 0 #00000033, 0 34px 60px -26px #000; rotate: -6deg; }
+.ts-book small { font-size: 9px; font-weight: 600; letter-spacing: .2em; }
+.ts-book b { font-family: var(--serif); font-size: 22px; font-weight: 400; letter-spacing: .2em; }
+.ts-stamp { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 84px; height: 84px; border: 2px dashed #e6d5aecc; border-radius: 50%; color: #e6d5ae; background: #0b232199; }
+.ts-stamp small { font-size: 8.5px; font-weight: 700; letter-spacing: .12em; }
+.ts-stamp:nth-child(2) { top: 14%; left: 12%; rotate: -14deg; }
+.ts-stamp:nth-child(3) { top: 12%; right: 12%; rotate: 12deg; }
+.ts-stamp:nth-child(4) { bottom: 16%; left: 14%; rotate: 8deg; }
+.ts-stamp:nth-child(5) { right: 13%; bottom: 18%; rotate: -10deg; }
+
+/* Contribution: a photo from a visit and a memory, approved. */
+.ts-share { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 30px 80px; }
+.ts-photo { display: flex; flex-direction: column; gap: 8px; width: clamp(150px, 46%, 240px); padding: 10px 10px 12px; border-radius: 4px; background: #f6f1e6; box-shadow: 0 30px 50px -24px #000; rotate: -4deg; }
+.ts-photo img { width: 100%; aspect-ratio: 4 / 3; max-width: none; object-fit: cover; border-radius: 2px; }
+.ts-photo small { font-family: var(--serif); font-size: 14px; font-style: italic; color: #4b5448; text-align: center; }
+.ts-bubble.memory { align-self: center; max-width: 82%; font-family: var(--serif); font-size: 17px; font-style: italic; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .ts-scene.on .ts-pin { animation: ts-drop .7s cubic-bezier(.2, 1.4, .4, 1) calc(.15s + var(--i) * .12s) backwards; }
+  .ts-scene.on .ts-pin::after { animation: ts-pulse 2.4s calc(1s + var(--i) * .3s) ease-out infinite; }
+  .ts-scene.on .ts-scan { animation: ts-scan 2.6s cubic-bezier(.6, 0, .4, 1) infinite alternate; }
+  .ts-scene.on .ts-finder { animation: ts-focus 1.1s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .ts-scene.on .ts-ask > * { animation: ts-rise .6s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .ts-scene.on .ts-ask > :nth-child(2) { animation-delay: .5s; }
+  .ts-scene.on .ts-ask > :nth-child(3) { animation-delay: 1.1s; }
+  .ts-scene.on .ts-ask > :nth-child(4) { animation-delay: 1.5s; }
+  .ts-scene.on .ts-typing i { animation: ts-dot 1s ease-in-out infinite; }
+  .ts-scene.on .ts-typing i:nth-child(2) { animation-delay: .15s; }
+  .ts-scene.on .ts-typing i:nth-child(3) { animation-delay: .3s; }
+  .ts-scene.on .ts-card { animation: ts-deal .8s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .ts-scene.on .ts-card.c2 { animation-delay: .08s; }
+  .ts-scene.on .ts-card.c3 { animation-delay: .16s; }
+  .ts-scene.on .ts-card.c4 { animation-delay: .24s; }
+  .ts-scene.on .ts-stamp { animation: ts-stamp .5s cubic-bezier(.3, 1.5, .5, 1) calc(.3s + var(--i) * .25s) backwards; }
+  .ts-scene.on .ts-photo { animation: ts-rise .8s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .ts-scene.on .ts-share > :nth-child(2) { animation: ts-rise .7s .45s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .ts-scene.on .ts-chip { animation: ts-rise .6s .7s cubic-bezier(.2, .7, .2, 1) backwards; }
+}
+@keyframes ts-drop { from { opacity: 0; transform: translateY(-40px); } }
+@keyframes ts-pulse { 0% { box-shadow: 0 0 0 0 #e6d5ae80; } 100% { box-shadow: 0 0 0 18px #e6d5ae00; } }
+@keyframes ts-scan { to { top: 82%; } }
+@keyframes ts-focus { from { inset: 8% 10%; opacity: 0; } }
+@keyframes ts-rise { from { opacity: 0; transform: translateY(16px); } }
+@keyframes ts-dot { 50% { opacity: 1; transform: translateY(-3px); } }
+@keyframes ts-deal { from { opacity: 0; rotate: 0deg; translate: 0 30%; } }
+@keyframes ts-stamp { from { opacity: 0; scale: 1.8; } }
+
+/* Narrow screens: each tool with its own scene, no sticky stage. */
+@media (max-width: 900px) {
+  .ts { grid-template-columns: 1fr; gap: 0; }
+  .ts-stage { display: none; }
+  .ts-list { display: grid; gap: 64px; padding: 0; }
+  .ts-item { min-height: 0; opacity: 1; }
+  .ts-inline { display: block; width: 100%; margin-bottom: 26px; }
+  .ts-inline .ts-frame { aspect-ratio: 4 / 3; border-radius: 20px; }
+  .ts-item h3 { font-size: clamp(30px, 8vw, 44px); }
+  .ts-text { margin-top: 16px; font-size: 14.5px; line-height: 1.7; }
+  .ts-tags { margin: 16px 0 18px; }
+}
+
+/* Okuma odası: açık bir sayfa, altı noktalı bir terim ve yanında açılan açıklaması */
+.ts-read { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 30px 30px 80px; }
+.ts-page { position: relative; display: flex; flex-direction: column; gap: 11px; width: min(78%, 330px); padding: 26px 26px 30px; border-radius: 4px; background: linear-gradient(180deg, #f3ecdf, #e6dcc8); color: #15130d; box-shadow: 0 24px 60px #0008; transform: rotate(-2.5deg); }
+.ts-page small { font-size: 10px; font-weight: 600; letter-spacing: .16em; color: #8a6a2e; }
+.ts-page b { font-family: var(--serif); font-weight: 500; font-size: 26px; line-height: 1.1; color: #0c241c; margin-bottom: 4px; }
+.ts-line { display: block; height: 7px; border-radius: 7px; background: #15130d26; }
+.ts-line.short { width: 55%; }
+.ts-has-term { position: relative; background: linear-gradient(90deg, #15130d26 0 34%, transparent 34% 62%, #15130d26 62%); }
+.ts-has-term i { position: absolute; left: 36%; top: -8px; font-family: var(--serif); font-style: normal; font-size: 16px; line-height: 1; color: #8a6a2e; text-decoration: underline dotted; text-underline-offset: 3px; }
+.ts-term { position: absolute; right: 7%; top: 9%; display: flex; flex-direction: column; gap: 6px; max-width: 200px; padding: 14px 16px; border: 1px solid #e6d5ae40; border-radius: 6px; color: #f3ecdf; background: #061410e6; box-shadow: 0 14px 40px #0009; animation: ts-term 4s ease-in-out infinite; }
+.ts-term b { font-family: var(--serif); font-weight: 500; font-size: 19px; color: #e6d5ae; }
+.ts-term small { font-size: 12.5px; line-height: 1.45; color: #cfcabd; }
+@keyframes ts-term { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .ts-term { animation: none; } }

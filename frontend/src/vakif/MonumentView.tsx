@@ -130,9 +130,12 @@ function Narration({ lang, detail, paragraphs, generate, edit }: {
   }
   const run = (m: NarrationMode) => generate && act(() => generate(m));
   const reply = mode === 'detail' ? null : detail.narrations?.[mode] ?? null;
-  return <section className="pv-narration" aria-labelledby="pv-mode">
-    <div className="pv-tools"><div id="pv-mode"><Sparkles size={18} /> {s.mode}</div>
-      <div className="pv-segmented" role="group" aria-labelledby="pv-mode">{MODES.map((m, i) => <button key={m} className={mode === m ? 'active' : ''} aria-pressed={mode === m} onClick={() => { setMode(m); setError(''); setDraft(null); }}>{s.modes[i]}</button>)}</div></div>
+  // Only the tellings that exist are offered (the panel, which can generate them, sees all three). With the book's
+  // text alone there is nothing to choose, so the picker is not shown.
+  const offered = MODES.filter(m => m === 'detail' || Boolean(generate) || Boolean(detail.narrations?.[m]?.answer?.trim()));
+  return <section className="pv-narration" aria-labelledby={offered.length > 1 ? 'pv-mode' : undefined} aria-label={offered.length > 1 ? undefined : s.text}>
+    {offered.length > 1 && <div className="pv-tools"><div id="pv-mode"><Sparkles size={18} /> {s.mode}</div>
+      <div className="pv-segmented" role="group" aria-labelledby="pv-mode">{offered.map(m => <button key={m} className={mode === m ? 'active' : ''} aria-pressed={mode === m} onClick={() => { setMode(m); setError(''); setDraft(null); }}>{s.modes[MODES.indexOf(m)]}</button>)}</div></div>}
     {mode === 'detail'
       ? <div className="pv-fulltext"><small className="pv-muted"><BookOpen size={14} /> {s.text}{detail.text_note ? ` · ${detail.text_note}` : ''}</small>
         {paragraphs.length ? paragraphs.map((p, i) => <p key={i}>{p}</p>) : <p className="pv-muted">{s.noText}</p>}</div>

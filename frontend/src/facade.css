@@ -1,0 +1,133 @@
+/* ——— Facade entrance (HeroGate.tsx, .hero-facade). Loaded last. ———
+   The carved stone facade (public/images/cephe.webp, 1672×941) covers the hero at its own proportions, so the two
+   leaves cut from the same photo (kanat-sol / kanat-sag) always sit on its doorway. The doorway, measured on the photo,
+   runs from x 627 to 1040 and y 312 to 870; the leaves meet at x 834. A deep emerald shade frames the picture so the
+   copy reads over the stone. The scroll timeline lives in HeroGate.tsx. */
+.hero-facade .gate-scene { display: block; padding: 0; container-type: size; background: var(--en-ink); }
+/* The room beside the door, on either side, for the copy and the index. */
+.hero-facade .gate-scene > * { --cw: calc(50cqw - max(100cqw + 28px, (100cqh + 28px) * 1.7768) * .125 - var(--en-left) - 32px); }
+.hero-facade .en-arches-layer { display: none; }
+
+/* The frame drifts a little against the pointer; the stage inside it is what the camera pushes into. */
+.fc-frame { position: absolute; inset: -14px; z-index: 0; translate: calc(var(--mouse-x, 0) * -16px) calc(var(--mouse-y, 0) * -10px); transition: translate .8s cubic-bezier(.2, .7, .3, 1); }
+/* Centred by margins, not a translate: GSAP folds a CSS translate or scale into its own transform when it takes the
+   stage over, so the stage keeps only the transform GSAP gives it. */
+.fc-stage { --sw: max(calc(100cqw + 28px), calc((100cqh + 28px) * 1.7768)); position: absolute; top: 50%; left: 50%; width: var(--sw); margin: calc(var(--sw) / -3.5536) 0 0 calc(var(--sw) / -2); aspect-ratio: 1672 / 941; transform-origin: 49.88% 62.8%; }
+.fc-facade { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; max-width: none; user-select: none; }
+.fc-interior, .fc-doors { position: absolute; top: 33.156%; left: 37.5%; width: 24.701%; height: 59.299%; }
+
+/* Behind the leaves: the vaulted stone arcade, against a warm stone light, filling the doorway from top to bottom. The
+   picture (public/images/avlu-tavan.webp) is the arcade lengthened band by band: its vault a little, the arches and
+   the column bases barely, the paving in front most, so the building keeps its shape. The middle arch's opening runs
+   down to about 59% of it, past the centre of the doorway, so the camera passes straight through it. No filter and no will-change here: either
+   would make the browser draw the layer once, small, and enlarge that picture as the camera pushes in. As the camera
+   passes, the light behind turns to the emerald night of the courtyard (.fi-night). */
+.fc-interior { z-index: 0; overflow: hidden; background: #cdb999; }
+.fi-sky { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 46% at 50% 48%, #f3e8d4, transparent 78%), linear-gradient(180deg, #d9c8ad 0%, #e6d8c0 46%, #cbb796 74%, #a8916f 100%); }
+.fi-night { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse 60% 50% at 50% 50%, #1c3d35, transparent 80%), linear-gradient(115deg, #040d0a 0%, #07181a 48%, #0b2321 100%); }
+.fi-arches { position: absolute; top: 0; left: 50%; z-index: 2; width: 132%; height: 100%; max-width: none; margin-left: -66%; object-fit: fill; transform-origin: 50% 47%; }
+.fc-doorglow { position: absolute; inset: 0; z-index: 0; opacity: 0; mix-blend-mode: screen; background: radial-gradient(ellipse 80% 50% at 50% 58%, #c7a96b40, transparent 75%); }
+
+/* The leaves, hinged on the outer edges of the doorway; they swing inward, away from the visitor. */
+.fc-doors { z-index: 2; perspective: 70cqh; }
+.fc-leaf { position: absolute; top: 0; height: 100%; transform-style: preserve-3d; }
+.fc-leaf.left { left: 0; width: 50.12%; transform-origin: 0 50%; }
+.fc-leaf.right { right: 0; width: 49.88%; transform-origin: 100% 50%; }
+.fc-leaf img { display: block; width: 100%; height: 100%; max-width: none; user-select: none; }
+.fc-leaf-shade { position: absolute; inset: 0; opacity: 0; background: #080503; }
+.fc-leaf.left .fc-leaf-shade { background: linear-gradient(90deg, #080503cc, #080503); }
+.fc-leaf.right .fc-leaf-shade { background: linear-gradient(270deg, #080503cc, #080503); }
+
+/* The shade: emerald on the edges, deepest behind the copy on the left and under the bar, clear on the door. */
+.fc-shade { position: absolute; inset: 0; z-index: 2; pointer-events: none; background:
+  radial-gradient(ellipse 34% 52% at 50% 60%, transparent 0, transparent 50%, #04130f59 100%),
+  linear-gradient(90deg, #04130ff2 0%, #061915c7 18%, #06191566 32%, transparent 44%, transparent 58%, #06191559 72%, #04130fbf 88%, #04130fe6 100%),
+  linear-gradient(180deg, #04130fa6 0%, transparent 20%, transparent 72%, #04130fe6 100%); }
+.hero-facade .en-lantern { inset: 0; z-index: 3; opacity: .42; background: radial-gradient(circle min(28vmax, 420px) at calc(50% + var(--mouse-x, 0) * 100vw) calc(56% + var(--mouse-y, 0) * 100svh), transparent 0, transparent 34%, #04130f 100%); }
+
+/* The copy, left of the door: three staggered lines, the last one in gold. */
+/* The copy, left of the door: its width runs up to the door's left edge, measured from the stage (the doorway starts
+   12.5% of the stage's width left of its centre), and the title scales with that width. */
+.fc-copy { position: absolute; top: calc(88px + 2svh); bottom: calc(84px + 3svh); left: var(--en-left); z-index: 6; display: flex; flex-direction: column; justify-content: center; width: min(var(--cw), 560px); }
+.fc-copy .en-index { gap: 10px; margin-bottom: clamp(14px, 3svh, 30px); white-space: nowrap; }
+.fc-copy .en-index > i { width: 28px; }
+.fc-title { margin: 0; font-family: var(--serif); font-size: clamp(40px, min(var(--cw) / 6.3, 11svh), 112px); font-weight: 300; line-height: .9; letter-spacing: -.03em; color: var(--en-ivory); text-shadow: 0 10px 50px #020806d9; }
+.fc-line { display: block; overflow: hidden; padding: .04em .12em .14em 0; margin-bottom: -.12em; }
+.fc-line > span { display: block; }
+.fc-line:nth-child(2) { padding-left: .42em; }
+.fc-line:nth-child(3) { padding-left: .84em; font-size: 1.14em; }
+.fc-title em { padding-right: .08em; font-style: italic; font-weight: 400; color: var(--en-gold); background: linear-gradient(100deg, #f6ecd0 0%, #ddc28a 40%, #b08a4e 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.fc-copy .en-lede { margin-top: clamp(18px, 3.4svh, 34px); padding-left: 0; }
+.fc-copy .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: clamp(20px, 3.8svh, 40px); padding: 0; }
+.fc-copy :focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 10px; box-shadow: none; }
+
+/* A small index on the right, balancing the copy across the door: what lies behind it, in three steps. */
+.fc-note { position: absolute; right: var(--en-left); bottom: calc(96px + 10svh); z-index: 6; display: flex; flex-direction: column; gap: 14px; width: min(var(--cw), 250px); margin: 0; padding: 18px 0 0; border-top: 1px solid #e6d5ae40; list-style: none; text-shadow: 0 6px 30px #020806e6; }
+.fc-note li { display: grid; grid-template-columns: 30px 1fr; align-items: baseline; font-family: var(--serif); font-size: clamp(16px, var(--cw) / 14, 22px); white-space: nowrap; line-height: 1.2; color: var(--en-ivory); }
+.fc-note li > span { font-size: 13px; font-style: italic; letter-spacing: .04em; color: var(--en-gold); }
+.fc-note em { font-style: italic; color: var(--en-gold-light); }
+
+/* The courtyard introduces the platform, on the entrance's own deep emerald. */
+.hero-scroll.hero-facade .courtyard-scene { background: radial-gradient(ellipse 44% 62% at 73% 55%, #1c3d35 0, #12302a40 50%, transparent 74%), radial-gradient(ellipse 50% 45% at 12% 8%, #0f2a2470, transparent 70%), linear-gradient(115deg, #040d0a 0%, #07181a 48%, #0b2321 100%); }
+
+/* The inscription, the mission and the three verbs as one group in the middle of the screen. */
+.cy-mission { display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: calc(88px + 2.5svh) clamp(22px, 5vw, 96px) clamp(18px, 4svh, 40px); }
+.cy-mission .cy-kitabe { position: relative; top: auto; left: auto; translate: none; }
+.hero-scroll .cy-mission h2 { font-size: clamp(40px, min(4.8vw, 8.6svh), 92px); }
+.cy-lead { max-width: 62ch; margin: clamp(18px, 3.6svh, 40px) 0 0; font-size: clamp(15px, 1.12vw, 17.5px); line-height: 1.75; text-align: center; color: #efe9dc; text-shadow: 0 2px 18px #020806, 0 0 40px #020806b3; }
+.cy-lead b { font-weight: 600; color: var(--en-gold-light); }
+.cy-mission .cy-label { position: static; width: min(100%, 1180px); margin-top: clamp(32px, 7svh, 80px); grid-template-columns: minmax(0, 1fr) auto; }
+.cy-pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.6vw, 44px); margin: 0; padding: 0; list-style: none; }
+.cy-pillars li { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 12px; }
+.cy-pillars span { font-family: var(--serif); font-size: 14px; font-style: italic; color: var(--en-gold); }
+.cy-pillars b { font-family: var(--serif); font-size: clamp(22px, 1.8vw, 28px); font-weight: 400; color: #fbf7ee; }
+.cy-pillars small { grid-column: 2; font-size: 13.5px; line-height: 1.55; color: #d9d3c5; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .fc-frame { animation: fc-in 2.4s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .fc-line > span { animation: en-rise 1.2s .6s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .fc-line:nth-child(2) > span { animation-delay: .72s; }
+  .fc-line:nth-child(3) > span { animation: pt-arrive 1.5s .9s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .fc-copy .hero-actions > * { animation: en-fade-up .9s 1.15s cubic-bezier(.16, 1, .3, 1) backwards; }
+  .fc-copy .hero-actions > :nth-child(2) { animation-delay: 1.25s; }
+  .fc-note { animation: en-fade-up 1s 1.35s cubic-bezier(.16, 1, .3, 1) backwards; }
+}
+@keyframes fc-in { from { scale: 1.08; filter: brightness(.4) saturate(.7); } }
+
+/* Medium screens: the three verbs take the full width of the floor, the buttons below them. */
+@media (max-width: 1200px) {
+  .cy-mission .cy-label { grid-template-columns: 1fr; gap: 16px; }
+}
+/* Short landscape screens: a smaller title and the buttons kept side by side. */
+@media (max-height: 760px) and (min-width: 801px) and (orientation: landscape) {
+  .fc-title { font-size: clamp(40px, min(var(--cw) / 6.3, 10svh), 96px); }
+  .fc-copy .en-lede p { font-size: 14px; line-height: 1.6; }
+}
+/* Narrow and portrait screens: the door in the middle, the title above it and the buttons on the steps. */
+@media (max-width: 800px), (max-width: 1100px) and (orientation: portrait) {
+  .fc-copy { top: calc(78px + 2svh); right: 7%; bottom: calc(74px + 2svh); left: 7%; justify-content: flex-start; width: auto; }
+  .fc-title { font-size: clamp(42px, 11.6vw, 92px); }
+  .fc-copy .hero-actions { gap: 10px 22px; margin-top: auto; }
+  .fc-note, .hero-facade .en-lantern { display: none; }
+  .cy-mission { padding: calc(78px + 2svh) 7% 16px; }
+  .hero-scroll .cy-mission h2 { flex-direction: row; font-size: clamp(32px, 9vw, 56px); }
+  .cy-lead { margin-top: 14px; font-size: 14px; line-height: 1.6; }
+  .cy-mission .cy-label { grid-template-columns: 1fr; gap: 16px; padding-top: 16px; }
+  .cy-pillars { grid-template-columns: 1fr; gap: 8px; }
+  .cy-pillars small { font-size: 12.5px; }
+  .fc-shade { background: radial-gradient(ellipse 60% 40% at 50% 62%, transparent 0, transparent 50%, #04130f66 100%), linear-gradient(180deg, #04130ff2 0%, #04130fc7 24%, #04130f33 42%, transparent 52%, transparent 66%, #04130fcc 84%, #04130ff7 100%); }
+}
+
+/* Portrait screens: the facade no longer covers the screen, which would put the door edge to edge. It is sized so the
+   door takes about 53% of the width (and at most 40% of the height on short phones), with the carved frame around it,
+   its centre a little below the middle; above and below, the same facade blurred and darkened fills the screen, and the
+   sharp one fades into it at its top and bottom. The title sits above the door, the buttons on the steps. */
+.fc-fill { display: none; }
+@media (max-width: 1100px) and (orientation: portrait) {
+  .fc-fill { position: absolute; inset: -40px; z-index: 0; display: block; background: url('/images/cephe.webp') 50% 60% / cover no-repeat; filter: blur(16px) brightness(.45) saturate(.75); }
+  .hero-facade .fc-frame { inset: 0; translate: none; }
+  .hero-facade .fc-stage { --sw: min(215cqw, 120cqh); top: calc(60cqh - var(--sw) / 1.7768 * .628); margin-top: 0; -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 88%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 88%, transparent 100%); }
+  .fc-shade { background: radial-gradient(ellipse 70% 30% at 50% 60%, transparent 0, transparent 60%, #04130f59 100%), linear-gradient(180deg, #04130fe6 0%, #04130fb3 22%, #04130f40 36%, transparent 44%, transparent 74%, #04130fb3 86%, #04130ff2 100%) !important; }
+  .fc-copy .en-lede { margin-top: 14px; }
+  .fc-copy .en-lede p { font-size: 13.5px; line-height: 1.55; }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { t } from '../lib/i18n';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight } from 'lucide-react';
@@ -67,17 +68,17 @@ export function PeriodTimeline() {
   return <section className="tl-section" ref={section} style={{ '--eras': count, backgroundColor: chapters[0].era.tone } as CSSProperties} aria-labelledby="era-title">
     <div className="tl-stage">
       <header className="tl-head">
-        <div><p className="eyebrow"><span />DÖNEMLERE GÖRE KEŞİF</p><h2 id="era-title">Zamanın içinde <em>yürü.</em></h2></div>
+        <div><p className="eyebrow"><span />{t('DÖNEMLERE GÖRE KEŞİF', 'DISCOVERY BY ERA')}</p><h2 id="era-title">{t('Zamanın içinde', 'Walk')} <em>{t('yürü.', 'through time.')}</em></h2></div>
         <p className="tl-count" aria-hidden="true"><b>{pad(active + 1)}</b> / {pad(count)}</p>
       </header>
-      <nav className="tl-index" aria-label="Dönemler">
+      <nav className="tl-index" aria-label={t('Dönemler', 'Eras')}>
         {chapters.map(({ era }, i) => <button type="button" key={era.id} className={active === i ? 'current' : ''} aria-current={active === i ? 'step' : undefined} onClick={() => go(i)}><i>{era.century}</i><span>{era.period}<small>{era.span}</small></span></button>)}
         <span className="tl-progress" aria-hidden="true"><i /></span>
       </nav>
       <div className="tl-eras">
         {chapters.map(({ era, works }, i) => <article className="tl-era" data-i={i} key={era.id} style={{ '--accent': era.accent } as CSSProperties} aria-labelledby={`era-${era.id}`}>
           <span className="tl-numeral" aria-hidden="true">{era.century}</span>
-          <figure className="tl-figure"><img src={works[0].image} alt="" loading="lazy" /><figcaption>{works[0].name} · özgün mimari yorum</figcaption></figure>
+          <figure className="tl-figure"><img src={works[0].image} alt="" loading="lazy" /><figcaption>{works[0].name} · {t('özgün mimari yorum', 'original architectural interpretation')}</figcaption></figure>
           <div className="tl-copy">
             <small><i aria-hidden="true" />{era.span} · {era.period}</small>
             <h3 id={`era-${era.id}`}>{era.title}</h3>

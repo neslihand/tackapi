@@ -4,6 +4,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { vakifApiEnabled } from './vakifApi';
 import type { Progress } from './progress';
+import { t } from './i18n';
 
 export type User = { id: number; email: string; display_name: string | null; age_range: string | null; home_city: string | null;
   purposes: string[]; interests: string[]; created_at: string };
@@ -11,13 +12,13 @@ export type ProfileFields = Partial<Pick<User, 'display_name' | 'age_range' | 'h
 export type ProfileOptions = { consent_version: string; password_min: number; age_ranges: Option[]; purposes: Option[]; interests: Option[] };
 type Option = { id: string; label: string };
 
-async function call<T>(url: string, init?: RequestInit): Promise<T> {
+export async function call<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { credentials: 'same-origin', ...init,
     headers: { accept: 'application/json', ...(init?.body && typeof init.body === 'string' ? { 'content-type': 'application/json' } : {}), ...init?.headers } });
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
     const detail = typeof body?.detail === 'string' ? body.detail
-      : Array.isArray(body?.detail) ? 'Lütfen alanları kontrol edin.' : `Sunucu ${response.status} döndü.`;
+      : Array.isArray(body?.detail) ? t('Lütfen alanları kontrol edin.', 'Please check the fields.') : t(`Sunucu ${response.status} döndü.`, `The server returned ${response.status}.`);
     throw Object.assign(new Error(detail), { status: response.status });
   }
   return response.status === 204 ? undefined as T : response.json() as Promise<T>;
@@ -69,6 +70,6 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 export function useAccount(): Account {
   return useContext(Context) ?? NO_ACCOUNT;
 }
-const fail = () => Promise.reject(new Error('Hesaplar bu sürümde kapalı.'));
+const fail = () => Promise.reject(new Error(t('Hesaplar bu sürümde kapalı.', 'Accounts are turned off in this version.')));
 const NO_ACCOUNT: Account = { enabled: false, user: null, ready: true, register: fail, login: fail,
   logout: () => Promise.resolve(), update: fail, remove: fail };

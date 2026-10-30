@@ -3,6 +3,7 @@ import { MapPin, Plus, Search, X } from 'lucide-react';
 import type { Artifact } from '../data/artifacts';
 import type { NarrationMode } from '../lib/preferences';
 import { Link } from '../lib/navigation';
+import { t } from '../lib/i18n';
 
 // The chapters of a story page, drawn differently for each way of telling it:
 //   story (Hikâyeleştirerek) → CineChapter: full-screen scenes behind graphic-novel captions, a camera that moves
@@ -29,27 +30,27 @@ type DetailState = { detail: boolean; setDetail: (open: boolean) => void };
 
 export function Hotspot({ artifact, detail, setDetail, className }: { artifact: Artifact; className: string } & DetailState) {
   return <>
-    <button type="button" className={`hotspot ${className}`} onClick={() => setDetail(!detail)} aria-expanded={detail} aria-label={`Mimari ayrıntı: ${artifact.detail.title}`}>{detail ? <X size={18} aria-hidden="true" /> : className === 'tale-hotspot' ? <Search size={20} aria-hidden="true" /> : <Plus aria-hidden="true" />}</button>
+    <button type="button" className={`hotspot ${className}`} onClick={() => setDetail(!detail)} aria-expanded={detail} aria-label={`${t('Mimari ayrıntı', 'Architectural detail')}: ${artifact.detail.title}`}>{detail ? <X size={18} aria-hidden="true" /> : className === 'tale-hotspot' ? <Search size={20} aria-hidden="true" /> : <Plus aria-hidden="true" />}</button>
     {detail && <div className={`hotspot-info ${className}-info`} role="note"><strong>{artifact.detail.title}</strong><p>{artifact.detail.text}</p></div>}
   </>;
 }
 
-const hints: Record<NarrationMode, (title: string) => string> = {
-  story: title => `Sahnede parlayan işarete dokunarak ${title} ayrıntısını incele.`,
-  child: title => `Resimde büyütecin parladığı yeri bul ve dokun: ${title} seni bekliyor!`,
-  short: title => `Görseldeki işarete dokunarak ${title} ayrıntısını incele.`,
-};
+const hints = (): Record<NarrationMode, (title: string) => string> => ({
+  story: title => t(`Sahnede parlayan işarete dokunarak ${title} ayrıntısını incele.`, `Tap the glowing mark on the stage to look at the detail: ${title}.`),
+  child: title => t(`Resimde büyütecin parladığı yeri bul ve dokun: ${title} seni bekliyor!`, `Find where the magnifier glows in the picture and tap it: ${title} is waiting for you!`),
+  short: title => t(`Görseldeki işarete dokunarak ${title} ayrıntısını incele.`, `Tap the mark on the picture to look at the detail: ${title}.`),
+});
 
 // What a chapter carries besides its narration: the note on the narration, the facts and the image description in
 // the first chapter, the hint to the detail in the third and the visit note in the last.
 function ChapterExtras({ artifact, index, mode }: { artifact: Artifact; index: number; mode: NarrationMode }) {
   const last = index === artifact.chapters.length - 1;
   return <>
-    {mode !== 'short' && <small className="narrative-note">{mode === 'story' ? 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.' : 'Çocuklar için hazırlanmış sadeleştirilmiş anlatım.'}</small>}
-    {index === 0 && <div className="story-facts"><div><small>DÖNEM</small><strong>{artifact.period}</strong></div><div><small>MİMAR / USTA</small><strong>{artifact.architect}</strong></div><div><small>TARİH</small><strong>{artifact.year}</strong></div><div><small>TÜR</small><strong>{artifact.category}</strong></div></div>}
-    {index === 0 && artifact.imageAlt && <details className="image-description"><summary>GÖRSELDE NE VAR?</summary><p>{artifact.imageAlt} {artifact.origin ? `Fotoğraf: ${artifact.origin.photoCredit}.` : 'Bu çizim eserden esinlenen özgün bir yorumdur; fotoğraf veya rölöve değildir.'}</p></details>}
-    {index === 2 && artifact.detail.title && <p className="detail-hint">{mode === 'child' ? <Search size={16} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}<span>{hints[mode](artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
-    {last && <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. Haritadaki konumlar yaklaşık yönlendirme içindir. <Link to="/harita">Haritada gör</Link></p></div>}
+    {mode !== 'short' && <small className="narrative-note">{mode === 'story' ? t('Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.', 'The atmosphere of the telling is a creative interpretation; the historical facts rest on the sources below.') : t('Çocuklar için hazırlanmış sadeleştirilmiş anlatım.', 'A simplified telling made for children.')}</small>}
+    {index === 0 && <div className="story-facts"><div><small>{t('DÖNEM', 'ERA')}</small><strong>{artifact.period}</strong></div><div><small>{t('MİMAR / USTA', 'ARCHITECT / MASTER')}</small><strong>{artifact.architect}</strong></div><div><small>{t('TARİH', 'DATE')}</small><strong>{artifact.year}</strong></div><div><small>{t('TÜR', 'TYPE')}</small><strong>{artifact.category}</strong></div></div>}
+    {index === 0 && artifact.imageAlt && <details className="image-description"><summary>{t('GÖRSELDE NE VAR?', 'WHAT IS IN THE PICTURE?')}</summary><p>{artifact.imageAlt} {artifact.origin ? `${t('Fotoğraf', 'Photo')}: ${artifact.origin.photoCredit}.` : t('Bu çizim eserden esinlenen özgün bir yorumdur; fotoğraf veya rölöve değildir.', 'This drawing is an original interpretation inspired by the work; it is not a photograph or a survey drawing.')}</p></details>}
+    {index === 2 && artifact.detail.title && <p className="detail-hint">{mode === 'child' ? <Search size={16} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}<span>{hints()[mode](artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
+    {last && <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>{t('Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. Haritadaki konumlar yaklaşık yönlendirme içindir.', 'Before you set off, check current visiting conditions and restoration work with the institution in charge. Locations on the map are approximate.')} <Link to="/harita">{t('Haritada gör', 'See on the map')}</Link></p></div>}
   </>;
 }
 
@@ -93,13 +94,13 @@ export function CineChapter({ artifact, index, detail, setDetail }: { artifact: 
       <CineAtmosphere tone={tone} />
       <span className="cine-grade" aria-hidden="true" />
       <span className="cine-bar top" aria-hidden="true" /><span className="cine-bar bottom" aria-hidden="true" />
-      <span className="cine-slate" aria-hidden="true">SAHNE {pad(index + 1)} <i>·</i> {tone === 'dawn' ? 'BUGÜN' : artifact.year}</span>
+      <span className="cine-slate" aria-hidden="true">{t('SAHNE', 'SCENE')} {pad(index + 1)} <i>·</i> {tone === 'dawn' ? t('BUGÜN', 'TODAY') : artifact.year}</span>
       {index === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="cine-hotspot" />}
     </div>
     <div className="cine-flow">
       <header className="cine-title">
         <span className="cine-numeral" aria-hidden="true">{pad(index + 1)}</span>
-        <span className="chapter-number">BÖLÜM {pad(index + 1)} / {pad(artifact.chapters.length)}</span>
+        <span className="chapter-number">{t('BÖLÜM', 'CHAPTER')} {pad(index + 1)} / {pad(artifact.chapters.length)}</span>
         <h2 id={`chapter-title-${index}`}>{c.title}</h2>
       </header>
       <div className="narrative cine-captions">{sentences(c.story).map((text, k) => <p key={k} className={`cine-caption at-${k % 3}`}>{text}</p>)}</div>
@@ -110,11 +111,11 @@ export function CineChapter({ artifact, index, detail, setDetail }: { artifact: 
 
 // ——— Çocuklar İçin: picture-book pages ———
 
-const guideLines = [
-  'Merhaba! Ben Hüdhüd. Bu yapının hikâyesini birlikte keşfedelim mi?',
-  'Resme dikkatli bak: kaç kubbe, kaç pencere sayabilirsin?',
-  'Büyütecin parladığı yeri gördün mü? Ona dokun, sana bir sır vereceğim!',
-  'Harika bir keşifti! Eski yapıları korumak hepimizin görevi.',
+const guideLines = () => [
+  t('Merhaba! Ben Hüdhüd. Bu yapının hikâyesini birlikte keşfedelim mi?', 'Hello! I am Hüdhüd the hoopoe. Shall we discover this building’s story together?'),
+  t('Resme dikkatli bak: kaç kubbe, kaç pencere sayabilirsin?', 'Look closely at the picture: how many domes and windows can you count?'),
+  t('Büyütecin parladığı yeri gördün mü? Ona dokun, sana bir sır vereceğim!', 'Did you see where the magnifier glows? Tap it and I will tell you a secret!'),
+  t('Harika bir keşifti! Eski yapıları korumak hepimizin görevi.', 'What a great discovery! Looking after old buildings is a job for all of us.'),
 ];
 
 // Hüdhüd, a hoopoe: the guide of the picture book. It bobs, blinks and talks when tapped.
@@ -138,7 +139,7 @@ const sparkles = [[12, 16], [27, 8], [70, 11], [86, 24], [56, 5], [40, 20], [92,
 export function TaleChapter({ artifact, index, detail, setDetail }: { artifact: Artifact; index: number } & DetailState) {
   const [talking, setTalking] = useState(false);
   const c = artifact.chapters[index];
-  const line = guideLines[index === artifact.chapters.length - 1 ? 3 : Math.min(index, 2)];
+  const line = guideLines()[index === artifact.chapters.length - 1 ? 3 : Math.min(index, 2)];
   const [fx, fy] = artifact.detail.focus ?? [50, 50];
   return <section className={`story-chapter tale ${index % 2 ? 'flip' : ''}`} id={`chapter-${index}`} data-chapter={index} aria-labelledby={`chapter-title-${index}`}>
     <div className="tale-page">
@@ -149,7 +150,7 @@ export function TaleChapter({ artifact, index, detail, setDetail }: { artifact: 
           <span className="tale-shooting" /><span className="tale-cloud c1" /><span className="tale-cloud c2" />
         </div>
         {index === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="tale-hotspot" />}
-        <button type="button" className={`tale-guide ${talking ? 'talking' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls={`guide-${index}`} aria-label="Rehber kuş Hüdhüd ile konuş"><Hoopoe /></button>
+        <button type="button" className={`tale-guide ${talking ? 'talking' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls={`guide-${index}`} aria-label={t('Rehber kuş Hüdhüd ile konuş', 'Talk to Hüdhüd, the guide bird')}><Hoopoe /></button>
       </div>
       <div className="tale-text">
         <span className="tale-page-no">SAYFA {index + 1} / {artifact.chapters.length}</span>
@@ -176,7 +177,7 @@ export function BriefChapter({ artifact, index, detail, setDetail }: { artifact:
     <span className="brief-num" aria-hidden="true">{pad(index + 1)}</span>
     <div className="brief-body">
       <div className="brief-thumb" aria-hidden={index !== 2 || undefined}><div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': Math.min(1.7, s) } as CSSProperties}><img src={artifact.image} alt="" loading="lazy" /></div>{index === 2 && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="brief-hotspot" />}</div>
-      <span className="chapter-number">BÖLÜM {pad(index + 1)}</span>
+      <span className="chapter-number">{t('BÖLÜM', 'CHAPTER')} {pad(index + 1)}</span>
       <h2 id={`chapter-title-${index}`}>{c.title}</h2>
       <p className="narrative brief-lead">{marked(c.short)}</p>
       <ChapterExtras artifact={artifact} index={index} mode="short" />
@@ -191,17 +192,17 @@ export const paragraphs = (text: string) => text.split(/\n\s*\n/).map(p => p.rep
 // The facts, the image description and the visit note that the chapters would carry, once, after the text.
 function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: NarrationMode }) {
   return <>
-    <small className="narrative-note">{mode === 'story' ? 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.' : mode === 'child' ? 'Çocuklar için hazırlanmış sadeleştirilmiş anlatım.' : `Envanter kitabındaki metin: ${artifact.sourceReferences[0]?.title ?? ''}.`}</small>
-    <div className="story-facts"><div><small>DÖNEM</small><strong>{artifact.period}</strong></div><div><small>MİMAR / USTA</small><strong>{artifact.architect}</strong></div><div><small>TARİH</small><strong>{artifact.year}</strong></div><div><small>TÜR</small><strong>{artifact.category}</strong></div></div>
-    {artifact.imageAlt && <details className="image-description"><summary>GÖRSELDE NE VAR?</summary><p>{artifact.imageAlt}{artifact.origin ? ` Fotoğraf: ${artifact.origin.photoCredit}.` : ''}</p></details>}
-    <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. <Link to="/harita">Haritada gör</Link></p></div>
+    <small className="narrative-note">{mode === 'story' ? t('Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.', 'The atmosphere of the telling is a creative interpretation; the historical facts rest on the sources below.') : mode === 'child' ? t('Çocuklar için hazırlanmış sadeleştirilmiş anlatım.', 'A simplified telling made for children.') : `${t('Envanter kitabındaki metin', 'The text of the inventory book')}: ${artifact.sourceReferences[0]?.title ?? ''}.`}</small>
+    <div className="story-facts"><div><small>{t('DÖNEM', 'ERA')}</small><strong>{artifact.period}</strong></div><div><small>{t('MİMAR / USTA', 'ARCHITECT / MASTER')}</small><strong>{artifact.architect}</strong></div><div><small>{t('TARİH', 'DATE')}</small><strong>{artifact.year}</strong></div><div><small>{t('TÜR', 'TYPE')}</small><strong>{artifact.category}</strong></div></div>
+    {artifact.imageAlt && <details className="image-description"><summary>{t('GÖRSELDE NE VAR?', 'WHAT IS IN THE PICTURE?')}</summary><p>{artifact.imageAlt}{artifact.origin ? ` ${t('Fotoğraf', 'Photo')}: ${artifact.origin.photoCredit}.` : ''}</p></details>}
+    <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>{t('Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et.', 'Before you set off, check current visiting conditions and restoration work with the institution in charge.')} <Link to="/harita">{t('Haritada gör', 'See on the map')}</Link></p></div>
   </>;
 }
 
 /** Hikâyeleştirerek, whole: one night scene behind the photograph, the paragraphs rising over it as captions. */
 export function CineNarration({ artifact, text }: { artifact: Artifact; text: string }) {
   const style = { '--fx': 50, '--fy': 50, '--zoom': 1.12, '--sx': 0, '--sy': 0 } as CSSProperties;
-  return <section className="story-chapter cine tone-lantern cine-whole" id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: hikâye`} style={style}>
+  return <section className="story-chapter cine tone-lantern cine-whole" id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: ${t('hikâye', 'story')}`} style={style}>
     <div className="cine-stage">
       <div className="cine-camera" aria-hidden="true"><img src={artifact.image} alt="" loading="lazy" draggable={false} /></div>
       <CineAtmosphere tone="lantern" />
@@ -210,7 +211,7 @@ export function CineNarration({ artifact, text }: { artifact: Artifact; text: st
       <span className="cine-slate" aria-hidden="true">{artifact.city.toLocaleUpperCase('tr-TR')} <i>·</i> {artifact.year}</span>
     </div>
     <div className="cine-flow">
-      <header className="cine-title"><span className="cine-numeral" aria-hidden="true" /><span className="chapter-number">HİKÂYELEŞTİREREK</span></header>
+      <header className="cine-title"><span className="cine-numeral" aria-hidden="true" /><span className="chapter-number">{t('HİKÂYELEŞTİREREK', 'AS A STORY')}</span></header>
       <div className="narrative cine-captions">{paragraphs(text).map((p, k) => <p key={k} className={`cine-caption at-${k % 3}`}>{p}</p>)}</div>
       <div className="cine-panel"><NarrationExtras artifact={artifact} mode="story" /></div>
     </div>
@@ -238,8 +239,8 @@ export function TaleNarration({ artifact, text }: { artifact: Artifact; text: st
     root.querySelectorAll('.tale-para').forEach(p => observer.observe(p));
     return () => observer.disconnect();
   }, [text]);
-  const line = guideLines[at === 0 ? 0 : at >= parts.length - 1 ? 3 : 1 + (at % 2)];
-  return <section className="story-chapter tale tale-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: çocuklar için`}>
+  const line = guideLines()[at === 0 ? 0 : at >= parts.length - 1 ? 3 : 1 + (at % 2)];
+  return <section className="story-chapter tale tale-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: ${t('çocuklar için', 'for children')}`}>
     <div className="tale-page tale-cover">
       <div className="tale-art">
         <div className="tale-window" aria-hidden="true">
@@ -248,14 +249,14 @@ export function TaleNarration({ artifact, text }: { artifact: Artifact; text: st
           <span className="tale-shooting" /><span className="tale-cloud c1" /><span className="tale-cloud c2" />
         </div>
       </div>
-      <div className="tale-text"><span className="tale-page-no">ÇOCUKLAR İÇİN</span><p className="tale-lead">{artifact.name} · {artifact.city}</p></div>
+      <div className="tale-text"><span className="tale-page-no">{t('ÇOCUKLAR İÇİN', 'FOR CHILDREN')}</span><p className="tale-lead">{artifact.name} · {artifact.city}</p></div>
     </div>
     <div className="tale-story" ref={story}>
       <div className="tale-story-text narrative">{parts.map((p, k) => <p key={k} data-k={k} className={`tale-para ${k === at ? 'now' : ''}`}>{p}</p>)}
         <div className="tale-extras"><NarrationExtras artifact={artifact} mode="child" /></div></div>
       <aside className="tale-companion">
         {/* The drawing is remounted on each hop so its animation restarts; the button keeps its focus. */}
-        <button type="button" className={`tale-guide ${talking ? 'talking' : ''} ${hop > 1 ? 'hop' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls="guide-whole" aria-label="Rehber kuş Hüdhüd ile konuş"><Hoopoe key={hop} /></button>
+        <button type="button" className={`tale-guide ${talking ? 'talking' : ''} ${hop > 1 ? 'hop' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls="guide-whole" aria-label={t('Rehber kuş Hüdhüd ile konuş', 'Talk to Hüdhüd, the guide bird')}><Hoopoe key={hop} /></button>
         <p className={`tale-bubble ${talking ? 'open' : ''}`} id="guide-whole" aria-live="polite">{talking ? line : ''}</p>
       </aside>
     </div>
@@ -266,9 +267,9 @@ export function TaleNarration({ artifact, text }: { artifact: Artifact; text: st
 export function BriefNarration({ artifact, text }: { artifact: Artifact; text: string }) {
   return <section className="story-chapter brief brief-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: kitaptaki metin`}>
     <div className="brief-body">
-      <span className="chapter-number">KİTAPTAKİ METİN</span>
+      <span className="chapter-number">{t('KİTAPTAKİ METİN', 'THE BOOK’S TEXT')}</span>
       {paragraphs(text).map((p, k) => <p key={k} className="narrative brief-lead">{marked(p)}</p>)}
-      {artifact.detail.title && <p className="detail-hint"><Plus size={15} aria-hidden="true" /><span>{hints.short(artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
+      {artifact.detail.title && <p className="detail-hint"><Plus size={15} aria-hidden="true" /><span>{hints().short(artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
       <NarrationExtras artifact={artifact} mode="short" />
     </div>
   </section>;

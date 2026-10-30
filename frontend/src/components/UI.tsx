@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { t } from '../lib/i18n';
 import { X, ArrowUpRight, DoorOpen, Landmark, Compass, Map, Shield, Sparkles, Puzzle, Search, Eye } from 'lucide-react';
 import { Link } from '../lib/navigation';
 import { Girih } from './PlayArt';
 
 export const symbols = { door: DoorOpen, building: Landmark, compass: Compass, map: Map, shield: Shield, sparkles: Sparkles, puzzle: Puzzle, search: Search, eye: Eye };
 export function Brand({ compact = false }: { compact?: boolean }) {
-  return <Link to="/" className="brand" aria-label="EŞİK ana sayfa"><svg viewBox="0 0 32 42" aria-hidden="true"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><span>EŞİK{!compact && <small>TARİHE AÇILAN KAPI</small>}</span></Link>;
+  return <Link to="/" className="brand" aria-label={t('EŞİK ana sayfa', 'EŞİK home')}><svg viewBox="0 0 32 42" aria-hidden="true"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><span>EŞİK{!compact && <small>{t('TARİHE AÇILAN KAPI', 'A DOOR TO HISTORY')}</small>}</span></Link>;
 }
 export function Scene({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`theme-scene ${className}`}><Girih className="theme-girih" />{children}</div>;
@@ -23,5 +24,5 @@ export function Modal({ title, children, onClose, className = '' }: { title: str
     const before = document.body.style.overflow; document.body.style.overflow = 'hidden';
     return () => { dialog?.close(); document.body.style.overflow = before; if (previous?.isConnected) previous.focus(); };
   }, []);
-  return <dialog ref={ref} className={`modal ${className}`} onCancel={e => { e.preventDefault(); close.current(); }} onClick={e => { if (e.target === e.currentTarget) close.current(); }} aria-labelledby={titleId}><div className="modal-content"><button className="icon-button modal-close" onClick={onClose} aria-label="Kapat" autoFocus><X aria-hidden="true" /></button><h2 id={titleId}>{title}</h2>{children}</div></dialog>;
+  return <dialog ref={ref} className={`modal ${className}`} onCancel={e => { e.preventDefault(); close.current(); }} onClick={e => { if (e.target === e.currentTarget) close.current(); }} aria-labelledby={titleId}><div className="modal-content"><button className="icon-button modal-close" onClick={onClose} aria-label={t('Kapat', 'Close')} autoFocus><X aria-hidden="true" /></button><h2 id={titleId}>{title}</h2>{children}</div></dialog>;
 }

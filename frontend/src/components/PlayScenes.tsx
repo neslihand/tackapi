@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { centuryName, t } from '../lib/i18n';
 import { animate, motion, useInView, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'framer-motion';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 
@@ -131,7 +132,7 @@ export function PuzzlePreview({ artifact, solved }: { artifact: DiscoveryArtifac
       })}
       <span className="pl-slot" style={{ gridColumn: (LOOSE % COLS) + 1, gridRow: Math.floor(LOOSE / COLS) + 1 }} />
     </div>
-    <p className="pl-puzzle-count"><b>{pad(placed)}</b> / {COLS * ROWS} PARÇA</p>
+    <p className="pl-puzzle-count"><b>{pad(placed)}</b> / {COLS * ROWS} {t('PARÇA', 'PIECES')}</p>
   </div>;
 }
 
@@ -159,17 +160,17 @@ export function DetectivePreview({ artifact }: { artifact: DiscoveryArtifact }) 
   }
   const century = artifact.year.match(/\d{2}/)?.[0];
   return <div className="pl-file" aria-hidden="true" onPointerEnter={event => { if (event.pointerType === 'mouse') setHunting(true); }} onPointerLeave={() => setHunting(false)} onPointerMove={move}>
-    <div className="pl-file-head"><span>GİZLİ DOSYA · N° 07</span><span>KİMLİĞİ BİLİNMİYOR</span></div>
+    <div className="pl-file-head"><span>{t('GİZLİ DOSYA', 'SECRET FILE')} · N° 07</span><span>{t('KİMLİĞİ BİLİNMİYOR', 'IDENTITY UNKNOWN')}</span></div>
     <div className="pl-file-photo">
       <img className="pl-file-blur" src={artifact.image} alt="" draggable={false} loading="lazy" />
       <motion.img className="pl-file-sharp" src={artifact.image} alt="" draggable={false} loading="lazy" style={{ WebkitMaskImage: mask, maskImage: mask }} />
       <motion.span className="pl-file-lens" style={{ left, top }} />
-      <span className="pl-file-stamp">GİZLİ</span>
+      <span className="pl-file-stamp">{t('GİZLİ', 'SECRET')}</span>
     </div>
     <ol className="pl-clues">
-      <li><span>İPUCU 01</span>{century ? `${Number(century) + 1}. yüzyıl` : artifact.period}</li>
-      <li><span>İPUCU 02</span>{artifact.category}</li>
-      <li className="locked"><span>İPUCU 03</span>● ● ● ●</li>
+      <li><span>{t('İPUCU', 'CLUE')} 01</span>{century ? centuryName(Number(century) + 1) : artifact.period}</li>
+      <li><span>{t('İPUCU', 'CLUE')} 02</span>{artifact.category}</li>
+      <li className="locked"><span>{t('İPUCU', 'CLUE')} 03</span>● ● ● ●</li>
     </ol>
   </div>;
 }

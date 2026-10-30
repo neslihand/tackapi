@@ -12,7 +12,7 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
 export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
-  segmentation_pending: number; contributions_pending?: number; agent_open?: number;
+  segmentation_pending: number; contributions_pending?: number; agent_open?: number; articles_pending?: number; terms_pending?: number;
   // MVP pilot seçkisi: şehir başına seçilen eser ve hedef (009 göçü yoksa boş)
   pilot?: { city: string; n: number; target: number | null }[] };
 
@@ -146,3 +146,37 @@ export type Announcement = { id: number; title: string; body: string; monuments:
   starts_on: string | null; ends_on: string | null; published: boolean; ai_draft: boolean; suggestion_id: number | null;
   created_by: string | null; updated_at: string };
 export type AnnouncementFields = Partial<Pick<Announcement, 'title' | 'body' | 'monuments' | 'route_slug' | 'starts_on' | 'ends_on' | 'published'>>;
+
+// Makaleler ve terimler sözlüğü (backend/pipeline/articles.py, göç 017)
+export type ArticleKind = 'city_history' | 'heritage' | 'culture';
+export type ArticleStatus = 'draft' | 'pending' | 'published' | 'rejected';
+export type ArticleOrigin = 'book' | 'editorial' | 'visitor';
+export type ArticleCover = { src: string; thumb: string; alt: string; own: boolean } | null;
+export type ArticleRow = { id: number; slug: string; kind: ArticleKind; title_tr: string; status: ArticleStatus; origin: ArticleOrigin;
+  city: string | null; byline: string; featured: boolean; has_english: boolean; words: number; cover: ArticleCover;
+  updated_at: string; published_at: string | null; created_at: string; monuments_count: number };
+export type ArticleMonument = { slug: string; name_tr: string; city: string; review_status: string; pilot: boolean };
+export type Article = { id: number; slug: string; kind: ArticleKind; title_tr: string; title_en: string | null; summary_tr: string | null;
+  summary_en: string | null; body_tr: string; body_en: string | null; city_id: number | null; city_slug: string | null; city_tr: string | null;
+  cover_file: string | null; cover_alt: string | null; cover: ArticleCover; authors: string[]; source_section_id: number | null;
+  source_paras: [number, number] | null; page_start: number | null; page_end: number | null; source_note: string | null;
+  book_title: string | null; section_title: string | null; origin: ArticleOrigin; user_id: number | null; user_name: string | null;
+  user_deleted: boolean | null; status: ArticleStatus; reject_reason: string | null; featured: boolean; created_by: string | null;
+  reviewed_by: string | null; reviewed_at: string | null; published_at: string | null; created_at: string; updated_at: string;
+  byline: string; reading_minutes: number; words: number; monuments: ArticleMonument[] };
+export type ArticleFields = Partial<{ kind: ArticleKind; title_tr: string; title_en: string | null; summary_tr: string | null;
+  summary_en: string | null; body_tr: string; body_en: string | null; city: string | null; authors: string[]; source_note: string | null;
+  page_start: number | null; page_end: number | null; monuments: string[]; featured: boolean; cover_alt: string | null; slug: string;
+  status: ArticleStatus; reject_reason: string | null }>;
+export type ArticleSource = { id: number; kind: string; kind_label: string; title_tr: string; page_start: number | null; page_end: number | null;
+  book: string; book_title: string; city: string | null; paragraphs: number; used_paragraphs: number; articles: number };
+export type SourceRange = { id: number; title: string; status: ArticleStatus; from_para: number; to_para: number };
+export type ArticleSourceDetail = { id: number; kind: string; title_tr: string; book: string; book_title: string; city: string | null;
+  authors: string[]; paragraphs: { n: number; text: string; pages: number[] }[]; used: SourceRange[] };
+export type TermCategory = 'architecture' | 'decoration' | 'waqf' | 'title' | 'daily_life' | 'other';
+export type Term = { id: number; slug: string; term_tr: string; term_en: string; definition_tr: string; definition_child_tr: string | null;
+  definition_en: string | null; category: TermCategory | null; origin: ArticleOrigin; status: ArticleStatus; reject_reason: string | null;
+  created_by: string | null; reviewed_by: string | null; reviewed_at: string | null; created_at: string; updated_at: string;
+  user_id: number | null; user_name: string | null; author?: string | null };
+export type TermFields = Partial<Pick<Term, 'term_tr' | 'term_en' | 'definition_tr' | 'definition_child_tr' | 'definition_en' | 'category' |
+  'status' | 'reject_reason'>>;

@@ -8,12 +8,13 @@ import { Girih } from '../components/PlayArt';
 import { NextDoor } from '../components/ArtifactCard';
 import { settleScroll } from '../lib/motion';
 import { Link } from '../lib/navigation';
+import { t } from '../lib/i18n';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { hasImmersiveStory } from '../lib/artifactAdapter';
 import { imageAlt, PLACEHOLDER_IMAGE } from '../lib/content';
-import { narrationModes, useNarrationMode, type NarrationMode } from '../lib/preferences';
+import { narrationLabel, narrationModes, useNarrationMode, type NarrationMode } from '../lib/preferences';
 import { useAmbience } from '../lib/ambience';
 import { BriefChapter, BriefNarration, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
@@ -32,12 +33,12 @@ const smooth = () => window.matchMedia('(prefers-reduced-motion: reduce)').match
 function Stage({ artifact, chapter, detail, setDetail, whole = false }: { artifact: Artifact; chapter: number; detail: boolean; setDetail: (open: boolean) => void; whole?: boolean }) {
   const { x, y, s } = whole ? { x: 50, y: 50, s: 1.04 } : shot(artifact, chapter);
   const tone = ['past', 'past', 'detail', 'present'][Math.min(chapter, 3)];
-  return <aside className={`story-stage tone-${tone}`} aria-label="Hikâye sahnesi">
-    <div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': s } as CSSProperties}><img src={artifact.image} alt={whole ? `${artifact.name} fotoğrafı` : artifact.origin ? `${artifact.name} fotoğrafı; ${artifact.chapters[chapter]?.title ?? ''} bölümü` : `${artifact.name} için özgün mimari illüstrasyon; ${artifact.chapters[chapter]?.title ?? ''} bölümünün görünümü`} /></div>
+  return <aside className={`story-stage tone-${tone}`} aria-label={t('Hikâye sahnesi', 'Story stage')}>
+    <div className="stage-canvas" style={{ '--fx': x, '--fy': y, '--zoom': s } as CSSProperties}><img src={artifact.image} alt={whole ? t(`${artifact.name} fotoğrafı`, `Photo of ${artifact.name}`) : artifact.origin ? t(`${artifact.name} fotoğrafı; ${artifact.chapters[chapter]?.title ?? ''} bölümü`, `Photo of ${artifact.name}; chapter ${artifact.chapters[chapter]?.title ?? ''}`) : t(`${artifact.name} için özgün mimari illüstrasyon; ${artifact.chapters[chapter]?.title ?? ''} bölümünün görünümü`, `Original architectural illustration of ${artifact.name}; the view for chapter ${artifact.chapters[chapter]?.title ?? ''}`)} /></div>
     <div className="stage-grade" aria-hidden="true" />
-    <div className="stage-top">{whole ? <span>KİTAPTAKİ METİN</span> : <span>BÖLÜM {pad(chapter + 1)} / {pad(artifact.chapters.length)}</span>}<span className="stage-era">{!whole && chapter === artifact.chapters.length - 1 ? 'BUGÜN' : artifact.year}</span></div>
+    <div className="stage-top">{whole ? <span>{t('KİTAPTAKİ METİN', 'THE BOOK’S TEXT')}</span> : <span>{t('BÖLÜM', 'CHAPTER')} {pad(chapter + 1)} / {pad(artifact.chapters.length)}</span>}<span className="stage-era">{!whole && chapter === artifact.chapters.length - 1 ? t('BUGÜN', 'TODAY') : artifact.year}</span></div>
     {(whole || chapter === 2) && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
-    <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? 'FOTOĞRAF' : 'ÖZGÜN MİMARİ YORUM'}</small><strong>{whole ? artifact.name : artifact.chapters[chapter]?.title}</strong></div>
+    <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM', 'ORIGINAL ARCHITECTURAL INTERPRETATION')}</small><strong>{whole ? artifact.name : artifact.chapters[chapter]?.title}</strong></div>
   </aside>;
 }
 
@@ -188,23 +189,23 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   return <div ref={ref} className={`story-page mode-${mode}`}>
     {/* The opening scene stays put while the telling slides up over it on a torn paper edge. */}
     <div className="story-curtain">
-    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt={artifact.origin ? `${artifact.name} fotoğrafı. ${imageAlt(artifact)}` : `${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`} /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> Koleksiyona dön</Link>
-      <div className="story-hero-copy"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label="Eser künyesi"><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>ESER {pad(position + 1)}</li></ul><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>Hikâyeyi keşfet <ArrowDown size={17} aria-hidden="true" /></button></div>
-      {stamped && <span className="ex-stamp story-hero-stamp">MÜHÜRLENDİ<span className="ex-seal" aria-hidden="true">✦</span></span>}
-      {!whole && <ol className="story-hero-chapters" aria-label="Hikâyenin bölümleri">{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}
-      <span className="story-art-note">{artifact.origin ? `FOTOĞRAF · ${artifact.origin.photoCredit}` : 'ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR'}</span></section>
+    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt={artifact.origin ? t(`${artifact.name} fotoğrafı. ${imageAlt(artifact)}`, `Photo of ${artifact.name}. ${imageAlt(artifact)}`) : t(`${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`, `Original architectural illustration of ${artifact.name}. ${imageAlt(artifact)}`)} /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
+      <div className="story-hero-copy"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>{t('Hikâyeyi keşfet', 'Discover the story')} <ArrowDown size={17} aria-hidden="true" /></button></div>
+      {stamped && <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span>}
+      {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}
+      <span className="story-art-note">{artifact.origin ? `${t('FOTOĞRAF', 'PHOTO')} · ${artifact.origin.photoCredit}` : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}</span></section>
     <div className="story-body" data-nav-theme={mode === 'story' ? 'dark' : 'light'}>
       <Girih className="story-girih" />
       <div className="story-tools" id="story-reading">
-        <div><span className="ex-medallion" aria-hidden="true"><BookOpen size={16} /></span><span>Anlatım şeklini seç</span></div>
-        <div className="segmented" role="group" aria-label="Anlatım biçimi">{narrationModes.map(([value, label]) => <button key={value} className={mode === value ? 'active' : ''} aria-pressed={mode === value} onClick={() => choose(value)}>{value === 'short' && artifact.origin ? artifact.origin.shortLabel : label}</button>)}</div>
-        <button className="story-sound" onClick={sound.toggle} aria-pressed={sound.on} aria-label={sound.on ? 'Ortam sesini kapat' : 'Ortam sesini aç'}><span className="story-save-icon" aria-hidden="true">{sound.on ? <Volume2 size={16} /> : <VolumeX size={16} />}</span><span>Ses</span></button>
-        <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>Favori</span></button>
+        <div><span className="ex-medallion" aria-hidden="true"><BookOpen size={16} /></span><span>{t('Anlatım şeklini seç', 'Choose how it is told')}</span></div>
+        <div className="segmented" role="group" aria-label={t('Anlatım biçimi', 'Narration style')}>{narrationModes.map(([value]) => <button key={value} className={mode === value ? 'active' : ''} aria-pressed={mode === value} onClick={() => choose(value)}>{value === 'short' && artifact.origin ? artifact.origin.shortLabel : narrationLabel(value)}</button>)}</div>
+        <button className="story-sound" onClick={sound.toggle} aria-pressed={sound.on} aria-label={sound.on ? t('Ortam sesini kapat', 'Turn the ambient sound off') : t('Ortam sesini aç', 'Turn the ambient sound on')}><span className="story-save-icon" aria-hidden="true">{sound.on ? <Volume2 size={16} /> : <VolumeX size={16} />}</span><span>{t('Ses', 'Sound')}</span></button>
+        <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>{t('Favori', 'Favourite')}</span></button>
         <AskArtifact artifact={artifact} mode={mode} chapter={chapter} />
         <div className="reading-progress" aria-hidden="true"><span /></div>
       </div>
-      {!whole && <nav className={`story-index ${railOn ? 'on' : ''}`} aria-label="Bölümler arasında gezin">
-        <span>HİKÂYENİN İZİ</span>
+      {!whole && <nav className={`story-index ${railOn ? 'on' : ''}`} aria-label={t('Bölümler arasında gezin', 'Move between chapters')}>
+        <span>{t('HİKÂYENİN İZİ', 'THE STORY’S TRAIL')}</span>
         {artifact.chapters.map((c, i) => <button key={i} className={chapter === i ? 'current' : ''} aria-current={chapter === i ? 'step' : undefined} onClick={() => goTo(i)}><i>{pad(i + 1)}</i><span>{c.title}</span></button>)}
         <div className="story-index-progress" aria-hidden="true"><span /></div>
       </nav>}
@@ -217,10 +218,10 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       </div>
     </div>
     </div>
-    <section className="story-interlude" data-nav-theme="dark" aria-label={`${artifact.name}: geçmişten bugüne`}>
+    <section className="story-interlude" data-nav-theme="dark" aria-label={`${artifact.name}: ${t('geçmişten bugüne', 'from the past to today')}`}>
       <div className="interlude-sticky"><img className="interlude-image" src={artifact.image} alt="" loading="lazy" /><div className="interlude-shade" />
         <span className="interlude-year" aria-hidden="true">{artifact.year.split(/[–-]/)[0]}</span>
-        <div className="interlude-copy"><p className="eyebrow light"><span />GEÇMİŞTEN BUGÜNE</p><h2>Yüzyıllar geçti.<br /><em>Hikâye hâlâ burada.</em></h2><p>{artifact.name} · {artifact.city} · {artifact.year}</p></div></div>
+        <div className="interlude-copy"><p className="eyebrow light"><span />{t('GEÇMİŞTEN BUGÜNE', 'FROM THE PAST TO TODAY')}</p><h2>{t('Yüzyıllar geçti.', 'Centuries have passed.')}<br /><em>{t('Hikâye hâlâ burada.', 'The story is still here.')}</em></h2><p>{artifact.name} · {artifact.city} · {artifact.year}</p></div></div>
     </section>
     {extras}
     <div className="story-end"><Girih className="story-girih" />
@@ -228,19 +229,19 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
     <section className="story-finish" aria-labelledby="finish-title">
       <div className="finish-copy">
         <span className={`story-seal ${stamped ? 'on' : ''}`} aria-hidden="true"><Stamp size={30} /></span>
-        <Eyebrow>BİR HİKÂYE DAHA SANA KATILDI</Eyebrow>
-        <h2 id="finish-title">Bu keşif <em>senin olsun.</em></h2>
-        <p>Hikâyeyi keşfettiğini pasaportuna kaydet. Bu mühür dijital keşfini temsil eder; fiziksel ziyaret kaydı değildir.</p>
+        <Eyebrow>{t('BİR HİKÂYE DAHA SANA KATILDI', 'ONE MORE STORY IS YOURS')}</Eyebrow>
+        <h2 id="finish-title">{t('Bu keşif', 'Let this discovery')} <em>{t('senin olsun.', 'be yours.')}</em></h2>
+        <p>{t('Hikâyeyi keşfettiğini pasaportuna kaydet. Bu mühür dijital keşfini temsil eder; fiziksel ziyaret kaydı değildir.', 'Record in your passport that you discovered this story. The stamp stands for your digital discovery; it is not a record of a visit.')}</p>
       </div>
       <div className="finish-actions">
-        <button className={`button ${stamped ? 'stamped' : 'gold'}`} disabled={stamped} onClick={() => { markDiscovered(artifact.id); notify('Keşfin miras pasaportuna mühürlendi.'); }}>{stamped ? <><Check size={18} /> Pasaportuna mühürlendi</> : <><Stamp size={18} /> Pasaportuma mühürle</>}</button>
+        <button className={`button ${stamped ? 'stamped' : 'gold'}`} disabled={stamped} onClick={() => { markDiscovered(artifact.id); notify(t('Keşfin miras pasaportuna mühürlendi.', 'Your discovery is stamped into your heritage passport.')); }}>{stamped ? <><Check size={18} /> {t('Pasaportuna mühürlendi', 'Stamped into your passport')}</> : <><Stamp size={18} /> {t('Pasaportuma mühürle', 'Stamp my passport')}</>}</button>
         <ul className="finish-links">
-          {stamped && <li><Link to="/pasaport"><span className="finish-icon" aria-hidden="true"><Stamp size={18} /></span><span>Pasaportumu gör<small>Topladığın mühürler ve keşiflerin</small></span><ArrowUpRight size={18} aria-hidden="true" /></Link></li>}
-          {stamped && <li><Link to="/oyun"><span className="finish-icon" aria-hidden="true"><Sparkles size={18} /></span><span>Bilgini sına<small>Dört soruluk bilgi yarışması</small></span><ArrowUpRight size={18} aria-hidden="true" /></Link></li>}
-          {artifact.image !== PLACEHOLDER_IMAGE && <li className="story-finish-play"><Link to={`/oyun/oyunlar?oyun=yapboz&eser=${encodeURIComponent(artifact.id)}`}><span className="finish-icon" aria-hidden="true"><Puzzle size={18} /></span><span>Bu eserin yapbozunu çöz<small>Görseli parçalardan yeniden kur</small></span><ArrowUpRight size={18} aria-hidden="true" /></Link></li>}
+          {stamped && <li><Link to="/pasaport"><span className="finish-icon" aria-hidden="true"><Stamp size={18} /></span><span>{t('Pasaportumu gör', 'See my passport')}<small>{t('Topladığın mühürler ve keşiflerin', 'Your stamps and discoveries')}</small></span><ArrowUpRight size={18} aria-hidden="true" /></Link></li>}
+          {stamped && <li><Link to="/oyun"><span className="finish-icon" aria-hidden="true"><Sparkles size={18} /></span><span>{t('Bilgini sına', 'Test what you know')}<small>{t('Dört soruluk bilgi yarışması', 'A four-question quiz')}</small></span><ArrowUpRight size={18} aria-hidden="true" /></Link></li>}
+          {artifact.image !== PLACEHOLDER_IMAGE && <li className="story-finish-play"><Link to={`/oyun/oyunlar?oyun=yapboz&eser=${encodeURIComponent(artifact.id)}`}><span className="finish-icon" aria-hidden="true"><Puzzle size={18} /></span><span>{t('Bu eserin yapbozunu çöz', 'Solve this work’s puzzle')}<small>{t('Görseli parçalardan yeniden kur', 'Rebuild the picture from its pieces')}</small></span><ArrowUpRight size={18} aria-hidden="true" /></Link></li>}
         </ul>
       </div>
     </section>
-    <section className="story-sources"><div><p className="story-sources-kicker">KAYNAKÇA</p><h3>Hikâyenin kaynakları</h3><p>{artifact.origin ? artifact.origin.sourcesNote : 'Üç anlatım biçimi de önceden hazırlanmış içeriktir.'}<br />{chatEndpoint() ? '“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.' : 'Bu sürümde yapay zekâ ile metin üretimi yapılmaz.'}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only"> (yeni sekmede açılır)</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul></section>
+    <section className="story-sources"><div><p className="story-sources-kicker">{t('KAYNAKÇA', 'SOURCES')}</p><h3>{t('Hikâyenin kaynakları', 'The story’s sources')}</h3><p>{artifact.origin ? artifact.origin.sourcesNote : t('Üç anlatım biçimi de önceden hazırlanmış içeriktir.', 'All three narration styles are prepared in advance.')}<br />{chatEndpoint() ? t('“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.', 'The answers of “Ask the Work” are written by AI and may contain mistakes.') : t('Bu sürümde yapay zekâ ile metin üretimi yapılmaz.', 'This version does not generate text with AI.')}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only">{t(' (yeni sekmede açılır)', ' (opens in a new tab)')}</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul></section>
     <NextDoor artifact={next} /></div></div></div>;
 }

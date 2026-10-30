@@ -5,6 +5,7 @@ import { ArrowUpRight, ChevronDown, LocateFixed, MapPin, Search } from 'lucide-r
 import { Girih } from '../components/PlayArt';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
+import { locale, t } from '../lib/i18n';
 import { distanceKm, normalize } from '../lib/progress';
 import { ANATOLIA, GEO_LABELS, THRACE } from '../lib/turkeyOutline';
 import { track } from '../lib/analytics';
@@ -65,7 +66,7 @@ export function MapPage({ query = '' }: { query?: string }) {
       ...GEO_LABELS.map(label => L.marker(label.at, { interactive: false, keyboard: false,
         icon: L.divIcon({ className: `mp-geo-label ${label.className}`, html: `<span>${label.text}</span>`, iconSize: [0, 0] }) })),
     ]).addTo(map);
-    map.attributionControl.addAttribution('EŞİK · Sadeleştirilmiş Türkiye haritası');
+    map.attributionControl.addAttribution(t('EŞİK · Sadeleştirilmiş Türkiye haritası', 'EŞİK · Simplified map of Türkiye'));
     const resize = new ResizeObserver(() => map.invalidateSize()); resize.observe(ref.current);
     setReady(true);
     return () => { alive.current = false; resize.disconnect(); map.remove(); mapRef.current = null; userMarker.current = null; };
@@ -92,7 +93,7 @@ export function MapPage({ query = '' }: { query?: string }) {
       pin.setAttribute('aria-hidden', 'true');
       const icon = L.divIcon({ className: 'heritage-marker', html: pin, iconSize: [44, 44], iconAnchor: [22, 22] });
       const marker = L.marker(a.coordinates, { icon, title: a.name, alt: a.name }).addTo(map);
-      const tooltip = document.createElement('span'); tooltip.textContent = a.coordinatesApproximate ? `${a.name} · yaklaşık konum` : a.name; marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -20] });
+      const tooltip = document.createElement('span'); tooltip.textContent = a.coordinatesApproximate ? `${a.name} · ${t('yaklaşık konum', 'approximate location')}` : a.name; marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -20] });
       marker.on('click', () => setSelected(a.id));
       placed.set(a.id, marker);
     });
@@ -128,7 +129,7 @@ export function MapPage({ query = '' }: { query?: string }) {
   useEffect(() => {
     if (!mapRef.current || !online) return;
     const layer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19 }).addTo(mapRef.current);
-    layer.on('tileerror', () => { if (alive.current) setStatus('Çevrimiçi harita yüklenemedi. Şematik haritayı ve eser listesini kullanabilirsin.'); });
+    layer.on('tileerror', () => { if (alive.current) setStatus(t('Çevrimiçi harita yüklenemedi. Şematik haritayı ve eser listesini kullanabilirsin.', 'The online map could not be loaded. You can use the schematic map and the list of works.')); });
     // The opaque schematic would otherwise cover the street tiles.
     schematic.current?.remove();
     return () => { layer.remove(); if (mapRef.current) schematic.current?.addTo(mapRef.current); };
@@ -148,49 +149,49 @@ export function MapPage({ query = '' }: { query?: string }) {
   }
   function focus(id: string) { const a = artifacts.find(a => a.id === id); if (!a) return; setSelected(id); track('map_select', a.slug); if (a.coordinates) show(a.coordinates, online ? 12 : 7); }
   function locate() {
-    if (!navigator.geolocation) { setStatus('Bu cihazda konum desteği yok. Şehir seçerek keşfedebilirsin.'); return; }
+    if (!navigator.geolocation) { setStatus(t('Bu cihazda konum desteği yok. Şehir seçerek keşfedebilirsin.', 'This device cannot share its location. Choose a city to explore.')); return; }
     setLocating(true); setStatus('Konum iznin bekleniyor…');
     navigator.geolocation.getCurrentPosition(position => {
       if (!alive.current) return;
       const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
-      setLocation(coords); setCity(''); setLocating(false); track('map_locate', undefined, { radius }); setStatus('Eserler kuş uçuşu mesafeye göre sıralandı. Konumun kaydedilmez.');
+      setLocation(coords); setCity(''); setLocating(false); track('map_locate', undefined, { radius }); setStatus(t('Eserler kuş uçuşu mesafeye göre sıralandı. Konumun kaydedilmez.', 'The works are sorted by straight-line distance. Your location is not stored.'));
       if (mapRef.current) { userMarker.current?.remove(); userMarker.current = L.circleMarker(coords, { radius: 8, fillColor: '#7beeba', color: '#f3eee5', weight: 3, fillOpacity: 1, className: 'map-user' }).addTo(mapRef.current); show(coords, 7); }
-    }, error => { if (!alive.current) return; setLocating(false); setStatus(error.code === 1 ? 'Konum izni verilmedi. Şehir seçerek keşfetmeye devam edebilirsin.' : 'Konum alınamadı. Şehir seçimiyle devam edebilirsin.'); }, { timeout: 12000, maximumAge: 60000, enableHighAccuracy: false });
+    }, error => { if (!alive.current) return; setLocating(false); setStatus(error.code === 1 ? t('Konum izni verilmedi. Şehir seçerek keşfetmeye devam edebilirsin.', 'Location permission was not given. Choose a city to carry on exploring.') : t('Konum alınamadı. Şehir seçimiyle devam edebilirsin.', 'Your location could not be found. Choose a city to carry on.')); }, { timeout: 12000, maximumAge: 60000, enableHighAccuracy: false });
   }
   return <div className="map-scene" data-nav-theme="dark">
     <Girih className="map-girih" />
     <div className="page-shell map-page">
       <header className="mp-head">
-        <p className="mp-index"><span>N° 01</span><i aria-hidden="true" />Yakınımdaki miras · {pad(mapped)} durak</p>
-        <h1 className="mp-title"><span className="mp-line"><span>Bir sonraki hikâye</span></span> <span className="mp-line"><em>nerede?</em></span></h1>
-        <p className="mp-lede">Bir şehrin sokaklarında, yüzyılların izini bul. Haritada bir yıldıza dokun ya da dizinden bir eser seç.</p>
+        <p className="mp-index"><span>N° 01</span><i aria-hidden="true" />{t('Yakınımdaki miras', 'Heritage near me')} · {pad(mapped)} {t('durak', 'stops')}</p>
+        <h1 className="mp-title"><span className="mp-line"><span>{t('Bir sonraki hikâye', 'Where is the')}</span></span> <span className="mp-line"><em>{t('nerede?', 'next story?')}</em></span></h1>
+        <p className="mp-lede">{t('Bir şehrin sokaklarında, yüzyılların izini bul. Haritada bir yıldıza dokun ya da dizinden bir eser seç.', 'Find the trace of centuries in a city’s streets. Tap a star on the map, or choose a work from the index.')}</p>
       </header>
       <div className="map-controls">
-        <label className="map-select"><span className="mp-control-label">Şehir</span><select value={city} onChange={e => { setCity(e.target.value); const a = artifacts.find(a => a.city === e.target.value); if (a) focus(a.id); }}><option value="">Tüm şehirler</option>{[...new Set(artifacts.map(a => a.city))].map(c => <option key={c}>{c}</option>)}</select><ChevronDown size={16} aria-hidden="true" /></label>
-        {location && <label className="map-select map-radius"><span className="mp-control-label">Mesafe</span><select value={radius} onChange={e => setRadius(Number(e.target.value))}><option value={0}>Tüm mesafeler</option><option value={10}>10 km</option><option value={50}>50 km</option><option value={250}>250 km</option></select><ChevronDown size={16} aria-hidden="true" /></label>}
-        <button type="button" className="map-locate" onClick={locate} disabled={locating}><span aria-hidden="true"><LocateFixed size={18} /></span>{locating ? 'Konum alınıyor…' : 'Konumumu kullan'}</button>
-        <label className="map-online"><input type="checkbox" role="switch" checked={online} onChange={e => { setOnline(e.target.checked); setStatus(''); }} /> Çevrimiçi sokak haritası</label>
+        <label className="map-select"><span className="mp-control-label">{t('Şehir', 'City')}</span><select value={city} onChange={e => { setCity(e.target.value); const a = artifacts.find(a => a.city === e.target.value); if (a) focus(a.id); }}><option value="">{t('Tüm şehirler', 'All cities')}</option>{[...new Set(artifacts.map(a => a.city))].map(c => <option key={c}>{c}</option>)}</select><ChevronDown size={16} aria-hidden="true" /></label>
+        {location && <label className="map-select map-radius"><span className="mp-control-label">{t('Mesafe', 'Distance')}</span><select value={radius} onChange={e => setRadius(Number(e.target.value))}><option value={0}>{t('Tüm mesafeler', 'Any distance')}</option><option value={10}>10 km</option><option value={50}>50 km</option><option value={250}>250 km</option></select><ChevronDown size={16} aria-hidden="true" /></label>}
+        <button type="button" className="map-locate" onClick={locate} disabled={locating}><span aria-hidden="true"><LocateFixed size={18} /></span>{locating ? t('Konum alınıyor…', 'Finding your location…') : t('Konumumu kullan', 'Use my location')}</button>
+        <label className="map-online"><input type="checkbox" role="switch" checked={online} onChange={e => { setOnline(e.target.checked); setStatus(''); }} /> {t('Çevrimiçi sokak haritası', 'Online street map')}</label>
       </div>
       <p className="map-status" role="status">{status}</p>
       <div className="map-layout">
         <div className="map-sidebar" ref={sidebar}>
-          <span className="map-result-count">{visible.length} ESER · {location ? 'MESAFEYE GÖRE' : 'İLK KOLEKSİYON'}</span>
-          <label className="search-field"><Search size={17} aria-hidden="true" /><input placeholder="Eser veya şehir ara" aria-label="Haritada eser veya şehir ara" value={search} onChange={e => setSearch(e.target.value)} /></label>
-          <div className="map-artifact-list">{visible.map(a => <button type="button" key={a.id} className={selected === a.id ? 'active' : ''} aria-current={selected === a.id ? 'true' : undefined} onClick={() => focus(a.id)}><span className="mp-no" aria-hidden="true">{pad(artifacts.findIndex(x => x.id === a.id) + 1)}</span><img src={a.image} alt="" loading="lazy" /><span><strong>{a.name}</strong><small><MapPin size={11} aria-hidden="true" /> {a.city}{a.distance !== null && ` · ${a.distance.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} km`}{!a.coordinates && ' · Konum bilgisi yok'}{a.coordinatesApproximate && ' · Yaklaşık konum'}</small></span><ArrowUpRight size={16} aria-hidden="true" /></button>)}{!visible.length && <p className="map-empty">Bu aralıkta koleksiyona eklenmiş eser yok. Mesafeyi artırabilir veya filtreyi kaldırabilirsin.</p>}</div>
+          <span className="map-result-count">{visible.length} {t('ESER', 'WORKS')} · {location ? t('MESAFEYE GÖRE', 'BY DISTANCE') : t('İLK KOLEKSİYON', 'THE COLLECTION')}</span>
+          <label className="search-field"><Search size={17} aria-hidden="true" /><input placeholder={t('Eser veya şehir ara', 'Search for a work or a city')} aria-label={t('Haritada eser veya şehir ara', 'Search the map for a work or a city')} value={search} onChange={e => setSearch(e.target.value)} /></label>
+          <div className="map-artifact-list">{visible.map(a => <button type="button" key={a.id} className={selected === a.id ? 'active' : ''} aria-current={selected === a.id ? 'true' : undefined} onClick={() => focus(a.id)}><span className="mp-no" aria-hidden="true">{pad(artifacts.findIndex(x => x.id === a.id) + 1)}</span><img src={a.image} alt="" loading="lazy" /><span><strong>{a.name}</strong><small><MapPin size={11} aria-hidden="true" /> {a.city}{a.distance !== null && ` · ${a.distance.toLocaleString(locale(), { maximumFractionDigits: 1 })} km`}{!a.coordinates && ` · ${t('Konum bilgisi yok', 'No location')}`}{a.coordinatesApproximate && ` · ${t('Yaklaşık konum', 'Approximate location')}`}</small></span><ArrowUpRight size={16} aria-hidden="true" /></button>)}{!visible.length && <p className="map-empty">{t('Bu aralıkta koleksiyona eklenmiş eser yok. Mesafeyi artırabilir veya filtreyi kaldırabilirsin.', 'There are no works in the collection within this range. Widen the distance or remove the filter.')}</p>}</div>
         </div>
         <div className="map-container">
-          <div ref={ref} className="interactive-map" role="region" aria-label="Türkiye miras haritası. Eserleri yanındaki listeden de seçebilirsin." />
+          <div ref={ref} className="interactive-map" role="region" aria-label={t('Türkiye miras haritası. Eserleri yanındaki listeden de seçebilirsin.', 'Heritage map of Türkiye. You can also choose the works from the list beside it.')} />
           <span className="mp-frame" aria-hidden="true"><i /><i /><i /><i /></span>
           {/* A surveyor's readout for the chosen work: its place in the collection and its (approximate) position. */}
-          <p className="mp-hud" aria-hidden="true"><span>N° {pad(currentIndex + 1)} <i>/ {pad(artifacts.length)}</i></span>{current.coordinates && <span key={current.id}>{degrees(current.coordinates[0])}° K · {degrees(current.coordinates[1])}° D</span>}</p>
+          <p className="mp-hud" aria-hidden="true"><span>N° {pad(currentIndex + 1)} <i>/ {pad(artifacts.length)}</i></span>{current.coordinates && <span key={current.id}>{degrees(current.coordinates[0])}° {t('K', 'N')} · {degrees(current.coordinates[1])}° {t('D', 'E')}</span>}</p>
           <div className="selected-map-artifact">
             <span className="mp-sel-media"><img key={current.id} src={current.image} alt="" /></span>
-            <span className="mp-sel-copy" key={current.id}><small>N° {pad(currentIndex + 1)} · {current.city.toLocaleUpperCase('tr-TR')} · {current.year}</small><strong>{current.name}</strong><em>{current.period}</em></span>
-            <Link className="circle-link mp-open" to={`/eser/${current.slug}`} aria-label={`Hikâyeyi aç: ${current.name}`}><span>Hikâyeyi aç</span><i aria-hidden="true"><ArrowUpRight size={18} /></i></Link>
+            <span className="mp-sel-copy" key={current.id}><small>N° {pad(currentIndex + 1)} · {current.city.toLocaleUpperCase(locale())} · {current.year}</small><strong>{current.name}</strong><em>{current.period}</em></span>
+            <Link className="circle-link mp-open" to={`/eser/${current.slug}`} aria-label={`${t('Hikâyeyi aç', 'Open the story')}: ${current.name}`}><span>{t('Hikâyeyi aç', 'Open the story')}</span><i aria-hidden="true"><ArrowUpRight size={18} /></i></Link>
           </div>
         </div>
       </div>
-      <p className="page-note">Şematik harita çevrimdışı çalışır. Sokak haritası internet gerektirir. Mesafeler yaklaşık koordinatlardan kuş uçuşu hesaplanır; yol tarifi değildir.</p>
+      <p className="page-note">{t('Şematik harita çevrimdışı çalışır. Sokak haritası internet gerektirir. Mesafeler yaklaşık koordinatlardan kuş uçuşu hesaplanır; yol tarifi değildir.', 'The schematic map works offline. The street map needs the internet. Distances are straight-line from approximate coordinates; they are not directions.')}</p>
     </div>
   </div>;
 }

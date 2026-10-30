@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { Article, ArticleFields, ArticleRow, ArticleSource, ArticleSourceDetail, ArticleStatus, ArticleKind, ArticleOrigin, Term, TermFields, AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -182,5 +182,28 @@ export const api = {
   createAnnouncement: (body: AnnouncementFields) => request<Announcement>('/api/admin/announcements', json('POST', body)),
   updateAnnouncement: (id: number, body: AnnouncementFields) => request<Announcement>(`/api/admin/announcements/${id}`, json('PATCH', body)),
   deleteAnnouncement: (id: number) => request<void>(`/api/admin/announcements/${id}`, { method: 'DELETE' }),
+  // makaleler (kitaptan içe aktarılan, panelde yazılan ve ziyaretçilerin gönderdiği) ve terimler sözlüğü
+  articles: (f: { status?: ArticleStatus | null; kind?: ArticleKind | null; origin?: ArticleOrigin | null; q?: string; page?: number }) =>
+    request<{ enabled: boolean; total: number; items: ArticleRow[]; counts: { status: ArticleStatus; n: number }[] }>(`/api/admin/articles${qs(f)}`),
+  article: (id: number) => request<Article>(`/api/admin/articles/${id}`),
+  createArticle: (body: ArticleFields & { kind: ArticleKind; title_tr: string }) => request<Article>('/api/admin/articles', json('POST', body)),
+  updateArticle: (id: number, body: ArticleFields) => request<Article>(`/api/admin/articles/${id}`, json('PATCH', body)),
+  deleteArticle: (id: number) => request<void>(`/api/admin/articles/${id}`, { method: 'DELETE' }),
+  uploadArticleCover: (id: number, file: File, alt?: string) => {
+    const form = new FormData();
+    form.set('file', file);
+    if (alt !== undefined) form.set('alt', alt);
+    return request<Article>(`/api/admin/articles/${id}/cover`, { method: 'POST', body: form });
+  },
+  removeArticleCover: (id: number) => request<Article>(`/api/admin/articles/${id}/cover`, { method: 'DELETE' }),
+  articleSources: () => request<ArticleSource[]>('/api/admin/article-sources'),
+  articleSource: (id: number) => request<ArticleSourceDetail>(`/api/admin/article-sources/${id}`),
+  importArticle: (body: { section_id: number; from_para: number; to_para: number; title_tr?: string; kind?: ArticleKind }) =>
+    request<Article>('/api/admin/articles/import', json('POST', body)),
+  terms: (f: { status?: ArticleStatus | null; origin?: ArticleOrigin | null; q?: string }) =>
+    request<{ enabled: boolean; items: Term[]; counts: { status: ArticleStatus; n: number }[] }>(`/api/admin/terms${qs(f)}`),
+  createTerm: (body: TermFields & { term_tr: string; definition_tr: string }) => request<Term>('/api/admin/terms', json('POST', body)),
+  updateTerm: (id: number, body: TermFields) => request<Term>(`/api/admin/terms/${id}`, json('PATCH', body)),
+  deleteTerm: (id: number) => request<void>(`/api/admin/terms/${id}`, { method: 'DELETE' }),
   log: (target?: string) => request<LogRow[]>(`/api/admin/log${qs({ target, limit: 200 })}`),
 };

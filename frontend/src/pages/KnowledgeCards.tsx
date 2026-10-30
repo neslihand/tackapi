@@ -5,6 +5,7 @@ import type { DiscoveryArtifact as Artifact } from '../lib/artifactContract';
 import { useTilt } from '../components/PlayScenes';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
+import { t } from '../lib/i18n';
 
 // The knowledge cards as a hand of cards: fanned in an arc around the one in front. Choosing a card (pointer, focus,
 // the arrows or the arrow keys) turns the hand until it is in front; it can then be turned over to read its story.
@@ -34,7 +35,7 @@ export function KnowledgeCards({ flipped, onFlip }: { flipped: string[]; onFlip:
   // While the hand is being dealt the cards leave the pile one after another; later moves are immediate.
   const [dealing, setDealing] = useState(true);
   useEffect(() => { if (!dealt) return; const timer = setTimeout(() => setDealing(false), 1400); return () => clearTimeout(timer); }, [dealt]);
-  if (!artifacts.length) return <p role="status">Bu koleksiyonda henüz bilgi kartı yok.</p>;
+  if (!artifacts.length) return <p role="status">{t('Bu koleksiyonda henüz bilgi kartı yok.', 'There are no knowledge cards in this collection yet.')}</p>;
   const n = artifacts.length;
   const narrow = width < 640;
   const cardWidth = narrow ? Math.min(270, width * 0.8) : 320;
@@ -55,9 +56,9 @@ export function KnowledgeCards({ flipped, onFlip }: { flipped: string[]; onFlip:
   }
   const current = artifacts[active];
   return <div className="deck">
-    <div className="flip-bar"><p><strong>{artifacts.filter(a => flipped.includes(a.id)).length}</strong> / {n} KART KEŞFEDİLDİ <span>· Bu oturumda</span></p>
+    <div className="flip-bar"><p><strong>{artifacts.filter(a => flipped.includes(a.id)).length}</strong> / {n} {t('KART KEŞFEDİLDİ', 'CARDS DISCOVERED')} <span>· {t('Bu oturumda', 'This visit')}</span></p>
       <ol className="deck-pips" aria-hidden="true">{artifacts.map((a, i) => <li key={a.id} className={`${flipped.includes(a.id) ? 'seen' : ''} ${i === active ? 'here' : ''}`} />)}</ol></div>
-    <ul className="flip-grid deck-hand" ref={stage} onKeyDown={keys} style={{ height: narrow ? cardWidth * 1.46 + 120 : 620 }} aria-label="Bilgi kartları destesi; kartlar arasında sağ ve sol ok tuşlarıyla gezinebilirsin">
+    <ul className="flip-grid deck-hand" ref={stage} onKeyDown={keys} style={{ height: narrow ? cardWidth * 1.46 + 120 : 620 }} aria-label={t('Bilgi kartları destesi; kartlar arasında sağ ve sol ok tuşlarıyla gezinebilirsin', 'Deck of knowledge cards; move between the cards with the left and right arrow keys')}>
       {artifacts.map((artifact, i) => {
         const k = offset(i), far = Math.abs(k);
         const place = still || dealt
@@ -71,9 +72,9 @@ export function KnowledgeCards({ flipped, onFlip }: { flipped: string[]; onFlip:
       })}
     </ul>
     <div className="deck-controls">
-      <button type="button" className="deck-arrow" onClick={() => choose(active - 1, true)} aria-label="Önceki kart"><ArrowLeft size={18} aria-hidden="true" /></button>
+      <button type="button" className="deck-arrow" onClick={() => choose(active - 1, true)} aria-label={t('Önceki kart', 'Previous card')}><ArrowLeft size={18} aria-hidden="true" /></button>
       <p className="deck-now" aria-live="polite"><span>{pad(active + 1)} / {pad(n)}</span><b>{current.name}</b><small>{current.city} · {current.year}</small></p>
-      <button type="button" className="deck-arrow" onClick={() => choose(active + 1, true)} aria-label="Sonraki kart"><ArrowRight size={18} aria-hidden="true" /></button>
+      <button type="button" className="deck-arrow" onClick={() => choose(active + 1, true)} aria-label={t('Sonraki kart', 'Next card')}><ArrowRight size={18} aria-hidden="true" /></button>
     </div>
   </div>;
 }
@@ -99,18 +100,18 @@ function FlipCard({ artifact, index, front, shade, onFlip, onSelect }: { artifac
         <div className="flip-caption">
           <h3>{words.join(' ')} <em>{lastWord}{/[.!?…]$/.test(lastWord) ? '' : '.'}</em></h3>
           <p className="flip-name">{artifact.name} · {artifact.city}</p>
-          <button ref={frontButton} type="button" className="flip-turn" onClick={() => turn(true)} aria-label={`Arkasını çevir: ${artifact.name}`}><span>Arkasını çevir</span><ArrowUpRight size={18} aria-hidden="true" /></button>
+          <button ref={frontButton} type="button" className="flip-turn" onClick={() => turn(true)} aria-label={`${t('Arkasını çevir', 'Turn over')}: ${artifact.name}`}><span>{t('Arkasını çevir', 'Turn over')}</span><ArrowUpRight size={18} aria-hidden="true" /></button>
         </div>
         <span className="flip-shade" style={{ opacity: shade }} aria-hidden="true" />
       </div>
       <div className="flip-face flip-back" inert={!turned}>
         <div className="flip-top"><span>{number}</span><span aria-hidden="true">✦</span><span>{artifact.year}</span></div>
-        <h3 className="flip-label" ref={back} tabIndex={-1}><span className="sr-only">{artifact.name}: </span>Eserin hikâyesi</h3>
+        <h3 className="flip-label" ref={back} tabIndex={-1}><span className="sr-only">{artifact.name}: </span>{t('Eserin hikâyesi', 'The work’s story')}</h3>
         <p className="flip-story">{chapter?.short ?? artifact.description}</p>
         <ul className="flip-facts"><li>{artifact.period} · {artifact.category}</li><li>{artifact.architect}</li><li>{artifact.city}</li></ul>
         <div className="flip-foot">
-          <button type="button" className="flip-return" onClick={() => turn(false)} aria-label={`Öne dön: ${artifact.name}`}><RotateCcw size={16} aria-hidden="true" /> Öne dön</button>
-          <div className="flip-actions"><Link to={`/eser/${artifact.slug}`} aria-label={`Keşfet: ${artifact.name} hikâyesi`}>Keşfet</Link><Link to={`/harita?eser=${artifact.id}`} aria-label={`Haritada gör: ${artifact.name}`}>Haritada gör</Link></div>
+          <button type="button" className="flip-return" onClick={() => turn(false)} aria-label={`${t('Öne dön', 'Back to the front')}: ${artifact.name}`}><RotateCcw size={16} aria-hidden="true" /> {t('Öne dön', 'Back to the front')}</button>
+          <div className="flip-actions"><Link to={`/eser/${artifact.slug}`} aria-label={t(`Keşfet: ${artifact.name} hikâyesi`, `Explore: the story of ${artifact.name}`)}>{t('Keşfet', 'Explore')}</Link><Link to={`/harita?eser=${artifact.id}`} aria-label={`${t('Haritada gör', 'See on the map')}: ${artifact.name}`}>{t('Haritada gör', 'See on the map')}</Link></div>
         </div>
       </div>
     </div>
