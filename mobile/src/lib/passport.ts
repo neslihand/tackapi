@@ -46,6 +46,38 @@ export function parseProgress(value: string | null): Progress {
   } catch { return emptyProgress(); }
 }
 
+/** Two devices' passports, by the server's rules (backend/pipeline/users.py merge_progress): discoveries, visits
+ *  and favourites are joined (the first date stays), the best scores are kept, the streak days are joined. */
+export function mergeProgress(a: Progress, b: Progress): Progress {
+  const earlier = (x?: string, y?: string) => (!x ? y! : !y ? x : x < y ? x : y);
+  const discovered: Progress['discovered'] = {};
+  for (const slug of new Set([...Object.keys(a.discovered), ...Object.keys(b.discovered)])) discovered[slug] = earlier(a.discovered[slug], b.discovered[slug]);
+  const visits: Progress['visits'] = {};
+  for (const slug of new Set([...Object.keys(a.visits), ...Object.keys(b.visits)])) {
+    const [x, y] = [a.visits[slug], b.visits[slug]];
+    visits[slug] = !x ? y : !y ? x : x.date <= y.date ? x : y;
+  }
+  const games = { puzzle: {}, detective: {} } as Progress['games'];
+  for (const game of ['puzzle', 'detective'] as const) {
+    for (const slug of new Set([...Object.keys(a.games[game]), ...Object.keys(b.games[game])])) {
+      const levels: Record<string, number> = {};
+      for (const src of [a.games[game][slug] ?? {}, b.games[game][slug] ?? {}]) for (const [lvl, n] of Object.entries(src)) levels[lvl] = Math.min(n, levels[lvl] ?? n);
+      games[game][slug] = levels;
+    }
+  }
+  return { version: 1, discovered, visits, games,
+    favorites: [...new Set([...a.favorites, ...b.favorites])], answered: [...new Set([...a.answered, ...b.answered])],
+    quiz: { completed: Math.max(a.quiz.completed, b.quiz.completed), best: Math.max(a.quiz.best, b.quiz.best) },
+    days: [...new Set([...a.days, ...b.days])].sort().slice(-400) };
+}
+
+/** A comparable form: the same passport gives the same text whatever the order of its keys and lists. */
+export function canonical(p: Progress): string {
+  const sort = (v: unknown): unknown => Array.isArray(v) ? [...v].map(sort).sort() as unknown[]
+    : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, sort((v as Record<string, unknown>)[k])])) : v;
+  return JSON.stringify(sort(p));
+}
+
 /** The device's local day, YYYY-MM-DD. */
 export function dayKey(date = new Date()) {
   const pad = (n: number) => String(n).padStart(2, '0');

@@ -6,7 +6,7 @@ import { loadFeed, type Feed, type Item } from './api';
 import { useLang } from './i18n';
 import { buildQuests } from './quests';
 import { answerable } from './quiz';
-import { discover, emptyProgress, parseProgress, recordQuiz, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
+import { canonical, discover, emptyProgress, mergeProgress, parseProgress, recordQuiz, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
 
 // ------------------------------------------------------------------------------------------------ collection
 type Content = Feed & { loading: boolean; error: string | null; reload: () => void; bySlug: (slug: string) => Item | undefined };
@@ -43,6 +43,8 @@ type Passport = {
   progress: Progress; ready: boolean;
   discover: (slug: string) => void; visit: (slug: string, approximate: boolean) => void; toggleFavorite: (slug: string) => void;
   recordQuiz: (score: number, rightAbout: string[]) => void;
+  /** Takes in a passport from the account (another device's progress); returns the merged one. */
+  absorb: (incoming: unknown) => void;
 };
 const PassportContext = createContext<Passport | null>(null);
 
@@ -68,6 +70,10 @@ export function PassportProvider({ children }: { children: ReactNode }) {
     visit: (slug, approximate) => update(p => visit(p, slug, approximate), true),
     toggleFavorite: slug => update(p => toggleFavorite(p, slug)),
     recordQuiz: (score, rightAbout) => update(p => recordQuiz(p, score, rightAbout)),
+    absorb: incoming => update(p => {
+      const merged = mergeProgress(p, parseProgress(JSON.stringify(incoming)));
+      return canonical(merged) === canonical(p) ? p : merged;
+    }),
   }), [progress, ready, update]);
   return <PassportContext.Provider value={value}>{children}</PassportContext.Provider>;
 }

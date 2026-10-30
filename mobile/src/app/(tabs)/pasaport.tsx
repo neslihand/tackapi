@@ -1,9 +1,11 @@
 // Miras Pasaportu: digital stamps and the golden on-the-spot ones, the streak, and the medallions (the phone adds
 // three of its own: on-the-spot visits and the seven-day streak).
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Empty, Eyebrow, Title, WorkCard } from '@/components/UI';
+import { Button, Empty, Eyebrow, Title, WorkCard } from '@/components/UI';
+import { syncLabel, useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
 import { longestStreak, medals, streak } from '@/lib/passport';
 import { useContent, usePassport } from '@/lib/store';
@@ -14,6 +16,7 @@ const METAL = { bronze: '#a9773f', silver: '#9a9a96', gold: colors.gold };
 export default function Passport() {
   const { items } = useContent();
   const { progress } = usePassport();
+  const account = useAccount();
   const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => progress.discovered[b.slug].localeCompare(progress.discovered[a.slug])), [items, progress]);
   const visits = Object.keys(progress.visits).length;
   const cities = new Set(found.map(i => i.city.slug)).size;
@@ -55,7 +58,8 @@ export default function Passport() {
       : <Empty title={t('Pasaportun seni bekliyor.', 'Your passport is waiting.')} body={t('Bir eserin hikâyesini oku ve “Pasaportuma mühürle”ye dokun.', 'Read a work’s story and tap “Stamp my passport”.')} />}
 
     {!!favorites.length && <><Eyebrow>{t('FAVORİLER', 'FAVOURITES')}</Eyebrow>{favorites.map(i => <WorkCard key={i.slug} item={i} />)}</>}
-    <Text style={s.small}>{t('Pasaportun bu telefonda saklanır. Hesapla eşitleme bir sonraki sürümde.', 'Your passport is kept on this phone. Syncing with an account comes in the next version.')}</Text>
+    {account.user ? <Text style={s.small}>{t('Pasaportun hesabınla eşitleniyor.', 'Your passport is synced with your account.')} {syncLabel(account.sync, account.lastSync)}</Text>
+      : <Button kind="plain" icon="person-circle-outline" label={t('Giriş yap, pasaportun kaybolmasın', 'Sign in so your passport is never lost')} onPress={() => router.push('/giris')} />}
   </ScrollView>;
 }
 

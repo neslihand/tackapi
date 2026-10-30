@@ -40,7 +40,7 @@ Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarınd
 | Bilgi yarışması, keşif görevleri | Oyna sekmesi | 2 ✅ |
 | Bilgi kartları | Oyna sekmesi | 2 |
 | Mini oyunlar (yapboz, dosya) | Oyna sekmesi | 2 |
-| Hesap, pasaport eşitleme | Ayarlar → Hesap | 2 |
+| Hesap, pasaport eşitleme | Ayarlar → Hesap | 2 ✅ |
 | Okuma Odası (makaleler, sözlük), yazı/terim gönderme | Okuma sekmesi | 2 |
 | Katkılar, öneriler ("Senin için") | Eser ekranı / ana sayfa | 2 |
 | Analitik olayları (izinli) | `platform: mobile` alanıyla | 2 |

@@ -45,15 +45,24 @@ export function sourceTitle(source: Item['source']): string {
 
 export class ApiError extends Error { status: number; constructor(message: string, status: number) { super(message); this.status = status; } }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// The account's session key (account.tsx sets it); sent as a Bearer header, the phone has no cookie session.
+let sessionKey: string | null = null;
+export const setSessionKey = (key: string | null) => { sessionKey = key; };
+
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
-  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers: { accept: 'application/json', ...init?.headers } }); }
+  const headers: Record<string, string> = { accept: 'application/json', ...(init?.headers as Record<string, string> | undefined) };
+  if (typeof init?.body === 'string' && !headers['content-type']) headers['content-type'] = 'application/json';
+  if (sessionKey) headers.authorization = `Bearer ${sessionKey}`;
+  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers }); }
   catch { throw new ApiError(t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0); }
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
-    throw new ApiError(typeof body?.detail === 'string' ? body.detail : t(`Sunucu ${response.status} döndü.`, `The server returned ${response.status}.`), response.status);
+    const detail = typeof body?.detail === 'string' ? body.detail
+      : Array.isArray(body?.detail) ? t('Lütfen alanları kontrol et.', 'Please check the fields.') : t(`Sunucu ${response.status} döndü.`, `The server returned ${response.status}.`);
+    throw new ApiError(detail, response.status);
   }
-  return response.json() as Promise<T>;
+  return (response.status === 204 ? undefined : response.json()) as Promise<T>;
 }
 
 const cacheKey = (path: string) => `esik:cache:${path}`;

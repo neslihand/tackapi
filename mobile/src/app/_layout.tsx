@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AccountProvider } from '@/lib/account';
 import { LangProvider, t, useLang } from '@/lib/i18n';
 import { scheduleDailyWork, scheduleStreakReminder, setupNotifications, useNotificationTaps } from '@/lib/notify';
 import { ContentProvider, PassportProvider, SettingsProvider, useContent, usePassport, useSettings } from '@/lib/store';
@@ -41,16 +42,18 @@ function Screens() {
     <Stack.Screen name="sor/[slug]" options={{ title: t('Esere Sor', 'Ask the Work'), presentation: 'modal' }} />
     <Stack.Screen name="quiz" options={{ title: t('Tarihin İzinde', 'On the Trail of History') }} />
     <Stack.Screen name="rota/[id]" options={{ title: t('Rota Yürüyüşü', 'Route Walk') }} />
+    <Stack.Screen name="giris" options={{ title: t('Giriş yap', 'Sign in') }} />
+    <Stack.Screen name="hesap" options={{ title: t('Hesabım', 'My account') }} />
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
   </Stack>;
 }
 
 export default function RootLayout() {
   return <SafeAreaProvider>
-    <LangProvider><SettingsProvider><ContentProvider><PassportProvider>
+    <LangProvider><SettingsProvider><ContentProvider><PassportProvider><AccountProvider>
       <StatusBar style="light" />
       <NotificationSync />
       <Screens />
-    </PassportProvider></ContentProvider></SettingsProvider></LangProvider>
+    </AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
   </SafeAreaProvider>;
 }
