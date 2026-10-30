@@ -33,6 +33,18 @@ class PureTest(unittest.TestCase):
         self.assertEqual(m['games']['puzzle'], {'x': {'kolay': 25, 'zor': 90}})       # az hamle daha iyi
         self.assertEqual(U.clean_progress({'discovered': {'a': 5}, 'favorites': 'x', 'games': None}), U.empty_progress())
 
+    def test_mobile_visits_and_days_survive_the_merge(self):
+        a = dict(version=1, visits={'x': {'date': '2026-10-05T10:00:00Z', 'approximate': False}}, days=['2026-10-05', '2026-10-06'])
+        b = dict(version=1, visits={'x': {'date': '2026-10-02T10:00:00Z', 'approximate': True},
+                                    'y': {'date': '2026-10-03T10:00:00Z', 'approximate': 'evet'}},
+                 days=['2026-10-06', '2026-10-01', 'dün', 7])
+        m = U.merge_progress(a, b)
+        self.assertEqual(m['visits'], {'x': {'date': '2026-10-02T10:00:00Z', 'approximate': True},     # ilk ziyaret kalır
+                                       'y': {'date': '2026-10-03T10:00:00Z', 'approximate': False}})   # yalnızca true sayılır
+        self.assertEqual(m['days'], ['2026-10-01', '2026-10-05', '2026-10-06'])                          # bozuk günler atılır
+        web = dict(version=1, discovered={'x': '2026-10-01T10:00:00Z'})           # site bu alanları göndermez
+        self.assertEqual(U.merge_progress(m, web)['visits'], m['visits'])
+
     def test_event_props_are_flattened_and_bounded(self):
         out = V.clean_props({'q': 'x' * 900, 'n': 3, 'nested': {'a': 1}, 'list': ['a', {'b': 1}, 2]})
         self.assertEqual(len(out['q']), 500)
@@ -88,6 +100,22 @@ class AccountApiTest(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(set(r.json()['progress']['favorites']), {'konya-meram-ornek-camii'})
         self.assertIn('bursa-osmangazi-muradiye-camii', r.json()['progress']['discovered'])   # iki cihaz birleşti
+
+    def test_bearer_session_for_the_mobile_app(self):
+        self.assertNotIn('token', self.register().json())                       # site anahtarı gövdede görmez
+        self.c.cookies.clear()
+        r = self.c.post('/api/auth/login', json=dict(email='ali@ornek.com', password='gizli-sifre-1', token=True))
+        token = r.json()['token']
+        self.c.cookies.clear()                                                 # mobil yalnızca başlığı kullanır
+        auth = {'Authorization': f'Bearer {token}'}
+        self.assertEqual(self.c.get('/api/me').status_code, 401)
+        self.assertEqual(self.c.get('/api/me', headers=auth).json()['user']['email'], 'ali@ornek.com')
+        visit = {'konya-ornek': {'date': '2026-10-30T09:00:00Z', 'approximate': False}}
+        r = self.c.put('/api/me/progress', headers=auth, json=dict(progress={'version': 1, 'visits': visit, 'days': ['2026-10-30']}))
+        self.assertEqual((r.json()['progress']['visits'], r.json()['progress']['days']), (visit, ['2026-10-30']))
+        self.assertEqual(self.c.get('/api/me', headers={'Authorization': 'Bearer yanlis'}).status_code, 401)
+        self.assertEqual(self.c.post('/api/auth/logout', headers=auth).status_code, 204)
+        self.assertEqual(self.c.get('/api/me', headers=auth).status_code, 401)  # çıkışta oturum silinir
 
     def test_profile_progress_and_delete(self):
         self.register()

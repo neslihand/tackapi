@@ -63,9 +63,14 @@ def _record(value):
     return value if isinstance(value, dict) else {}
 
 
+DAY_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+DAYS_KEPT = 400
+
+
 def empty_progress():
+    # visits ve days mobil uygulamanındır (yerinde mühürler, keşif serisinin günleri); site okumaz ama korur
     return dict(version=1, discovered={}, favorites=[], quiz=dict(completed=0, best=0),
-                games=dict(puzzle={}, detective={}), answered=[])
+                games=dict(puzzle={}, detective={}), answered=[], visits={}, days=[])
 
 
 def clean_progress(value):
@@ -89,6 +94,12 @@ def clean_progress(value):
             if best and isinstance(slug, str):
                 out[slug] = best
         p['games'][game] = out
+    for slug, visit in _record(v.get('visits')).items():
+        visit = _record(visit)
+        if isinstance(slug, str) and len(slug) <= 200 and isinstance(visit.get('date'), str) and len(visit['date']) <= 40:
+            p['visits'][slug] = dict(date=visit['date'], approximate=visit.get('approximate') is True)
+    days = v.get('days') if isinstance(v.get('days'), list) else []
+    p['days'] = sorted({d for d in days if isinstance(d, str) and DAY_RE.match(d)})[-DAYS_KEPT:]
     return p
 
 
@@ -110,4 +121,8 @@ def merge_progress(a, b):
                     levels[lvl] = min(n, levels.get(lvl, n))      # oyunlarda daha az hamle daha iyi
             merged[slug] = levels
         out['games'][game] = merged
+    # yerinde mühür: ilk ziyaret kalır (yaklaşık konumlu mu, o ziyaretin bilgisidir)
+    for slug in set(a['visits']) | set(b['visits']):
+        out['visits'][slug] = min((x for x in (a['visits'].get(slug), b['visits'].get(slug)) if x), key=lambda x: x['date'])
+    out['days'] = sorted(set(a['days']) | set(b['days']))[-DAYS_KEPT:]
     return out
