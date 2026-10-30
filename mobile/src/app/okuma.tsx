@@ -42,7 +42,10 @@ function Articles({ toGlossary }: { toGlossary: () => void }) {
   if (!data) return <Loading />;
   if (!data.enabled || !data.items.length) return <Empty title={t('Okuma Odası henüz boş.', 'The Reading Room is empty for now.')}
     body={t('Makaleler yayımlandığında burada okuyabileceksin. Terimler sözlüğüne göz atabilirsin.', 'You will be able to read the articles here once they are published. You can look at the glossary meanwhile.')}
-    action={<Button icon="book-outline" label={t('Sözlüğe geç', 'Go to the glossary')} onPress={toGlossary} />} />;
+    action={<View style={{ gap: space.s, alignSelf: 'stretch' }}>
+      <Button icon="book-outline" label={t('Sözlüğe geç', 'Go to the glossary')} onPress={toGlossary} />
+      <Button kind="plain" icon="create-outline" label={t('İlk yazıyı sen gönder', 'Send the first article')} onPress={() => router.push('/yazi')} />
+    </View>} />;
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.s + 4, paddingBottom: space.xl }}>
     <Eyebrow>✦ {t('OKUMA ODASI', 'READING ROOM')}</Eyebrow>
     <Text style={s.lead}>{t('Şehirlerin tarihi, vakıf eserleri ve vakıf kültürü üzerine yazılar; envanter kitaplarından ve editörlerden.', 'Writing on the cities’ history, the waqf works and waqf culture, from the inventory books and the editors.')}</Text>
@@ -52,6 +55,7 @@ function Articles({ toGlossary }: { toGlossary: () => void }) {
     <Chips options={data.facets.kinds.map(k => [k.slug, `${k.label} (${k.n})`])} value={kind} onChange={setKind} all={t('Tüm türler', 'All kinds')} />
     <Chips options={data.facets.cities.map(c => [c.slug, `${c.name} (${c.n})`])} value={city} onChange={setCity} all={t('Tüm şehirler', 'All cities')} />
     {shown.length ? shown.map(a => <ArticleCard key={a.slug} a={a} />) : <Empty title={t('Bu aramayla eşleşen makale yok.', 'No article matches this search.')} />}
+    <Button kind="plain" icon="create-outline" label={t('Sen de yaz: yazı gönder', 'Write too: send an article')} onPress={() => router.push('/yazi')} />
   </ScrollView>;
 }
 
@@ -76,6 +80,7 @@ function Glossary() {
     <TextInput value={query} onChangeText={setQuery} placeholder={t('Terim ara (ör. mihrap, revak)', 'Search a term (e.g. mihrab, portico)')} placeholderTextColor={colors.soft}
       style={s.search} accessibilityLabel={t('Terimlerde ara', 'Search the terms')} autoCapitalize="none" />
     <Chips options={cats.map(c => [c.slug, `${c.label} (${c.n})`])} value={cat} onChange={setCat} all={t('Tümü', 'All')} />
+    <Button kind="plain" icon="add-circle-outline" label={t('Sözlükte olmayan bir terim öner', 'Suggest a term the glossary lacks')} onPress={() => router.push('/terim-oner')} />
     {shown.length ? letterGroups(shown).map(([letter, list]) => <View key={letter} style={{ gap: space.s }}>
       <Text style={s.letter} accessibilityRole="header">{letter}</Text>
       {list.map(x => <Pressable key={x.slug} onPress={() => router.push(`/terim/${x.slug}`)} style={s.term} accessibilityRole="button" accessibilityLabel={`${x.term}. ${x.definition}`}>

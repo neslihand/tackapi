@@ -42,7 +42,7 @@ Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarınd
 | Mini oyunlar (yapboz, dosya) | Oyna sekmesi | 2 |
 | Hesap, pasaport eşitleme | Ayarlar → Hesap | 2 ✅ |
 | Okuma Odası (makaleler, sözlük) | Keşfet → Okuma Odası (okuma, sesli dinleme, terim kartları, çevrimdışı kopya) | 2 ✅ |
-| Yazı/terim gönderme | Okuma Odası | 2 |
+| Yazı/terim gönderme | Okuma Odası → Yazı gönder / Terim öner, Hesabım → Yazılarım | 2 ✅ |
 | Katkılar, öneriler ("Senin için") | Eser ekranı / ana sayfa | 2 |
 | Analitik olayları (izinli) | `platform: mobile` alanıyla | 2 |
 

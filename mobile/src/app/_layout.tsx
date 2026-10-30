@@ -46,6 +46,9 @@ function Screens() {
     <Stack.Screen name="okuma" options={{ title: t('Okuma Odası', 'Reading Room') }} />
     <Stack.Screen name="makale/[slug]" options={{ title: t('Makale', 'Article') }} />
     <Stack.Screen name="terim/[slug]" options={{ title: t('Terim', 'Term') }} />
+    <Stack.Screen name="yazi" options={{ title: t('Yazı gönder', 'Send an article') }} />
+    <Stack.Screen name="terim-oner" options={{ title: t('Terim öner', 'Suggest a term') }} />
+    <Stack.Screen name="yazilarim" options={{ title: t('Yazılarım', 'My writing') }} />
     <Stack.Screen name="hatira" options={{ title: t('Hatıra Defterim', 'My Memory Book') }} />
     <Stack.Screen name="giris" options={{ title: t('Giriş yap', 'Sign in') }} />
     <Stack.Screen name="hesap" options={{ title: t('Hesabım', 'My account') }} />

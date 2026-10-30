@@ -37,6 +37,8 @@ export default function Account() {
       <Button kind="plain" icon="sync" label={t('Şimdi eşitle', 'Sync now')} onPress={account.syncNow} busy={account.sync === 'syncing'} />
     </View>
 
+    <Button icon="document-text-outline" label={t('Yazılarım ve terim önerilerim', 'My articles and term suggestions')} onPress={() => router.push('/yazilarim')} />
+
     <View style={s.card}>
       <Text style={s.head}>{t('Takma ad', 'Nickname')}</Text>
       <TextInput value={name} onChangeText={v => { setName(v); setSaved(false); }} style={s.input} maxLength={40} accessibilityLabel={t('Takma ad', 'Nickname')} />
