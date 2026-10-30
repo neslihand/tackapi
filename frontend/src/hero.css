@@ -20,25 +20,7 @@
 .cy-copy h2:focus-visible { box-shadow: none; }
 .vertical-note { top: 40%; left: 2.8%; font-size: 9.5px; letter-spacing: .24em; color: #aab2a5; }
 
-.gate-visual { right: 4%; top: 9%; height: 82%; width: 46%; }
-.gate-stage { width: auto; height: 100%; max-width: 100%; aspect-ratio: 2 / 3; }
-/* The courtyard seen through the door (Interior in HeroGate.tsx). The far layers are oversized so they still cover
-   the doorway when they are scaled down for depth as the camera passes through. */
-.gi-sky, .gi-architecture, .gi-arcade { position: absolute; transform-origin: 50% 60%; }
-.gi-sky { inset: -50%; background: radial-gradient(circle at 62% 42%, #fcf5e0 0, #e1ccaa 8%, transparent 24%), linear-gradient(180deg, #dac8a9 30%, #b9a386 55%, #8c7b62 70%); }
-.gi-architecture { inset: -30% -60%; width: 220%; height: 160%; max-width: none; object-fit: cover; object-position: 50% 40%; filter: sepia(.25) saturate(.9) brightness(1.08); }
-/* Light falls through in a few soft shafts, not hard stripes: the camera magnifies them five times on its way through,
-   and a hard edge grows into a shard. Plain alpha instead of a blend mode, which flickers on scaled layers. The
-   courtyard's rays match them. */
-.gi-rays { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(112deg, transparent 18%, #fcf3db1f 28%, transparent 38%, transparent 46%, #fcf3db29 56%, transparent 66%, transparent 72%, #fcf3db17 80%, transparent 88%), radial-gradient(ellipse at 66% 18%, #fcf4de55, transparent 60%); }
 .cy-rays { mix-blend-mode: normal; background: linear-gradient(112deg, transparent 16%, #fcf3db1c 27%, transparent 38%, transparent 47%, #fcf3db24 57%, transparent 67%, transparent 73%, #fcf3db14 81%, transparent 89%), radial-gradient(ellipse at 72% 20%, #fcf4de4d, transparent 55%); }
-/* Taller than the doorway and anchored to the floor, so the wall above the arches falls outside the view. */
-.gi-arcade { left: -20%; bottom: 0; width: 140%; height: 135%; transform-origin: 50% 100%; }
-.gate-interior-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(#0a1f1866, transparent 32%, transparent 72%, #0a1f1873); }
-/* Candlelight leaking under the closed door, and the light the opening door lays on the steps. */
-.gate-underglow { position: absolute; left: 23%; width: 54%; top: 88.7%; height: .5%; z-index: 4; pointer-events: none; background: #f2b950; filter: blur(2px); opacity: .6; }
-.gate-spill { position: absolute; left: 0; width: 100%; top: 89%; height: 18%; z-index: 4; pointer-events: none; clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); background: radial-gradient(ellipse 45% 100% at 50% 0, #f2b950, #f2b95000 80%); opacity: 0; }
-.gate-halo { background: radial-gradient(ellipse 40% 48% at 50% 50%, #d1a87466, #bfa67b2e 50%, transparent 72%); }
 /* The flash of light in the doorway gets its layer up front, so its first frames do not stall the scroll. */
 .gate-bloom { will-change: opacity; }
 
@@ -64,22 +46,18 @@
   .hero-copy h1 { animation-delay: .12s; }
   .hero-description { animation-delay: .26s; }
   .hero-actions { animation-delay: .38s; }
-  .gate-frame, .gate-doors, .gate-interior { animation: hero-door-in 1.3s .25s ease-out backwards; }
 }
 @keyframes hero-rise { from { opacity: 0; translate: 0 14px; } }
-@keyframes hero-door-in { from { opacity: 0; filter: blur(6px); } }
 
 @media (max-width: 999px) {
   .nav-camera { display: none; }
 }
 @media (min-width: 1600px) {
   .hero-copy { left: 10.5%; top: 26%; }
-  .gate-visual { right: 6%; width: 44%; }
 }
 @media (max-width: 1100px) {
   .hero-copy { left: 9.8%; top: 25.5%; }
   .hero-copy h1 { font-size: 8vw; }
-  .gate-visual { right: 4%; width: 46%; }
   .hero-caption { margin-top: 6px; }
 }
 
@@ -90,7 +68,6 @@
   .hero-copy h1 em { display: inline; }
   .hero-description { max-width: 420px; font-size: 14px; text-shadow: none; }
   .hero-actions { margin-top: 26px; flex-wrap: wrap; }
-  .gate-visual { position: relative; inset: auto; flex: 1 1 0; width: 100%; height: auto; min-height: 220px; margin-top: 18px; opacity: 1; }
   .hero-veil { display: none; }
   .hero-geometry { left: 50%; top: 66%; width: 120svh; height: 120svh; }
   .hero-bottom { left: 7%; right: 7%; bottom: 18px; }
