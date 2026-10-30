@@ -18,6 +18,11 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const report = { browser: '', axe: '4.10.3', checks: [], scans: [], runtimeErrors: [] };
 // "Esere Sor" is offered only with a chat backend address; the audit answers /api/chat itself (see chatReplies below).
 process.env.VITE_CHAT_API_URL = '/api/chat';
+// The checks walk the six built-in demo artifacts, so the backend mode a local .env may switch on stays off here,
+// and nothing is proxied to a running backend. Variables set here win over the .env files.
+process.env.VITE_VAKIF_API = '';
+process.env.VAKIF_API_PROXY = '';
+process.env.CHAT_API_PROXY = '';
 const server = await createServer({ server: { host: '127.0.0.1', port: 0, hmr: false, ws: false } });
 // Canned backend replies for the chat checks, used in order; the default is a streamed answer citing chapter 2.
 const chatReplies = [];
@@ -87,6 +92,7 @@ async function solvePuzzle() {
 }
 const focusedTile = () => evaluate(`[...document.querySelectorAll('.mg-tile')].indexOf(document.activeElement)`);
 function checked(label) { report.checks.push(label); console.log(`PASS ${label}`); }
+function skipped(label, reason) { report.checks.push(`SKIP ${label}: ${reason}`); console.log(`SKIP ${label}: ${reason}`); }
 
 try {
   await server.listen();
@@ -432,26 +438,32 @@ try {
   checked('Keşfet: compact mobile list, keyboard filter disclosure and Escape, visible active filters, cards/list retain filters and favourites, empty search recovery, deep links and story navigation');
 
   await route('/');
-  assert(await evaluate(`(() => { const doors = document.querySelector('.gate-doors').getBoundingClientRect(); const leaves = [...document.querySelectorAll('.door-leaf')].map(leaf => leaf.getBoundingClientRect()); return leaves.length === 2 && leaves.every(leaf => Math.abs(leaf.width - doors.width / 2) < 2) && !!document.querySelector('.gate-underglow'); })()`), 'The door should rest closed, with light under it');
-  await keyboardActivate('.hero-controls button:last-child');
-  await until(`document.activeElement.id === 'featured-title'`);
+  // The facade's two leaves (HeroGate.tsx) each fill half the doorway and stay unturned until the visitor scrolls; the
+  // doorway light behind them is there, waiting for the leaves to open.
+  assert(await evaluate(`(() => { const doors = document.querySelector('.fc-doors').getBoundingClientRect(); const leaves = [...document.querySelectorAll('.fc-leaf')]; return leaves.length === 2 && leaves.every(leaf => Math.abs(leaf.getBoundingClientRect().width - doors.width / 2) < 2 && new DOMMatrix(getComputedStyle(leaf).transform.replace('none', '')).isIdentity) && !!document.querySelector('.fc-doorglow'); })()`), 'The door should rest closed, with its light behind it');
+  await keyboardActivate('.hero-controls .en-skip');
+  await until(`document.activeElement.id === 'vision-title'`);
   await route('/kesfet'); await route('/');
   await keyboardActivate('.hero-actions .button');
   await until(`document.activeElement.matches('.cy-copy h2')`);
-  checked('Giriş: the door rests closed; Girişi atla reaches the collection and Kapıyı Aç the courtyard, both by keyboard');
+  checked('Giriş: the door rests closed; Girişi atla reaches the vision chapter and Kapıyı arala the courtyard, both by keyboard');
 
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await route('/');
-  const ringFront = () => evaluate(`document.querySelector('.ring-now strong').textContent`);
-  assert(await evaluate(`(() => { const links = [...document.querySelectorAll('.story-ring a.ring-face')]; const tabbable = links.filter(a => a.tabIndex >= 0); return tabbable.length === 6 && new Set(tabbable.map(a => a.getAttribute('href'))).size === 6 && links.filter(a => a.tabIndex < 0).every(a => a.getAttribute('aria-hidden') === 'true'); })()`), 'Each artifact should be one focusable link in the ring');
-  const firstFront = await ringFront();
-  await keyboardActivate('.ring-button[aria-label="Sonraki eser"]');
-  await until(`document.querySelector('.ring-now strong').textContent !== ${JSON.stringify(firstFront)}`);
-  await keyboardActivate('.ring-controls .ring-button:nth-child(2)');
-  assert(await evaluate(`document.querySelector('.ring-controls .ring-button:nth-child(2)').getAttribute('aria-pressed') === 'true' && document.querySelector('.ring-controls .ring-button:nth-child(2)').getAttribute('aria-label') === 'Döndürmeyi başlat'`));
-  await evaluate(`document.querySelectorAll('.story-ring a.ring-face:not([tabindex="-1"])')[3].focus()`);
-  await until(`document.querySelector('.ring-now strong').textContent === document.querySelectorAll('.story-ring a.ring-face:not([tabindex="-1"])')[3].getAttribute('aria-label').split(' · ')[0]`);
-  checked('Hikâye halkası: one link per artifact, Next turns the ring, the pause button reports its state, a focused card turns to the front');
+  // The home page dropped the ring in df120cb; the checks run again as soon as a page shows it.
+  if (!await evaluate(`!!document.querySelector('.story-ring')`)) skipped('Hikâye halkası', 'the ring is not on the home page');
+  else {
+    const ringFront = () => evaluate(`document.querySelector('.ring-now strong').textContent`);
+    assert(await evaluate(`(() => { const links = [...document.querySelectorAll('.story-ring a.ring-face')]; const tabbable = links.filter(a => a.tabIndex >= 0); return tabbable.length === 6 && new Set(tabbable.map(a => a.getAttribute('href'))).size === 6 && links.filter(a => a.tabIndex < 0).every(a => a.getAttribute('aria-hidden') === 'true'); })()`), 'Each artifact should be one focusable link in the ring');
+    const firstFront = await ringFront();
+    await keyboardActivate('.ring-button[aria-label="Sonraki eser"]');
+    await until(`document.querySelector('.ring-now strong').textContent !== ${JSON.stringify(firstFront)}`);
+    await keyboardActivate('.ring-controls .ring-button:nth-child(2)');
+    assert(await evaluate(`document.querySelector('.ring-controls .ring-button:nth-child(2)').getAttribute('aria-pressed') === 'true' && document.querySelector('.ring-controls .ring-button:nth-child(2)').getAttribute('aria-label') === 'Döndürmeyi başlat'`));
+    await evaluate(`document.querySelectorAll('.story-ring a.ring-face:not([tabindex="-1"])')[3].focus()`);
+    await until(`document.querySelector('.ring-now strong').textContent === document.querySelectorAll('.story-ring a.ring-face:not([tabindex="-1"])')[3].getAttribute('aria-label').split(' · ')[0]`);
+    checked('Hikâye halkası: one link per artifact, Next turns the ring, the pause button reports its state, a focused card turns to the front');
+  }
 
   await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 500, deviceScaleFactor: 1, mobile: false });
   await route('/oyun'); await scan('play-reflow-200');
