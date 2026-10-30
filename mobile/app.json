@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "EŞİK",
+    "slug": "esik-mobil",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tr.girlsandcodes.esik",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Yakınındaki vakıf eserlerini göstermek ve yerinde mühür basmak için konumun kullanılır; konumun cihazından çıkmaz.",
+        "NSCameraUsageDescription": "Bir yapının fotoğrafını çekip hangi eser olduğunu bulmak için.",
+        "NSPhotoLibraryUsageDescription": "Galerindeki bir fotoğrafla eser aramak için."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0F2F26",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "tr.girlsandcodes.esik",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-image",
+      [
+        "expo-notifications",
+        {
+          "color": "#C3A869"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Yakınındaki vakıf eserlerini göstermek ve yerinde mühür basmak için konumun kullanılır; konumun cihazından çıkmaz."
+        }
+      ],
+      "expo-font"
+    ],
+    "scheme": "esik"
+  }
+}

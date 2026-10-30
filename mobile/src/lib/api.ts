@@ -1,0 +1,119 @@
+// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. Like the site, the
+// MVP shows only the pilot selection. Every successful GET is kept on the device, so a work opened once still opens
+// without a connection (the photos are kept by expo-image's disk cache).
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { currentLang, t } from './i18n';
+
+/** EXPO_PUBLIC_API_URL, otherwise the computer running the Expo dev server, on the backend's port 8000. */
+export function apiBase(): string {
+  const own = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (own) return own.replace(/\/+$/, '');
+  const host = Constants.expoConfig?.hostUri?.split(':')[0];
+  return `http://${host || '127.0.0.1'}:8000`;
+}
+export const mediaUrl = (src: string | null | undefined) => (!src ? null : /^https?:/.test(src) ? src : `${apiBase()}${src}`);
+
+export type Location = { lat: number; lon: number; approximate: boolean; radius_m: number | null };
+export type Image = { src: string; thumb: string; alt: string | null; width: number | null; height: number | null };
+export type Item = {
+  slug: string; name: string; alt_names: string[]; kind: string; kind_label: string; city: { slug: string; name: string };
+  district: string | null; neighborhood: string | null; period: { slug: string; name: string } | null;
+  built: { from: number | null; to: number | null; label: string | null };
+  summary: string | null; image: Image | null; source: { book: string | null; pages: [number, number] | null };
+  location?: Location | null; architect?: string | null; builder?: string | null;
+};
+export type Narration = { answer: string; sources: { book: string; pages: string; heading: string | null }[] } | null;
+export type Detail = {
+  text: string | null; text_note: string | null;
+  narrations: { story: Narration; child: Narration };
+  images: (Image & { caption: string | null; source: { book: string; page: number | null } | null })[];
+  location: Location | null;
+  source: { book: string | null; pages: [number | null, number | null]; credits: string | null };
+};
+export type Season = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
+export type Feed = { items: Item[]; seasons: Season[]; stale: boolean };
+
+export const makers = (item: Pick<Item, 'architect' | 'builder'>) => item.architect?.trim() || item.builder?.trim() || null;
+export function sourceTitle(source: Item['source']): string {
+  const book = source.book?.trim() || 'Vakıf Katılım şehir envanteri';
+  const [from, to] = source.pages ?? [null, null];
+  return from ? `${book}, s. ${from}${to && to !== from ? `–${to}` : ''}` : book;
+}
+
+export class ApiError extends Error { status: number; constructor(message: string, status: number) { super(message); this.status = status; } }
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let response: Response;
+  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers: { accept: 'application/json', ...init?.headers } }); }
+  catch { throw new ApiError(t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0); }
+  if (!response.ok) {
+    const body = await response.json().catch(() => null) as { detail?: unknown } | null;
+    throw new ApiError(typeof body?.detail === 'string' ? body.detail : t(`Sunucu ${response.status} döndü.`, `The server returned ${response.status}.`), response.status);
+  }
+  return response.json() as Promise<T>;
+}
+
+const cacheKey = (path: string) => `esik:cache:${path}`;
+
+/** GET with the device copy as the fallback; `stale` says the answer came from the copy. */
+export async function cachedGet<T>(path: string): Promise<{ data: T; stale: boolean }> {
+  try {
+    const data = await request<T>(path);
+    AsyncStorage.setItem(cacheKey(path), JSON.stringify(data)).catch(() => {});
+    return { data, stale: false };
+  } catch (error) {
+    // a 404 is an answer (the work was taken down), not a missing connection
+    if (error instanceof ApiError && error.status !== 0 && error.status < 500) throw error;
+    const saved = await AsyncStorage.getItem(cacheKey(path)).catch(() => null);
+    if (saved) return { data: JSON.parse(saved) as T, stale: true };
+    throw error;
+  }
+}
+
+export async function loadFeed(): Promise<Feed> {
+  const lang = currentLang();
+  const [list, routes] = await Promise.all([
+    cachedGet<{ items: Item[] }>(`/api/monuments?pilot=true&page_size=200&lang=${lang}`),
+    cachedGet<Season[]>('/api/routes?pilot=true').catch(() => ({ data: [] as Season[], stale: true })),
+  ]);
+  return { items: list.data.items, seasons: routes.data, stale: list.stale };
+}
+
+export const loadMonument = (slug: string) => cachedGet<Detail>(`/api/monuments/${encodeURIComponent(slug)}?lang=${currentLang()}`);
+
+// ------------------------------------------------------------------------------------------------- Esere Sor
+export type ChatTurn = { role: 'user' | 'assistant'; content: string };
+export type ChatMode = 'standard' | 'story' | 'child';
+
+/** The answer's source marks ([S1, F0], [T]) refer to the model's context; the source list below the answer says it. */
+export const stripCitations = (text: string) =>
+  text.replace(/\s*\[(?:[SFT]\d*)(?:\s*,\s*[SFT]\d*)*\]/g, '').replace(/[ \t]+([.,;:!?])/g, '$1').trim();
+
+export async function askWork(slug: string, question: string, mode: ChatMode, history: ChatTurn[]) {
+  const data = await request<{ answer: string; sources?: { book?: string; pages?: string }[] }>('/api/chat', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ slug, question: question.trim().slice(0, 1000), mode, lang: currentLang(),
+      history: history.slice(-20).map(m => ({ role: m.role, content: m.content.slice(0, 4000) })) }),
+  });
+  const pages = (p?: string) => p && (/^s\.\s/.test(p) ? p : `s. ${p}`);
+  const sources = [...new Set((data.sources ?? []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
+  return { answer: stripCitations(data.answer), sources };
+}
+
+// ------------------------------------------------------------------------------------------------- Kamera
+export type VisualResult = { confident: boolean; match: string | null; candidates: { slug: string; name: string; score: number; photo: string }[] };
+
+/** POST /api/visual-search. Not confident: the closest works are offered as "not sure", never as one answer. */
+export async function findByPhoto(uri: string, mimeType = 'image/jpeg'): Promise<VisualResult> {
+  const form = new FormData();
+  // React Native's FormData takes a file as {uri, name, type}
+  form.append('file', { uri, name: 'foto.jpg', type: mimeType } as unknown as Blob);
+  form.append('lang', currentLang());
+  const data = await request<{ confident: boolean; match: Item | null; candidates: { item: Item; score: number; photo: { thumb: string } }[] }>(
+    '/api/visual-search', { method: 'POST', body: form });
+  return {
+    confident: data.confident, match: data.match?.slug ?? null,
+    candidates: data.candidates.map(c => ({ slug: c.item.slug, name: c.item.name, score: c.score, photo: c.photo.thumb })),
+  };
+}
