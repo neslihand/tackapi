@@ -8,7 +8,7 @@ export const colors = {
   gold: '#C3A869',
   goldSoft: '#E7DCB9',
   goldText: '#765B38',
-  goldLine: '#A8916E',
+  goldLine: '#977749',     // borders and icons: at least 3:1 on parchment, paper and emerald
   parchment: '#F7F3EB',
   parchmentDeep: '#EEE8DB',
   paper: '#FDFAF4',

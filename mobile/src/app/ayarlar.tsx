@@ -53,7 +53,7 @@ export default function Settings() {
 
     <Eyebrow>{t('DİL', 'LANGUAGE')}</Eyebrow>
     <View style={s.row}>{([['tr', 'Türkçe'], ['en', 'English']] as [Lang, string][]).map(([id, label]) =>
-      <Pressable key={id} onPress={() => setLang(id)} accessibilityRole="radio" accessibilityState={{ checked: lang === id }} style={[s.chip, lang === id && s.chipOn]}>
+      <Pressable key={id} onPress={() => setLang(id)} accessibilityRole="radio" accessibilityState={{ checked: lang === id }} aria-checked={lang === id} hitSlop={4} style={[s.chip, lang === id && s.chipOn]}>
         <Text style={[s.chipText, lang === id && { color: colors.goldSoft }]}>{label}</Text></Pressable>)}</View>
 
     <Eyebrow>{t('BİLDİRİMLER', 'NOTIFICATIONS')}</Eyebrow>
@@ -62,7 +62,7 @@ export default function Settings() {
       <Line title={t('Günün Eşiği', 'Today’s Threshold')} body={t('Her gün bir eser ve kitabından kısa bir cümle.', 'One work a day with a short line from its book.')}
         value={settings.dailyWork} onChange={v => toggle('dailyWork', v)} />
       {settings.dailyWork && <View style={[s.row, { paddingTop: 4 }]}>{HOURS.map(h => <Pressable key={h} onPress={() => change({ dailyHour: h })}
-        accessibilityRole="radio" accessibilityState={{ checked: settings.dailyHour === h }} style={[s.chip, settings.dailyHour === h && s.chipOn]}>
+        accessibilityRole="radio" accessibilityState={{ checked: settings.dailyHour === h }} aria-checked={settings.dailyHour === h} hitSlop={4} style={[s.chip, settings.dailyHour === h && s.chipOn]}>
         <Text style={[s.chipText, settings.dailyHour === h && { color: colors.goldSoft }]}>{String(h).padStart(2, '0')}:00</Text></Pressable>)}</View>}
       <View style={s.divider} />
       <Line title={t('Seri hatırlatması', 'Streak reminder')} body={t('Serin sürüyorsa ve o gün bir eser açmadıysan akşam 19:00’da tek bir not.', 'A single note at 19:00 when your streak is alive and you have not opened a work that day.')}
@@ -89,7 +89,7 @@ function Line({ title, body, value, onChange }: { title: string; body: string; v
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
   chipOn: { backgroundColor: colors.emerald },
   chipText: { color: colors.ink, fontSize: 14 },
   card: { padding: space.m, borderRadius: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, gap: space.s },

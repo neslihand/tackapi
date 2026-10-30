@@ -32,7 +32,7 @@ export default function Explore() {
   const header = <View style={{ gap: space.m, marginBottom: space.m }}>
     {stale && <Notice icon="cloud-offline-outline">{t('Çevrimdışısın: cihazdaki son hâli gösteriliyor.', 'You are offline: the copy on this device is shown.')}</Notice>}
     {today && <Pressable accessibilityRole="button" accessibilityLabel={`${t('Günün Eşiği', 'Today’s Threshold')}: ${today.name}`} onPress={() => router.push(`/eser/${today.slug}`)} style={s.today}>
-      {mediaUrl(today.image?.src) && <Image source={mediaUrl(today.image?.src)} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityIgnoresInvertColors />}
+      {mediaUrl(today.image?.src) && <Image source={mediaUrl(today.image?.src)} alt="" style={StyleSheet.absoluteFill} contentFit="cover" accessibilityIgnoresInvertColors />}
       <View style={s.todayShade} />
       <View style={s.todayBody}>
         <Eyebrow light>✦ {t('GÜNÜN EŞİĞİ', 'TODAY’S THRESHOLD')}</Eyebrow>
@@ -54,7 +54,7 @@ export default function Explore() {
       style={s.search} accessibilityLabel={t('Eserlerde ara', 'Search the works')} returnKeyType="search" clearButtonMode="while-editing" />
     {cities.length > 1 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.s }}>
       {[[null, t('Tümü', 'All')] as const, ...cities].map(([slug, name]) => <Pressable key={slug ?? 'all'} onPress={() => setCity(slug)}
-        accessibilityRole="button" accessibilityState={{ selected: city === slug }} style={[s.chip, city === slug && s.chipOn]}>
+        accessibilityRole="button" accessibilityState={{ selected: city === slug }} hitSlop={4} style={[s.chip, city === slug && s.chipOn]}>
         <Text style={[s.chipText, city === slug && { color: colors.goldSoft }]}>{name}</Text></Pressable>)}
     </ScrollView>}
     <Text style={s.count}>{t(`${shown.length} eser`, `${shown.length} works`)}</Text>
@@ -83,7 +83,7 @@ const s = StyleSheet.create({
   streak: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
   streakText: { flex: 1, color: colors.ink, fontSize: 14 },
   search: { minHeight: 48, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper, paddingHorizontal: 18, color: colors.ink, fontSize: 15 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: '#ffffff80' },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: '#ffffff80' },
   chipOn: { backgroundColor: colors.emerald },
   chipText: { color: colors.ink, fontSize: 14 },
   count: { fontFamily: serif, color: colors.goldText, fontSize: 15 },

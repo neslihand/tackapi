@@ -15,7 +15,7 @@ export function ArticleCard({ a }: { a: ArticleItem }) {
   const cover = mediaUrl(a.cover?.thumb);
   return <Pressable onPress={() => router.push(`/makale/${a.slug}`)} accessibilityRole="button" accessibilityLabel={`${a.title}, ${a.kind_label}, ${t(`${a.reading_minutes} dakika okuma`, `${a.reading_minutes} minute read`)}`}
     style={({ pressed }) => [s.card, pressed && { opacity: 0.85 }]}>
-    {cover ? <Image source={cover} style={s.cover} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
+    {cover ? <Image source={cover} alt="" style={s.cover} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
       : <View style={[s.cover, s.art, { backgroundColor: KIND_COLOR[a.kind] }]}><Text style={s.artLetter}>{a.title.trim().charAt(0).toLocaleUpperCase('tr-TR')}</Text></View>}
     <View style={s.body}>
       <Text style={s.kicker}>{a.kind_label.toLocaleUpperCase('tr-TR')}{a.city ? ` · ${a.city.name.toLocaleUpperCase('tr-TR')}` : ''}{a.featured ? ` · ${t('ÖNE ÇIKAN', 'FEATURED')}` : ''}</Text>

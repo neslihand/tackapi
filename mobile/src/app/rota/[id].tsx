@@ -110,7 +110,7 @@ function OfflinePack({ routeId, stops }: { routeId: string; stops: Item[] }) {
             : t('Yola çıkmadan önce indir: duraklarda internet olmasa da hikâyeler ve fotoğraflar açılır.', 'Save it before you set off: the stories and photos open at the stops even without internet.')}</Text>
       </View>
     </View>
-    {busy && <View style={s.bar}><View style={[s.barFill, { width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }]} /></View>}
+    {busy && <View style={s.bar} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: progress.total, now: progress.done }}><View style={[s.barFill, { width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }]} /></View>}
     {error && <Notice tone="warn" icon="cloud-offline-outline">{t('İndirme tamamlanamadı: sunucuya ulaşılamıyor. Bağlantı varken yeniden dene.', 'The download could not finish: the server cannot be reached. Try again when online.')}</Notice>}
     {pack && !complete && !busy && <Notice icon="information-circle-outline">{t('Rotaya yeni durak eklenmiş; paketi güncelle.', 'A stop was added to the route; update the pack.')}</Notice>}
     {!!pack?.missedPhotos && !busy && <Text style={s.small}>{t(`${pack.missedPhotos} fotoğraf indirilemedi.`, `${pack.missedPhotos} photos could not be saved.`)}</Text>}

@@ -68,7 +68,7 @@ export default function Quiz() {
     <View style={{ gap: space.s }} accessibilityRole="radiogroup">
       {q.options.map((o, i) => {
         const state = chosen === null ? 'open' : i === q.answer ? 'right' : i === chosen ? 'wrong' : 'other';
-        return <Pressable key={i} onPress={() => answer(i)} disabled={chosen !== null} accessibilityRole="radio" accessibilityState={{ checked: chosen === i, disabled: chosen !== null }}
+        return <Pressable key={i} onPress={() => answer(i)} disabled={chosen !== null} accessibilityRole="radio" accessibilityState={{ checked: chosen === i, disabled: chosen !== null }} aria-checked={chosen === i}
           accessibilityLabel={`${o}${state === 'right' ? t(', doğru cevap', ', the right answer') : state === 'wrong' ? t(', yanlış', ', wrong') : ''}`}
           style={[s.option, state === 'right' && s.right, state === 'wrong' && s.wrong, state === 'other' && { opacity: 0.55 }]}>
           <Text style={[s.optionText, state === 'right' && { color: colors.goldSoft }]}>{o}</Text>

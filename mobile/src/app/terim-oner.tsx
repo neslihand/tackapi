@@ -66,7 +66,7 @@ export default function SuggestTerm() {
       </Field>
       <Text style={s.label}>{t('Kategori (isteğe bağlı)', 'Category (optional)')}</Text>
       <View style={s.chips} accessibilityRole="radiogroup">{CATEGORIES.map(c => <Pressable key={c} onPress={() => set('category', d.category === c ? '' : c)} accessibilityRole="radio" accessibilityLabel={categoryName(c)}
-        accessibilityState={{ checked: d.category === c }} style={[s.chip, d.category === c && s.chipOn]}><Text style={[s.chipText, d.category === c && { color: colors.goldSoft }]}>{categoryName(c)}</Text></Pressable>)}</View>
+        accessibilityState={{ checked: d.category === c }} aria-checked={d.category === c} hitSlop={4} style={[s.chip, d.category === c && s.chipOn]}><Text style={[s.chipText, d.category === c && { color: colors.goldSoft }]}>{categoryName(c)}</Text></Pressable>)}</View>
       {issues.length > 0 && <Notice tone="warn" icon="alert-circle-outline">{issues.join(' ')}</Notice>}
       <Button kind="gold" icon="send" label={t('Onaya gönder', 'Send for approval')} onPress={submit} busy={busy} />
     </ScrollView>
@@ -86,7 +86,7 @@ const s = StyleSheet.create({
   label: { color: colors.ink, fontSize: 14, fontWeight: '600' },
   input: { minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper, paddingHorizontal: 14, paddingVertical: 10, color: colors.ink, fontSize: 15 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
   chipOn: { backgroundColor: colors.emerald },
   chipText: { color: colors.ink, fontSize: 13 },
   sentMark: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },

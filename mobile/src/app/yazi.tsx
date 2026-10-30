@@ -106,7 +106,7 @@ function Writer({ existing }: { existing: MyArticle | null }) {
 
       <Text style={s.label}>{t('Ne hakkında yazıyorsun?', 'What are you writing about?')}</Text>
       <View style={{ gap: space.s }} accessibilityRole="radiogroup">{(['heritage', 'city_history', 'culture'] as ArticleKind[]).map(k =>
-        <Pressable key={k} onPress={() => set('kind', k)} accessibilityRole="radio" accessibilityLabel={`${kindName(k)}. ${kindNote(k)}`} accessibilityState={{ checked: d.kind === k }} style={[s.kind, d.kind === k && s.kindOn]}>
+        <Pressable key={k} onPress={() => set('kind', k)} accessibilityRole="radio" accessibilityLabel={`${kindName(k)}. ${kindNote(k)}`} accessibilityState={{ checked: d.kind === k }} aria-checked={d.kind === k} style={[s.kind, d.kind === k && s.kindOn]}>
           <Text style={[s.kindName, d.kind === k && { color: colors.goldSoft }]}>{kindName(k)}</Text>
           <Text style={[s.small, d.kind === k && { color: '#e6e2d8' }]}>{kindNote(k)}</Text>
         </Pressable>)}</View>
@@ -151,7 +151,7 @@ function Writer({ existing }: { existing: MyArticle | null }) {
         <Text style={s.panelHead}>{t('Şehir ve eserler', 'City and works')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.s }}>
           {[['', t('Belirli bir şehir değil', 'No particular city')] as [string, string], ...cities].map(([slug, name]) => <Pressable key={slug || 'none'} onPress={() => set('city', slug)} accessibilityLabel={name}
-            accessibilityRole="radio" accessibilityState={{ checked: d.city === slug }} style={[s.chip, d.city === slug && s.chipOn]}><Text style={[s.chipText, d.city === slug && { color: colors.goldSoft }]}>{name}</Text></Pressable>)}
+            accessibilityRole="radio" accessibilityState={{ checked: d.city === slug }} aria-checked={d.city === slug} hitSlop={4} style={[s.chip, d.city === slug && s.chipOn]}><Text style={[s.chipText, d.city === slug && { color: colors.goldSoft }]}>{name}</Text></Pressable>)}
         </ScrollView>
         {d.monuments.map(slug => <View key={slug} style={s.picked}><Text style={[s.chipText, { flex: 1 }]}>{items.find(a => a.slug === slug)?.name ?? slug}</Text>
           <Pressable onPress={() => set('monuments', d.monuments.filter(x => x !== slug))} accessibilityRole="button" accessibilityLabel={t('Çıkar', 'Remove')} hitSlop={8}><Ionicons name="close" size={16} color={colors.soft} /></Pressable></View>)}
@@ -204,7 +204,7 @@ const s = StyleSheet.create({
   panelHead: { color: colors.ink, fontSize: 16, fontWeight: '600' },
   cover: { width: '100%', height: 170, borderRadius: 12, backgroundColor: colors.parchmentDeep },
   uncover: { position: 'absolute', top: 8, right: 8, width: 30, height: 30, borderRadius: 15, backgroundColor: '#000000a0', alignItems: 'center', justifyContent: 'center' },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
   chipOn: { backgroundColor: colors.emerald },
   chipText: { color: colors.ink, fontSize: 13 },
   picked: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 10, backgroundColor: colors.parchmentDeep },

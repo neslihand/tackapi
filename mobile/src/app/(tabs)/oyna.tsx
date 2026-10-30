@@ -33,12 +33,12 @@ function QuestCard({ quest }: { quest: Quest }) {
   const photos = quest.stops.map(st => mediaUrl(st.image?.thumb)).filter(Boolean).slice(0, 5) as string[];
   const open = (kind: 'read' | 'quiz', slug: string) => router.push(kind === 'quiz' ? `/quiz?eser=${encodeURIComponent(slug)}` : `/eser/${slug}`);
   return <View style={[s.card, quest.complete && { borderColor: colors.gold }]}>
-    <View style={s.stops}>{photos.map((p, i) => <Image key={p} source={p} style={[s.stop, { marginLeft: i ? -14 : 0, zIndex: 10 - i }]} contentFit="cover" accessibilityIgnoresInvertColors />)}
+    <View style={s.stops}>{photos.map((p, i) => <Image key={p} source={p} alt="" style={[s.stop, { marginLeft: i ? -14 : 0, zIndex: 10 - i }]} contentFit="cover" accessibilityIgnoresInvertColors />)}
       <Text style={s.stopCount}>{t(`${quest.stops.length} DURAK`, `${quest.stops.length} STOPS`)}</Text></View>
     <Eyebrow>{quest.route.kicker}</Eyebrow>
     <Text style={s.title} accessibilityRole="header">{quest.route.title}</Text>
     <Text style={s.small}>{quest.route.description}</Text>
-    <View style={s.bar} accessible accessibilityLabel={t(`${quest.steps.length} adımın ${quest.done} tanesi tamam`, `${quest.done} of ${quest.steps.length} steps done`)}>
+    <View style={s.bar} accessible accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: quest.steps.length, now: quest.done }} accessibilityLabel={t(`${quest.steps.length} adımın ${quest.done} tanesi tamam`, `${quest.done} of ${quest.steps.length} steps done`)}>
       <View style={[s.barFill, { width: `${(quest.done / quest.steps.length) * 100}%` }]} /></View>
     <Text style={s.small}>{t(`${quest.done}/${quest.steps.length} adım · ${quest.visited}/${quest.stops.length} durak yerinde`, `${quest.done}/${quest.steps.length} steps · ${quest.visited}/${quest.stops.length} stops on the spot`)}</Text>
     {quest.steps.map((st, i) => <Pressable key={i} onPress={() => open(st.kind, st.slug)} style={s.step} accessibilityRole="button" accessibilityLabel={`${st.label}${st.done ? t(', tamamlandı', ', done') : ''}`}>

@@ -76,7 +76,7 @@ export default function Article() {
     {!!a.monuments.length && <View style={s.section}>
       <Eyebrow>{t('YAZIDAKİ ESERLER', 'WORKS IN THIS ARTICLE')}</Eyebrow>
       {a.monuments.map(m => <Pressable key={m.slug} disabled={!m.pilot} onPress={() => router.push(`/eser/${m.slug}`)} style={s.work} accessibilityRole={m.pilot ? 'button' : undefined}>
-        {m.image ? <Image source={mediaUrl(m.image.thumb)} style={s.thumb} contentFit="cover" accessibilityIgnoresInvertColors /> : <View style={[s.thumb, { backgroundColor: colors.parchmentDeep }]} />}
+        {m.image ? <Image source={mediaUrl(m.image.thumb)} alt="" style={s.thumb} contentFit="cover" accessibilityIgnoresInvertColors /> : <View style={[s.thumb, { backgroundColor: colors.parchmentDeep }]} />}
         <View style={{ flex: 1 }}><Text style={s.workName}>{m.name}</Text><Text style={s.small}>{m.city}{m.pilot ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
         {m.pilot && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
       </Pressable>)}

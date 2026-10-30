@@ -51,7 +51,7 @@ export function WorkCard({ item, extra, stamped }: { item: Item; extra?: string;
   const label = [item.name, item.kind_label, where, item.built.label, extra, stamped === 'visit' ? t('yerinde mühürlü', 'stamped on the spot') : stamped ? t('pasaportta', 'in the passport') : null].filter(Boolean).join(', ');
   return <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={() => router.push(`/eser/${item.slug}`)}
     style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}>
-    {photo ? <Image source={photo} style={styles.cardImage} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
+    {photo ? <Image source={photo} alt="" style={styles.cardImage} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
       : <View style={[styles.cardImage, styles.cardPlaceholder]}><Ionicons name="business-outline" size={28} color={colors.goldLine} /></View>}
     <View style={styles.cardBody}>
       <Text style={styles.cardKind}>{item.kind_label.toLocaleUpperCase('tr-TR')}</Text>

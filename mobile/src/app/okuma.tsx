@@ -95,7 +95,7 @@ function Chips({ options, value, onChange, all }: { options: [string, string][];
   if (options.length < 2) return null;
   return <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.s }}>
     {[[null, all] as [string | null, string], ...options].map(([id, label]) => <Pressable key={id ?? 'all'} onPress={() => onChange(id)} accessibilityRole="button"
-      accessibilityState={{ selected: value === id }} style={[s.chip, value === id && s.chipOn]}><Text style={[s.chipText, value === id && { color: colors.goldSoft }]}>{label}</Text></Pressable>)}
+      accessibilityState={{ selected: value === id }} hitSlop={4} style={[s.chip, value === id && s.chipOn]}><Text style={[s.chipText, value === id && { color: colors.goldSoft }]}>{label}</Text></Pressable>)}
   </ScrollView>;
 }
 
@@ -106,7 +106,7 @@ const s = StyleSheet.create({
   tabText: { color: colors.ink, fontSize: 14, fontWeight: '600' },
   lead: { color: colors.soft, fontSize: 14, lineHeight: 20 },
   search: { minHeight: 46, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper, paddingHorizontal: 18, color: colors.ink, fontSize: 15 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: '#ffffff80' },
+  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: '#ffffff80' },
   chipOn: { backgroundColor: colors.emerald },
   chipText: { color: colors.ink, fontSize: 13 },
   letter: { fontFamily: serif, fontSize: 26, color: colors.goldText, marginTop: space.s },

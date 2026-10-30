@@ -57,7 +57,7 @@ export default function Camera() {
       <Eyebrow>{t('EMİN DEĞİLİZ', 'WE ARE NOT SURE')}</Eyebrow>
       <Text style={s.body}>{result.candidates.length ? t('Fotoğraf şu eserlere benziyor. Hangisi olduğuna sen karar ver:', 'The photo looks like these works. You decide which one it is:') : t('Benzeyen bir eser bulamadık. Başka bir açıdan dene.', 'We found no similar work. Try another angle.')}</Text>
       {result.candidates.map(c => <Pressable key={c.slug} onPress={() => router.push(`/eser/${c.slug}`)} style={s.candidate} accessibilityRole="button" accessibilityLabel={c.name}>
-        <Image source={mediaUrl(c.photo)} style={s.thumb} contentFit="cover" accessibilityIgnoresInvertColors />
+        <Image source={mediaUrl(c.photo)} alt="" style={s.thumb} contentFit="cover" accessibilityIgnoresInvertColors />
         <Text style={[s.body, { flex: 1, color: colors.ink }]}>{c.name}</Text>
       </Pressable>)}
     </View>)}

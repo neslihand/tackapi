@@ -77,7 +77,7 @@ export default function MyWriting() {
 }
 
 function Action({ label, onPress, danger }: { label: string; onPress: () => void; danger?: boolean }) {
-  return <Pressable onPress={onPress} accessibilityRole="button" hitSlop={6}><Text style={[s.action, danger && { color: colors.danger }]}>{label}</Text></Pressable>;
+  return <Pressable onPress={onPress} accessibilityRole="button" hitSlop={12} style={{ minHeight: 32, justifyContent: 'center' }}><Text style={[s.action, danger && { color: colors.danger }]}>{label}</Text></Pressable>;
 }
 
 const s = StyleSheet.create({

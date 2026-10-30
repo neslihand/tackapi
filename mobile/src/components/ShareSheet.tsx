@@ -33,11 +33,11 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
         <Pressable onPress={onClose} style={s.close} accessibilityRole="button" accessibilityLabel={t('Kapat', 'Close')} hitSlop={10}>
           <Ionicons name="close" size={22} color={colors.goldSoft} /></Pressable>
         {shared && <View ref={card} collapsable={false} style={s.card}>
-          {shared.kind === 'stamp' && shared.photo && <Image source={shared.photo} style={StyleSheet.absoluteFill} contentFit="cover" />}
+          {shared.kind === 'stamp' && shared.photo && <Image source={shared.photo} alt="" style={StyleSheet.absoluteFill} contentFit="cover" />}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: shared.kind === 'stamp' && shared.photo ? '#082119c4' : colors.emerald }]} />
           <View style={s.frame} />
           <View style={s.top}>
-            <Image source={ARCH} style={s.arch} contentFit="cover" />
+            <Image source={ARCH} alt="" style={s.arch} contentFit="cover" />
             <Text style={s.kicker}>✦ {shared.kind === 'stamp' ? t('MİRAS PASAPORTU', 'HERITAGE PASSPORT') : t('MİRAS MADALYONU', 'HERITAGE MEDALLION')}</Text>
           </View>
           {shared.kind === 'stamp' ? <View style={s.middle}>
