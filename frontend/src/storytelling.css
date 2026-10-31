@@ -79,7 +79,7 @@
 .cine-title h2 { max-width: 13ch; font-size: clamp(48px, 7vw, 116px); line-height: .96; color: #fbf7ee; text-shadow: 0 8px 50px #000, 0 2px 12px #000a; }
 .cine-captions { display: flex; flex-direction: column; gap: 48svh; }
 /* Graphic-novel captions: ink-bordered paper boxes that drift over the scene. */
-.cine .cine-caption { pointer-events: auto; animation: none; position: relative; max-width: min(540px, 100%); margin: 0; padding: 26px 30px; font-family: var(--serif); font-size: clamp(22px, 2vw, 30px); line-height: 1.42; color: #1c1a14; border: 2px solid #15130f; border-radius: 3px; background: linear-gradient(180deg, #f6eedb, #ecdfc2); box-shadow: 10px 10px 0 #000000b3; }
+.cine .cine-caption { pointer-events: auto; animation: none; position: relative; max-width: min(540px, 100%); margin: 0; padding: 26px 30px; font-family: var(--serif); font-size: clamp(18px, 1.35vw, 21px); line-height: 1.6; color: #1c1a14; border: 2px solid #15130f; border-radius: 3px; background: linear-gradient(180deg, #f6eedb, #ecdfc2); box-shadow: 10px 10px 0 #000000b3; }
 .cine-caption::before { content: ''; position: absolute; inset: 6px; border: 1px solid #15130f33; pointer-events: none; }
 .cine-caption.at-0 { align-self: flex-start; rotate: -1deg; }
 .cine-caption.at-1 { align-self: flex-end; rotate: .8deg; }
@@ -135,7 +135,7 @@
 .tale-text { color: var(--ink); }
 .tale-page-no { display: inline-block; padding: 7px 14px; font-size: 11px; font-weight: 600; letter-spacing: .2em; color: #6e4f1f; border: 1px solid #c3a86966; border-radius: 999px; background: #efe6d1; }
 .tale-text h2 { margin: 16px 0 14px; font-family: var(--serif); font-size: clamp(36px, 3.4vw, 54px); font-weight: 500; line-height: 1.05; color: #0c241c; }
-.tale .tale-words { margin: 0; font-family: Inter, sans-serif; font-size: clamp(19px, 1.6vw, 23px); font-weight: 400; line-height: 1.7; color: var(--ink); animation: none; }
+.tale .tale-words { margin: 0; font-family: Inter, sans-serif; font-size: clamp(16px, 1.2vw, 18px); font-weight: 400; line-height: 1.7; color: var(--ink); animation: none; }
 .tale-words > span { display: inline-block; white-space: pre; }
 .tale-bubble { position: relative; margin: 0; font-family: var(--serif); font-size: 20px; font-style: italic; line-height: 1.45; color: #0c241c; border-radius: 22px; }
 .tale-bubble.open { margin-top: 20px; padding: 16px 20px; background: #fbf9f3; box-shadow: 0 0 0 1px #c3a869, 0 18px 30px -22px #0c241c66; }
@@ -192,7 +192,7 @@
 .brief-body { position: relative; max-width: 640px; }
 .brief .chapter-number { display: block; font-size: 11px; font-weight: 600; letter-spacing: .22em; color: #765b38; }
 .brief h2 { max-width: 13ch; margin: 16px 0 24px; font-size: clamp(40px, 4.2vw, 68px); line-height: 1; color: #17201c; }
-.brief .brief-lead { margin: 0; animation: none; font-family: var(--serif); font-size: clamp(24px, 2.2vw, 34px); line-height: 1.36; color: #232c29; }
+.brief .brief-lead { margin: 0; animation: none; font-family: var(--serif); font-size: clamp(18px, 1.4vw, 21px); line-height: 1.65; color: #232c29; }
 .brief-lead mark { padding: 0 .06em; color: inherit; background: linear-gradient(transparent 60%, #e7d3a6 60%); }
 .brief .story-facts { margin-top: 34px; }
 .brief .detail-hint { display: flex; }
@@ -224,7 +224,7 @@
   .mode-story .story-index > button.current i { color: #f0e6cf; }
   .cine-title h2 { font-size: clamp(42px, 12vw, 60px); }
   .cine-numeral { top: 22svh; font-size: 60vw; }
-  .cine-caption { padding: 20px 22px; font-size: 21px; box-shadow: 7px 7px 0 #000000b3; }
+  .cine-caption { padding: 20px 22px; font-size: 17px; box-shadow: 7px 7px 0 #000000b3; }
   .cine-caption.at-0, .cine-caption.at-1, .cine-caption.at-2 { align-self: stretch; }
   .cine-captions { gap: 40svh; }
   .cine-panel { padding: 22px 20px; }

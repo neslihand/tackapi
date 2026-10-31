@@ -30,9 +30,12 @@ export function MonumentMap({ location, name, lang }: { location: PublicLocation
     }
     return () => { map.remove(); };
   }, [location.lat, location.lon, location.approximate, location.radius_m, name, s.mapApprox]);
+  // site: harita ve notu çerçeveli tek bir kartta (eser sayfasının kart diliyle)
   return <section className="pv-section"><h2>{s.map}</h2>
-    <div ref={box} className="pv-map" role="img" aria-label={`${s.mapLabel}: ${name}`} />
-    <p className="pv-map-note">{location.approximate && <span>{s.mapApprox} </span>}
-      <a href={osmLink(location)} target="_blank" rel="noreferrer">{s.mapOpen} <ExternalLink size={13} /></a></p>
+    <div className="pv-map-card">
+      <div ref={box} className="pv-map" role="img" aria-label={`${s.mapLabel}: ${name}`} />
+      <p className="pv-map-note">{location.approximate && <span>{s.mapApprox} </span>}
+        <a href={osmLink(location)} target="_blank" rel="noreferrer">{s.mapOpen} <ExternalLink size={13} /></a></p>
+    </div>
   </section>;
 }

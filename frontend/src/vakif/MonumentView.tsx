@@ -112,7 +112,7 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
 
       {detail.location && <MonumentMap location={detail.location} name={item.name} lang={lang} />}
 
-      {c.current_state && <section className="pv-section pv-visit"><MapPin size={20} /><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
+      {c.current_state && <section className="pv-section pv-visit"><span className="pv-visit-icon" aria-hidden="true"><MapPin size={18} /></span><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
     {zoom !== null && <Lightbox images={detail.images} index={zoom} lang={lang} onIndex={setZoom} onClose={() => setZoom(null)} />}
     {artZoom && <Lightbox images={artZoom.images} index={artZoom.index} lang={lang} onIndex={i => setArtZoom({ ...artZoom, index: i })} onClose={() => setArtZoom(null)} />}
   </>;
