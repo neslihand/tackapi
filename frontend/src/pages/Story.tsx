@@ -142,6 +142,18 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   // A backend monument tells its story and children's version whole, as stored: no chapters, no chapter titles.
   const whole = artifact.origin ? artifact.origin.narrations[mode] : null;
   useEffect(() => { if (chapter !== 2) setDetail(false); }, [chapter]);
+  // A hero taller than the screen pins only once its last line is in view, so nothing in it is left under the telling.
+  useEffect(() => {
+    const root = ref.current, hero = root?.querySelector<HTMLElement>('.story-hero');
+    if (!root || !hero) return;
+    // Set on the page, not the hero: the hero's own style attribute belongs to React.
+    const pin = () => root.style.setProperty('--hero-pin', `${Math.min(0, window.innerHeight - hero.offsetHeight)}px`);
+    pin();
+    const resized = new ResizeObserver(pin);
+    resized.observe(hero);
+    window.addEventListener('resize', pin);
+    return () => { resized.disconnect(); window.removeEventListener('resize', pin); };
+  }, [artifact.id]);
   useEffect(() => {
     const root = ref.current;
     if (!root) return;

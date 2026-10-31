@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
-import { ArrowRight, ChevronDown, Compass, Heart, Hourglass, Landmark, LayoutGrid, List, Route, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, ChevronDown, Compass, Heart, Hourglass, Landmark, LayoutGrid, List, Route, Search, SlidersHorizontal, X } from 'lucide-react';
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { ArtifactCard } from '../components/ArtifactCard';
 import { Girih } from '../components/PlayArt';
@@ -106,12 +106,14 @@ export function Explore({ query }: { query: string }) {
     setSearch(''); setCity(''); setPeriod(''); setCategory(''); setSeasonId(''); setFavorites(false);
     resultsTitle.current?.focus({ preventScroll: true });
   }
-  function closeFilters(showResults = false) {
+  function showResults() {
+    resultsTitle.current?.focus({ preventScroll: true });
+    resultsTitle.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }
+  function closeFilters(show = false) {
     setFiltersOpen(false);
-    if (showResults) {
-      resultsTitle.current?.focus({ preventScroll: true });
-      resultsTitle.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
-    } else filterButton.current?.focus();
+    if (show) showResults();
+    else filterButton.current?.focus();
   }
   // Analitik: arama yazmayı bitirince, süzgeç ve rota seçildiğinde (yalnızca izin verildiyse gönderilir)
   useEffect(() => {
@@ -132,7 +134,10 @@ export function Explore({ query }: { query: string }) {
     <div className="page-shell ex-shell">
       <div className="ex-top">
         <div className="ex-heading"><p className="ex-kicker"><span>N° 01</span><i aria-hidden="true" />{t('Anadolu koleksiyonu', 'Anatolian collection')} · {pad(artifacts.length)} {t('eser', 'works')}</p><h1><span className="ex-line"><span>{t('Merakın nereye', 'Where will your')}</span></span> <span className="ex-line"><em>{t('götürür?', 'curiosity lead?')}</em></span></h1></div>
-        <label className="ex-search"><Search size={18} aria-hidden="true" /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('Bir eser veya şehir ara…', 'Search for a work or a city…')} aria-label={t('Eser veya şehir ara', 'Search for a work or a city')} />{search && <button type="button" onClick={() => { setSearch(''); searchInput.current?.focus(); }} aria-label={t('Aramayı temizle', 'Clear the search')}><X size={16} aria-hidden="true" /></button>}</label>
+        {/* The results are far below the search, so the count shows right under it and Enter takes the visitor there.
+            Screen readers already hear the count from the results bar (role="status"), so this line is not a live region. */}
+        <div className="ex-search-wrap"><label className="ex-search"><Search size={18} aria-hidden="true" /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && search.trim()) { e.preventDefault(); showResults(); } }} enterKeyHint="search" placeholder={t('Bir eser veya şehir ara…', 'Search for a work or a city…')} aria-label={t('Eser veya şehir ara', 'Search for a work or a city')} />{search && <button type="button" onClick={() => { setSearch(''); searchInput.current?.focus(); }} aria-label={t('Aramayı temizle', 'Clear the search')}><X size={16} aria-hidden="true" /></button>}</label>
+          {search.trim() && <p className="ex-search-hint">{filtered.length ? t(`${filtered.length} eser bulundu`, `${filtered.length} works found`) : t('Eşleşen eser yok', 'No matching works')}<button type="button" onClick={showResults}>{filtered.length ? t('Sonuçları gör', 'See the results') : t('Önerilere bak', 'See the suggestions')} <ArrowDown size={14} aria-hidden="true" /></button></p>}</div>
       </div>
       <Corridor artifacts={artifacts} />
       {readOnly && <Discoveries />}
@@ -163,7 +168,7 @@ export function Explore({ query }: { query: string }) {
             <button type="button" onClick={() => setPreferredView('list')} aria-pressed={view === 'list'} aria-label={t('Liste görünümü', 'List view')}><List size={18} aria-hidden="true" /><span>{t('Liste', 'List')}</span></button>
           </div>
         </div>
-        {filtered.length > 0 && <ul className={`ex-results ex-results-${view}`} aria-labelledby="ex-results-title" data-columns="1 0.86 1.1" onPointerLeave={preview.hide}>{filtered.map((artifact, index) => <li key={artifact.id} onPointerMove={view === 'list' && !narrow ? event => preview.move(event, artifact) : undefined}><ArtifactCard artifact={artifact} variant={view === 'list' ? 'compact' : 'catalog'} eager={index < 3} number={`${season ? 'DURAK' : 'ESER'} ${pad((season ? season.artifactIds.indexOf(artifact.id) : index) + 1)}`} /></li>)}</ul>}
+        {filtered.length > 0 && <ul className={`ex-results ex-results-${view}`} aria-labelledby="ex-results-title" onPointerLeave={preview.hide}>{filtered.map((artifact, index) => <li key={artifact.id} onPointerMove={view === 'list' && !narrow ? event => preview.move(event, artifact) : undefined}><ArtifactCard artifact={artifact} variant={view === 'list' ? 'compact' : 'catalog'} eager={index < 3} number={`${season ? 'DURAK' : 'ESER'} ${pad((season ? season.artifactIds.indexOf(artifact.id) : index) + 1)}`} /></li>)}</ul>}
         {!filtered.length && <div className="empty-state"><Search size={36} aria-hidden="true" /><h2>{t('Bu iz henüz koleksiyonda yok.', 'This trail is not in the collection yet.')}</h2><p>{t('Başka bir kelime deneyebilir veya filtreleri kaldırabilirsin.', 'Try another word, or remove the filters.')}</p><button type="button" className="button gold" onClick={clear}>{t('Tüm eserleri göster', 'Show every work')}</button></div>}
         {!readOnly && <p className="page-note">{t('Görseller eserlerden esinlenen özgün mimari illüstrasyonlardır; fotoğraf değildir.', 'The pictures are original architectural illustrations inspired by the works, not photographs.')}</p>}
       </div>

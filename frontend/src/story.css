@@ -17,6 +17,13 @@
 .story-hero-cta:hover, .next-story:hover .next-story-cta { box-shadow: 0 0 0 5px #acaba840, 0 14px 30px -10px #000d, 0 0 34px -4px #acaba8cc; }
 .story-hero .story-hero-stamp { top: 196px; right: calc(6.2% + 34px); bottom: auto; z-index: 2; padding: 6px 32px 6px 12px; font-size: 11px; transform: rotate(-6deg); }
 .story-hero .story-hero-stamp .ex-seal { right: -26px; width: 50px; height: 50px; font-size: 18px; }
+/* The hero grows with its words instead of a fixed height: the copy sits in the flow under the back link and the bar,
+   so a long name or a short screen never pushes the title up under the menu. */
+.story-page .story-hero { display: flex; flex-direction: column; height: auto; min-height: 100svh; max-height: none; padding: 128px 10% 36px; }
+.story-page .story-hero > .back-link { position: relative; top: auto; left: auto; z-index: 2; align-self: flex-start; }
+.story-page .story-hero-copy { position: relative; z-index: 1; inset: auto; margin-top: auto; padding-top: 28px; }
+.story-page .story-hero-copy h1 { font-size: clamp(40px, min(7.2vw, 12svh), 116px); }
+.story-page .story-hero-chapters { position: relative; z-index: 1; inset: auto; margin-top: 36px; }
 .story-hero-chapters { border-top-color: #acaba840; }
 .story-hero-chapters i { color: #d4bf9d; }
 
@@ -129,7 +136,11 @@
 }
 @media (max-width: 800px) {
   .story-hero::after { inset: 92px 12px 12px; }
-  .story-hero .story-hero-stamp { top: 150px; right: 46px; }
+  .story-page .story-hero { padding: 108px 7% 64px; }
+  /* On a phone the stamp takes its own line under the back link instead of lying over the words. */
+  .story-page .story-hero .story-hero-stamp { position: relative; top: auto; right: auto; order: 1; align-self: flex-start; margin: 22px 0 0 4px; }
+  .story-page .story-hero-copy { order: 2; }
+  .story-page .story-hero .story-art-note { position: relative; inset: auto; order: 3; margin-top: 24px; }
   .story-hero-tags li { font-size: 16px; }
   .story-tools .ex-medallion { display: none; }
   .story-chapter { border-bottom: 0; }

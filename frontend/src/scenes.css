@@ -86,7 +86,8 @@
 
 /* Shopify Editions: the hero stays pinned while the page slides up over it on a torn paper edge (Story.tsx). */
 .story-curtain { position: relative; }
-.story-curtain > .story-hero { position: sticky; top: 0; z-index: 0; }
+/* A hero taller than the screen scrolls until its bottom shows, then stays (--hero-pin, set in Story.tsx). */
+.story-curtain > .story-hero { position: sticky; top: var(--hero-pin, 0px); z-index: 0; }
 .story-curtain > .story-body { z-index: 1; }
 .story-curtain > .story-body::before, .story-curtain > .story-body::after { content: ''; position: absolute; left: 0; right: 0; bottom: calc(100% - 1px); pointer-events: none; }
 .story-curtain > .story-body::before { height: 46px; background: #fbf9f3; clip-path: polygon(0.00% 18%, 1.14% 36%, 2.48% 29%, 4.07% 3%, 5.56% 2%, 6.90% 4%, 8.05% 23%, 9.95% 7%, 10.92% 35%, 12.81% 32%, 13.82% 54%, 14.96% 47%, 16.52% 8%, 17.79% 17%, 19.67% 10%, 20.89% 35%, 22.13% 30%, 23.31% 3%, 24.79% 37%, 26.34% 17%, 27.84% 25%, 29.03% 44%, 30.69% 13%, 32.00% 29%, 33.60% 40%, 34.57% 54%, 35.84% 23%, 37.68% 8%, 38.88% 2%, 40.40% 42%, 41.72% 48%, 42.93% 38%, 44.51% 32%, 45.80% 46%, 47.53% 26%, 48.73% 3%, 50.14% 36%, 51.73% 45%, 52.63% 21%, 54.28% 1%, 55.53% 9%, 56.68% 3%, 58.52% 7%, 59.55% 22%, 61.37% 4%, 62.46% 30%, 64.16% 45%, 65.53% 15%, 66.61% 20%, 68.32% 53%, 69.20% 10%, 70.65% 13%, 72.21% 32%, 73.45% 0%, 74.94% 20%, 76.44% 52%, 77.91% 28%, 79.25% 37%, 80.24% 49%, 82.14% 48%, 83.54% 22%, 84.65% 6%, 86.21% 3%, 87.20% 11%, 88.65% 19%, 89.96% 0%, 91.42% 6%, 92.96% 1%, 94.71% 34%, 95.59% 14%, 97.12% 20%, 98.35% 47%, 100.00% 55%, 100% 100%, 0% 100%); }

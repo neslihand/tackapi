@@ -35,6 +35,11 @@
 .explore-page .ex-search input::placeholder { font-style: italic; color: #aab4ac; }
 .explore-page .ex-search button { width: 44px; height: 44px; border-radius: 50%; color: var(--en-ivory); }
 .explore-page .ex-search button:hover { background: #e6d5ae1f; }
+/* The live count under the search; it hangs below the line so typing does not move the heading. */
+.ex-search-wrap { position: relative; min-width: 0; }
+.ex-search-hint { position: absolute; top: calc(100% - .6em + 6px); left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; font-size: 14px; color: var(--ex-soft); }
+.ex-search-hint button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--en-gold-light); }
+.ex-search-hint button:hover { text-decoration: underline; text-underline-offset: 4px; }
 
 /* The corridor: arches of the collection passing by as the page scrolls (Explore.tsx Corridor). */
 .ex-corridor { position: relative; margin: clamp(48px, 6vw, 84px) calc(var(--pl-left) * -1) 0; padding: 0 var(--pl-left); overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
@@ -98,11 +103,11 @@
 .explore-page .ex-lower .ex-view-toggle button[aria-pressed='true'] { color: var(--en-ivory); background: var(--ex-ink); }
 
 /* Cards: each work hangs in an arch, with its index drawn underneath. */
-.explore-page .ex-results-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(60px, 6vw, 100px) clamp(26px, 3.4vw, 64px); }
-.explore-page .ex-results-cards > li:nth-child(3n + 2) { padding-top: clamp(60px, 7vw, 120px); }
+/* The rows line up (no staggered column), so each name and text stands right under its own arch. */
+.explore-page .ex-results-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(44px, 4vw, 64px) clamp(26px, 3.4vw, 64px); }
 .explore-page .ex-card { height: auto; border: 0; border-radius: 0; color: var(--ex-ink); background: none; box-shadow: none; }
 .explore-page .ex-card:hover { border: 0; box-shadow: none; }
-.explore-page .ex-card-catalog .ex-card-media { aspect-ratio: 4 / 5; margin: 0; border-radius: 999px 999px 3px 3px; background: #0b1f19; box-shadow: 0 0 0 1px var(--ex-rule), 0 50px 80px -50px #1a1408cc; }
+.explore-page .ex-card-catalog .ex-card-media { aspect-ratio: 1; margin: 0; border-radius: 999px 999px 3px 3px; background: #0b1f19; box-shadow: 0 0 0 1px var(--ex-rule), 0 50px 80px -50px #1a1408cc; }
 .explore-page .ex-card-catalog .ex-card-media::after { content: ''; position: absolute; inset: 9px; z-index: 1; border: 1px solid #e6d5ae59; border-radius: 999px 999px 2px 2px; pointer-events: none; transition: inset .7s var(--pl-ease), border-color .7s; }
 .explore-page .ex-card-catalog:hover .ex-card-media::after { inset: 16px; border-color: var(--en-gold-light); }
 .explore-page .ex-card-catalog .ex-card-media::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, transparent 55%, #030a08cc); opacity: .7; transition: opacity .6s; pointer-events: none; }
@@ -124,7 +129,7 @@
 .explore-page .ex-card-meta { font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #4b5448; }
 .explore-page .ex-card-meta svg { color: #765b38; }
 .explore-page .ex-card h3 { margin-top: 12px; font-size: clamp(30px, 2.5vw, 40px); font-weight: 400; line-height: 1.02; letter-spacing: -.015em; color: var(--ex-ink); transition: translate .6s var(--pl-ease); }
-.explore-page .ex-card-text { margin: 14px 0 22px; font-size: 14px; line-height: 1.65; color: #4b5448; }
+.explore-page .ex-card-text { display: -webkit-box; margin: 14px 0 22px; overflow: hidden; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; font-size: 14px; line-height: 1.65; color: #4b5448; }
 .explore-page .ex-card-foot { padding-top: 10px; font-size: 10px; font-weight: 600; letter-spacing: .2em; color: #4b5448; border-top: 1px solid var(--ex-rule); }
 .explore-page .ex-card .ex-stamp { gap: 7px; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #2f5446; }
 .explore-page .ex-card .ex-stamp > span { color: #8a6a36; font-size: 13px; }
@@ -184,8 +189,6 @@
 
 @media (max-width: 1100px) {
   .explore-page .ex-results-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .explore-page .ex-results-cards > li:nth-child(3n + 2) { padding-top: 0; }
-  .explore-page .ex-results-cards > li:nth-child(2n) { padding-top: clamp(50px, 8vw, 90px); }
   .explore-page .ex-capsule { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .explore-page .ex-segment:nth-child(3) { padding-left: 0; border-left: 0; }
   .explore-page .ex-segment:nth-child(n + 3) { border-top: 1px solid var(--ex-line); }
@@ -193,6 +196,7 @@
 @media (max-width: 800px) {
   .explore-page .ex-top { grid-template-columns: 1fr; gap: 26px; }
   .explore-page .ex-search { margin: 0; }
+  .ex-search-hint { position: static; margin-top: 4px; }
 }
 @media (max-width: 760px) {
   .explore-page .ex-shell { padding: 104px 22px 0; }
@@ -224,7 +228,6 @@
   .explore-page .ex-lower .ex-count { margin-top: 6px; }
   .explore-page .ex-lower .ex-view-toggle button { width: 44px; padding: 0; }
   .explore-page .ex-results-cards { gap: 56px; padding-top: 24px; }
-  .explore-page .ex-results-cards > li:nth-child(n) { padding-top: 0; }
   .explore-page .ex-results-list { border-top: 0; }
   .explore-page .ex-card-compact { grid-template-columns: 70px minmax(0, 1fr); column-gap: 16px; padding: 16px 0; }
   .explore-page .ex-card-compact .ex-card-media { width: 70px; height: 90px; }
