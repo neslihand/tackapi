@@ -172,7 +172,6 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         // Opening: the title rises out of the dark while the camera pulls back from the detail to the whole building.
         gsap.from('.story-hero h1 .word > span', { yPercent: 110, duration: 1.1, ease: 'power3.out', stagger: 0.07, delay: 0.15 });
         gsap.from('.story-hero-head > :not(h1), .story-hero .hg, .story-hero-lede > *', { y: 24, opacity: 0, duration: 0.9, ease: 'power2.out', stagger: 0.08, delay: 0.45 });
-        gsap.fromTo('.story-hero-image', { scale: 1.5 }, { scale: 1.02, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight * 1.1}`, scrub: true } });
         gsap.fromTo('.reading-progress span', { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 60%', end: 'bottom 60%', scrub: true } });
         if (ref.current?.querySelector('.story-index-progress span')) gsap.fromTo('.story-index-progress span', { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 50%', end: 'bottom 50%', scrub: true } });
         storyMotion(mode);
@@ -203,8 +202,8 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
     {/* The opening scene stays put while the telling slides up over it on a torn paper edge. */}
     <div className="story-curtain">
     {/* The opening: the words on the left, the work's photos in an arched card on the right (under the title on a phone).
-        The full-screen picture behind is only a blurred glow of the photo, so a small or old photo never fills the screen. */}
-    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt="" aria-hidden="true" /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
+        The photos stay in the card; the background is the site's own night green, the same on every work. */}
+    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
       <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul></div>
       <HeroGallery slides={slides} name={artifact.name} note={artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}
         badge={stamped ? <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span> : undefined} />

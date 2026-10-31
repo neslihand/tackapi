@@ -7,18 +7,10 @@ export type Lang = 'tr' | 'en';
 export type PublicImage = { src: string; thumb: string; alt: string | null; width: number | null; height: number | null;
   caption?: string | null; source?: { book: string; page: number | null } | null; review_status?: string };
 
-// The picture at the top of a work's page. A photo added in the panel (no source book) is preferred over a scan from
-// the inventory book. The cover stays when it is a wide picture of a good size; otherwise the largest picture wins (a
-// tall one counts for less), since the cover is set automatically to the book's first picture of the work, which is
-// often a small detail of a few hundred pixels while a large photo of the whole building follows it.
-export const GOOD_WIDTH = 900;
+// The picture at the top of a work's page: the first one as the backend orders them (the cover, otherwise the book's
+// first picture of the work), as the panel shows it. The developer chose this order over picking the largest picture.
 export function heroImage(images: PublicImage[]): PublicImage | undefined {
-  const added = images.filter(i => !i.source);
-  const pool = added.length ? added : images;
-  const [first] = pool;
-  if (first && (first.width ?? 0) >= GOOD_WIDTH && (first.width ?? 0) >= (first.height ?? 0)) return first;
-  const score = (i: PublicImage) => (i.width ?? 0) * (i.height ?? 0) * ((i.width ?? 0) >= (i.height ?? 0) ? 1 : 0.6);
-  return pool.reduce<PublicImage | undefined>((best, i) => !best || score(i) > score(best) ? i : best, undefined);
+  return images[0];
 }
 
 export type PublicItem = {

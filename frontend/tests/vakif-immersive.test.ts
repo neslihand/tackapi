@@ -60,24 +60,18 @@ test('Panelde yazılan sorular yalnızca kurallara uyuyor ve eser koleksiyondays
   assert.deepEqual(feed.quizQuestions, [good]);
 });
 
-test('Sayfanın üstüne kitap taraması yerine panelden eklenen yatay fotoğraf gelir; tarama galeride kalır', () => {
+test('Sayfanın üstüne ve kartın başına kitaptaki ilk görsel gelir; diğerleri sırasıyla kartta gezilir', () => {
   const scan = detail.images[0];
-  const tall = { src: '/media/uploads/dikey.webp', thumb: '/media/thumbs/uploads/dikey.webp', alt: 'Minare', width: 900, height: 1600, source: null };
-  const wide = { src: '/media/uploads/drone.webp', thumb: '/media/thumbs/uploads/drone.webp', alt: 'Havadan', width: 2400, height: 1350, caption: 'Drone çekimi', source: null };
-  const a = toImmersive(item, { ...detail, images: [scan, tall, wide] } as unknown as PublicDetail)!;
-  assert.equal(a.image, wide.src);
-  assert.equal(a.origin?.photoCredit, 'Drone çekimi');
-  // kart için bütün fotoğraflar: seçilen önce, sonra panel sırasıyla; tarama kitap adı ve sayfasıyla
-  assert.deepEqual(a.gallery?.map(g => g.src), [wide.src, scan.src, tall.src]);
-  assert.equal(a.gallery?.[1].credit, 'Bursa I, s. 12');
-  // yalnızca dikey bir fotoğraf eklenmişse o; hiç eklenmemişse eskisi gibi kapak (kitap taraması)
-  assert.equal(heroImage([scan, tall])?.src, tall.src);
-  assert.equal(heroImage([scan])?.src, scan.src);
-  // kitapta kapak (ilk görsel) küçük bir ayrıntıysa eserin en büyük fotoğrafı seçilir; iyi boyuttaki yatay kapak kalır
-  const detailShot = { ...scan, src: '/media/books/b/ayrinti.webp', width: 179, height: 261 };
-  const whole = { ...scan, src: '/media/books/b/cephe.webp', width: 1324, height: 888 };
-  assert.equal(heroImage([detailShot, whole])?.src, whole.src);
-  assert.equal(heroImage([{ ...whole, src: '/media/books/b/kapak.webp', width: 1000, height: 700 }, whole])?.src, '/media/books/b/kapak.webp');
-  // altyazısız eklenmiş fotoğrafa kitap adı yazılmaz
-  assert.equal(toImmersive(item, { ...detail, images: [scan, tall] } as unknown as PublicDetail)!.origin?.photoCredit, '');
+  const whole = { ...scan, src: '/media/books/bursa-1/cephe.webp', width: 1324, height: 888, source: { book: 'Bursa I', page: 13 } };
+  const upload = { src: '/media/uploads/drone.webp', thumb: '/media/thumbs/uploads/drone.webp', alt: 'Havadan', width: 2400, height: 1350, caption: 'Drone çekimi', source: null };
+  const a = toImmersive(item, { ...detail, images: [scan, whole, upload] } as unknown as PublicDetail)!;
+  // daha büyük görsel olsa da ilk görsel (kapak) önce gelir
+  assert.equal(a.image, scan.src);
+  assert.equal(a.origin?.photoCredit, 'Bursa I, s. 12');
+  assert.deepEqual(a.gallery?.map(g => g.src), [scan.src, whole.src, upload.src]);
+  // kitap görseli kitap adı ve sayfasıyla, eklenmiş fotoğraf altyazısıyla anılır
+  assert.equal(a.gallery?.[1].credit, 'Bursa I, s. 13');
+  assert.equal(a.gallery?.[2].credit, 'Drone çekimi');
+  assert.equal(heroImage([whole, scan])?.src, whole.src);
+  assert.equal(heroImage([]), undefined);
 });
