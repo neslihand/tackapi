@@ -22,13 +22,12 @@ import { AskArtifact } from '../components/AskArtifact';
 import { HeroGallery } from '../components/HeroGallery';
 import { chatEndpoint } from '../lib/chatApi';
 import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
+import { monogram } from '../lib/content';
 import { track } from '../lib/analytics';
 // Loaded on demand: its map (Leaflet) needs a browser window and the demo pages do not use it.
 const VakifStory = lazy(() => import('../vakif/VakifStory').then(m => ({ default: m.VakifStory })));
 
 gsap.registerPlugin(ScrollTrigger);
-// Two initials for an author's mark, leaving out academic titles (Prof. Dr., Doç. Dr., Dr., …).
-const monogram = (name: string) => name.split(/\s+/).filter(w => w && !/\.$/.test(w)).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toLocaleUpperCase('tr-TR');
 const smooth = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
 
 // The lens of the short telling: an arched window on the illustration whose camera follows the chapter in view.

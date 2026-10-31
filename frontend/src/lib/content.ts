@@ -21,6 +21,14 @@ export function collectionStats(artifacts: { city: string }[]) {
   return { works: artifacts.length, cities: cities.size };
 }
 
+// An author's initials for their mark: the first and the last name, leaving out academic titles (Prof. Dr., Doç. Dr.,
+// Dr. Öğr. Üyesi, …). 'Dr. Öğr. Üyesi Doğan Yavaş' → 'DY', 'Berica Nevin Berberoğlu Şen' → 'BŞ'.
+const TITLE_WORDS = new Set(['üyesi', 'görevlisi']);
+export function monogram(name: string) {
+  const words = name.split(/\s+/).filter(w => w && !/\.$/.test(w) && !TITLE_WORDS.has(w.toLocaleLowerCase('tr-TR')));
+  return [words[0], words.length > 1 ? words.at(-1) : undefined].filter(Boolean).map(w => w![0]).join('').toLocaleUpperCase('tr-TR');
+}
+
 // The works the home page shows by name where it needs one example (the closing door, "Hafızaya Katkı"): their
 // pictures sit well in the site's colours. Matched loosely by name; works not in the collection are skipped.
 const spotlightNames = [['mahmut celebi', 'ecezade'], ['mihalic']];
