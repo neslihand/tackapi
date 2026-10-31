@@ -92,7 +92,7 @@ select{border:1px solid var(--line);padding:13px 32px 13px 14px;border-radius:0;
 .mobile-menu a{padding:19px 0;display:flex;justify-content:space-between;border-bottom:1px solid #c5c3c026;font-size:16px}
 
 /* The threshold */
-.hero-scroll{height:420svh;background:#0c2224;position:relative}
+.hero-scroll{height:220svh;background:#0c2224;position:relative}
 .hero-sticky{height:100svh;min-height:680px;position:sticky;top:0;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 75% 40%,#36433b 0,transparent 46%),linear-gradient(112deg,#0a1f22,#0f2627 60%,#112929);color:#f3eee5}
 .gate-scene{position:absolute;inset:0;overflow:hidden}
 .gate-scene::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(0deg,#0c2224 2%,transparent 28%)}
@@ -677,7 +677,7 @@ to{opacity:1;transform:perspective(1000px) rotateY(0)}
 .hero-actions .button{min-height:48px;font-size:13.5px;padding:14px 20px;gap:15px}
 .hero-secondary{font-size:12.5px}
 .hero-veil{display:block;position:absolute;inset:0;z-index:4;background:linear-gradient(90deg,#0a2022a8,transparent 80%);pointer-events:none}
-.hero-scroll{height:330svh}
+.hero-scroll{height:200svh}
 .cy-copy{left:7%;right:7%;bottom:9%}
 .cy-shade{background:linear-gradient(0deg,#071913f2 0%,#071913b3 45%,#07191333 75%)}
 .cy-architecture{object-position:42% 40%}
@@ -774,7 +774,7 @@ to{opacity:1;transform:perspective(1000px) rotateY(0)}
 .about-grid{gap:40px}
 .about-grid p{font-size:15px}
 }
-@media(max-width:540px){.hero-scroll{height:310svh}
+@media(max-width:540px){.hero-scroll{height:190svh}
 .cy-copy h2{font-size:15vw;margin:16px 0 18px}
 .cy-text{font-size:14px}
 .cy-facts{gap:20px;margin:18px 0 22px}
