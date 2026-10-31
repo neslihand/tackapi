@@ -12,6 +12,9 @@ export type Artifact = {
   image: string;
   // Text equivalent of what the illustration shows; used as alt text and as a visible image description.
   imageAlt?: string;
+  // Every picture of the work for the card at the top of its page, the first one being `image`; credit names where the
+  // picture comes from (empty when nothing is known). Without it the card shows `image` alone.
+  gallery?: { src: string; alt: string; credit: string }[];
   // url is missing for a book citation (an inventory book has no web address)
   sourceReferences: { title: string; url?: string }[];
   chapters: { title: string; short: string; story: string; child: string }[];

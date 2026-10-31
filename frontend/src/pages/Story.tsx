@@ -19,6 +19,7 @@ import { useAmbience } from '../lib/ambience';
 import { BriefChapter, BriefNarration, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
+import { HeroGallery } from '../components/HeroGallery';
 import { chatEndpoint } from '../lib/chatApi';
 import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
 import { track } from '../lib/analytics';
@@ -138,6 +139,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   const words = artifact.name.split(' ');
   const favorite = progress.favorites.includes(artifact.id);
   const [fx, fy] = artifact.detail.focus ?? [50, 50];
+  const slides = artifact.gallery?.length ? artifact.gallery : [{ src: artifact.image, credit: artifact.origin?.photoCredit ?? '', alt: artifact.origin ? t(`${artifact.name} fotoğrafı. ${imageAlt(artifact)}`, `Photo of ${artifact.name}. ${imageAlt(artifact)}`) : t(`${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`, `Original architectural illustration of ${artifact.name}. ${imageAlt(artifact)}`) }];
   const Chapter = mode === 'story' ? CineChapter : mode === 'child' ? TaleChapter : BriefChapter;
   // A backend monument tells its story and children's version whole, as stored: no chapters, no chapter titles.
   const whole = artifact.origin ? artifact.origin.narrations[mode] : null;
@@ -169,9 +171,8 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       const context = gsap.context(() => {
         // Opening: the title rises out of the dark while the camera pulls back from the detail to the whole building.
         gsap.from('.story-hero h1 .word > span', { yPercent: 110, duration: 1.1, ease: 'power3.out', stagger: 0.07, delay: 0.15 });
-        gsap.from('.story-hero-copy > :not(h1)', { y: 24, opacity: 0, duration: 0.9, ease: 'power2.out', stagger: 0.08, delay: 0.45 });
+        gsap.from('.story-hero-head > :not(h1), .story-hero .hg, .story-hero-lede > *', { y: 24, opacity: 0, duration: 0.9, ease: 'power2.out', stagger: 0.08, delay: 0.45 });
         gsap.fromTo('.story-hero-image', { scale: 1.5 }, { scale: 1.02, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight * 1.1}`, scrub: true } });
-        gsap.to('.story-hero-copy', { yPercent: -25, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight}`, scrub: true } });
         gsap.fromTo('.reading-progress span', { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 60%', end: 'bottom 60%', scrub: true } });
         if (ref.current?.querySelector('.story-index-progress span')) gsap.fromTo('.story-index-progress span', { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 50%', end: 'bottom 50%', scrub: true } });
         storyMotion(mode);
@@ -201,11 +202,14 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   return <div ref={ref} className={`story-page mode-${mode}`}>
     {/* The opening scene stays put while the telling slides up over it on a torn paper edge. */}
     <div className="story-curtain">
-    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt={artifact.origin ? t(`${artifact.name} fotoğrafı. ${imageAlt(artifact)}`, `Photo of ${artifact.name}. ${imageAlt(artifact)}`) : t(`${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`, `Original architectural illustration of ${artifact.name}. ${imageAlt(artifact)}`)} /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
-      <div className="story-hero-copy"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>{t('Hikâyeyi keşfet', 'Discover the story')} <ArrowDown size={17} aria-hidden="true" /></button></div>
-      {stamped && <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span>}
-      {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}
-      <span className="story-art-note">{artifact.origin ? `${t('FOTOĞRAF', 'PHOTO')} · ${artifact.origin.photoCredit}` : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}</span></section>
+    {/* The opening: the words on the left, the work's photos in an arched card on the right (under the title on a phone).
+        The full-screen picture behind is only a blurred glow of the photo, so a small or old photo never fills the screen. */}
+    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt="" aria-hidden="true" /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
+      <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul></div>
+      <HeroGallery slides={slides} name={artifact.name} note={artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}
+        badge={stamped ? <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span> : undefined} />
+      <div className="story-hero-lede"><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>{t('Hikâyeyi keşfet', 'Discover the story')} <ArrowDown size={17} aria-hidden="true" /></button></div>
+      {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}</section>
     <div className="story-body" data-nav-theme={mode === 'story' ? 'dark' : 'light'}>
       <Girih className="story-girih" />
       <div className="story-tools" id="story-reading">

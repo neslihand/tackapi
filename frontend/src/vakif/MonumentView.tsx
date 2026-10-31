@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Pencil, Sparkles, X } from 'lucide-react';
 import { MonumentMap } from './MonumentMap';
 import { track } from '../lib/analytics';   // site: fotoğraf açma olayı
-import { artworkLabel, eventLabel, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
+import { artworkLabel, eventLabel, heroImage, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
 
 type Mode = 'detail' | NarrationMode;
 const MODES: Mode[] = ['detail', 'story', 'child'];
@@ -21,7 +21,7 @@ export function MonumentView({ item, detail, lang, generate, edit, backHref, act
 }) {
   const s = strings(lang);
   const c = detail.card;
-  const hero = detail.images[0] ?? item.image;
+  const hero = heroImage(detail.images) ?? item.image;
   const people = c.persons.filter(p => ['patron', 'founder', 'architect', 'builder', 'calligrapher'].includes(p.role)).slice(0, 4);
   const location = [item.district, item.neighborhood].filter(Boolean).join(', ');
   const paragraphs = (detail.text ?? '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
