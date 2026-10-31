@@ -87,3 +87,12 @@ test('Tarihçe yıla göre sıralanır ve yüzyıllara ayrılır; tarihsiz olay 
   assert.equal(centuryLabel(21, 'en'), '21st century');
   assert.equal(centuryLabel(null, 'tr'), 'Tarihi belirtilmemiş');
 });
+
+test('Kitabın yazarları ve editörü kaynakçaya taşınır', () => {
+  const a = toImmersive(item, { ...detail, source: { ...detail.source, credits: { authors: ['Prof. Dr. Ayşe Yılmaz', '', 'Dr. Zeynep Demir'], editor: 'Ali Şahin' } } } as PublicDetail)!;
+  assert.deepEqual(a.origin?.authors, ['Prof. Dr. Ayşe Yılmaz', 'Dr. Zeynep Demir']);
+  assert.equal(a.origin?.editor, 'Ali Şahin');
+  assert.equal(a.origin?.book, 'Bursa I');
+  // yazar bilgisi olmayan kitapta liste boş kalır
+  assert.deepEqual(toImmersive(item, detail)!.origin?.authors, []);
+});

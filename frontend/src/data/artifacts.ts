@@ -23,7 +23,8 @@ export type Artifact = {
   // Set for a monument from the backend: the image is a photograph from the book (not an illustration); the three
   // tellings (the book's own text and two stored narrations) are shown whole, without chapters or chapter titles.
   // An empty detail title means there is no documented detail to point at.
-  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { short: string; story: string; child: string } };
+  // authors / editor: the inventory book's own credits, shown with the sources.
+  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { short: string; story: string; child: string }; authors?: string[]; editor?: string | null; book?: string | null };
 };
 
 // Coordinates are approximate discovery markers, not entrances or navigation data.

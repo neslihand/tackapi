@@ -27,6 +27,8 @@ import { track } from '../lib/analytics';
 const VakifStory = lazy(() => import('../vakif/VakifStory').then(m => ({ default: m.VakifStory })));
 
 gsap.registerPlugin(ScrollTrigger);
+// Two initials for an author's mark, leaving out academic titles (Prof. Dr., Doç. Dr., Dr., …).
+const monogram = (name: string) => name.split(/\s+/).filter(w => w && !/\.$/.test(w)).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toLocaleUpperCase('tr-TR');
 const smooth = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
 
 // The lens of the short telling: an arched window on the illustration whose camera follows the chapter in view.
@@ -246,6 +248,13 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         </ul>
       </div>
     </section>
-    <section className="story-sources"><div><p className="story-sources-kicker">{t('KAYNAKÇA', 'SOURCES')}</p><h3>{t('Hikâyenin kaynakları', 'The story’s sources')}</h3><p>{artifact.origin ? artifact.origin.sourcesNote : t('Üç anlatım biçimi de önceden hazırlanmış içeriktir.', 'All three narration styles are prepared in advance.')}<br />{chatEndpoint() ? t('“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.', 'The answers of “Ask the Work” are written by AI and may contain mistakes.') : t('Bu sürümde yapay zekâ ile metin üretimi yapılmaz.', 'This version does not generate text with AI.')}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only">{t(' (yeni sekmede açılır)', ' (opens in a new tab)')}</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul></section>
+    <section className="story-sources"><div><p className="story-sources-kicker">{t('KAYNAKÇA', 'SOURCES')}</p><h3>{t('Hikâyenin kaynakları', 'The story’s sources')}</h3><p>{artifact.origin ? artifact.origin.sourcesNote : t('Üç anlatım biçimi de önceden hazırlanmış içeriktir.', 'All three narration styles are prepared in advance.')}<br />{chatEndpoint() ? t('“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.', 'The answers of “Ask the Work” are written by AI and may contain mistakes.') : t('Bu sürümde yapay zekâ ile metin üretimi yapılmaz.', 'This version does not generate text with AI.')}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only">{t(' (yeni sekmede açılır)', ' (opens in a new tab)')}</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul>
+      {/* The people who wrote the inventory book the page rests on, in large type with a monogram each. */}
+      {(artifact.origin?.authors?.length || artifact.origin?.editor) ? <div className="story-authors" role="group" aria-labelledby="authors-title">
+        <p className="story-sources-kicker" id="authors-title">{t('KİTABIN YAZARLARI', 'THE BOOK’S AUTHORS')}{artifact.origin.book && <span> · {artifact.origin.book}</span>}</p>
+        <ul>{[...(artifact.origin.authors ?? []).map(name => [name, '']), ...(artifact.origin.editor ? [[artifact.origin.editor, t('Editör', 'Editor')]] : [])].map(([name, role]) => <li key={`${role}${name}`}>
+          <span className="story-author-mark" aria-hidden="true">{monogram(name)}</span><span><b>{name}</b>{role && <small>{role}</small>}</span>
+        </li>)}</ul>
+      </div> : null}</section>
     <NextDoor artifact={next} /></div></div></div>;
 }

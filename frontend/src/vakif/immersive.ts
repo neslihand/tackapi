@@ -37,6 +37,7 @@ export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | 
     detail: artDetail && artDetail.text ? artDetail : (card.current_state ? { title: t('Bugünkü durumu', 'Its condition today'), text: card.current_state } : { title: '', text: '' }),
     origin: {
       photoCredit: credit, shortLabel: t('Detaylı Anlatım', 'In Detail'), narrations: { short: book, story, child },
+      authors: (detail.source.credits?.authors ?? []).filter(Boolean), editor: detail.source.credits?.editor ?? null, book: detail.source.book,
       sourcesNote: t('“Detaylı Anlatım” envanter kitabındaki metnin kendisidir. “Hikâyeleştirerek” ve “Çocuklar İçin” anlatımlarını yapay zekâ, yalnızca bu kitaptaki bilgilere dayanarak hazırladı; hikâyedeki atmosfer yaratıcı bir yorumdur.', '“In Detail” is the text of the inventory book itself. The “As a story” and “For children” tellings were written by AI from this book’s information alone; the atmosphere of the story is a creative interpretation.'),
     },
   };
