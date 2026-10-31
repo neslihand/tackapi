@@ -181,6 +181,17 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
     });
     return () => { observer.disconnect(); rail.disconnect(); match.revert(); };
   }, [artifact.id, mode]);
+  // The hero stays pinned while the telling slides over it, so a control reached with the keyboard can be hidden under
+  // the telling: then the page goes back to the top. A click (the photo arrows) never moves the page, nor does a control
+  // that is already in sight.
+  function revealHero(event: React.FocusEvent<HTMLElement>) {
+    const el = event.target;
+    if (window.scrollY <= 0 || !el.matches(':focus-visible')) return;
+    const box = el.getBoundingClientRect();
+    const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    if (top && (top === el || el.contains(top))) return;
+    settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' });
+  }
   // Changing the telling rebuilds the chapters; a reader already inside them stays at the same chapter.
   function choose(next: NarrationMode) {
     if (next === mode) return;
@@ -198,7 +209,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
     <div className="story-curtain">
     {/* The opening: the words on the left, the work's photos in an arched card on the right (under the title on a phone).
         The photos stay in the card; the background is the site's own night green, the same on every work. */}
-    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
+    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={revealHero}><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
       <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul></div>
       <HeroGallery slides={slides} name={artifact.name} note={artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}
         badge={stamped ? <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span> : undefined} />
