@@ -86,7 +86,7 @@ export function PlayHero({ artifacts, children, footer }: { artifacts: Discovery
 
 // ——— Chapter: a section whose backdrop opens from an inset rounded panel to full width ———
 
-export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, children, className = '' }: { id: string; tone: 'night' | 'ivory'; n: number; total?: number; kicker: string; titleId: string; title: ReactNode; lede: ReactNode; children: ReactNode; className?: string }) {
+export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, children, className = '' }: { id: string; tone: 'night' | 'ivory'; n?: number; total?: number; kicker: string; titleId: string; title: ReactNode; lede: ReactNode; children: ReactNode; className?: string }) {
   const ref = useRef<HTMLElement>(null);
   const still = Boolean(useReducedMotion());
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start 25%'] });
@@ -100,7 +100,7 @@ export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, 
     <motion.div className="pl-backdrop" aria-hidden="true" style={still ? undefined : { clipPath }} />
     <div className="pl-chapter-inner">
       <header className="pl-head" ref={head}>
-        <p className="pl-index"><span>{pad(n)}</span><i aria-hidden="true" /><span>{pad(total)}</span><b>{kicker}</b></p>
+        <p className="pl-index">{n !== undefined && <><span>{pad(n)}</span><i aria-hidden="true" /><span>{pad(total)}</span></>}<b>{kicker}</b></p>
         <h2 id={titleId} tabIndex={-1}><span className="pl-mask"><motion.span {...rise(0.05)}>{title}</motion.span></span></h2>
         <motion.div className="pl-lede" initial={still ? false : { opacity: 0, y: 24 }} animate={shown ? { opacity: 1, y: 0 } : undefined} transition={{ duration: 0.9, delay: 0.25, ease: 'easeOut' }}>{lede}</motion.div>
       </header>

@@ -9,7 +9,27 @@
   overflow-x: clip;
   background: #030a08;
 }
-.home-page .pl-chapter { padding-right: var(--pl-left); }
+.home-page .pl-chapter { padding-top: clamp(80px, 8vw, 120px); padding-right: var(--pl-left); padding-bottom: clamp(88px, 8.5vw, 128px); }
+.home-page .pl-head { margin-bottom: clamp(44px, 5vw, 72px); }
+/* The chapters carry their name only, no running number. */
+.home-page .pl-index > b:first-child { margin-left: 0; }
+
+/* ——— Why waqf: one line under the entrance, with the way to the project page ——— */
+.hp-why { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); align-items: end; gap: 14px clamp(30px, 5vw, 90px); padding: clamp(56px, 6vw, 88px) var(--pl-left); color: #17201c; background: radial-gradient(ellipse 60% 60% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
+.hp-why-kicker { grid-column: 1 / -1; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .24em; color: #765b38; }
+.hp-why h2 { grid-column: 1; margin: 0; font-size: clamp(36px, 4.4vw, 72px); font-weight: 400; line-height: 1; letter-spacing: -.024em; }
+.hp-why h2 em { font-style: italic; color: #8a6a36; }
+.hp-why h2:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; box-shadow: none; }
+.hp-why-text { grid-column: 2; margin: 0; font-size: 15.5px; line-height: 1.8; color: #4b5448; }
+.hp-why .hp-link { grid-column: 2; justify-self: start; }
+.hp-why .hp-link:focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
+
+/* ——— How a work is discovered: the page of a work from the inside, then the tools on an ivory plate ——— */
+.hp-inside-plate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); align-items: end; gap: 12px clamp(30px, 5vw, 90px); margin-bottom: clamp(32px, 4vw, 56px); padding-top: 22px; border-top: 1px solid #e6d5ae2e; }
+.hp-inside-plate h3 { margin: 0; font-size: clamp(28px, 2.6vw, 40px); font-weight: 400; line-height: 1.05; color: #fbf7ee; }
+.hp-inside-plate p { margin: 0; font-size: 15px; line-height: 1.75; color: #c9cfc8; }
+.hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); padding: clamp(28px, 4vw, 64px); border-radius: 6px; color: #17201c; background: radial-gradient(ellipse 60% 40% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
+.hp-tools-panel :focus-visible { outline-color: #17201c; }
 .hp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
 .hp-actions :focus-visible, .hp-collection :focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
 
@@ -36,9 +56,9 @@
 .hp-featured.tone-night :focus-visible { outline-color: var(--en-gold-light); }
 .hp-collection p i {font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; color: #6a5a3c; }
 /* Same weight as the shared drawn-link rule in entrance.css, which this file follows. */
-.home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
-.home-page .pl-chapter .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
-.home-page .tone-ivory .hp-link.en-link:hover .en-link-arrow, .hp-today .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
+.home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link, .home-page .hp-why .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
+.home-page :is(.pl-chapter, .hp-why) .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
+.home-page :is(.tone-ivory, .hp-why) .hp-link.en-link:hover .en-link-arrow, .hp-today .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
 
 /* ——— 02 Divriği (HomeScenes PanoramaScene): the story card as a label ——— */
 .home-page .panorama-copy { border-radius: 3px; background: #f3ede1; box-shadow: 0 0 0 1px #8a6a3666, 0 50px 90px -40px #000; }
@@ -166,7 +186,31 @@
 
 /* ——— 10 Closing: the arch's picture toned, and three more doors ——— */
 .hp-arch-window img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.92); }
-.hp-doors { grid-column: 1 / -1; grid-row: 4; width: min(980px, 100%); justify-self: center; margin-top: clamp(56px, 7vw, 96px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
+.hp-doors { grid-column: 1 / -1; grid-row: 5; width: min(980px, 100%); justify-self: center; margin-top: clamp(40px, 5vw, 64px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
+/* Today's discovery, inside the threshold: today's work and the quiz as two small plates in the doors' own language. */
+.hp-today { grid-column: 1 / -1; grid-row: 4; width: min(980px, 100%); justify-self: center; margin-top: clamp(48px, 6vw, 80px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
+.hp-today h3 { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px 16px; margin: 0 0 22px; font-family: var(--serif); font-size: clamp(26px, 2.2vw, 32px); font-weight: 400; text-align: center; color: var(--en-ivory); }
+.hp-today h3 span { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--en-ivory-soft); }
+.hp-today ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
+.hp-plate { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; column-gap: 18px; height: 100%; padding: 14px 20px 14px 14px; border-radius: 4px; text-align: left; color: var(--en-ivory); background: #ffffff06; box-shadow: inset 0 0 0 1px #e6d5ae26; transition: background .4s, box-shadow .4s, translate .4s var(--pl-ease); }
+.hp-plate:hover { translate: 0 -4px; background: #e6d5ae0f; box-shadow: inset 0 0 0 1px #e6d5ae66; }
+.hp-plate:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; }
+.hp-plate-art { width: 64px; height: 82px; overflow: hidden; border-radius: 999px 999px 3px 3px; background: #0c241c; box-shadow: 0 0 0 1px #e6d5ae40; }
+.hp-plate-art img { width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
+.hp-plate-art.quiz { display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #f6efe0, #e8dcc3); }
+.hp-plate-art.quiz .qz-mark { display: block; width: 46px; height: 54px; }
+.hp-plate-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hp-plate-body small { font-size: 10px; font-weight: 600; letter-spacing: .18em; color: #d9c9a5; }
+.hp-plate-body b { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.15; }
+.hp-plate-body em { font-size: 12.5px; font-style: normal; color: var(--en-ivory-soft); }
+.hp-plate > svg { color: var(--en-gold-light); transition: rotate .4s; }
+.hp-plate:hover > svg { rotate: 45deg; }
+/* The visitor lists (backend only) under the plates, on the threshold's night. */
+.hp-today .v-discover { gap: 28px; margin-top: 32px; text-align: left; }
+.hp-today .v-discover h2 { font-size: clamp(22px, 2vw, 28px); color: var(--en-ivory); }
+.hp-today .v-discover h2 em { color: var(--en-gold-light); }
+.hp-today .v-discover h2 small { color: var(--en-ivory-soft); }
+.hp-today .v-eyebrow { color: #d9c9a5; }
 .hp-doors > p { margin: 0 0 22px; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-align: center; text-transform: uppercase; color: #d9c9a5; }
 .hp-doors ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
 .hp-doors a { position: relative; display: grid; text-align: left; grid-template-columns: 54px 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 16px; padding: 18px 20px; border-radius: 4px; color: var(--en-ivory); background: #ffffff06; box-shadow: inset 0 0 0 1px #e6d5ae26; transition: background .4s, box-shadow .4s, translate .4s cubic-bezier(.2, .7, .2, 1); }
@@ -187,7 +231,8 @@
   .hp-passport-steps li { display: grid; grid-template-columns: 44px 1fr; column-gap: 16px; align-items: start; text-align: left; }
   .hp-passport-steps i { grid-row: span 2; }
   .hp-passport-steps b { margin-top: 0; }
-  .hp-doors { grid-row: auto; }
+  .hp-doors, .hp-today { grid-row: auto; }
+  .hp-today ul { grid-template-columns: 1fr; }
   .hp-doors ol { grid-template-columns: 1fr; }
 }
 
@@ -212,6 +257,9 @@
 }
 @media (max-width: 800px) {
   .home-page .pl-chapter { padding-top: 60px; padding-bottom: 68px; }
+  .hp-why, .hp-inside-plate { grid-template-columns: 1fr; }
+  .hp-why :is(h2, .hp-why-text, .hp-link) { grid-column: 1; }
+  .hp-tools-panel { margin-inline: calc(var(--pl-left) * -.5); padding: 24px 18px; }
   .home-page .pl-head { gap: 14px; margin-bottom: 32px; }
   .vs-foot { margin-top: 44px; padding-top: 24px; }
   .hp-passport-steps { margin-top: 44px; }

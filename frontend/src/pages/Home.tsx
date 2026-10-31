@@ -10,7 +10,6 @@ import { Chapter } from '../components/PlayScenes';
 import { QuizMark } from '../components/PlayArt';
 import { DoorGallery } from '../components/DoorGallery';
 import { ToolsShowcase } from '../components/ToolsShowcase';
-import { Vision } from '../components/Vision';
 import { JourneyRail } from '../components/JourneyRail';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
@@ -20,24 +19,23 @@ import { quizPool } from '../lib/quiz';
 import { Discoveries } from '../vakif/Discoveries';
 import { Agenda } from '../vakif/Agenda';
 
-// The home page after the entrance: numbered chapters in the entrance's language, ivory and night in turn, each with
-// its own scene — the vision, the door gallery, the tools, an artifact from the inside, the routes, the passport, the
-// day's discovery and a last threshold.
+// The home page after the entrance: a short line on why waqf, then chapters in the entrance's language, each with its
+// own scene — the door gallery, the routes, how a work is discovered (an artifact from the inside and the tools), the
+// day's discovery, the passport and a last threshold.
 const pad = (n: number) => String(n).padStart(2, '0');
-const TOTAL = 10;
 // How the passport fills: read, get the stamp, open the medals.
 const passportSteps = (): [string, string][] => [[t('Oku', 'Read'), t('Bir eserin hikâyesini sonuna kadar oku.', 'Read a work’s story to the end.')], [t('Mühürle', 'Stamp'), t('Eser, pasaportuna bir mühür olarak işlensin.', 'The work is pressed into your passport as a stamp.')], [t('Kazan', 'Earn'), t('Mühürler biriktikçe madalyonların kilidi açılsın.', 'As stamps gather, medallions unlock.')]];
 
-// The last threshold: the next door to open, seen through a drawn arch, with the line set around it, and three more
-// doors to walk through instead.
+// The last threshold: the next door to open, seen through a drawn arch, with the line set around it; under it the day's
+// discovery (today's work and the quiz) as two small plates, and three more doors to walk through instead.
 const doors = (): [string, string, string][] => [['/kesfet', t('Koleksiyon', 'Collection'), t('Tüm eserler, tek bir yerde', 'Every work, in one place')], ['/harita', t('Miras Haritası', 'Heritage Map'), t('Yakınındaki eseri bul', 'Find a work near you')], ['/oyun', t('Oyna & Öğren', 'Play & Learn'), t('Oyunlar, görevler, yarışma', 'Games, quests, a quiz')]];
-function Threshold({ artifact, done, n }: { artifact: { name: string; city: string; slug: string; image: string; year: string }; done: boolean; n: number }) {
+function Threshold({ artifact, done, today, questions }: { artifact: { name: string; city: string; slug: string; image: string; year: string }; done: boolean; today: { name: string; city: string; slug: string; image: string; year: string }; questions: number }) {
   const ref = useRef<HTMLElement>(null);
   const shown = useInView(ref, { once: true, amount: 0.35 });
   const still = Boolean(useReducedMotion());
   const rise = (delay: number) => still ? {} : { initial: { y: '108%' }, animate: shown ? { y: '0%' } : undefined, transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const } };
   return <section ref={ref} id="kapanis" className="hp-threshold" data-nav-theme="dark" aria-labelledby="final-gate-title">
-    <p className="pl-index"><span>{pad(n)}</span><i aria-hidden="true" /><span>{pad(TOTAL)}</span><b>{t('YENİ BİR EŞİK', 'A NEW THRESHOLD')}</b></p>
+    <p className="pl-index"><b>{t('YENİ BİR EŞİK', 'A NEW THRESHOLD')}</b></p>
     <div className="hp-arch" aria-hidden="true">
       <div className="hp-arch-window"><span className="hp-arch-reveal"><img src={artifact.image} alt="" loading="lazy" /></span></div>
       <svg className="final-gate-arch" viewBox="0 0 300 380"><path pathLength="1" d="M20 380V170C20 92 80 38 150 12C220 38 280 92 280 170V380" /><path pathLength="1" d="M4 380V166C4 82 70 24 150 -4C230 24 296 82 296 166V380" /></svg>
@@ -47,6 +45,14 @@ function Threshold({ artifact, done, n }: { artifact: { name: string; city: stri
       <p>{done ? t('Koleksiyonun tamamlandı. Günün eserine yeniden bakmaya ne dersin?', 'Your collection is complete. How about another look at today’s work?') : <>{t('Sıradaki kapı seni bekliyor:', 'The next door awaits you:')} <b>{artifact.name}</b> · {artifact.city}</>}</p>
       <div className="hp-actions"><Link className="hp-cta en-key" to={`/eser/${artifact.slug}`}><span className="en-key-label">{t('Sıradaki kapıyı aç', 'Open the next door')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link></div>
     </div>
+    <section className="hp-today" aria-labelledby="today-title">
+      <h3 id="today-title">{t('Günün keşfi', 'Today’s discovery')}<span>{t('Her gün koleksiyondan bir eser öne çıkar; oku, sonra bildiklerini sına.', 'Every day one work steps forward; read it, then test what you know.')}</span></h3>
+      <ul>
+        <li><Link className="hp-plate" to={`/eser/${today.slug}`}><span className="hp-plate-art" aria-hidden="true"><img src={today.image} alt="" loading="lazy" /></span><span className="hp-plate-body"><small>{t('GÜNÜN ESERİ', 'TODAY’S WORK')}{[today.city, today.year].filter(known).map(v => ` · ${v.toLocaleUpperCase(locale())}`).join('')}</small><b>{today.name}</b><em>{t('Hikâyesini oku', 'Read its story')}</em></span><ArrowUpRight size={16} aria-hidden="true" /></Link></li>
+        <li><Link className="hp-plate" to="/oyun/quiz"><span className="hp-plate-art quiz" aria-hidden="true"><QuizMark n={1} total={4} /></span><span className="hp-plate-body"><small>{t('BİLGİ YARIŞMASI', 'KNOWLEDGE QUIZ')}</small><b>{t('Tarihin izini sürebilir misin?', 'Can you follow the trail of history?')}</b><em>{questions} {t('soru · bir madalyon', 'questions · a medallion')}</em></span><ArrowUpRight size={16} aria-hidden="true" /></Link></li>
+      </ul>
+      <Discoveries />
+    </section>
     <nav className="hp-doors" aria-label={t('Başka bir kapıdan gir', 'Enter by another door')}>
       <p>{t('Ya da başka bir kapıdan gir', 'Or enter by another door')}</p>
       <ol>{doors().map(([to, title, note], i) => <li key={to}><Link to={to}>
@@ -54,6 +60,16 @@ function Threshold({ artifact, done, n }: { artifact: { name: string; city: stri
         <i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><small>{note}</small><ArrowUpRight size={16} aria-hidden="true" />
       </Link></li>)}</ol>
     </nav>
+  </section>;
+}
+
+// Why waqf, in one line under the entrance: what a waqf is, and the way to the project's own page for more.
+function WhyWaqf() {
+  return <section id="vizyon" className="hp-why" data-nav-theme="light" aria-labelledby="vision-title">
+    <p className="hp-why-kicker">{t('NEDEN VAKIF?', 'WHY WAQF?')}</p>
+    <h2 id="vision-title" tabIndex={-1}>{t('Bir iyilik,', 'One kindness,')} <em>{t('yüzyıllarca yaşar.', 'lives for centuries.')}</em></h2>
+    <p className="hp-why-text">{t('Vakıf, bir kimsenin malını hayır amacıyla süresiz olarak topluma adamasıdır. Anadolu’nun dört bir yanındaki camiler, çeşmeler, hanlar ve köprüler bu anlayışla yaşadı.', 'A waqf is a gift of property to the public, for good and for ever. The mosques, fountains, caravanserais and bridges all across Anatolia have lived on in this spirit.')}</p>
+    <Link className="hp-link en-link" to="/hakkinda"><span>{t('Projeyi ve kaynakları tanı', 'About the project and its sources')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link>
   </section>;
 }
 
@@ -80,24 +96,21 @@ export function Home() {
     return () => match.revert();
   }, []);
   return <div ref={ref} className="home-page"><HeroGate />
-    <Chapter id="vizyon" tone="ivory" n={3} total={TOTAL} kicker={t('NEDEN VAKIF?', 'WHY WAQF?')} titleId="vision-title" className="hp-vision" title={<>{t('Bir iyilik,', 'One kindness,')} <em>{t('yüzyıllarca yaşar.', 'lives for centuries.')}</em></>} lede={<p>{t('Vakıf, bir kimsenin malını hayır amacıyla süresiz olarak topluma adamasıdır. Anadolu’nun dört bir yanındaki camiler, çeşmeler, hanlar ve köprüler bu anlayışla yaşadı.', 'A waqf is a gift of property to the public, for good and for ever. The mosques, fountains, caravanserais and bridges all across Anatolia have lived on in this spirit.')}</p>}>
-      <Vision artifacts={artifacts} />
-    </Chapter>
-    <Chapter id="featured" tone="night" n={4} total={TOTAL} kicker={t('TAŞA İŞLENEN HİKÂYELER', 'STORIES CARVED IN STONE')} titleId="featured-title" className="hp-featured" title={<>{t('Bazı kapılar,', 'Some doors')} <em>{t('yüzyıllara açılır.', 'open onto centuries.')}</em></>} lede={<p>{t('Koleksiyondaki her eser, kendi hikâyesiyle seni bekliyor. Birini seç, kapısını arala.', 'Every work in the collection is waiting for you with its own story. Choose one and open its door.')}</p>}>
+    <WhyWaqf />
+    <Chapter id="featured" tone="night" kicker={t('TAŞA İŞLENEN HİKÂYELER', 'STORIES CARVED IN STONE')} titleId="featured-title" className="hp-featured" title={<>{t('Bazı kapılar,', 'Some doors')} <em>{t('yüzyıllara açılır.', 'open onto centuries.')}</em></>} lede={<p>{t('Koleksiyondaki her eser, kendi hikâyesiyle seni bekliyor. Birini seç, kapısını arala.', 'Every work in the collection is waiting for you with its own story. Choose one and open its door.')}</p>}>
       <Agenda />
       <DoorGallery artifacts={artifacts} />
       <div className="hp-collection"><p>{pad(artifacts.length)} {t('eser', 'works')} <span>·</span> {pad(new Set(artifacts.map(a => a.city)).size)} {t('şehir', 'cities')} <span>·</span> <i>{t('Birlikte koruduğumuz miras.', 'A heritage we keep together.')}</i></p><Link className="hp-link en-link" to="/kesfet"><span>{t('Tüm eserleri keşfet', 'Explore every work')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
     </Chapter>
-    <Chapter id="araclar" tone="ivory" n={5} total={TOTAL} kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" title={<>{t('Bir eser,', 'One work,')} <em>{t('birçok kapı.', 'many doors.')}</em></>} lede={<p>{vakifApiEnabled() ? t('Haritadan kameraya, yapay zekâ rehberinden oyunlara ve okuma odasına; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games and the reading room: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.') : t('Haritadan kameraya, yapay zekâ rehberinden oyunlara; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.')}</p>}>
-      <ToolsShowcase artifacts={artifacts} />
-    </Chapter>
-    <Chapter id="eserin-ici" tone="night" n={6} total={TOTAL} kicker={t('BİR ESERİN İÇİ', 'INSIDE A WORK')} titleId="inside-title" className="hp-inside" title={<>{t('Bir kapıya kaç hikâye', 'How many stories fit')} <em>{t('sığar?', 'behind one door?')}</em></>} lede={<p>{t('Her eserin kendi sayfası var. Hikâyesini sana uyan biçimde oku, kaynaklarına bak, merak ettiğini sor; okuduğun her eser pasaportuna işlensin.', 'Every work has a page of its own. Read its story the way that suits you, look at its sources, ask what you wonder about; every work you read is stamped into your passport.')}</p>}>
-      <ArtifactAnatomy artifact={insideArtifact} />
-    </Chapter>
-    <Chapter id="rotalar" tone="ivory" n={7} total={TOTAL} kicker={t('KEŞİF SEZONLARI', 'DISCOVERY SEASONS')} titleId="routes-title" className="hp-routes" title={<>{t('Kendi izini', 'Find your')} <em>{t('bul.', 'own trail.')}</em></>} lede={<p>{t('Bir şehir, bir dönem, bir ustanın dokunuşu. Bu kez hangi rotanın peşindesin? Her rota bir avuç eserden kurulur; haritada da yürüyebilirsin.', 'A city, an era, a master’s touch. Which route will you follow this time? Each route is made of a handful of works, and you can walk it on the map too.')}</p>}>
+    <Chapter id="rotalar" tone="ivory" kicker={t('KEŞİF SEZONLARI', 'DISCOVERY SEASONS')} titleId="routes-title" className="hp-routes" title={<>{t('Kendi izini', 'Find your')} <em>{t('bul.', 'own trail.')}</em></>} lede={<p>{t('Bir şehir, bir dönem, bir ustanın dokunuşu. Bu kez hangi rotanın peşindesin? Her rota bir avuç eserden kurulur; haritada da yürüyebilirsin.', 'A city, an era, a master’s touch. Which route will you follow this time? Each route is made of a handful of works, and you can walk it on the map too.')}</p>}>
       <SeasonStack seasons={seasons} artifacts={artifacts} discovered={progress.discovered} />
     </Chapter>
-    <Chapter id="pasaport" tone="night" n={8} total={TOTAL} kicker={t('BAKMAKLA BAŞLAR, KEŞFETMEKLE DEĞİŞİR', 'IT STARTS WITH A LOOK AND CHANGES WITH DISCOVERY')} titleId="passport-title" className="hp-passport" title={<>{t('Her keşif bir iz.', 'Every discovery leaves a mark.')} <em>{t('Her iz senin hikâyen.', 'Every mark is your story.')}</em></>} lede={<p>{t('Eserlerin hikâyelerini keşfet, madalyonlarını kazan. Kendi miras pasaportunu, kendi merakınla doldur.', 'Discover the works’ stories and earn their medallions. Fill your own heritage passport with your own curiosity.')}</p>}>
+    <Chapter id="araclar" tone="night" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools hp-how" title={<>{t('Bir eser,', 'One work,')} <em>{t('birçok kapı.', 'many doors.')}</em></>} lede={<p>{vakifApiEnabled() ? t('Haritadan kameraya, yapay zekâ rehberinden oyunlara ve okuma odasına; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games and the reading room: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.') : t('Haritadan kameraya, yapay zekâ rehberinden oyunlara; EŞİK’te her eser birden çok yoldan keşfedilir. Aşağı indikçe hepsiyle tanış.', 'From the map to the camera, from the AI guide to the games: at EŞİK every work can be discovered in more than one way. Meet them all as you scroll.')}</p>}>
+      <div className="hp-inside-plate"><h3>{t('Bir eserin içi', 'Inside a work')}</h3><p>{t('Her eserin kendi sayfası var. Hikâyesini sana uyan biçimde oku, kaynaklarına bak, merak ettiğini sor; okuduğun her eser pasaportuna işlensin.', 'Every work has a page of its own. Read its story the way that suits you, look at its sources, ask what you wonder about; every work you read is stamped into your passport.')}</p></div>
+      <ArtifactAnatomy artifact={insideArtifact} />
+      <div className="hp-tools-panel"><ToolsShowcase artifacts={artifacts} /></div>
+    </Chapter>
+    <Chapter id="pasaport" tone="night" kicker={t('BAKMAKLA BAŞLAR, KEŞFETMEKLE DEĞİŞİR', 'IT STARTS WITH A LOOK AND CHANGES WITH DISCOVERY')} titleId="passport-title" className="hp-passport" title={<>{t('Her keşif bir iz.', 'Every discovery leaves a mark.')} <em>{t('Her iz senin hikâyen.', 'Every mark is your story.')}</em></>} lede={<p>{t('Eserlerin hikâyelerini keşfet, madalyonlarını kazan. Kendi miras pasaportunu, kendi merakınla doldur.', 'Discover the works’ stories and earn their medallions. Fill your own heritage passport with your own curiosity.')}</p>}>
       <div className="hp-passport-body">
         <PassportVisual artifacts={artifacts} />
         <div className="hp-passport-card">
@@ -109,20 +122,7 @@ export function Home() {
       </div>
       <ol className="hp-passport-steps">{passportSteps().map(([title, text], i) => <li key={title}><i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><span>{text}</span></li>)}</ol>
     </Chapter>
-    <Chapter id="gunun-kesfi" tone="ivory" n={9} total={TOTAL} kicker={t('GÜNÜN KEŞFİ', 'TODAY’S DISCOVERY')} titleId="today-title" className="hp-today" title={<>{t('Bugün bir kapı,', 'One door today,')} <em>{t('yarın bir başkası.', 'another tomorrow.')}</em></>} lede={<p>{t('Her gün koleksiyondan bir eser öne çıkar. Hikâyesini oku, sonra bildiklerini dört soruluk yarışmada sına.', 'Every day one work of the collection steps forward. Read its story, then test what you know in a four-question quiz.')}</p>}>
-      <div className="hp-exhibits">
-        <Link className="hp-exhibit today" to={`/eser/${today.slug}`}>
-          <span className="hp-exhibit-art" aria-hidden="true"><span className="hp-exhibit-arch"><img src={today.image} alt="" loading="lazy" /></span></span>
-          <span className="hp-exhibit-body"><small>{t('GÜNÜN ESERİ', 'TODAY’S WORK')} · {[today.city, today.year].filter(known).join(' · ').toLocaleUpperCase(locale())}</small><b>{today.name}</b><span>{today.description}</span><em>{t('Bugünün hikâyesini oku', 'Read today’s story')} <ArrowUpRight size={16} aria-hidden="true" /></em></span>
-        </Link>
-        <Link className="hp-exhibit quiz" to="/oyun/quiz">
-          <span className="hp-exhibit-art" aria-hidden="true"><QuizMark n={1} total={4} /></span>
-          <span className="hp-exhibit-body"><small>{t('MERAKINI BİLGİYE DÖNÜŞTÜR', 'TURN CURIOSITY INTO KNOWLEDGE')}</small><b>{t('Tarihin izini sürebilir misin?', 'Can you follow the trail of history?')}</b><span>{Math.min(4, quizPool(quizQuestions, artifacts).length)} {t('soru, yepyeni bilgiler ve kazanılacak bir madalyon.', 'questions, fresh knowledge and a medallion to earn.')}</span><em>{t('Yarışmaya başla', 'Start the quiz')} <ArrowUpRight size={16} aria-hidden="true" /></em></span>
-        </Link>
-      </div>
-      <Discoveries />
-    </Chapter>
-    <Threshold artifact={nextDoor} done={Boolean(progress.discovered[nextDoor.id])} n={10} />
+    <Threshold artifact={nextDoor} done={Boolean(progress.discovered[nextDoor.id])} today={today} questions={Math.min(4, quizPool(quizQuestions, artifacts).length)} />
     <Manifesto />
     <JourneyRail />
   </div>;

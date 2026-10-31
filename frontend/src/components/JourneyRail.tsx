@@ -7,8 +7,8 @@ import { t } from '../lib/i18n';
 const STEPS: [() => string, string[]][] = [
   [() => t('Etkilen', 'Be moved'), ['giris']],
   [() => t('Anla', 'Understand'), ['vizyon']],
-  [() => t('Keşfet', 'Discover'), ['featured', 'araclar', 'eserin-ici', 'rotalar']],
-  [() => t('Katıl', 'Take part'), ['pasaport', 'gunun-kesfi', 'kapanis']],
+  [() => t('Keşfet', 'Discover'), ['featured', 'rotalar', 'araclar']],
+  [() => t('Katıl', 'Take part'), ['pasaport', 'kapanis']],
 ];
 
 export function JourneyRail() {
