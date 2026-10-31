@@ -5,7 +5,7 @@ import { chatEndpoint } from '../lib/chatApi';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 import { vakifApiEnabled } from '../lib/vakifApi';
-import { spotlight } from '../lib/content';
+import { collectionStats, spotlight } from '../lib/content';
 import '../tools.css';
 
 // "Keşfin araçları": what the platform offers, one tool at a time. On wide screens a stage stays on the left and shows
@@ -20,7 +20,7 @@ function MapScene({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   return <div className="ts-map">
     <img src="/images/turkiye-gece.svg" alt="" />
     {spots.map(([x, y], i) => <span key={i} className="ts-pin" style={{ left: `${x}%`, top: `${y}%`, '--i': i } as CSSProperties}><MapPin size={18} /></span>)}
-    <p className="ts-chip"><Compass size={14} />{artifacts.length} {t('eser', 'works')} · {new Set(artifacts.map(a => a.city)).size} {t('şehir', 'cities')}</p>
+    <p className="ts-chip"><Compass size={14} />{collectionStats(artifacts).works} {t('eser', 'works')} · {collectionStats(artifacts).cities} {t('şehir', 'cities')}</p>
   </div>;
 }
 

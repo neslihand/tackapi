@@ -14,6 +14,13 @@ const isObject = (value: unknown): value is Loose => typeof value === 'object' &
 const filled = (value: unknown, max = 4000) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
 const httpsUrl = (value: unknown) => { try { return typeof value === 'string' && new URL(value).protocol === 'https:'; } catch { return false; } };
 
+// The collection's counts, worked out in one place so every page shows the same numbers. A city written with other
+// spacing or case counts once; a work with no city adds none.
+export function collectionStats(artifacts: { city: string }[]) {
+  const cities = new Set(artifacts.map(a => a.city.trim().toLocaleLowerCase('tr-TR')).filter(Boolean));
+  return { works: artifacts.length, cities: cities.size };
+}
+
 // The works the home page shows by name where it needs one example (the closing door, "Hafızaya Katkı"): their
 // pictures sit well in the site's colours. Matched loosely by name; works not in the collection are skipped.
 const spotlightNames = [['mahmut celebi', 'ecezade'], ['mihalic']];
