@@ -175,10 +175,6 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         gsap.fromTo('.reading-progress span', { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 60%', end: 'bottom 60%', scrub: true } });
         if (ref.current?.querySelector('.story-index-progress span')) gsap.fromTo('.story-index-progress span', { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 50%', end: 'bottom 50%', scrub: true } });
         storyMotion(mode);
-        // Interlude: the camera pulls back from the facade while the date rises out of the stone.
-        const interlude = gsap.timeline({ scrollTrigger: { trigger: '.story-interlude', start: 'top top', end: 'bottom bottom', scrub: 0.8 } });
-        interlude.fromTo('.interlude-year', { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, ease: 'power2.out', duration: 0.45 }, 0.05)
-          .fromTo('.interlude-copy > *', { y: 40, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08, duration: 0.3 }, 0.45);
       }, ref);
       return () => context.revert();
     });
@@ -231,13 +227,6 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       </div>
     </div>
     </div>
-    <section className="story-interlude" data-nav-theme="dark" aria-label={`${artifact.name}: ${t('geçmişten bugüne', 'from the past to today')}`}>
-      {/* Words only, on the site's night green: the photos are in the card at the top, and the book's small photos
-          would only blur when stretched over a whole screen. */}
-      <div className="interlude-sticky">
-        <span className="interlude-year" aria-hidden="true">{artifact.year.split(/[–-]/)[0]}</span>
-        <div className="interlude-copy"><p className="eyebrow light"><span />{t('GEÇMİŞTEN BUGÜNE', 'FROM THE PAST TO TODAY')}</p><h2>{t('Yüzyıllar geçti.', 'Centuries have passed.')}<br /><em>{t('Hikâye hâlâ burada.', 'The story is still here.')}</em></h2><p>{artifact.name} · {artifact.city} · {artifact.year}</p></div></div>
-    </section>
     {extras}
     <div className="story-end"><Girih className="story-girih" />
     <div className="end-wrap">

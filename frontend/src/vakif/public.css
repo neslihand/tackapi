@@ -46,6 +46,23 @@
 .pv-gallery img{width:100%;height:100%;object-fit:cover;filter:saturate(.85);transition:transform .6s}
 .pv-gallery button:hover img{transform:scale(1.04)}
 .pv-pending{position:absolute;left:8px;top:8px;background:#efe4c7;color:#6b4e1f;font-size:11px;padding:3px 7px}
+/* Tarihçe: yüzyıl başlıkları, solda tarih, ortada altın çizgi ve halka, sağda olay kartı */
+.pv-chrono{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:30px}
+.pv-era{list-style:none}
+.pv-era-label{display:flex;align-items:center;gap:16px;margin:0 0 18px;font-family:var(--serif);font-size:22px;font-style:italic;color:#765b38}
+.pv-era-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#c3a86999,transparent)}
+.pv-era>ol{list-style:none;margin:0;padding:0;position:relative}
+.pv-era>ol::before{content:'';position:absolute;top:8px;bottom:8px;left:157px;width:1px;background:linear-gradient(180deg,#c3a869,#c3a86955)}
+.pv-event{display:grid;grid-template-columns:140px 36px minmax(0,1fr);align-items:start;padding-bottom:16px}
+.pv-event:last-child{padding-bottom:0}
+.pv-event-date{display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin:0;padding-top:12px;text-align:right}
+.pv-event-date b{font-family:var(--serif);font-size:24px;font-weight:500;line-height:1.1;color:var(--ink)}
+.pv-event-date small{font-size:11.5px;color:var(--muted)}
+.pv-event-dot{position:relative;z-index:1;justify-self:center;width:13px;height:13px;margin-top:18px;border:2px solid var(--gold);border-radius:50%;background:#fbf9f3;box-shadow:0 0 0 4px #fbf9f3}
+.pv-event-card{padding:14px 20px 16px;border:1px solid var(--line);border-radius:10px;background:#fffdf8;box-shadow:0 14px 30px -24px #1a140866}
+.pv-event-kind{display:block;margin-bottom:6px;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#765b38}
+.pv-event-card p{margin:0;font-size:15px;line-height:1.7;color:#3c4639}
+.pv-event-card .pv-event-person{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:13.5px;color:var(--ink)}
 .pv-timeline{list-style:none;margin:0;padding:0;border-left:1px solid #c9b98a}
 .pv-timeline li{position:relative;padding:0 0 22px 26px;display:grid;grid-template-columns:130px 1fr;gap:16px;font-size:14.5px;line-height:1.75;color:#4b5a4c}
 .pv-timeline li::before{content:'';position:absolute;left:-5px;top:9px;width:9px;height:9px;border-radius:50%;background:var(--gold)}
@@ -142,6 +159,12 @@
   .pv-hero-copy h1{font-size:44px}
   .pv-lead{font-size:20px;padding-top:30px}
   .pv-timeline li{grid-template-columns:1fr;gap:2px}
+  .pv-event{grid-template-columns:26px minmax(0,1fr)}
+  .pv-era>ol::before{left:12px}
+  .pv-event-date{grid-column:2;grid-row:1;flex-direction:row;align-items:baseline;gap:10px;padding:0 0 6px;text-align:left}
+  .pv-event-date b{font-size:20px}
+  .pv-event-dot{grid-column:1;grid-row:1;margin-top:6px}
+  .pv-event-card{grid-column:2;grid-row:2}
   .pv-sources{grid-template-columns:1fr;gap:16px}
   .pv-segmented button{padding:10px 12px}
 }

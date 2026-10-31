@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Pencil, Sparkles, X } from 'lucide-react';
 import { MonumentMap } from './MonumentMap';
 import { track } from '../lib/analytics';   // site: fotoğraf açma olayı
-import { artworkLabel, eventLabel, heroImage, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
+import { artworkLabel, centuryLabel, eventLabel, heroImage, historyByCentury, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
 
 type Mode = 'detail' | NarrationMode;
 const MODES: Mode[] = ['detail', 'story', 'child'];
@@ -82,9 +82,16 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
           <img src={img.thumb} alt="" loading="lazy" />{img.review_status && img.review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}
         </button>)}</div></section>}
 
-      {c.events.length > 0 && <section className="pv-section"><h2>{s.timeline}</h2>
-        <ol className="pv-timeline">{c.events.map((e, i) => <li key={i}><b>{e.date_text || rangeText(e.years) || '—'}</b>
-          <div><strong>{eventLabel(e.kind, lang)}</strong> {e.description_tr}{e.person ? ` — ${e.person}` : ''}{e.date_text_hijri && <small> (H. {e.date_text_hijri})</small>}</div></li>)}</ol>
+      {/* Tarihçe: yüzyıllara ayrılmış, kronolojik bir zaman çizgisi; solda tarih, ortada altın çizgi, sağda olay kartı */}
+      {c.events.length > 0 && <section className="pv-section pv-history" aria-labelledby="pv-history-title"><h2 id="pv-history-title">{s.timeline}</h2>
+        <ol className="pv-chrono">{historyByCentury(c.events).map((g, gi) => <li key={gi} className="pv-era">
+          <p className="pv-era-label"><span>{centuryLabel(g.century, lang)}</span></p>
+          <ol>{g.events.map((e, i) => <li key={i} className="pv-event">
+            <p className="pv-event-date"><b>{e.date_text || rangeText(e.years) || (lang === 'en' ? 'Undated' : 'Tarihsiz')}</b>{e.date_text_hijri && <small>H. {e.date_text_hijri}</small>}</p>
+            <span className="pv-event-dot" aria-hidden="true" />
+            <div className="pv-event-card"><small className="pv-event-kind">{eventLabel(e.kind, lang)}</small><p>{e.description_tr}</p>{e.person && <p className="pv-event-person">{e.person}</p>}</div>
+          </li>)}</ol>
+        </li>)}</ol>
       </section>}
 
       {/* yalnızca fotoğrafı olan süsleme kayıtları gösterilir; hiçbirinin fotoğrafı yoksa bölüm de yok */}

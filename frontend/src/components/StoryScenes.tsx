@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { MapPin, Plus, Search, X } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import type { Artifact } from '../data/artifacts';
 import type { NarrationMode } from '../lib/preferences';
 import { Link } from '../lib/navigation';
@@ -50,7 +50,6 @@ function ChapterExtras({ artifact, index, mode }: { artifact: Artifact; index: n
     {index === 0 && <div className="story-facts"><div><small>{t('DÖNEM', 'ERA')}</small><strong>{artifact.period}</strong></div><div><small>{t('MİMAR / USTA', 'ARCHITECT / MASTER')}</small><strong>{artifact.architect}</strong></div><div><small>{t('TARİH', 'DATE')}</small><strong>{artifact.year}</strong></div><div><small>{t('TÜR', 'TYPE')}</small><strong>{artifact.category}</strong></div></div>}
     {index === 0 && artifact.imageAlt && <details className="image-description"><summary>{t('GÖRSELDE NE VAR?', 'WHAT IS IN THE PICTURE?')}</summary><p>{artifact.imageAlt} {artifact.origin ? `${t('Fotoğraf', 'Photo')}: ${artifact.origin.photoCredit}.` : t('Bu çizim eserden esinlenen özgün bir yorumdur; fotoğraf veya rölöve değildir.', 'This drawing is an original interpretation inspired by the work; it is not a photograph or a survey drawing.')}</p></details>}
     {index === 2 && artifact.detail.title && <p className="detail-hint">{mode === 'child' ? <Search size={16} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}<span>{hints()[mode](artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
-    {last && <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>{t('Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. Haritadaki konumlar yaklaşık yönlendirme içindir.', 'Before you set off, check current visiting conditions and restoration work with the institution in charge. Locations on the map are approximate.')} <Link to="/harita">{t('Haritada gör', 'See on the map')}</Link></p></div>}
   </>;
 }
 
@@ -195,7 +194,6 @@ function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: Narrati
     <small className="narrative-note">{mode === 'story' ? t('Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.', 'The atmosphere of the telling is a creative interpretation; the historical facts rest on the sources below.') : mode === 'child' ? t('Çocuklar için hazırlanmış sadeleştirilmiş anlatım.', 'A simplified telling made for children.') : `${t('Envanter kitabındaki metin', 'The text of the inventory book')}: ${artifact.sourceReferences[0]?.title ?? ''}.`}</small>
     <div className="story-facts"><div><small>{t('DÖNEM', 'ERA')}</small><strong>{artifact.period}</strong></div><div><small>{t('MİMAR / USTA', 'ARCHITECT / MASTER')}</small><strong>{artifact.architect}</strong></div><div><small>{t('TARİH', 'DATE')}</small><strong>{artifact.year}</strong></div><div><small>{t('TÜR', 'TYPE')}</small><strong>{artifact.category}</strong></div></div>
     {artifact.imageAlt && <details className="image-description"><summary>{t('GÖRSELDE NE VAR?', 'WHAT IS IN THE PICTURE?')}</summary><p>{artifact.imageAlt}{artifact.origin ? ` ${t('Fotoğraf', 'Photo')}: ${artifact.origin.photoCredit}.` : ''}</p></details>}
-    <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>{t('Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et.', 'Before you set off, check current visiting conditions and restoration work with the institution in charge.')} <Link to="/harita">{t('Haritada gör', 'See on the map')}</Link></p></div>
   </>;
 }
 

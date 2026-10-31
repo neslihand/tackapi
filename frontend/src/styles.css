@@ -335,13 +335,6 @@ select{border:1px solid var(--line);padding:13px 32px 13px 14px;border-radius:0;
 .architecture-detail>span{position:absolute;bottom:10px;left:13px;color:#f2eada;font-size:10.5px;letter-spacing:.05em;text-shadow:1px 1px #17372d}
 .visit-note{display:flex;align-items:flex-start;gap:14px;padding:23px;background:#e8e7de;margin-top:28px;font-size:13.5px;line-height:1.8;color:#616a5d}
 .visit-note a{text-decoration:underline;text-underline-offset:3px}
-.story-interlude{position:relative;height:150svh;background:radial-gradient(ellipse 45% 70% at 78% 40%,#1c3d35 0,#0c2420 48%,transparent 76%),radial-gradient(ellipse 50% 60% at 6% 0%,#0f2a2480,transparent 70%),#030a08;color:#f3eee5}
-.interlude-sticky{position:sticky;top:0;height:100svh;min-height:600px;overflow:hidden;display:flex;align-items:flex-end}
-.interlude-year{position:absolute;right:4%;top:14%;font-family:var(--serif);font-size:clamp(140px,22vw,340px);line-height:.8;color:transparent;-webkit-text-stroke:1.5px #d8c2a0d9;letter-spacing:-.015em}
-.interlude-copy{position:relative;z-index:1;padding:0 10% 11%;max-width:960px}
-.interlude-copy h2{font-size:clamp(46px,6vw,96px);line-height:1.02;margin:20px 0 22px}
-.interlude-copy h2 em{color:#cfb793}
-.interlude-copy>p:not(.eyebrow){font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#e1dbcc}
 .story-finish{background:var(--teal);color:var(--paper);text-align:center;padding:85px 24px;display:flex;align-items:center;flex-direction:column;gap:20px}
 .story-finish>svg{color:var(--gold)}
 .story-finish .eyebrow{color:#bdb195}
@@ -378,9 +371,6 @@ select{border:1px solid var(--line);padding:13px 32px 13px 14px;border-radius:0;
 .detail-hint{display:none}
 .architecture-detail{display:block}
 .narrative{font-size:20px}
-.story-interlude{height:130svh}
-.interlude-copy{padding:0 7% 18%}
-.interlude-year{top:16%;right:-2%}
 .story-finish{padding:60px 24px}
 .story-sources{grid-template-columns:1fr;gap:20px}
 .next-story{padding:35px 24px;gap:15px;flex-wrap:wrap}
@@ -388,8 +378,7 @@ select{border:1px solid var(--line);padding:13px 32px 13px 14px;border-radius:0;
 .next-story>svg{width:25px}
 .next-story h2{text-align:left;font-size:28px}
 }
-@media(prefers-reduced-motion:reduce){.story-interlude{height:auto}
-.interlude-sticky{position:relative;min-height:80svh}
+@media(prefers-reduced-motion:reduce){
 .stage-canvas{transition:none}
 }
 

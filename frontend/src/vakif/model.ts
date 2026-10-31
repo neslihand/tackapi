@@ -140,6 +140,32 @@ export function osmLink(loc: PublicLocation): string {
 }
 
 /** '[1425,1427)' → '1425–1426' */
+// A work's history in time order, grouped by century. The book lists events as they come in the text (a restoration of
+// 1955 can come before an occupation of 1920); here they go by their first year. An undated event keeps its place next
+// to the dated event before it (or after it, when it comes first), so it stays with the time the book tells it in.
+export type HistoryEvent = Card['events'][number];
+export const firstYear = (r: string | null | undefined) => { const m = /^\[(-?\d+),/.exec(r ?? ''); return m ? Number(m[1]) : null; };
+export function historyByCentury(events: HistoryEvent[]): { century: number | null; events: HistoryEvent[] }[] {
+  const years = events.map(e => firstYear(e.years));
+  const keys = years.map((y, i) => y ?? years.slice(0, i).reverse().find(v => v !== null) ?? years.slice(i).find(v => v !== null) ?? null);
+  const order = events.map((e, i) => ({ e, key: keys[i], i })).sort((a, b) => (a.key ?? Infinity) - (b.key ?? Infinity) || a.i - b.i);
+  const groups: { century: number | null; events: HistoryEvent[] }[] = [];
+  for (const { e, key } of order) {
+    const century = key === null ? null : Math.floor((key - 1) / 100) + 1;
+    if (groups.at(-1)?.century !== century || !groups.length) groups.push({ century, events: [] });
+    groups.at(-1)!.events.push(e);
+  }
+  return groups;
+}
+const ROMAN: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+export function centuryLabel(century: number | null, lang: Lang) {
+  if (century === null) return lang === 'en' ? 'Undated' : 'Tarihi belirtilmemiş';
+  if (lang === 'en') return `${century}${century % 10 === 1 && century !== 11 ? 'st' : century % 10 === 2 && century !== 12 ? 'nd' : century % 10 === 3 && century !== 13 ? 'rd' : 'th'} century`;
+  let n = century, out = '';
+  for (const [v, r] of ROMAN) while (n >= v) { out += r; n -= v; }
+  return `${out}. yüzyıl`;
+}
+
 export function rangeText(r: string | null | undefined): string {
   const m = /^\[(-?\d+),(-?\d+)\)$/.exec(r ?? '');
   if (!m) return r ?? '';

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { toImmersive } from '../src/vakif/immersive.ts';
 import { adaptArtifactFeed } from '../src/lib/artifactAdapter.ts';
-import { heroImage, type PublicDetail, type PublicItem } from '../src/vakif/model.ts';
+import { centuryLabel, heroImage, historyByCentury, type PublicDetail, type PublicItem } from '../src/vakif/model.ts';
 
 const item = {
   slug: 'bursa-osmangazi-ulucami', name: 'Ulucami', alt_names: [], kind: 'mosque', kind_label: 'Cami', city: { slug: 'bursa', name: 'Bursa' },
@@ -74,4 +74,16 @@ test('Sayfanın üstüne ve kartın başına kitaptaki ilk görsel gelir; diğer
   assert.equal(a.gallery?.[2].credit, 'Drone çekimi');
   assert.equal(heroImage([whole, scan])?.src, whole.src);
   assert.equal(heroImage([]), undefined);
+});
+
+test('Tarihçe yıla göre sıralanır ve yüzyıllara ayrılır; tarihsiz olay kitaptaki komşusunun yanında kalır', () => {
+  const ev = (years: string | null, d: string) => ({ kind: 'other', years, date_text: null, date_text_hijri: null, basis: null, description_tr: d, person: null, page_start: null });
+  const groups = historyByCentury([ev('[1388,1389)', 'yapım'), ev('[1955,1956)', 'restorasyon'), ev(null, 'onarım'), ev('[1920,1921)', 'işgal'), ev('[2010,2011)', 'bugün')]);
+  assert.deepEqual(groups.map(g => [g.century, g.events.map(e => e.description_tr)]),
+    [[14, ['yapım']], [20, ['işgal', 'restorasyon', 'onarım']], [21, ['bugün']]]);
+  assert.deepEqual(historyByCentury([ev(null, 'a'), ev(null, 'b')]).map(g => g.century), [null]);
+  assert.equal(centuryLabel(14, 'tr'), 'XIV. yüzyıl');
+  assert.equal(centuryLabel(19, 'tr'), 'XIX. yüzyıl');
+  assert.equal(centuryLabel(21, 'en'), '21st century');
+  assert.equal(centuryLabel(null, 'tr'), 'Tarihi belirtilmemiş');
 });
