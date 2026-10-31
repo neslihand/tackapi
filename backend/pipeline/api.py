@@ -203,7 +203,13 @@ ITEM_SELECT = f"""
     LEFT JOIN LATERAL (SELECT file, alt_tr, alt_en, width, height FROM image
                         WHERE monument_id = m.id AND (review_status = 'published'
                               OR (%(drafts)s::boolean AND review_status IN ('draft', 'reviewed')))
-                        ORDER BY is_cover DESC, review_status = 'published' DESC, sort, id LIMIT 1) cov ON true"""
+                        ORDER BY source = 'upload' DESC, COALESCE(is_cover AND width >= 900 AND width >= height, false) DESC,
+                                 review_status = 'published' DESC,
+                                 width::bigint * height * CASE WHEN width >= height THEN 10 ELSE 6 END DESC NULLS LAST,
+                                 sort, id LIMIT 1) cov ON true"""
+# Kart görseli: otomatik kapak kitaptaki ilk görseldir ve çoğu zaman birkaç yüz piksellik bir ayrıntıdır. Panelden
+# eklenen fotoğraf, yoksa iyi boyutta yatay bir kapak, yoksa eserin en büyük görseli seçilir (dikey olan daha az
+# sayılır). Ön yüzdeki eser sayfası da aynı kuralı izler (frontend/src/vakif/model.ts → heroImage).
 
 
 def item_select():
