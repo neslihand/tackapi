@@ -5,6 +5,7 @@ import { chatEndpoint } from '../lib/chatApi';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 import { vakifApiEnabled } from '../lib/vakifApi';
+import { spotlight } from '../lib/content';
 import '../tools.css';
 
 // "Keşfin araçları": what the platform offers, one tool at a time. On wide screens a stage stays on the left and shows
@@ -75,8 +76,10 @@ function PassportScene({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
 }
 
 function ShareScene({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
+  const [first, second] = spotlight(artifacts);
+  const shown = second ?? first ?? artifacts[0];
   return <div className="ts-share">
-    <span className="ts-photo"><img src={artifacts[0].image} alt="" /><small>{t('Ziyaretimden bir kare', 'A moment from my visit')}</small></span>
+    <span className="ts-photo"><img src={shown.image} alt="" /><small>{t('Ziyaretimden bir kare', 'A moment from my visit')}</small></span>
     <p className="ts-bubble a memory">{t('“Dedemle her bayram bu avluda buluşurduk.”', '“My grandfather and I met in this courtyard every holiday.”')}</p>
     <p className="ts-chip ok"><Check size={14} />{t('Onaylandı · eser sayfasında', 'Approved · on the work’s page')}</p>
   </div>;

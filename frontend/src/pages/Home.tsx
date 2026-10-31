@@ -16,6 +16,7 @@ import { locale, t } from '../lib/i18n';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import { quizPool } from '../lib/quiz';
+import { spotlight } from '../lib/content';
 import { Discoveries } from '../vakif/Discoveries';
 import { Agenda } from '../vakif/Agenda';
 
@@ -78,7 +79,8 @@ export function Home() {
   const { progress } = useProgress();
   const { artifacts, seasons, quizQuestions } = useContent();
   const today = artifacts[Math.floor(Date.now() / 86400000) % artifacts.length];
-  const nextDoor = artifacts.find(a => !progress.discovered[a.id]) ?? today;
+  // The next door: one of the spotlight works while they are still to be found, then the collection in order.
+  const nextDoor = [...spotlight(artifacts), ...artifacts].find(a => !progress.discovered[a.id]) ?? today;
   // The artifact shown from the inside: the one with the most to show (sources, a known date), today's on a tie.
   const insideArtifact = [...artifacts].sort((a, b) => (b.sourceReferences.length + Number(known(b.year))) - (a.sourceReferences.length + Number(known(a.year))))[0] ?? today;
   const found = artifacts.filter(a => progress.discovered[a.id]).length;

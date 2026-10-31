@@ -14,6 +14,13 @@ const isObject = (value: unknown): value is Loose => typeof value === 'object' &
 const filled = (value: unknown, max = 4000) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
 const httpsUrl = (value: unknown) => { try { return typeof value === 'string' && new URL(value).protocol === 'https:'; } catch { return false; } };
 
+// The works the home page shows by name where it needs one example (the closing door, "Hafızaya Katkı"): their
+// pictures sit well in the site's colours. Matched loosely by name; works not in the collection are skipped.
+const spotlightNames = [['mahmut celebi', 'ecezade'], ['mihalic']];
+export function spotlight<T extends { name: string }>(artifacts: T[]): T[] {
+  return spotlightNames.map(keys => artifacts.find(a => keys.some(key => normalize(a.name).includes(key)))).filter((a): a is T => a !== undefined);
+}
+
 export function slugify(value: string) {
   return normalize(value).replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 }
