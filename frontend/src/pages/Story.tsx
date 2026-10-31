@@ -1,5 +1,5 @@
 import { lazy, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUpRight, BookOpen, Check, Heart, MapPin, Puzzle, Sparkles, Stamp, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, BookOpen, Check, Heart, MapPin, Puzzle, Sparkles, Stamp, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { type Artifact } from '../data/artifacts';
@@ -177,9 +177,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         storyMotion(mode);
         // Interlude: the camera pulls back from the facade while the date rises out of the stone.
         const interlude = gsap.timeline({ scrollTrigger: { trigger: '.story-interlude', start: 'top top', end: 'bottom bottom', scrub: 0.8 } });
-        interlude.fromTo('.interlude-image', { scale: 1.7 }, { scale: 1, ease: 'none', duration: 1 }, 0)
-          .fromTo('.interlude-shade', { opacity: 1 }, { opacity: 0.75, ease: 'none', duration: 1 }, 0)
-          .fromTo('.interlude-year', { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, ease: 'power2.out', duration: 0.45 }, 0.05)
+        interlude.fromTo('.interlude-year', { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, ease: 'power2.out', duration: 0.45 }, 0.05)
           .fromTo('.interlude-copy > *', { y: 40, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08, duration: 0.3 }, 0.45);
       }, ref);
       return () => context.revert();
@@ -207,7 +205,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul></div>
       <HeroGallery slides={slides} name={artifact.name} note={artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}
         badge={stamped ? <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span> : undefined} />
-      <div className="story-hero-lede"><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>{t('Hikâyeyi keşfet', 'Discover the story')} <ArrowDown size={17} aria-hidden="true" /></button></div>
+      <div className="story-hero-lede"><p>{artifact.description}</p></div>
       {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}</section>
     <div className="story-body" data-nav-theme={mode === 'story' ? 'dark' : 'light'}>
       <Girih className="story-girih" />
@@ -234,7 +232,9 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
     </div>
     </div>
     <section className="story-interlude" data-nav-theme="dark" aria-label={`${artifact.name}: ${t('geçmişten bugüne', 'from the past to today')}`}>
-      <div className="interlude-sticky"><img className="interlude-image" src={artifact.image} alt="" loading="lazy" /><div className="interlude-shade" />
+      {/* Words only, on the site's night green: the photos are in the card at the top, and the book's small photos
+          would only blur when stretched over a whole screen. */}
+      <div className="interlude-sticky">
         <span className="interlude-year" aria-hidden="true">{artifact.year.split(/[–-]/)[0]}</span>
         <div className="interlude-copy"><p className="eyebrow light"><span />{t('GEÇMİŞTEN BUGÜNE', 'FROM THE PAST TO TODAY')}</p><h2>{t('Yüzyıllar geçti.', 'Centuries have passed.')}<br /><em>{t('Hikâye hâlâ burada.', 'The story is still here.')}</em></h2><p>{artifact.name} · {artifact.city} · {artifact.year}</p></div></div>
     </section>

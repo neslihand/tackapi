@@ -12,9 +12,8 @@
 .story-hero-tags { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px; padding: 0; list-style: none; }
 .story-hero-tags li { display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px; font-family: var(--serif); font-size: 18px; line-height: 1.2; color: #fdfbf7; border: 1px solid #acaba8b3; border-radius: 4px; background: #0a241beb; box-shadow: 0 8px 18px -8px #000c, 0 0 14px -6px #acaba899; }
 .story-hero-tags svg { color: #d4bf9d; }
-.story-hero-cta, .next-story-cta { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 26px; overflow: hidden; font-size: 13.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #e7dcb9; border: 1.5px solid #acaba8; border-radius: 999px; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 4px #acaba826, 0 12px 26px -10px #000d, 0 0 26px -6px #acaba899; transition: box-shadow .5s ease-in-out, transform .5s ease-in-out; }
-.story-hero-cta { margin-top: 30px; }
-.story-hero-cta:hover, .next-story:hover .next-story-cta { box-shadow: 0 0 0 5px #acaba840, 0 14px 30px -10px #000d, 0 0 34px -4px #acaba8cc; }
+.next-story-cta { position: relative; display: inline-flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 26px; overflow: hidden; font-size: 13.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #e7dcb9; border: 1.5px solid #acaba8; border-radius: 999px; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 4px #acaba826, 0 12px 26px -10px #000d, 0 0 26px -6px #acaba899; transition: box-shadow .5s ease-in-out, transform .5s ease-in-out; }
+.next-story:hover .next-story-cta { box-shadow: 0 0 0 5px #acaba840, 0 14px 30px -10px #000d, 0 0 34px -4px #acaba8cc; }
 .story-hero .story-hero-stamp { top: 22px; right: 30px; bottom: auto; z-index: 3; padding: 6px 32px 6px 12px; font-size: 11px; transform: rotate(-6deg); }
 .story-hero .story-hero-stamp .ex-seal { right: -26px; width: 50px; height: 50px; font-size: 18px; }
 /* The hero grows with its words instead of a fixed height, so a long name or a short screen never pushes the title up

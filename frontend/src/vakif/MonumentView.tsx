@@ -68,16 +68,16 @@ export function MonumentView({ item, detail, lang, generate, edit, backHref, act
  * site: eser sayfasının künye dışındaki bölümleri (fotoğraflar, tarihçe, süsleme, bağlı yapılar, harita, bugünkü
  * durumu). MonumentView'da ve sitenin sinematik hikâye sayfasının altında aynı bileşen kullanılır.
  */
-export function MonumentSections({ item, detail, lang }: { item: PublicItem; detail: PublicDetail; lang: Lang }) {
+// gallery: false on the cinematic page, whose photo card at the top already shows every photo.
+export function MonumentSections({ item, detail, lang, gallery = true }: { item: PublicItem; detail: PublicDetail; lang: Lang; gallery?: boolean }) {
   const s = strings(lang);
   const c = detail.card;
   const [zoom, setZoom] = useState<number | null>(null);
   const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number } | null>(null);
   const artTitle = (a: Card['artworks'][number]) => [a.element, a.technique].filter(Boolean).join(' · ') || artworkLabel(a.kind, lang);
   const artworksWithPhotos = c.artworks.filter(a => a.images?.length);
-  const artworksText = c.artworks.filter(a => !a.images?.length).slice(0, 8);
   return <>
-      {detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
+      {gallery && detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
         <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => { setZoom(i); track('photo_open', item.slug); }} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
           <img src={img.thumb} alt="" loading="lazy" />{img.review_status && img.review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}
         </button>)}</div></section>}
@@ -87,18 +87,16 @@ export function MonumentSections({ item, detail, lang }: { item: PublicItem; det
           <div><strong>{eventLabel(e.kind, lang)}</strong> {e.description_tr}{e.person ? ` — ${e.person}` : ''}{e.date_text_hijri && <small> (H. {e.date_text_hijri})</small>}</div></li>)}</ol>
       </section>}
 
-      {c.artworks.length > 0 && <section className="pv-section"><h2>{s.artworks}</h2>
-        {/* fotoğrafı olan kayıtlar önce, fotoğraflı kart olarak; diğerleri metin listesi */}
-        {artworksWithPhotos.length > 0 && <div className="pv-art-grid">{artworksWithPhotos.map((a, i) => <figure key={i} className="pv-art-card">
+      {/* yalnızca fotoğrafı olan süsleme kayıtları gösterilir; hiçbirinin fotoğrafı yoksa bölüm de yok */}
+      {artworksWithPhotos.length > 0 && <section className="pv-section"><h2>{s.artworks}</h2>
+        <div className="pv-art-grid">{artworksWithPhotos.map((a, i) => <figure key={i} className="pv-art-card">
           <button onClick={() => setArtZoom({ images: a.images, index: 0 })} aria-label={`${artTitle(a)}: ${s.gallery}`}>
             <img src={a.images[0].thumb} alt={a.images[0].alt ?? ''} loading="lazy" />
             {a.images.length > 1 && <span className="pv-art-count">+{a.images.length - 1}</span>}
             {a.images[0].review_status && a.images[0].review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}</button>
           <figcaption><small>{artworkLabel(a.kind, lang)}</small><strong>{artTitle(a)}</strong>
             {(a.script || a.artist || a.date_text) && <span>{[a.script, a.artist, a.date_text].filter(Boolean).join(' · ')}</span>}</figcaption>
-        </figure>)}</div>}
-        {artworksText.length > 0 && <ul className="pv-list">{artworksText.map((a, i) => <li key={i}><strong>{artTitle(a)}</strong>
-          {(a.script || a.artist || a.date_text) && <span>{[a.script, a.artist, a.date_text].filter(Boolean).join(' · ')}</span>}</li>)}</ul>}</section>}
+        </figure>)}</div></section>}
 
       {(c.parent || c.children.length > 0) && <section className="pv-section">
         {c.parent && <p className="pv-relation">{s.partOf}: <strong>{c.parent}</strong></p>}
