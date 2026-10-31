@@ -136,6 +136,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
+- **Kitap künyeleri (1 Kasım 2026):** Bursa II–III ve Konya I'in metin yazarları, editörü ve çevirmeni kitapların ilk
+  sayfasından `books.py`'ye eklendi; altı kitabın künyesi tam. Mevcut veritabanına `book_credits.py --report/--apply`
+  yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
+  Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
 - **Testler:** `python -m unittest discover -s tests` (190 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
