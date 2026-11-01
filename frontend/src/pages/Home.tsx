@@ -13,6 +13,7 @@ import { ToolsShowcase } from '../components/ToolsShowcase';
 import { JourneyRail } from '../components/JourneyRail';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
+import { useKeptIn } from '../lib/account';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import { quizPool } from '../lib/quiz';
@@ -77,6 +78,7 @@ function WhyWaqf() {
 export function Home() {
   const ref = useRef<HTMLDivElement>(null);
   const { progress } = useProgress();
+  const kept = useKeptIn();
   const { artifacts, seasons, quizQuestions } = useContent();
   const today = artifacts[Math.floor(Date.now() / 86400000) % artifacts.length];
   // The next door: one of the spotlight works while they are still to be found, then the collection in order.
@@ -120,7 +122,7 @@ export function Home() {
           <p className="hp-passport-count"><strong>{pad(found)}</strong><span>/ {pad(artifacts.length)}</span><small>{t('Pasaportundaki mühür', 'Stamps in your passport')}</small></p>
           <ol className="hp-passport-ticks" aria-hidden="true">{artifacts.map(a => <li key={a.id} className={progress.discovered[a.id] ? 'on' : ''}><Stamp size={14} /></li>)}</ol>
           <div className="hp-actions"><Link className="hp-cta en-key" to="/pasaport"><span className="en-key-label">{t('Pasaportumu aç', 'Open my passport')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></Link><Link className="hp-link en-link" to="/basarimlar"><span>{t('Madalyonları gör', 'See the medallions')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
-          <small className="hp-passport-note">{t('Yolculuğun bu tarayıcıda saklanır.', 'Your journey is kept in this browser.')}</small>
+          <small className="hp-passport-note">{t(`Yolculuğun ${kept.where} saklanır.`, `Your journey is kept ${kept.where}.`)}</small>
         </div>
       </div>
       <ol className="hp-passport-steps">{passportSteps().map(([title, text], i) => <li key={title}><i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><span>{text}</span></li>)}</ol>

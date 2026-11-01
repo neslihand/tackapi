@@ -66,6 +66,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
+/** Pasaportun ve oyun sonuçlarının nerede saklandığı, bunu söyleyen sayfalar için: oturum açıksa hesapta (her cihazda
+ *  aynı), değilse bu tarayıcıda. `offer`, hesaplar açıkken giriş yapılmamışsa "Giriş yaparak koru" çağrısını gösterir. */
+export function useKeptIn() {
+  const { enabled, user } = useAccount();
+  return { synced: Boolean(enabled && user), offer: enabled && !user, where: user ? t('hesabında', 'in your account') : t('bu tarayıcıda', 'in this browser') };
+}
+
 /** Hesap bağlamı; sağlayıcı dışında (testler, demo) hesapsız bir varsayılan döner. */
 export function useAccount(): Account {
   return useContext(Context) ?? NO_ACCOUNT;

@@ -61,3 +61,6 @@ summary { min-height: 44px; }
   :focus-visible { outline: 3px solid Highlight; }
   .button { border: 1px solid ButtonText; }
 }
+/* P19: under the passport, the call to sign in so the passport is not lost with the browser's data */
+.passport-bottom .passport-keep { display: inline-block; margin-left: 4px; font-weight: 700; color: #7a5c22; text-decoration: underline; text-decoration-color: #7a5c2266; text-underline-offset: 3px; }
+.passport-bottom .passport-keep:hover, .passport-bottom .passport-keep:focus-visible { text-decoration-color: currentColor; }
