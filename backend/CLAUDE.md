@@ -162,7 +162,11 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   ziyaretçi terimleri ve makaleler sohbet kaynağı değildir. Metin biçimi: boş satır paragraf, `## ` ara başlık, `> `
   alıntı; sitede yayındaki terimler makalede ilk geçtikleri yerde açıklamalı işaretlenir. Kitap sözlüğünde yinelenen ya
   da İngilizce kalmış terimler var (Hünkar mahfili/Hünkâr Mahfili, Kitabe/kitâbe, Lectern, Plaster) ve çoğunun kategorisi
-  boş; panelin Terimler sayfasından düzeltilebilir. Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
+  boş; panelin Terimler sayfasından düzeltilebilir. **1 Kasım 2026:** `fix_terms.py --report/--apply` yazım hatalarını
+  ('Bani'de çift 'yapan'), eksik ve açıklama gibi uzun İngilizce karşılıkları (kural: 1–3 kelimelik ad) ve editör
+  terimlerinin İngilizce tanımlarını düzeltir; yinelenen 'hunkar-mahfili', 'kitabe' ve 'lectern' taslağa alınır (57
+  değişiklik + 3). Eski değer değişmişse atlar; `load_db.py` terimleri yeniden yüklerse yeniden çalıştırılmalı. Kitap
+  tanımlarının İngilizcesi eksik 13 terime dokunmaz. Uygulamayı geliştirici kendi penceresinde yapacak. Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
   paragraflar Türkçeyle hizalı değil); İngilizce başlık ve metin elle yazılırsa İngilizce sitede gösterilir.
 - **Yönetici asistanı (28 Ekim 2026):** `agent.py`, panelde `#/asistan`, `#/takvim`, `#/gundem`; ana sayfada "Gündem"
   bandı (`frontend/src/vakif/Agenda.tsx`). Göç `016_agent.sql` (gerçek veritabanında henüz uygulanmadı). Öneriyi açık
