@@ -1,20 +1,26 @@
 // "Esere Sor": the backend's source-grounded assistant (POST /api/chat). Answers carry their book sources and may
 // contain mistakes; the conversation stays on this screen.
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Notice } from '@/components/UI';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Text, TextInput } from '@/components/Typography';
+import { Button, Notice } from '@/components/UI';
+import { useAccount } from '@/lib/account';
+import { track } from '@/lib/analytics';
 import { askWork, type ChatMode, type ChatTurn } from '@/lib/api';
 import { t } from '@/lib/i18n';
-import { useContent } from '@/lib/store';
+import { canFollow, type Ticket } from '@/lib/questionRules';
+import { questionsApi } from '@/lib/questions';
+import { useContent, useFlags } from '@/lib/store';
 import { colors, space } from '@/lib/theme';
 
-type Message = ChatTurn & { sources?: string[]; failed?: boolean };
+type Message = ChatTurn & { sources?: string[]; failed?: boolean; unanswered?: string };
 
 export default function Ask() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const item = useContent().bySlug(slug);
+  const flags = useFlags();
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<ChatMode>('standard');
@@ -30,7 +36,9 @@ export default function Ask() {
     setDraft(''); setBusy(true);
     try {
       const r = await askWork(slug, question, mode, history);
-      setMessages(m => [...m, { role: 'assistant', content: r.answer, sources: r.sources }]);
+      setMessages(m => [...m, { role: 'assistant', content: r.answer, sources: r.sources, unanswered: r.noInfo ? question : undefined }]);
+      track('chat_question', slug, { question: question.slice(0, 300), mode });
+      track('chat_answer', slug, { no_info: r.noInfo, chars: r.answer.length });
     } catch (e) {
       setMessages(m => [...m, { role: 'assistant', content: String((e as Error)?.message ?? e), failed: true }]);
     } finally { setBusy(false); setTimeout(() => list.current?.scrollToEnd({ animated: true }), 50); }
@@ -49,6 +57,7 @@ export default function Ask() {
       renderItem={({ item: m }) => <View style={[s.bubble, m.role === 'user' ? s.mine : s.theirs, m.failed && { borderColor: colors.danger }]}>
         <Text style={[s.text, m.role === 'user' && { color: colors.goldSoft }]}>{m.content}</Text>
         {!!m.sources?.length && <Text style={s.sources}>{t('Kaynak: ', 'Source: ')}{m.sources.join(' · ')}</Text>}
+        {flags.question_follow && !!m.unanswered && canFollow(m.unanswered) && <Follow slug={slug} question={m.unanswered} />}
       </View>}
       ListFooterComponent={busy ? <View style={[s.bubble, s.theirs, { flexDirection: 'row', gap: 8 }]}><ActivityIndicator color={colors.goldText} /><Text style={s.text}>{t('Kitaba bakılıyor…', 'Checking the book…')}</Text></View> : undefined} />
     <View style={s.composer}>
@@ -60,7 +69,38 @@ export default function Ask() {
   </KeyboardAvoidingView>;
 }
 
+/** The honest end of a question the book cannot answer: an editor may look, if the visitor wants that. Nothing goes to the
+ *  queue unless they ask. An account is needed so that the answer can find them; signing in comes back to this conversation. */
+function Follow({ slug, question }: { slug: string; question: string }) {
+  const account = useAccount();
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  async function follow() {
+    setBusy(true); setProblem(null);
+    try {
+      const r = await questionsApi.follow(slug, question);
+      setTicket(r);
+      track('question_followed', slug, { ticket_id: r.id }, `question_followed:${r.id}`);
+    } catch (e) { setProblem(String((e as Error)?.message ?? e)); }
+    finally { setBusy(false); }
+  }
+  if (ticket) return <View style={s.follow}>
+    <Text style={s.text} accessibilityLiveRegion="polite">{ticket.answer ? t('Bu sorunun cevabı hazırmış.', 'This question already has an answer.') : t('Soruyu editörlere ilettik. Kaynakta bulurlarsa cevap kaynağıyla Sorularım’a gelir.', 'We passed the question to the editors. If they find it in the sources, the answer comes to My Questions with its source.')}</Text>
+    <Button kind="plain" icon="chatbubble-ellipses-outline" label={t('Sorularımı aç', 'Open my questions')} onPress={() => router.push('/sorularim')} />
+  </View>;
+  return <View style={s.follow}>
+    <Text style={s.followHead}>{t('Kaynaklarda doğrulanmış cevap bulamadık.', 'We found no verified answer in the sources.')}</Text>
+    <Text style={s.sources}>{t('İstersen soruyu editörlere iletelim. Yanıt garantisi yok; soru herkese açık görünmez.', 'We can pass the question to the editors if you like. An answer is not guaranteed; the question is not shown publicly.')}</Text>
+    {problem && <Notice tone="warn" icon="alert-circle-outline">{problem}</Notice>}
+    {account.user ? <Button kind="plain" icon="notifications-outline" label={t('Bu soruyu takip et', 'Follow this question')} busy={busy} onPress={follow} />
+      : <Button kind="plain" icon="person-circle-outline" label={t('Giriş yap ve takip et', 'Sign in and follow')} onPress={() => router.push(`/giris?sonra=${encodeURIComponent(`/sor/${slug}`)}`)} />}
+  </View>;
+}
+
 const s = StyleSheet.create({
+  follow: { marginTop: 4, paddingTop: 10, gap: 8, borderTopWidth: 1, borderTopColor: colors.line },
+  followHead: { color: colors.ink, fontSize: 15, fontWeight: '600', lineHeight: 21 },
   lead: { color: colors.ink, fontSize: 16 },
   row: { flexDirection: 'row', gap: 6 },
   chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
