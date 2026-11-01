@@ -6,7 +6,9 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useLang } from './i18n';
 import { dayKey } from './passport';
 import { loadTerms, type GlossaryTerm } from './reading';
-import { answerCard, dueCards, endSession, parseRecall, pickSession, RECALL_KEY, termCards, withTerm, workCards, type Candidate, type CardId, type RecallState } from './recall';
+import { answerCard, bringForward, dueCards, endSession, parseRecall, pickSession, RECALL_KEY, termCards, withTerm, workCards, type Candidate, type CardId, type RecallState } from './recall';
+import type { Item } from './api';
+import type { Progress } from './passport';
 import { useContent, usePassport } from './store';
 
 // the glossary is fetched once per language (the device copy when offline); null when neither is there, tried again later
@@ -25,6 +27,15 @@ export async function rememberTerm(slug: string) {
   const state = parseRecall(await AsyncStorage.getItem(RECALL_KEY).catch(() => null));
   const next = withTerm(state, slug, new Date());
   if (next !== state) await AsyncStorage.setItem(RECALL_KEY, JSON.stringify(next)).catch(() => {});
+}
+
+/** Ayarlar → Sunum: every card is due today; returns how many cards are due now. */
+export async function bringRecallForward(progress: Progress, items: readonly Item[], lang: string) {
+  const state = parseRecall(await AsyncStorage.getItem(RECALL_KEY).catch(() => null));
+  const candidates = [...workCards(progress, items), ...termCards(state, await glossary(lang))];
+  const next = bringForward(state, candidates, new Date());
+  await AsyncStorage.setItem(RECALL_KEY, JSON.stringify(next)).catch(() => {});
+  return dueCards(next, candidates, new Date()).length;
 }
 
 export type RecallView = {

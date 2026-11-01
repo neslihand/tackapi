@@ -10,6 +10,7 @@ import { Button, Empty, Eyebrow, Loading, Title } from '@/components/UI';
 import { mediaUrl, type Item } from '@/lib/api';
 import { teaser } from '@/lib/daily';
 import { guessMarks, outcome, scaleFor } from '@/lib/hunt';
+import { buzz } from '@/lib/motion';
 import { useHunt } from '@/lib/hunt-state';
 import { t } from '@/lib/i18n';
 import { useContent } from '@/lib/store';
@@ -66,7 +67,7 @@ export default function DetailHunt() {
     {/* no guessing blind: without the photo the options wait */}
     {(!broken || o.over) && <View style={s.options}>
       {options.map(item => <Option key={item.slug} item={item} wrong={puzzle.guesses.includes(item.slug) && item.slug !== puzzle.slug}
-        right={o.over && item.slug === puzzle.slug} locked={o.over} onPress={() => guess(item.slug)} />)}
+        right={o.over && item.slug === puzzle.slug} locked={o.over} onPress={() => { if (item.slug === puzzle.slug) buzz('success'); guess(item.slug); }} />)}
     </View>}
     <ShareSheet shared={shared} onClose={() => setShared(null)} />
   </ScrollView>;

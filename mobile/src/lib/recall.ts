@@ -111,6 +111,19 @@ export function answerCard(state: RecallState, id: CardId, correct: boolean, now
   return { ...state, cards: { ...state.cards, [id]: { box, due: addDays(dayKey(now), BOXES[box - 1]) } } };
 }
 
+/** Every card that exists now, new ones included, is due today (Ayarlar → Sunum); boxes and sessions stay as they
+ *  are, and a card already overdue keeps its day. */
+export function bringForward(state: RecallState, candidates: readonly Candidate[], now: Date): RecallState {
+  const today = dayKey(now);
+  const cards = { ...state.cards };
+  for (const c of candidates) {
+    const saved = cards[c.id];
+    if (!saved) cards[c.id] = { box: 1, due: today };
+    else if (saved.due > today) cards[c.id] = { ...saved, due: today };
+  }
+  return { ...state, cards };
+}
+
 export const endSession = (state: RecallState): RecallState => ({ ...state, sessions: state.sessions + 1 });
 
 /** mulberry32 seeded from the text: the same card on the same day gives the same order everywhere. */

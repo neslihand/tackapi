@@ -121,3 +121,5 @@ kendi kart bileşenini o klasöre ekler.
 - Bugün ekranında kaydırmadan en az 3 farklı eylem görünüyor.
 - Tüm yeni ekranlar TR/EN, ekran okuyucu etiketli, `tsc` hatasız.
 - APK telefonda çevrimdışı açılıyor; Günün Eşiği ve Detay Avı ağ olmadan da son hâliyle görünüyor.
+
+> P10a yapıldı (2 Kas): gizli demo modu (Ayarlar → sürüm satırına 7 dokunuş → Sunum) ve mühür/doğru cevap mikro anları; P10b (tutarlılık, erişilebilirlik, "sonra" görüntüleri) bekliyor.

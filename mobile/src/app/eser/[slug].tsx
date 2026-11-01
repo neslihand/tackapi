@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, SegmentedControl } from '@/components/Controls';
 import { AddMemory, MemoryCard } from '@/components/Journal';
@@ -16,6 +16,7 @@ import { ApiError, loadMonument, makers, mediaUrl, sourceTitle, type Detail } fr
 import { hasLocationPermission, openDirections, whereAmI } from '@/lib/geo';
 import { t, useLang } from '@/lib/i18n';
 import { useJournal } from '@/lib/journal';
+import { usePop } from '@/lib/motion';
 import { distanceM, formatDistance, stampRadius } from '@/lib/passport';
 import { rememberOpened } from '@/lib/recent';
 import { speak, stopSpeaking } from '@/lib/speech';
@@ -55,6 +56,9 @@ export default function Work() {
   const location = detail?.location ?? item?.location ?? null;
   const visited = passport.progress.visits[slug];
   const discovered = passport.progress.discovered[slug];
+  // the stamp button and the status chip pop when a stamp lands (digital or on the spot)
+  const stampKind = visited ? 'visit' : discovered ? 'digital' : 'none';
+  const statusPop = usePop(stampKind);
   // Only when the permission is already given: the dialog opens when the stamp button is pressed, never on opening.
   useEffect(() => {
     setNear(false);
@@ -117,6 +121,7 @@ export default function Work() {
     : location ? { label: onSpotLabel, icon: 'ribbon-outline', onPress: stampHere, busy: checking }
     : { label: t('Mühürlü', 'Stamped'), icon: 'checkmark-circle', onPress: () => {}, disabled: true,
       accessibilityLabel: t('Pasaportunda mühürlü', 'Stamped in your passport') };
+  stamp.pop = stampKind;
   const status = visited ? { icon: 'ribbon' as const, label: t('Yerinde mühür', 'On-the-spot stamp') }
     : discovered ? { icon: 'checkmark-circle' as const, label: t('Dijital mühür', 'Digital stamp') }
     : { icon: 'bookmark-outline' as const, label: t('Mühürlenmedi', 'Not stamped') };
@@ -141,7 +146,7 @@ export default function Work() {
           {!!by && <Fact icon="construct-outline" text={by} />}
         </View>
         {location?.approximate && <Text style={s.small}>{t('Konum otomatik bulundu ve henüz doğrulanmadı; yaklaşık bir alanı gösterir.', 'The location was found automatically and is not yet verified; it marks an approximate area.')}</Text>}
-        <View style={s.status}><Chip icon={status.icon} label={status.label} accessibilityLabel={`${t('Mühür durumu', 'Stamp')}: ${status.label}`} /></View>
+        <Animated.View style={[s.status, statusPop]}><Chip icon={status.icon} label={status.label} accessibilityLabel={`${t('Mühür durumu', 'Stamp')}: ${status.label}`} /></Animated.View>
         {!location && <Text style={s.small}>{t('Bu eserin konumu henüz yok; yerinde mühür açılmaz.', 'This work has no location yet, so there is no on-the-spot stamp.')}</Text>}
         {stale && <Notice icon="cloud-offline-outline">{t('Çevrimdışısın: bu eserin cihazda saklanan hâli gösteriliyor.', 'You are offline: the copy of this work kept on the device is shown.')}</Notice>}
       </View>

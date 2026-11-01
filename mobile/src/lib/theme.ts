@@ -55,3 +55,6 @@ export const shadow = {
     default: { boxShadow: '0 2px 8px rgba(8, 33, 25, 0.08)' },
   }),
 };
+
+// The short "pop" when a stamp lands (skipped when the phone asks for reduced motion).
+export const motion = { popScale: 1.12, popMs: 140 };

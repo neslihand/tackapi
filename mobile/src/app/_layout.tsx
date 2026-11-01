@@ -1,13 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccountProvider } from '@/lib/account';
 import { LangProvider, t, useLang } from '@/lib/i18n';
+import { useDemoPlace } from '@/lib/geo';
 import { JournalProvider } from '@/lib/journal';
 import { openedFromNotification, scheduleDailyWork, scheduleStreakReminder, setupNotifications, useNotificationTaps } from '@/lib/notify';
 import { ContentProvider, PassportProvider, SettingsProvider, useContent, usePassport, useSettings } from '@/lib/store';
-import { colors, serif } from '@/lib/theme';
+import { colors, serif, space, type } from '@/lib/theme';
 import { isOnboarded } from '@/lib/welcome';
 
 setupNotifications();
@@ -51,6 +54,24 @@ function WelcomeGate() {
   return null;
 }
 
+/** While the demo location is on, a thin strip above every screen says so; it takes the status bar's place in the
+ *  layout, so the screens below lay out without it and no header or tab bar is covered. */
+function DemoStrip({ children }: { children: ReactNode }) {
+  const place = useDemoPlace();
+  const insets = useSafeAreaInsets();
+  const { bySlug } = useContent();
+  const name = place ? bySlug(place.slug)?.name ?? '' : '';
+  // the same tree with and without the strip, so turning it on never redraws the screens
+  return <View style={s.fill}>
+    {place && <View style={[s.strip, { paddingTop: insets.top + space.xs }]} accessible accessibilityRole="text"
+      accessibilityLabel={t(`Demo konumu açık: ${name}`, `Demo location on: ${name}`)}>
+      <Ionicons name="location" size={14} color={colors.goldSoft} />
+      <Text style={s.stripText} numberOfLines={1}>{`DEMO${name ? ` · ${name}` : ''}`}</Text>
+    </View>}
+    <SafeAreaInsetsContext.Provider value={place ? { ...insets, top: 0 } : insets}>{children}</SafeAreaInsetsContext.Provider>
+  </View>;
+}
+
 function Screens() {
   useLang(); // the titles below are re-read when the language changes
   return <Stack screenOptions={{ headerStyle: { backgroundColor: colors.emerald }, headerTintColor: colors.goldSoft,
@@ -81,8 +102,14 @@ export default function RootLayout() {
     <LangProvider><SettingsProvider><ContentProvider><PassportProvider><AccountProvider><JournalProvider>
       <StatusBar style="light" />
       <NotificationSync />
-      <Screens />
+      <DemoStrip><Screens /></DemoStrip>
       <WelcomeGate />
     </JournalProvider></AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
   </SafeAreaProvider>;
 }
+
+const s = StyleSheet.create({
+  fill: { flex: 1, backgroundColor: colors.parchment },
+  strip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingBottom: space.xs, paddingHorizontal: space.m, backgroundColor: colors.emeraldDeep },
+  stripText: { color: colors.goldSoft, fontWeight: '700', letterSpacing: 1, ...type.caption },
+});

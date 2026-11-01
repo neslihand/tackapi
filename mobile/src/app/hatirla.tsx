@@ -10,6 +10,7 @@ import { AnswerOption, ProgressBar } from '@/components/Controls';
 import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { mediaUrl } from '@/lib/api';
 import { t, useLang } from '@/lib/i18n';
+import { buzz } from '@/lib/motion';
 import { capitalize, type GlossaryTerm } from '@/lib/reading';
 import { daysUntil, nextDue, parseCardId, questionFor, type Candidate } from '@/lib/recall';
 import { useRecall } from '@/lib/recall-state';
@@ -68,6 +69,7 @@ export default function Recall() {
 
   const record = (correct: boolean) => {
     const next = answer(card.id, correct);
+    if (correct) buzz('light');
     setResults(r => [...r, { card, correct, due: next?.cards[card.id]?.due ?? null }]);
   };
   const advance = () => {

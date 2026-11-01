@@ -4,9 +4,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Item } from './api';
-import { guessIn, HUNT_KEY, huntFor, huntNumberOf, outcome, parseHunt, withHunt, type HuntDay, type HuntState } from './hunt';
+import { guessIn, HUNT_KEY, huntFor, huntNumberOf, outcome, parseHunt, withHunt, withoutDay, type HuntDay, type HuntState } from './hunt';
 import { dayKey } from './passport';
 import { useContent, usePassport } from './store';
+
+/** Ayarlar → Sunum: today's puzzle starts again the next time it opens. */
+export async function resetHuntToday(now: Date) {
+  const state = parseHunt(await AsyncStorage.getItem(HUNT_KEY).catch(() => null));
+  await AsyncStorage.setItem(HUNT_KEY, JSON.stringify(withoutDay(state, dayKey(now)))).catch(() => {});
+}
 
 export type HuntView = {
   ready: boolean; day: string; number: number;

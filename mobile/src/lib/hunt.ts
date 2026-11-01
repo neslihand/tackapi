@@ -112,6 +112,13 @@ export function withHunt(state: HuntState, hunt: Hunt): HuntState {
   return { version: 1, days: Object.fromEntries(Object.entries(days).sort(([a], [b]) => a.localeCompare(b)).slice(-KEEP_DAYS)) };
 }
 
+/** Ayarlar → Sunum: forgets one day's puzzle and guesses; the other days stay. */
+export function withoutDay(state: HuntState, key: string): HuntState {
+  if (!state.days[key]) return state;
+  const { [key]: _gone, ...days } = state.days;
+  return { ...state, days };
+}
+
 export function guessIn(state: HuntState, key: string, slug: string): HuntState {
   const day = state.days[key];
   const next = day && applyGuess(day, slug);

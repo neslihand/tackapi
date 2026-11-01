@@ -1,9 +1,10 @@
 // Screen layout pieces: section headers, horizontal rails and the bottom action bar.
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactElement, ReactNode } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { IconName } from '@/components/UI';
+import { usePop } from '@/lib/motion';
 import { colors, hit, radius, serif, space, type } from '@/lib/theme';
 
 /** A section title with an optional "See all" link on the right. */
@@ -30,7 +31,9 @@ export function HorizontalRail<T>({ title, actionLabel, onAction, data, renderIt
   </View>;
 }
 
-export type BarAction = { label: string; icon: IconName; onPress: () => void; kind?: 'dark' | 'gold' | 'plain'; accessibilityLabel?: string; disabled?: boolean; busy?: boolean };
+export type BarAction = { label: string; icon: IconName; onPress: () => void; kind?: 'dark' | 'gold' | 'plain'; accessibilityLabel?: string; disabled?: boolean; busy?: boolean;
+  /** The button pops whenever this changes (e.g. a stamp landing). */
+  pop?: string };
 
 /** The bar's height without the safe area; add insets.bottom for the scroll view's bottom padding. */
 export const ACTION_BAR_HEIGHT = 52 + space.s * 2;
@@ -41,18 +44,24 @@ export function StickyActionBar({ actions, note }: { actions: [BarAction, BarAct
   return <View style={[styles.bar, { paddingBottom: space.s + insets.bottom }]}>
     {note && <View style={styles.note}>{note}</View>}
     <View style={styles.actions}>
-    {actions.map(a => {
-      const kind = a.kind ?? 'plain';
-      const fg = kind === 'dark' ? colors.goldSoft : colors.ink;
-      return <Pressable key={a.label} accessibilityRole="button" accessibilityLabel={a.accessibilityLabel ?? a.label}
-        accessibilityState={{ disabled: a.disabled || a.busy, busy: a.busy }} disabled={a.disabled || a.busy} onPress={a.onPress}
-        style={({ pressed }) => [styles.barAction, styles[kind], (a.disabled || a.busy) && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.97 }] }]}>
-        {a.busy ? <ActivityIndicator color={fg} /> : <Ionicons name={a.icon} size={20} color={fg} />}
-        <Text style={[styles.barLabel, { color: fg }]} numberOfLines={1}>{a.label}</Text>
-      </Pressable>;
-    })}
+    {/* by position, so a button that changes its label pops instead of being drawn anew */}
+    {actions.map((a, i) => <BarButton key={i} action={a} />)}
     </View>
   </View>;
+}
+
+function BarButton({ action: a }: { action: BarAction }) {
+  const pop = usePop(a.pop);
+  const kind = a.kind ?? 'plain';
+  const fg = kind === 'dark' ? colors.goldSoft : colors.ink;
+  return <Animated.View style={[styles.barSlot, pop]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={a.accessibilityLabel ?? a.label}
+      accessibilityState={{ disabled: a.disabled || a.busy, busy: a.busy }} disabled={a.disabled || a.busy} onPress={a.onPress}
+      style={({ pressed }) => [styles.barAction, styles[kind], (a.disabled || a.busy) && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.97 }] }]}>
+      {a.busy ? <ActivityIndicator color={fg} /> : <Ionicons name={a.icon} size={20} color={fg} />}
+      <Text style={[styles.barLabel, { color: fg }]} numberOfLines={1}>{a.label}</Text>
+    </Pressable>
+  </Animated.View>;
 }
 
 const styles = StyleSheet.create({
@@ -66,6 +75,7 @@ const styles = StyleSheet.create({
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: space.s, paddingTop: space.s, paddingHorizontal: space.m, backgroundColor: colors.parchment, borderTopWidth: 1, borderTopColor: colors.line },
   note: { paddingBottom: space.xs },
   actions: { flexDirection: 'row', gap: space.s },
+  barSlot: { flex: 1 },
   barAction: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: space.xs, borderRadius: radius.m, borderWidth: 1 },
   dark: { backgroundColor: colors.emerald, borderColor: colors.goldLine },
   gold: { backgroundColor: colors.gold, borderColor: colors.goldText },
