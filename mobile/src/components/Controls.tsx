@@ -1,7 +1,8 @@
-// Small controls: chips, segmented control, progress bar and stat pill.
+// Small controls: chips, segmented control, progress bar, answer option and stat pill.
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { IconName } from '@/components/UI';
+import { t } from '@/lib/i18n';
 import { colors, hit, radius, space, type } from '@/lib/theme';
 
 /** A filter chip; selected chips are filled and show a check, so state is not told by colour alone. Without onPress
@@ -49,6 +50,22 @@ export function ProgressBar({ value, max, label, accessibilityLabel, tone = 'lig
   </View>;
 }
 
+/** A multiple-choice answer. Once answered the right one shows a check and the picked wrong one a cross, each with a
+ *  written tag, so the result is not told by colour alone. */
+export function AnswerOption({ label, state, onPress }: { label: string; state: 'open' | 'right' | 'wrong' | 'other'; onPress: () => void }) {
+  const tag = state === 'right' ? t('Doğru cevap', 'The right answer') : state === 'wrong' ? t('Senin cevabın', 'Your answer') : null;
+  return <Pressable accessibilityRole="button" accessibilityLabel={tag ? `${label}, ${tag}` : label} accessibilityState={{ disabled: state !== 'open' }}
+    disabled={state !== 'open'} onPress={onPress}
+    style={({ pressed }) => [styles.option, state === 'right' && styles.optionRight, state === 'wrong' && styles.optionWrong, pressed && { opacity: 0.85 }]}>
+    <View style={styles.optionBody}>
+      <Text style={[styles.optionText, state === 'right' && { color: colors.goldSoft }, state === 'other' && { color: colors.soft }]}>{label}</Text>
+      {tag && <Text style={[styles.optionTag, { color: state === 'right' ? colors.gold : colors.danger }]}>{tag}</Text>}
+    </View>
+    {state === 'right' && <Ionicons name="checkmark-circle" size={22} color={colors.gold} />}
+    {state === 'wrong' && <Ionicons name="close-circle" size={22} color={colors.danger} />}
+  </Pressable>;
+}
+
 /** Icon + number + label, e.g. a streak; read as one phrase. */
 export function StatPill({ icon, value, label, tone = 'light' }: { icon: IconName; value: number | string; label: string; tone?: 'light' | 'dark' }) {
   const dark = tone === 'dark';
@@ -74,6 +91,12 @@ const styles = StyleSheet.create({
   trackDark: { backgroundColor: colors.emeraldDeep, borderColor: colors.goldLine },
   fill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.emeraldLight },
   progressText: { color: colors.soft, fontWeight: '600', ...type.caption },
+  option: { flexDirection: 'row', alignItems: 'center', gap: space.s, minHeight: hit + space.s, paddingHorizontal: space.m, paddingVertical: space.s, borderRadius: radius.m, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper },
+  optionRight: { backgroundColor: colors.emerald, borderColor: colors.gold },
+  optionWrong: { backgroundColor: colors.dangerSoft, borderColor: colors.danger },
+  optionBody: { flex: 1, gap: 2 },
+  optionText: { color: colors.ink, ...type.body },
+  optionTag: { fontWeight: '700', ...type.caption },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 32, paddingHorizontal: space.m - 4, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper, alignSelf: 'flex-start' },
   pillDark: { backgroundColor: colors.emeraldDeep },
   pillValue: { color: colors.ink, fontWeight: '700', ...type.body },

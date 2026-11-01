@@ -60,6 +60,7 @@ function Screens() {
     <Stack.Screen name="sor/[slug]" options={{ title: t('Esere Sor', 'Ask the Work'), presentation: 'modal' }} />
     <Stack.Screen name="quiz" options={{ title: t('Tarihin İzinde', 'On the Trail of History') }} />
     <Stack.Screen name="detay-avi" options={{ title: t('Detay Avı', 'Detail Hunt') }} />
+    <Stack.Screen name="hatirla" options={{ title: t('Hatırla', 'Recall') }} />
     <Stack.Screen name="rota/[id]" options={{ title: t('Rota Yürüyüşü', 'Route Walk') }} />
     <Stack.Screen name="okuma" options={{ title: t('Okuma Odası', 'Reading Room') }} />
     <Stack.Screen name="makale/[slug]" options={{ title: t('Makale', 'Article') }} />

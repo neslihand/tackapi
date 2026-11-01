@@ -20,7 +20,7 @@ export type HuntDay = { slug: string; options: string[]; focus: Focus; guesses: 
 export type HuntState = { version: 1; days: Record<string, HuntDay> };
 
 // FNV-1a with a final mix (so neighbouring days differ in every bit): a small stable hash, the same on every platform
-function hash(text: string) {
+export function hash(text: string) {
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
@@ -29,8 +29,8 @@ function hash(text: string) {
 const byHash = (salt: string) => (a: Item, b: Item) => hash(`${salt}:${a.slug}`) - hash(`${salt}:${b.slug}`) || a.slug.localeCompare(b.slug);
 const sameName = (a: Item, b: Item) => a.name.trim().toLocaleLowerCase('tr-TR') === b.name.trim().toLocaleLowerCase('tr-TR');
 
-const localDays = (date: Date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
-const fromKey = (key: string) => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); };
+export const localDays = (date: Date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
+export const fromKey = (key: string) => { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); };
 
 /** The puzzle number of `date` (a local day): HUNT_START is #1. */
 export function huntNumber(date: Date) {

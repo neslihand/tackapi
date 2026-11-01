@@ -324,6 +324,11 @@ Görev:
    whereAmI o eserin konumunu döner), "Hatırla kartlarını şimdi getir", "Detay Avı'nı sıfırla", "Karşılamayı göster".
    Demo konumu açıkken tüm ekranlarda küçük "DEMO" etiketi. Varsayılan kapalı; yayın derlemesinde de görünmez değil
    ama gizli kalır.
+   P7 notu ("Hatırla kartlarını şimdi getir"): src/lib/recall.ts'e saf `bringForward(state, candidates, now)` ekle.
+   `workCards` + `termCards` ile bulunan her kartın (henüz hiç sorulmamış yeni kartlar dahil) `due` alanını bugüne
+   çeker; kutuları ve `sessions`'ı değiştirmez. Böylece bugün keşfedilen eserin kartları da hemen açılır. Durum
+   `esik:recall:v1`'e yazılır; Hatırla ekranı ve Bugün kartı useFocusEffect ile yeniden okur. Oturum yine en fazla
+   5 kart (ilk oturumda 3) olur. Demodan önce en az 1–2 eser keşfedilmiş olmalı, yoksa kart çıkmaz.
 2. Tutarlılık turu: tüm sekmeler ve yeni ekranlarda başlık boyutları, boşluklar, kart yarıçapları, boş durumlar,
    yükleniyor göstergeleri aynı dili konuşuyor mu? Sapmaları listele, onayımla düzelt.
 3. Erişilebilirlik: yeni ekranlar için docs/erisilebilirlik.md'deki yöntemi tekrarla (axe ile web taraması, etiketler,

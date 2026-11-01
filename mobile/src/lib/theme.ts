@@ -16,6 +16,7 @@ export const colors = {
   soft: '#50594D',
   line: '#BBBAB6',
   danger: '#8D3A30',
+  dangerSoft: '#F6E9E6',   // behind a wrong answer; danger and ink text stay above 4.5:1
   tabInactive: '#A4A29F',  // tab labels on emeraldDeep
 };
 
