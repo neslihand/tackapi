@@ -19,14 +19,14 @@
 /* The hero grows with its words instead of a fixed height, so a long name or a short screen never pushes the title up
    under the menu. The words stand on the left and the photo card on the right, on the same night green as the Reading
    Room's band (vakif/articles.css → .rr-band), so the page's opening has one tone whatever the photo. */
-.story-page .story-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, min(34vw, 480px)); grid-template-rows: auto 1fr auto auto; grid-template-areas: 'back back' 'head card' 'lede card' 'chapters chapters'; column-gap: clamp(36px, 6vw, 110px); height: auto; min-height: 100svh; max-height: none; padding: 128px 8% 44px 10%; }
+.story-page .story-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, min(34vw, 480px)); grid-template-rows: auto auto 1fr auto; align-content: start; grid-template-areas: 'back back' 'head card' 'lede card' 'chapters chapters'; column-gap: clamp(36px, 6vw, 110px); height: auto; min-height: 100svh; max-height: none; padding: 128px 8% 44px 10%; }
 .story-page .story-hero > .back-link { grid-area: back; position: relative; top: auto; left: auto; z-index: 2; justify-self: start; margin-bottom: 20px; }
 .story-page .story-hero { background: radial-gradient(ellipse 45% 70% at 78% 40%, #1c3d35 0, #0c2420 48%, transparent 76%), radial-gradient(ellipse 50% 60% at 6% 0%, #0f2a2480, transparent 70%), #030a08; }
-.story-page .story-hero-head { grid-area: head; position: relative; z-index: 1; align-self: end; padding-top: 12px; }
+.story-page .story-hero-head { grid-area: head; position: relative; z-index: 1; align-self: start; padding-top: 12px; }
 .story-page .story-hero-head h1 { font-size: clamp(40px, min(6.2vw, 11svh), 104px); }
 .story-page .story-hero-lede { grid-area: lede; position: relative; z-index: 1; align-self: start; }
 .story-page .story-hero-lede > p { margin: 0; }
-.story-page .story-hero .hg { grid-area: card; position: relative; z-index: 2; align-self: center; }
+.story-page .story-hero .hg { grid-area: card; position: relative; z-index: 2; align-self: start; margin-top: 12px; }
 .story-page .story-hero-chapters { grid-area: chapters; position: relative; z-index: 1; inset: auto; margin-top: 40px; }
 
 /* ——— The photo card (HeroGallery.tsx): a plain wide card with a fine gold edge ——— */
