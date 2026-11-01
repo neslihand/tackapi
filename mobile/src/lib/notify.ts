@@ -1,7 +1,7 @@
 // Local notifications, scheduled on the device (no server, no push token; they work in Expo Go too):
 //   "Günün Eşiği": every morning one work with a sentence from its book summary; a week is set up ahead, so it
 //                  arrives without a connection. Tapping it opens the work.
-//   streak reminder: one gentle evening note, only while a streak is alive and today has no discovery yet.
+//   streak reminder: one gentle evening note, only when the streak would end that night (no rest day left).
 // The web build (development in the browser) uses notify.web.ts instead: expo-notifications has no web support.
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -10,7 +10,8 @@ import { Platform } from 'react-native';
 import type { Item } from './api';
 import { DAILY_DAYS, dailyPicks, teaser } from './daily';
 import { t } from './i18n';
-import { dayKey, streak, type Progress } from './passport';
+import { dayKey, type Progress } from './passport';
+import { nextReminder, type StreakMode } from './streak';
 
 const CHANNEL = 'esik';
 const STREAK_ID = 'streak';
@@ -73,19 +74,19 @@ export async function scheduleDailyWork(on: boolean, hour: number, items: Item[]
   }
 }
 
-export async function scheduleStreakReminder(on: boolean, progress: Progress) {
+export async function scheduleStreakReminder(on: boolean, progress: Progress, mode: StreakMode) {
   await cancelWhere(id => id === STREAK_ID);
-  const s = streak(progress);
-  if (!on || s.days === 0) return;
-  const now = new Date();
-  // today already counts: the note is for tomorrow evening; otherwise this evening, if it is not past
-  const at = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (s.today ? 1 : 0), STREAK_HOUR, 0, 0);
-  if (at <= now) return;
-  const days = s.days;
+  if (!on) return;
+  const next = nextReminder(progress.days, mode, new Date(), STREAK_HOUR);
+  if (!next) return;
+  const n = next.state.count;
   await Notifications.scheduleNotificationAsync({
     identifier: STREAK_ID,
-    content: { title: t(`${days} günlük keşif serin sürüyor`, `Your ${days}-day discovery streak goes on`),
-      body: t('Bugün bir kapı daha aç: tek bir hikâye seriyi sürdürür.', 'Open one more door today: a single story keeps it going.'), data: { path: '/' } },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
+    content: mode === 'weekly'
+      ? { title: t(`${n} haftalık serin sürüyor`, `Your ${n}-week streak goes on`),
+        body: t('Bu hafta henüz bir kapı açmadın; hafta bu gece bitiyor.', 'You have not opened a door this week yet; the week ends tonight.'), data: { path: '/' } }
+      : { title: t(`${n} günlük serin sürüyor`, `Your ${n}-day streak goes on`),
+        body: t('Bu haftanın izin gününü kullandın; bugün tek bir hikâye seriyi sürdürür.', 'You have used this week’s rest day; a single story today keeps it going.'), data: { path: '/' } },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: next.at, channelId: CHANNEL },
   });
 }

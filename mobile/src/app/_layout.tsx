@@ -27,9 +27,9 @@ function NotificationSync() {
   }, [ready, passportReady, settings.dailyWork, settings.dailyHour, items, found, lang]);
   useEffect(() => {
     if (!ready || !passportReady) return;
-    scheduleStreakReminder(settings.streakReminder, progress).catch(() => {});
+    scheduleStreakReminder(settings.streakReminder, progress, settings.streakMode).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, passportReady, settings.streakReminder, days, lang]);
+  }, [ready, passportReady, settings.streakReminder, settings.streakMode, days, lang]);
 
   useNotificationTaps();
   return null;

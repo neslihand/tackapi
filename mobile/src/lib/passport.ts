@@ -1,8 +1,7 @@
 // The heritage passport. The shape is the site's Progress (frontend/src/lib/progress.ts, key esik:passport:v1), so
 // an account can later merge both; the phone adds two fields the site does not have:
 //   visits: works stamped on the spot (the phone was near the work), {slug: {date, approximate}}
-//   days:   the local days (YYYY-MM-DD) with at least one discovery, for the discovery streak
-import { t } from './i18n';
+//   days:   the local days (YYYY-MM-DD) with at least one streak-keeping action (streak.ts)
 
 export type Visit = { date: string; approximate: boolean };
 export type Progress = {
@@ -83,9 +82,13 @@ export function dayKey(date = new Date()) {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
-const addDays = (key: string, n: number) => { const [y, m, d] = key.split('-').map(Number); return dayKey(new Date(y, m - 1, d + n)); };
-
 const withDay = (p: Progress, now: Date) => p.days.includes(dayKey(now)) ? p.days : [...p.days, dayKey(now)].slice(-400);
+
+/** Today counts for the streak (a stamp, a right answer, a solved puzzle, a review session…). */
+export function markActiveDay(p: Progress, now: Date): Progress {
+  const days = withDay(p, now);
+  return days === p.days ? p : { ...p, days };
+}
 
 /** A digital discovery (the story was read); also keeps today in the streak. */
 export function discover(p: Progress, slug: string, now = new Date()): Progress {
@@ -105,20 +108,11 @@ export function toggleFavorite(p: Progress, slug: string): Progress {
   return { ...p, favorites: p.favorites.includes(slug) ? p.favorites.filter(s => s !== slug) : [...p.favorites, slug] };
 }
 
-/** A finished quiz round: the count, the best score (percent) and the works with a question answered right. */
-export function recordQuiz(p: Progress, score: number, rightAbout: string[]): Progress {
-  return { ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, Math.min(100, Math.max(0, Math.round(score)))) },
+/** A finished quiz round: the count, the best score (percent) and the works with a question answered right; a right
+ *  answer keeps the streak too. */
+export function recordQuiz(p: Progress, score: number, rightAbout: string[], now: Date): Progress {
+  return { ...p, days: rightAbout.length ? withDay(p, now) : p.days, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, Math.min(100, Math.max(0, Math.round(score)))) },
     answered: [...new Set([...p.answered, ...rightAbout])] };
-}
-
-/** Consecutive days with a discovery, ending today (or yesterday, when today is still open). */
-export function streak(p: Progress, now = new Date()) {
-  const days = new Set(p.days);
-  let day = dayKey(now);
-  if (!days.has(day)) day = addDays(day, -1);
-  let n = 0;
-  while (days.has(day)) { n += 1; day = addDays(day, -1); }
-  return { days: n, today: days.has(dayKey(now)) };
 }
 
 /** Metres between two points (haversine). */
@@ -137,26 +131,3 @@ export const stampRadius = (loc: { approximate: boolean; radius_m: number | null
 export const normalize = (value: string) => value.toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
 
 export const formatDistance = (m: number) => m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toLocaleString(undefined, { maximumFractionDigits: m < 10000 ? 1 : 0 })} km`;
-
-export type Medal = { id: string; name: string; description: string; required: number; value: number; metal: 'bronze' | 'silver' | 'gold'; mobile?: boolean };
-export function medals(p: Progress, items: { slug: string; city: { slug: string } }[]): Medal[] {
-  const found = items.filter(a => p.discovered[a.slug]);
-  const cities = new Set(found.map(a => a.city.slug)).size;
-  const visits = Object.keys(p.visits).length;
-  const best = longestStreak(p.days);
-  return [
-    { id: 'first', name: t('İlk Adım', 'First Step'), description: t('İlk eserinin hikâyesini keşfet ve pasaportuna mühürle.', 'Discover the story of your first work and stamp it in your passport.'), required: 1, value: found.length, metal: 'bronze' },
-    { id: 'traveler', name: t('Tarih Yolcusu', 'History Traveller'), description: t('Beş eserin hikâyesini pasaportunda biriktir.', 'Collect the stories of five works in your passport.'), required: 5, value: found.length, metal: 'gold' },
-    { id: 'cities', name: t('Şehir Gezgini', 'City Wanderer'), description: t('Üç farklı şehirdeki eserleri keşfet.', 'Discover works in three different cities.'), required: 3, value: cities, metal: 'silver' },
-    { id: 'quiz', name: t('Bilgi Avcısı', 'Knowledge Hunter'), description: t('Tarihin İzinde bilgi yarışmasının ilk turunu tamamla.', 'Complete your first round of the On the Trail of History quiz.'), required: 1, value: p.quiz.completed, metal: 'bronze' },
-    { id: 'witness', name: t('Yerinde Tanık', 'On-the-Spot Witness'), description: t('Bir eserin önünde durup yerinde mühür bas.', 'Stand in front of a work and take its on-the-spot stamp.'), required: 1, value: visits, metal: 'bronze', mobile: true },
-    { id: 'pilgrim', name: t('Eşik Gezgini', 'Threshold Walker'), description: t('Beş eseri yerinde ziyaret et.', 'Visit five works on the spot.'), required: 5, value: visits, metal: 'gold', mobile: true },
-    { id: 'companion', name: t('Yol Arkadaşı', 'Travel Companion'), description: t('Yedi gün art arda en az bir eser keşfet.', 'Discover at least one work seven days in a row.'), required: 7, value: best, metal: 'silver', mobile: true },
-  ];
-}
-
-export function longestStreak(days: string[]) {
-  let best = 0, run = 0, prev = '';
-  for (const d of [...new Set(days)].sort()) { run = prev && addDays(prev, 1) === d ? run + 1 : 1; best = Math.max(best, run); prev = d; }
-  return best;
-}

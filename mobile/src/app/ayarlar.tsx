@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { SegmentedControl } from '@/components/Controls';
 import { Button, Eyebrow, Notice } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
 import { apiBase, request } from '@/lib/api';
@@ -67,8 +68,15 @@ export default function Settings() {
         accessibilityRole="radio" accessibilityState={{ checked: settings.dailyHour === h }} aria-checked={settings.dailyHour === h} hitSlop={4} style={[s.chip, settings.dailyHour === h && s.chipOn]}>
         <Text style={[s.chipText, settings.dailyHour === h && { color: colors.goldSoft }]}>{String(h).padStart(2, '0')}:00</Text></Pressable>)}</View>}
       <View style={s.divider} />
-      <Line title={t('Seri hatırlatması', 'Streak reminder')} body={t('Serin sürüyorsa ve o gün bir eser açmadıysan akşam 19:00’da tek bir not.', 'A single note at 19:00 when your streak is alive and you have not opened a work that day.')}
+      <Line title={t('Seri hatırlatması', 'Streak reminder')} body={settings.streakMode === 'weekly'
+        ? t('Serin sürüyorsa ve bu hafta henüz bir eser açmadıysan Pazar akşamı 19:00’da tek bir not.', 'A single note at 19:00 on Sunday when your streak is alive and you have not opened a work this week.')
+        : t('Serin sürüyorsa, bu haftanın izin günü kullanıldıysa ve bugün bir eser açmadıysan akşam 19:00’da tek bir not.', 'A single note at 19:00 when your streak is alive, this week’s rest day is used and you have not opened a work today.')}
         value={settings.streakReminder} onChange={v => toggle('streakReminder', v)} />
+      <View style={s.divider} />
+      <Text style={s.title}>{t('Seri türü', 'Streak type')}</Text>
+      <SegmentedControl accessibilityLabel={t('Seri türü', 'Streak type')} value={settings.streakMode} onChange={streakMode => change({ streakMode })}
+        options={[{ key: 'daily', label: t('Günlük', 'Daily') }, { key: 'weekly', label: t('Haftalık', 'Weekly') }]} />
+      <Text style={s.small}>{settings.streakMode === 'weekly' ? t('Her hafta en az bir eser.', 'At least one work every week.') : t('Her gün bir eser; haftada bir gün izinli.', 'One work a day; one rest day a week.')}</Text>
     </View>
     <Notice icon="lock-closed-outline">{t('Bildirimler telefonunda kurulur; sunucuya bir şey gönderilmez. Konumun ve ayarların bu cihazda kalır; pasaportun yalnızca giriş yaptıysan hesabınla eşitlenir.', 'Notifications are set up on your phone; nothing is sent to the server. Your location and settings stay on this device; your passport is synced with your account only if you sign in.')}</Notice>
     <Eyebrow>{t('KARŞILAMA', 'WELCOME')}</Eyebrow>

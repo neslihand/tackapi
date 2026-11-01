@@ -19,6 +19,9 @@ export const colors = {
   tabInactive: '#A4A29F',  // tab labels on emeraldDeep
 };
 
+// Medallion fills; the tier is always written out too, so the metal is never the only clue.
+export const metal = { bronze: '#A9773F', silver: '#B7B6B1', gold: colors.gold };
+
 export const serif = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
 export const space = { xs: 4, s: 8, m: 16, l: 24, xl: 32 };

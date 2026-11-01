@@ -7,10 +7,9 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Notice } from './UI';
 import { t } from '@/lib/i18n';
 import { CARD_HEIGHT, CARD_WIDTH, shareCard, shareVerb } from '@/lib/share';
-import { colors, serif } from '@/lib/theme';
+import { colors, metal as METAL, serif } from '@/lib/theme';
 
 const ARCH = require('../../assets/icon.png');
-const METAL = { bronze: '#a9773f', silver: '#b7b6b1', gold: colors.gold };
 
 export type Shared =
   | { kind: 'stamp'; name: string; place: string; date: string; onSpot: boolean; photo: string | null }

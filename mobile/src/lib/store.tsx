@@ -8,7 +8,8 @@ import { buildQuests } from './quests';
 import { answerable } from './quiz';
 import type { HomeFocus } from './welcome';
 import type { Telling } from './work';
-import { canonical, discover, emptyProgress, mergeProgress, parseProgress, recordQuiz, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
+import { canonical, discover, emptyProgress, markActiveDay, mergeProgress, parseProgress, recordQuiz, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
+import type { StreakMode } from './streak';
 
 // ------------------------------------------------------------------------------------------------ collection
 type Content = Feed & { loading: boolean; error: string | null; reload: () => void; bySlug: (slug: string) => Item | undefined };
@@ -48,6 +49,8 @@ type Passport = {
   progress: Progress; ready: boolean;
   discover: (slug: string) => void; visit: (slug: string, approximate: boolean) => void; toggleFavorite: (slug: string) => void;
   recordQuiz: (score: number, rightAbout: string[]) => void;
+  /** Today counts for the streak (Detay Avı, Hatırla…). */
+  markActiveDay: () => void;
   /** Takes in a passport from the account (another device's progress); returns the merged one. */
   absorb: (incoming: unknown) => void;
 };
@@ -74,7 +77,8 @@ export function PassportProvider({ children }: { children: ReactNode }) {
     discover: slug => update(p => discover(p, slug), true),
     visit: (slug, approximate) => update(p => visit(p, slug, approximate), true),
     toggleFavorite: slug => update(p => toggleFavorite(p, slug)),
-    recordQuiz: (score, rightAbout) => update(p => recordQuiz(p, score, rightAbout)),
+    recordQuiz: (score, rightAbout) => update(p => recordQuiz(p, score, rightAbout, new Date())),
+    markActiveDay: () => update(p => markActiveDay(p, new Date())),
     absorb: incoming => update(p => {
       const merged = mergeProgress(p, parseProgress(JSON.stringify(incoming)));
       return canonical(merged) === canonical(p) ? p : merged;
@@ -90,10 +94,10 @@ export function usePassport() {
 
 // ------------------------------------------------------------------------------------------------ settings
 // server: the backend address typed in Ayarlar ('' = the built-in one); telling: the last telling chosen on a work (or
-// on the welcome); homeFocus: the Bugün card the welcome choice lifts below Günün Eşiği
-export type Settings = { dailyWork: boolean; dailyHour: number; streakReminder: boolean; server: string; telling: Telling; homeFocus: HomeFocus };
+// on the welcome); homeFocus: the Bugün card the welcome choice lifts below Günün Eşiği; streakMode: daily or weekly streak
+export type Settings = { dailyWork: boolean; dailyHour: number; streakReminder: boolean; streakMode: StreakMode; server: string; telling: Telling; homeFocus: HomeFocus };
 const SETTINGS_KEY = 'esik:settings:v1';
-const defaults: Settings = { dailyWork: false, dailyHour: 9, streakReminder: false, server: '', telling: 'story', homeFocus: null };
+const defaults: Settings = { dailyWork: false, dailyHour: 9, streakReminder: false, streakMode: 'daily', server: '', telling: 'story', homeFocus: null };
 const SettingsContext = createContext<{ settings: Settings; ready: boolean; change: (s: Partial<Settings>) => void } | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
