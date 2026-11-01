@@ -136,7 +136,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
-- **Testler:** `python -m unittest discover -s tests` (190 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Mobil kişiselleştirme (1 Kasım 2026):** öneri ve sıralama telefonda hesaplanır (`mobile/src/lib/personal.ts`). Arka uçta yalnızca `list_item.has_story/has_child`, `insights.recommend` içinde hesabın şehri ve hikâye/çocuk ilgileri, `preferences_changed` olayı, `personalization` düğmesi. Yaş kullanılmaz.
+- **Mobil master plan, ikinci tur (1 Kasım 2026):** göçler 019-023 gerçek veritabanında uygulandı (yalnızca yeni tablo ve sütun). `routes.walk_issues` (süreli rota yayın kuralı), `details.py` (üç detay), `weekly.py` (Haftanın Keşfi, `#/haftanin-kesfi`), `questions.py` (Cevabı Bekleyen Sorular, `#/bekleyen-sorular`; sohbet kaynağı değil), `image.reuse_allowed` (çevrimdışı ve paylaşım kartı izni, varsayılan kapalı; panelde kitap kitap), `site_setting.app_flags` (telefon modül düğmeleri), `rag.says_no_info`. **`calistir.sh` içinde `GEMINI_API_KEY` boş: Esere Sor bu makinede cevap vermiyor.**
+- **Mobil master plan işleri (1 Kasım 2026):** `share.py` (`/eser/<slug>` paylaşım sayfası: uygulamasız açılır, betik/çerez/fotoğraf yok), `GET /api/routes/{id}/manifest` (paket boyutu ve sürümü), `hunt.py` + göç `018_daily_hunt.sql` (Detay Avı; gerçek veritabanında 1 Kasım 2026'da uygulandı, görev yok; panelde `#/detay-avi`), `site_setting.medal_tiers` (kademeli madalyon eşikleri, panelden), `insights.cohorts`/`pilot_kpis`. Durum ve kararlar: `../audit/current-state.md`.
+- **Testler:** `python -m unittest discover -s tests` (267 test, `TZ=UTC` ile; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.

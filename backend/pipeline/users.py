@@ -65,12 +65,14 @@ def _record(value):
 
 DAY_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 DAYS_KEPT = 400
+NOTEBOOK_LABELS = ('interested', 'learned', 'want_to_go', 'visited')
 
 
 def empty_progress():
-    # visits ve days mobil uygulamanındır (yerinde mühürler, keşif serisinin günleri); site okumaz ama korur
+    # visits, days, notebook, recall, read ve hunt mobil uygulamanındır (yerinde mühürler, seri günleri, Keşif Defteri
+    # etiketleri, Hatırla kartları, gerçekten okunan hikâyeler, Detay Avı denemeleri); site okumaz ama korur
     return dict(version=1, discovered={}, favorites=[], quiz=dict(completed=0, best=0),
-                games=dict(puzzle={}, detective={}), answered=[], visits={}, days=[])
+                games=dict(puzzle={}, detective={}), answered=[], visits={}, days=[], notebook={}, recall={}, read={}, hunt={})
 
 
 def clean_progress(value):
@@ -80,6 +82,9 @@ def clean_progress(value):
     for slug, date in _record(v.get('discovered')).items():
         if isinstance(slug, str) and isinstance(date, str) and len(slug) <= 200 and len(date) <= 40:
             p['discovered'][slug] = date
+    for slug, date in list(_record(v.get('read')).items())[:2000]:
+        if isinstance(slug, str) and isinstance(date, str) and len(slug) <= 200 and len(date) <= 40:
+            p['read'][slug] = date
     for key in ('favorites', 'answered'):
         items = v.get(key) if isinstance(v.get(key), list) else []
         p[key] = list(dict.fromkeys(x for x in items if isinstance(x, str) and len(x) <= 200))[:2000]
@@ -100,6 +105,26 @@ def clean_progress(value):
             p['visits'][slug] = dict(date=visit['date'], approximate=visit.get('approximate') is True)
     days = v.get('days') if isinstance(v.get('days'), list) else []
     p['days'] = sorted({d for d in days if isinstance(d, str) and DAY_RE.match(d)})[-DAYS_KEPT:]
+    for slug, labels in list(_record(v.get('notebook')).items())[:2000]:
+        kept = {label: dict(on=mark['on'], at=mark['at']) for label, mark in ((k, _record(m)) for k, m in _record(labels).items())
+                if label in NOTEBOOK_LABELS and isinstance(mark.get('on'), bool) and isinstance(mark.get('at'), str) and len(mark['at']) <= 40}
+        if kept and isinstance(slug, str) and len(slug) <= 200:
+            p['notebook'][slug] = kept
+    for card, state in list(_record(v.get('recall')).items())[:2000]:
+        state = _record(state)
+        due, last, step, at = state.get('due'), state.get('last'), state.get('step'), state.get('at')
+        if (isinstance(card, str) and len(card) <= 300 and isinstance(step, int) and 0 <= step <= 9 and isinstance(at, str) and len(at) <= 40
+                and isinstance(last, str) and DAY_RE.match(last) and (due is None or (isinstance(due, str) and DAY_RE.match(due)))):
+            p['recall'][card] = dict(step=step, due=due, first=state.get('first') is True, last=last, at=at)
+    for day, state in sorted(_record(v.get('hunt')).items())[-DAYS_KEPT:]:
+        state = _record(state)
+        attempts, at = state.get('attempts'), state.get('at')
+        if isinstance(day, str) and DAY_RE.match(day) and isinstance(attempts, int) and 0 <= attempts <= 6 and isinstance(at, str) and len(at) <= 40:
+            wrong = state.get('wrong') if isinstance(state.get('wrong'), list) else []
+            work = state.get('work') if isinstance(state.get('work'), str) and len(state['work']) <= 200 else None
+            p['hunt'][day] = dict(attempts=attempts, solved=state.get('solved') is True, at=at,
+                                  wrong=sorted({x for x in wrong if isinstance(x, int) and 0 <= x <= 5}),
+                                  **({'work': work} if work else {}))
     return p
 
 
@@ -109,6 +134,8 @@ def merge_progress(a, b):
     out = empty_progress()
     for slug in set(a['discovered']) | set(b['discovered']):
         out['discovered'][slug] = min(d for d in (a['discovered'].get(slug), b['discovered'].get(slug)) if d)
+    for slug in set(a['read']) | set(b['read']):
+        out['read'][slug] = min(d for d in (a['read'].get(slug), b['read'].get(slug)) if d)
     out['favorites'] = list(dict.fromkeys(a['favorites'] + b['favorites']))
     out['answered'] = list(dict.fromkeys(a['answered'] + b['answered']))
     out['quiz'] = dict(completed=max(a['quiz']['completed'], b['quiz']['completed']), best=max(a['quiz']['best'], b['quiz']['best']))
@@ -125,4 +152,18 @@ def merge_progress(a, b):
     for slug in set(a['visits']) | set(b['visits']):
         out['visits'][slug] = min((x for x in (a['visits'].get(slug), b['visits'].get(slug)) if x), key=lambda x: x['date'])
     out['days'] = sorted(set(a['days']) | set(b['days']))[-DAYS_KEPT:]
+    # Defter etiketi: en son değişiklik kazanır, böylece bir cihazda kaldırılan etiket öbüründen geri gelmez
+    for slug in set(a['notebook']) | set(b['notebook']):
+        x, y = a['notebook'].get(slug, {}), b['notebook'].get(slug, {})
+        out['notebook'][slug] = {label: max((m for m in (x.get(label), y.get(label)) if m), key=lambda m: m['at']) for label in set(x) | set(y)}
+    # Hatırla kartı: son yanıt takvimi belirler; ilk deneme ancak iki cihazda da doğruysa doğru sayılır
+    for card in set(a['recall']) | set(b['recall']):
+        states = [s for s in (a['recall'].get(card), b['recall'].get(card)) if s]
+        out['recall'][card] = dict(max(states, key=lambda s: s['at']), first=all(s['first'] for s in states))
+    # Detay Avı: iki cihaz tek oyuncudur; deneme hakkı yeniden dolmaz, bir cihazda bulunan görev bulunmuş kalır
+    for day in set(a['hunt']) | set(b['hunt']):
+        states = [s for s in (a['hunt'].get(day), b['hunt'].get(day)) if s]
+        work = next((s['work'] for s in states if s.get('work')), None)
+        out['hunt'][day] = dict(attempts=max(s['attempts'] for s in states), solved=any(s['solved'] for s in states), at=min(s['at'] for s in states),
+                                wrong=sorted({x for s in states for x in s['wrong']}), **({'work': work} if work else {}))
     return out

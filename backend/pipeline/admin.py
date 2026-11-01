@@ -13,14 +13,15 @@ Kurallar:
 - Eserle ilgili her değişiklik o eserin sohbet önbelleğini temizler.
 """
 import os, re, io, json, hmac, hashlib, logging
+from datetime import date, timedelta
 from typing import Literal
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, UploadFile, File, Form, Response
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 import gemini_client as G
 from db import vec_literal, VEC_CAST
 from segment import norm_title
 from chunk import chunk_paras, miladi_years, span
-import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes, quiz, insights
+import textfix_db, narrations, visual_search, pilot, pdf_pages, reextract, geocode, routes, quiz, insights, hunt, details, weekly
 
 log_warn = logging.getLogger('vakif.admin').warning
 pilot_targets = pilot.TARGETS
@@ -106,12 +107,17 @@ class TextIn(Strict):
 
 class ImagePatch(Strict):
     monument: str | None = Field(None, max_length=200)   # slug; "" → esere bağlı değil
+    reuse_allowed: bool | None = None                    # çevrimdışı saklama ve paylaşım kartı izni (göç 023)
     review_status: Literal['draft', 'reviewed', 'published', 'rejected'] | None = None
     alt_tr: str | None = Field(None, min_length=3, max_length=300)
     alt_en: str | None = Field(None, max_length=300)
     caption_tr: str | None = Field(None, max_length=500)
     sort: int | None = Field(None, ge=0, le=10000)
     is_cover: bool | None = None
+
+
+class BookReuse(Strict):
+    allowed: bool
 
 
 class ImageBulk(Strict):
@@ -178,6 +184,8 @@ class RouteFields(Strict):
     description: str | None = Field(None, max_length=600)
     sort: int | None = Field(None, ge=0, le=10000)
     published: bool | None = None
+    minutes: Literal[20, 45, 90, 60, 180, 360] | None = None      # editörün süresi; boşsa tematik liste
+    access_note: str | None = Field(None, max_length=300)         # yalnızca doğrulanmış erişim bilgisi
 
 
 class RouteCreate(RouteFields):
@@ -205,14 +213,98 @@ class QuizCreate(QuizFields):
     explanation: str = Field(max_length=400)
 
 
+class HuntFields(Strict):
+    day: date | None = None                                       # Türkiye yerel yayın günü
+    monument: str | None = Field(None, max_length=200)            # eser slug'ı
+    image: int | None = None
+    question: str | None = Field(None, max_length=240)
+    options: list[str] | None = Field(None, min_length=4, max_length=6)
+    answer: int | None = None
+    hints: list[str] | None = Field(None, max_length=4)
+    explanation: str | None = Field(None, max_length=400)
+    rights_confirmed: bool | None = None
+    published: bool | None = None
+
+
+class HuntCreate(HuntFields):
+    day: date
+    monument: str = Field(max_length=200)
+    image: int
+    question: str = Field(max_length=240)
+    options: list[str] = Field(min_length=4, max_length=6)
+    answer: int
+    explanation: str = Field(max_length=400)
+
+
+class WorkDetailIn(Strict):
+    body_tr: str = Field(max_length=500)
+    body_en: str | None = Field(None, max_length=500)
+    source: str = Field(max_length=300)
+    published: bool = False
+
+
+class WeeklyFields(Strict):
+    week: date | None = None                                      # haftanın herhangi bir günü; pazartesiye çekilir
+    monument: str | None = Field(None, max_length=200)
+    hook: str | None = Field(None, max_length=200)
+    detail: str | None = Field(None, max_length=500)
+    source: str | None = Field(None, max_length=300)
+    route: str | None = Field(None, max_length=200)
+    published: bool | None = None
+
+
+class WeeklyCreate(WeeklyFields):
+    week: date
+    monument: str = Field(max_length=200)
+    hook: str = Field(max_length=200)
+    detail: str = Field(max_length=500)
+    source: str = Field(max_length=300)
+
+
 class ContributionReview(Strict):
     status: Literal['pending', 'approved', 'rejected']
     reject_reason: str | None = Field(None, max_length=300)
 
 
+class MedalTiers(Strict):
+    """Bronz, gümüş, altın eşikleri: artan pozitif sayılar. Kademe sayısı sabit; yüzdeler 100'ü geçemez."""
+    read: list[int] = Field(min_length=3, max_length=3)
+    onsite: list[int] = Field(min_length=3, max_length=3)
+    recall: list[int] = Field(min_length=3, max_length=3)
+    city_read: list[int] = Field(min_length=3, max_length=3)
+    master_onsite: int = Field(ge=1, le=100)
+
+    @model_validator(mode='after')
+    def rising(self):
+        for name in ('read', 'onsite', 'recall', 'city_read'):
+            steps = getattr(self, name)
+            if steps[0] < 1 or not steps[0] < steps[1] < steps[2]:
+                raise ValueError(f'{name}: eşikler artan pozitif sayılar olmalı')
+        if self.city_read[2] > 100:
+            raise ValueError('city_read: yüzde 100\'ü geçemez')
+        return self
+
+
+class AppFlags(Strict):
+    """Uygulamanın modül düğmeleri (mobile/src/lib/flags.ts ile aynı adlar). Kapatılan modül bir sonraki açılışta kaybolur."""
+    onboarding_v2: bool | None = None
+    short_stories: bool | None = None
+    flexible_streak: bool | None = None
+    spaced_repetition: bool | None = None
+    tiered_medals: bool | None = None
+    daily_hunt: bool | None = None
+    mini_games: bool | None = None
+    three_details: bool | None = None
+    weekly_discovery: bool | None = None
+    question_follow: bool | None = None
+    personalization: bool | None = None
+
+
 class SettingsIn(Strict):
     default_mode: Literal['auto', 'short', 'story', 'child'] | None = None
     featured_route: str | None = Field(None, max_length=120)      # 'auto', 'none' ya da rota kimliği
+    medal_tiers: MedalTiers | None = None
+    app_flags: AppFlags | None = None
 
 
 class CityCreate(Strict):
@@ -235,6 +327,14 @@ def build_router(db, media_dir, save_webp):
     def log(actor, action, target, detail=None):
         db.execute('INSERT INTO admin_log(actor, action, target, detail) VALUES (%(a)s, %(x)s, %(t)s, %(d)s::jsonb)',
                    dict(a=actor, x=action, t=target, d=json.dumps(detail or {}, ensure_ascii=False, default=str)))
+
+    reuse_ready = []
+
+    def reuse_col(prefix='i.'):
+        """image.reuse_allowed: 023 göçü uygulanmamışsa panel yine açılsın."""
+        if not reuse_ready and db.query("""SELECT 1 FROM information_schema.columns WHERE table_name = 'image' AND column_name = 'reuse_allowed'"""):
+            reuse_ready.append(True)
+        return f'{prefix}reuse_allowed' if reuse_ready else 'false AS reuse_allowed'
 
     def forget_answers(slug):
         if db.query("SELECT to_regclass('public.answer_cache') IS NOT NULL AS ok")[0]['ok']:
@@ -264,7 +364,7 @@ def build_router(db, media_dir, save_webp):
         return m['book_slug'] is None or m['book_slug'].startswith('panel-')
 
     def images_of(monument_id):
-        return db.query("""SELECT id, file, source, review_status, is_cover, sort, alt_tr, alt_en, caption_tr,
+        return db.query(f"""SELECT id, file, source, review_status, is_cover, sort, alt_tr, alt_en, caption_tr, {reuse_col('')},
                                   printed_page, pdf_page, match_method, edited, width, height
                            FROM image WHERE monument_id = %(m)s ORDER BY is_cover DESC, sort, id""", dict(m=monument_id))
 
@@ -431,6 +531,8 @@ def build_router(db, media_dir, save_webp):
                                           WHERE monument_id IS NULL AND review_status <> 'rejected'""")[0]['n'],
             segmentation_pending=db.query("SELECT count(*) AS n FROM para_fix WHERE decision = 'pending'")[0]['n']
                                  if textfix_db.enabled(db) else 0,
+            questions_pending=db.query("""SELECT count(DISTINCT (monument_id, question_norm)) AS n FROM question_ticket
+                                           WHERE status IN ('submitted', 'researching')""")[0]['n'] if db.query("SELECT to_regclass('question_ticket') IS NOT NULL AS ok")[0]['ok'] else 0,
             contributions_pending=db.query("SELECT count(*) AS n FROM contribution WHERE status = 'pending'")[0]['n']
                                   if db.query("SELECT to_regclass('contribution') IS NOT NULL AS ok")[0]['ok'] else 0,
             agent_open=db.query("SELECT count(*) AS n FROM agent_suggestion WHERE status = 'open'")[0]['n']
@@ -502,7 +604,7 @@ def build_router(db, media_dir, save_webp):
         if not rng or not m['book_id'] or from_panel(m):
             return dict(book=m['book_slug'], pages=None, photos=[])
         lo, hi = rng.lower, rng.upper - 1
-        photos = db.query("""SELECT i.id, i.file, i.review_status, i.is_cover, i.alt_tr, i.printed_page, i.pdf_page,
+        photos = db.query(f"""SELECT i.id, i.file, i.review_status, i.is_cover, {reuse_col()}, i.alt_tr, i.printed_page, i.pdf_page,
                                      i.match_method, i.edited, i.width, i.height, mm.slug AS monument, mm.name_tr AS monument_name
                               FROM image i LEFT JOIN monument mm ON mm.id = i.monument_id
                               WHERE i.book_id = %(b)s AND i.printed_page BETWEEN %(lo)s AND %(hi)s
@@ -653,7 +755,7 @@ def build_router(db, media_dir, save_webp):
         p = dict(st=status, un=unassigned, bk=book, mn=monument, lim=page_size, off=(page - 1) * page_size)
         frm = 'FROM image i LEFT JOIN monument m ON m.id = i.monument_id LEFT JOIN source_book b ON b.id = i.book_id'
         total = db.query(f'SELECT count(*) AS n {frm} {where}', p)[0]['n']
-        items = db.query(f"""SELECT i.id, i.file, i.source, i.review_status, i.is_cover, i.sort, i.alt_tr, i.caption_tr,
+        items = db.query(f"""SELECT i.id, i.file, i.source, i.review_status, i.is_cover, i.sort, i.alt_tr, i.caption_tr, {reuse_col()},
                                     i.pdf_page, i.printed_page, i.section_title, i.match_method, i.edited, i.width, i.height,
                                     m.slug AS monument, m.name_tr AS monument_name, b.slug AS book, b.title AS book_title
                              {frm} {where} ORDER BY b.slug, i.pdf_page, i.id LIMIT %(lim)s OFFSET %(off)s""", p)
@@ -703,7 +805,7 @@ def build_router(db, media_dir, save_webp):
                                           f"{', p. ' + str(img['printed_page']) if img['printed_page'] else ''}")
             if target:
                 sets.append('city_id = %(c)s'); params['c'] = target['city_id']
-        for k in ('review_status', 'alt_tr', 'alt_en', 'caption_tr', 'sort'):
+        for k in ('review_status', 'alt_tr', 'alt_en', 'caption_tr', 'sort', 'reuse_allowed'):
             if k in data:
                 sets.append(f'{k} = %({k})s'); params[k] = data[k]
                 if data[k] != img.get(k):
@@ -1079,11 +1181,24 @@ def build_router(db, media_dir, save_webp):
     @r.get('/books')
     def books(user: str = Depends(admin_user)):
         """Kaynak kitaplar ve fotoğraf sayıları (kuyruk filtresi için)."""
-        return db.query("""SELECT b.slug, b.title, c.slug AS city,
+        reuse = reuse_col().replace(' AS reuse_allowed', '')
+        return db.query(f"""SELECT b.slug, b.title, c.slug AS city,
                                   count(i.*) FILTER (WHERE i.review_status = 'draft') AS images_draft,
+                                  count(i.*) FILTER (WHERE {reuse}) AS images_reuse,
                                   count(i.*) AS images
                            FROM source_book b LEFT JOIN city c ON c.id = b.city_id LEFT JOIN image i ON i.book_id = b.id
                            GROUP BY b.id, c.slug ORDER BY b.slug""")
+
+    @r.put('/books/{slug}/reuse')
+    def book_reuse(slug: str, body: BookReuse, user: str = Depends(admin_user)):
+        """Kitabın fotoğraflarının çevrimdışı pakete girmesi ve paylaşım kartına basılması için izin (göç 023). Telif kararıdır,
+        kurumdan teyit alınmadan açılmaz. Kitap fotoğrafları tek kaynaktan geldiği için kitap kitap verilir."""
+        rows = db.query('SELECT id FROM source_book WHERE slug = %(s)s', dict(s=slug))
+        if not rows:
+            raise HTTPException(404, 'Kitap bulunamadı')
+        done = db.query('UPDATE image SET reuse_allowed = %(a)s WHERE book_id = %(b)s AND reuse_allowed <> %(a)s RETURNING id', dict(a=body.allowed, b=rows[0]['id']))
+        log(user, 'book.reuse', f'book:{slug}', dict(allowed=body.allowed, images=len(done)))
+        return dict(slug=slug, allowed=body.allowed, updated=len(done))
 
     @r.get('/periods')
     def periods(user: str = Depends(admin_user)):
@@ -1136,6 +1251,11 @@ def build_router(db, media_dir, save_webp):
         data = {k: v for k, v in body.model_dump(exclude_unset=True).items() if v != rt[k]}
         if 'title' in data and data['title'] is None:
             raise HTTPException(422, 'Rota adı boş olamaz.')
+        if data.get('published', rt['published']) and data.get('minutes', rt.get('minutes')):
+            stops = [x['monument_id'] for x in db.query('SELECT monument_id FROM route_stop WHERE route_id = %(r)s', dict(r=route_id))]
+            problems = routes.walk_issues(db, stops)
+            if problems:
+                raise HTTPException(422, ' '.join(problems))
         if data:
             sets = ', '.join(f'{k} = %({k})s' for k in data)
             db.execute(f'UPDATE route SET {sets}, updated_at = now() WHERE id = %(id)s', dict(data, id=route_id))
@@ -1150,6 +1270,10 @@ def build_router(db, media_dir, save_webp):
         unknown = [s for s in slugs if s not in found]
         if unknown:
             raise HTTPException(422, f"Bilinmeyen eser: {', '.join(unknown)}")
+        if rt['published'] and rt.get('minutes'):
+            problems = routes.walk_issues(db, [found[s] for s in slugs])
+            if problems:
+                raise HTTPException(422, ' '.join(problems))
         db.execute('DELETE FROM route_stop WHERE route_id = %(r)s', dict(r=route_id))
         for i, s in enumerate(slugs):
             db.execute('INSERT INTO route_stop(route_id, monument_id, sort) VALUES (%(r)s, %(m)s, %(i)s)',
@@ -1239,6 +1363,181 @@ def build_router(db, media_dir, save_webp):
         log(user, 'quiz.delete', old['monument'], dict(id=qid, question=old['question']))
         return Response(status_code=204)
 
+    # ------------------------------------------------------------------------------------------ Detay Avı
+    HUNT_SELECT = """SELECT h.id, h.day, h.question, h.options, h.answer, h.hints, h.explanation, h.rights_confirmed, h.published,
+                             h.created_by, h.updated_at, h.image_id AS image, i.file AS image_file, i.review_status AS image_status,
+                             m.slug AS monument, m.name_tr AS monument_name, m.review_status
+                      FROM daily_hunt h JOIN monument m ON m.id = h.monument_id JOIN image i ON i.id = h.image_id"""
+
+    def hunt_row(hid):
+        if not hunt.enabled(db):
+            raise HTTPException(503, 'Detay Avı kapalı: önce python migrate.py --apply')
+        rows = db.query(f'{HUNT_SELECT} WHERE h.id = %(i)s', dict(i=hid))
+        if not rows:
+            raise HTTPException(404, 'Görev bulunamadı')
+        return rows[0]
+
+    def check_hunt(h, monument_id, publish):
+        problems = hunt.issues(h)
+        if publish:
+            problems += hunt.publish_issues(db, monument_id, h['image'], h['rights_confirmed'])
+        if problems:
+            raise HTTPException(422, ' '.join(problems))
+
+    def clean_hunt(d):
+        return dict(d, question=d['question'].strip(), options=[o.strip() for o in d['options']], hints=[x.strip() for x in d['hints'] if x.strip()],
+                    explanation=(d['explanation'] or '').strip())
+
+    @r.get('/hunts')
+    def list_hunts(user: str = Depends(admin_user)):
+        if not hunt.enabled(db):
+            return dict(enabled=False, hunts=[])
+        return dict(enabled=True, hunts=db.query(f'{HUNT_SELECT} ORDER BY h.day DESC'))
+
+    @r.post('/hunts', status_code=201)
+    def create_hunt(body: HuntCreate, user: str = Depends(admin_user)):
+        if not hunt.enabled(db):
+            raise HTTPException(503, 'Detay Avı kapalı: önce python migrate.py --apply')
+        mid = monument_id_of(body.monument)
+        h = clean_hunt(dict(question=body.question, options=body.options, answer=body.answer, hints=body.hints or [], explanation=body.explanation,
+                            image=body.image, rights_confirmed=bool(body.rights_confirmed)))
+        check_hunt(h, mid, bool(body.published))
+        if db.query('SELECT 1 FROM daily_hunt WHERE day = %(d)s', dict(d=body.day)):
+            raise HTTPException(409, 'Bu tarihte zaten bir görev var.')
+        if not db.query('SELECT 1 FROM image WHERE id = %(i)s', dict(i=body.image)):
+            raise HTTPException(422, 'Bilinmeyen görsel.')
+        hid = db.query("""INSERT INTO daily_hunt(day, monument_id, image_id, question, options, answer, hints, explanation, rights_confirmed, published, created_by, updated_at)
+                          VALUES (%(day)s, %(mid)s, %(image)s, %(question)s, %(options)s, %(answer)s, %(hints)s, %(explanation)s, %(rights_confirmed)s, %(pub)s, %(u)s, now()) RETURNING id""",
+                       dict(h, day=body.day, mid=mid, pub=bool(body.published), u=user))[0]['id']
+        log(user, 'hunt.create', body.monument, dict(id=hid, day=str(body.day)))
+        return hunt_row(hid)
+
+    @r.patch('/hunts/{hid}')
+    def update_hunt(hid: int, body: HuntFields, user: str = Depends(admin_user)):
+        old = hunt_row(hid)
+        data = body.model_dump(exclude_unset=True)
+        monument = data.get('monument') or old['monument']
+        mid = monument_id_of(monument)
+        h = clean_hunt({k: (data[k] if data.get(k) is not None else old[k]) for k in ('question', 'options', 'answer', 'hints', 'explanation', 'image', 'rights_confirmed')})
+        day = data.get('day') or old['day']
+        published = data['published'] if data.get('published') is not None else old['published']
+        check_hunt(h, mid, published)
+        if day != old['day'] and db.query('SELECT 1 FROM daily_hunt WHERE day = %(d)s', dict(d=day)):
+            raise HTTPException(409, 'Bu tarihte zaten bir görev var.')
+        db.execute("""UPDATE daily_hunt SET day = %(day)s, monument_id = %(mid)s, image_id = %(image)s, question = %(question)s, options = %(options)s, answer = %(answer)s,
+                      hints = %(hints)s, explanation = %(explanation)s, rights_confirmed = %(rights_confirmed)s, published = %(pub)s, updated_at = now() WHERE id = %(id)s""",
+                   dict(h, day=day, mid=mid, pub=published, id=hid))
+        log(user, 'hunt.update', monument, dict(id=hid, changed=sorted(data)))
+        return hunt_row(hid)
+
+    @r.delete('/hunts/{hid}', status_code=204)
+    def delete_hunt(hid: int, user: str = Depends(admin_user)):
+        old = hunt_row(hid)
+        db.execute('DELETE FROM daily_hunt WHERE id = %(i)s', dict(i=hid))
+        log(user, 'hunt.delete', old['monument'], dict(id=hid, day=str(old['day'])))
+        return Response(status_code=204)
+
+    # ------------------------------------------------------------------------------------------ üç detay
+    def details_ready():
+        if not details.enabled(db):
+            raise HTTPException(503, 'Üç detay kapalı: önce python migrate.py --apply (göç 020)')
+
+    @r.get('/monuments/{slug}/details')
+    def list_details(slug: str, user: str = Depends(admin_user)):
+        if not details.enabled(db):
+            return dict(enabled=False, details=[])
+        return dict(enabled=True, details=db.query("""SELECT d.kind, d.body_tr, d.body_en, d.source, d.published, d.created_by, d.updated_at
+                                                      FROM work_detail d JOIN monument m ON m.id = d.monument_id WHERE m.slug = %(s)s""", dict(s=slug)))
+
+    @r.put('/monuments/{slug}/details/{kind}')
+    def save_detail(slug: str, kind: Literal['why', 'look', 'today'], body: WorkDetailIn, user: str = Depends(admin_user)):
+        details_ready()
+        problems = details.issues(body.body_tr, body.source)
+        if problems:
+            raise HTTPException(422, ' '.join(problems))
+        db.execute("""INSERT INTO work_detail(monument_id, kind, body_tr, body_en, source, published, created_by, updated_at)
+                      VALUES (%(m)s, %(k)s, %(b)s, %(e)s, %(s)s, %(p)s, %(u)s, now())
+                      ON CONFLICT (monument_id, kind) DO UPDATE SET body_tr = EXCLUDED.body_tr, body_en = EXCLUDED.body_en, source = EXCLUDED.source,
+                      published = EXCLUDED.published, updated_at = now()""",
+                   dict(m=monument_row(slug)['id'], k=kind, b=body.body_tr, e=body.body_en or None, s=body.source, p=body.published, u=user))
+        log(user, 'detail.save', slug, dict(kind=kind, published=body.published))
+        return dict(kind=kind, published=body.published)
+
+    @r.delete('/monuments/{slug}/details/{kind}', status_code=204)
+    def delete_detail(slug: str, kind: Literal['why', 'look', 'today'], user: str = Depends(admin_user)):
+        details_ready()
+        db.execute('DELETE FROM work_detail WHERE monument_id = %(m)s AND kind = %(k)s', dict(m=monument_row(slug)['id'], k=kind))
+        log(user, 'detail.delete', slug, dict(kind=kind))
+        return Response(status_code=204)
+
+    # ------------------------------------------------------------------------------------------ Haftanın Keşfi
+    WEEKLY_SELECT = """SELECT w.id, w.week, w.hook, w.detail, w.source, w.route_slug AS route, w.published, w.created_by, w.updated_at,
+                               m.slug AS monument, m.name_tr AS monument_name, m.review_status, m.pilot
+                        FROM weekly_discovery w JOIN monument m ON m.id = w.monument_id"""
+
+    def weekly_row(wid):
+        if not weekly.enabled(db):
+            raise HTTPException(503, 'Haftanın Keşfi kapalı: önce python migrate.py --apply (göç 021)')
+        rows = db.query(f'{WEEKLY_SELECT} WHERE w.id = %(i)s', dict(i=wid))
+        if not rows:
+            raise HTTPException(404, 'Kayıt bulunamadı')
+        return rows[0]
+
+    def check_weekly(hook, detail, source, monument_id, route, publish):
+        problems = weekly.issues(hook, detail, source)
+        if publish:
+            problems += weekly.publish_issues(db, monument_id, route, {x['id'] for x in routes.public_routes(db, pilot=True)})
+        if problems:
+            raise HTTPException(422, ' '.join(problems))
+
+    def monday(day):
+        return day - timedelta(days=day.weekday())
+
+    @r.get('/weekly')
+    def list_weekly(user: str = Depends(admin_user)):
+        if not weekly.enabled(db):
+            return dict(enabled=False, items=[], routes=[])
+        return dict(enabled=True, items=db.query(f'{WEEKLY_SELECT} ORDER BY w.week DESC'), routes=[dict(id=x['id'], title=x['title']) for x in routes.public_routes(db, pilot=True)])
+
+    @r.post('/weekly', status_code=201)
+    def create_weekly(body: WeeklyCreate, user: str = Depends(admin_user)):
+        if not weekly.enabled(db):
+            raise HTTPException(503, 'Haftanın Keşfi kapalı: önce python migrate.py --apply (göç 021)')
+        week, mid = monday(body.week), monument_id_of(body.monument)
+        check_weekly(body.hook, body.detail, body.source, mid, body.route, bool(body.published))
+        if db.query('SELECT 1 FROM weekly_discovery WHERE week = %(w)s', dict(w=week)):
+            raise HTTPException(409, 'Bu hafta için zaten bir kayıt var.')
+        wid = db.query("""INSERT INTO weekly_discovery(week, monument_id, hook, detail, source, route_slug, published, created_by, updated_at)
+                          VALUES (%(w)s, %(m)s, %(h)s, %(d)s, %(s)s, %(r)s, %(p)s, %(u)s, now()) RETURNING id""",
+                       dict(w=week, m=mid, h=body.hook, d=body.detail, s=body.source, r=body.route or None, p=bool(body.published), u=user))[0]['id']
+        log(user, 'weekly.create', body.monument, dict(id=wid, week=str(week)))
+        return weekly_row(wid)
+
+    @r.patch('/weekly/{wid}')
+    def update_weekly(wid: int, body: WeeklyFields, user: str = Depends(admin_user)):
+        old = weekly_row(wid)
+        data = body.model_dump(exclude_unset=True)
+        monument = data.get('monument') or old['monument']
+        mid = monument_id_of(monument)
+        week = monday(data['week']) if data.get('week') else old['week']
+        hook, detail, source = (data[k] if data.get(k) is not None else old[k] for k in ('hook', 'detail', 'source'))
+        route = (data['route'] or None) if 'route' in data else old['route']
+        published = data['published'] if data.get('published') is not None else old['published']
+        check_weekly(hook, detail, source, mid, route, published)
+        if week != old['week'] and db.query('SELECT 1 FROM weekly_discovery WHERE week = %(w)s', dict(w=week)):
+            raise HTTPException(409, 'Bu hafta için zaten bir kayıt var.')
+        db.execute("""UPDATE weekly_discovery SET week = %(w)s, monument_id = %(m)s, hook = %(h)s, detail = %(d)s, source = %(s)s, route_slug = %(r)s,
+                      published = %(p)s, updated_at = now() WHERE id = %(i)s""", dict(w=week, m=mid, h=hook, d=detail, s=source, r=route, p=published, i=wid))
+        log(user, 'weekly.update', monument, dict(id=wid, changed=sorted(data)))
+        return weekly_row(wid)
+
+    @r.delete('/weekly/{wid}', status_code=204)
+    def delete_weekly(wid: int, user: str = Depends(admin_user)):
+        old = weekly_row(wid)
+        db.execute('DELETE FROM weekly_discovery WHERE id = %(i)s', dict(i=wid))
+        log(user, 'weekly.delete', old['monument'], dict(id=wid, week=str(old['week'])))
+        return Response(status_code=204)
+
     # ------------------------------------------------------------------------------------------ ziyaretçi katkıları
     @r.get('/contributions')
     def list_contributions(status: Literal['pending', 'approved', 'rejected'] | None = 'pending',
@@ -1293,12 +1592,10 @@ def build_router(db, media_dir, save_webp):
     @r.put('/settings')
     def put_site_settings(body: SettingsIn, user: str = Depends(admin_user)):
         insights_ready()
-        for key, value in body.model_dump(exclude_unset=True).items():
-            if value is None:
-                continue
+        for key, value in body.model_dump(exclude_unset=True, exclude_none=True).items():
             db.execute("""INSERT INTO site_setting(key, value, updated_by, updated_at) VALUES (%(k)s, %(v)s, %(u)s, now())
                           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by,
-                          updated_at = now()""", dict(k=key, v=value, u=user))
+                          updated_at = now()""", dict(k=key, v=json.dumps(value) if isinstance(value, dict) else value, u=user))
             log(user, 'settings.update', key, dict(value=value))
         return dict(stored=insights.get_settings(db), effective=insights.effective_settings(db))
 

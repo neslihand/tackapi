@@ -10,7 +10,7 @@ Etkileşim → Analiz → İçgörü → Yeni Keşif → Etkileşim.
 import json
 from collections import Counter, defaultdict
 
-MODES = {'short': 'Detaylı Anlatım', 'story': 'Hikâyeleştirerek', 'child': 'Çocuklar İçin'}
+MODES = {'short': 'Detaylı Anlatım', 'story': 'Hikâyeleştirerek', 'child': 'Çocuklar İçin', 'brief': 'Kısa Özet (mobil)'}
 
 # (kimlik, ad, açıklama). Kurallar segments() içinde; panelde açıklamasıyla gösterilir.
 SEGMENTS = [
@@ -129,9 +129,11 @@ def recommend(db, session_id=None, user_id=None, limit=6, pilot=None, progress=N
             weights['kind'][c['kind']] += 1
     feats = (visitors(db, days=90, demo=True, session_id=session_id) or [None])[0] if session_id else None
     declared = {}
+    home = ''
     if user_id:
-        u = db.query('SELECT purposes, interests FROM app_user WHERE id = %(u)s AND deleted_at IS NULL', dict(u=user_id))
+        u = db.query('SELECT purposes, interests, home_city FROM app_user WHERE id = %(u)s AND deleted_at IS NULL', dict(u=user_id))
         declared = dict(purposes=list(u[0]['purposes'] or []), interests=list(u[0]['interests'] or [])) if u else {}
+        home = (u[0]['home_city'] or '').strip().casefold() if u else ''
     segs = segments(feats, declared) if feats else []
     pop = {p['slug']: p['visitors'] for p in popular(db, days=30, limit=100, pilot=pilot)}
     out = []
@@ -139,15 +141,17 @@ def recommend(db, session_id=None, user_id=None, limit=6, pilot=None, progress=N
         if c['slug'] in seen:
             continue
         reasons, score = [], 0.0
+        if home and c['city'].casefold() == home:
+            score += 2.0; reasons.append('yaşadığın şehirde')
         for field, label in (('period', '{} eserlerine baktın'), ('city', "{}'daki eserlere baktın"), ('kind', None)):
             w = weights[field].get(c[field], 0) if c[field] else 0
             if w:
                 score += w * (1.5 if field == 'period' else 1.0)
                 if label:
                     reasons.append(label.format(c[field]))
-        if 'story' in segs and c['has_story']:
+        if ('story' in segs or 'stories' in declared.get('interests', [])) and c['has_story']:
             score += 1.5; reasons.append('hikâye anlatımını seviyorsun')
-        if 'family' in segs and c['has_child']:
+        if ('family' in segs or 'kids' in declared.get('interests', [])) and c['has_child']:
             score += 1.5; reasons.append('çocuklar için anlatımı var')
         if 'visual' in segs or 'decoration' in declared.get('interests', []):
             if c['has_art']:
@@ -167,11 +171,27 @@ def recommend(db, session_id=None, user_id=None, limit=6, pilot=None, progress=N
 
 # ------------------------------------------------------------------------------------------- site ayarları
 DEFAULTS = {'default_mode': 'auto', 'featured_route': 'auto'}
+# Kademeli madalyon eşikleri (bronz, gümüş, altın). Başlangıç hipotezidir, kullanıcı verisi görülünce panelden değişir;
+# uygulamaya yazılmaz. read, onsite, recall eser sayısı; city_read ve master_onsite şehrin eserlerinin yüzdesi
+# (şehirlerin eser sayısı çok farklı). Şehir Ustası: şehirde altın kademe + yerinde mühür yüzdesi.
+MEDAL_TIERS = dict(read=[3, 8, 15], onsite=[1, 3, 7], recall=[3, 8, 15], city_read=[30, 60, 100], master_onsite=50)
+
+
+def medal_tiers(db):
+    rows = db.query("SELECT value FROM site_setting WHERE key = 'medal_tiers'")
+    return json.loads(rows[0]['value']) if rows else MEDAL_TIERS
+
+
+def app_flags(db):
+    """Uygulamanın modülleri için panelden kapatılan düğmeler (master plan M00). Yalnızca yazılanlar döner; varsayılanlar
+    uygulamadadır (mobile/src/lib/flags.ts), böylece kayıt yoksa ya da sunucuya ulaşılamıyorsa uygulama olduğu gibi çalışır."""
+    rows = db.query("SELECT value FROM site_setting WHERE key = 'app_flags'")
+    return json.loads(rows[0]['value']) if rows else {}
 
 
 def get_settings(db):
     stored = {r['key']: r['value'] for r in db.query('SELECT key, value FROM site_setting')}
-    return {k: stored.get(k, v) for k, v in DEFAULTS.items()}
+    return {**{k: stored.get(k, v) for k, v in DEFAULTS.items()}, 'medal_tiers': medal_tiers(db), 'app_flags': app_flags(db)}
 
 
 def effective_settings(db):
@@ -195,6 +215,99 @@ def effective_settings(db):
 
 
 # ------------------------------------------------------------------------------------------- panel analitiği
+# Haftalık Anlamlı Keşif (WMHE): haftada en az bir nitelikli eylem yapan tekil kişi. Kişi, giriş yaptıysa hesap, yoksa
+# cihazın rastgele kimliğidir; aynı kişi haftada kaç eylem yaparsa yapsın bir sayıldığı için tekrar gönderim sayıyı artırmaz.
+# Uygulamayı ya da sayfayı açmak, bildirim ve ekran süresi nitelikli değildir. Geliştirme derlemesinin olayları (dev) sayılmaz.
+STORY_READ = """(e.type = 'heritage_story_completed'
+         OR (e.type = 'read_depth' AND e.props->>'platform' IS NULL AND (e.props->>'depth')::int >= 75))"""
+MEANINGFUL = f"""({STORY_READ} OR e.type = 'route_completed'
+         OR (e.type = 'stamp' AND e.props->>'stamp_type' = 'onsite')
+         OR (e.type = 'knowledge_recalled' AND e.props->>'correct' = 'true'))"""
+
+WMHE_SQL = f"""
+WITH since AS (SELECT date_trunc('week', now()) - make_interval(weeks => %(weeks)s::int - 1) AS at),
+who AS (SELECT session_id, max(user_id) AS user_id FROM analytics_event, since WHERE analytics_event.at >= since.at GROUP BY session_id),
+qualified AS (
+  SELECT e.at, coalesce(w.user_id::text, 's:' || e.session_id) AS person, coalesce(e.props->>'platform', 'web') AS platform, e.type
+  FROM analytics_event e JOIN who w USING (session_id), since
+  WHERE e.at >= since.at AND (%(demo)s::boolean OR NOT e.demo) AND coalesce(e.props->>'dev', '') <> 'true'
+    AND {MEANINGFUL}
+  UNION ALL
+  SELECT c.reviewed_at, c.user_id::text, 'web', 'contribution_approved'
+  FROM contribution c, since WHERE c.status = 'approved' AND c.user_id IS NOT NULL AND c.reviewed_at >= since.at
+)
+SELECT date_trunc('week', at)::date AS week, count(DISTINCT person) AS explorers,
+       count(DISTINCT person) FILTER (WHERE platform = 'mobile') AS mobile,
+       count(DISTINCT person) FILTER (WHERE type IN ('heritage_story_completed', 'read_depth')) AS stories,
+       count(DISTINCT person) FILTER (WHERE type = 'stamp') AS onsite,
+       count(DISTINCT person) FILTER (WHERE type = 'knowledge_recalled') AS recalled,
+       count(DISTINCT person) FILTER (WHERE type = 'route_completed') AS routes,
+       count(DISTINCT person) FILTER (WHERE type = 'contribution_approved') AS contributions
+FROM qualified GROUP BY 1 ORDER BY 1
+"""
+
+
+def wmhe(db, weeks=8, demo=False):
+    return db.query(WMHE_SQL, dict(weeks=weeks, demo=demo))
+
+
+# Pilot panosu (master plan §9.2). Kohort: kişinin ilk olayının ISO haftası, gün sınırı Türkiye saati. "Döndü" yalnızca
+# WMHE'nin anlamlı eylemleridir; uygulamayı açmak dönüş sayılmaz. Payda yalnızca o günü doldurmuş kişilerdir, bu yüzden
+# yeni kohortlarda D30 boş kalır. Küçük örneklemde oran yanıltıcıdır; panel 20 kişinin altında yüzde göstermez.
+COHORT_SQL = f"""
+WITH who AS (SELECT session_id, max(user_id) AS user_id FROM analytics_event GROUP BY session_id),
+acts AS (
+  SELECT coalesce(w.user_id::text, 's:' || e.session_id) AS person, e.at,
+         {MEANINGFUL} AS meaningful, {STORY_READ} AS story
+  FROM analytics_event e JOIN who w USING (session_id)
+  WHERE (%(demo)s::boolean OR NOT e.demo) AND coalesce(e.props->>'dev', '') <> 'true'
+),
+firsts AS (SELECT person, min(at) AS first_at FROM acts GROUP BY 1),
+per AS (
+  SELECT a.person, f.first_at,
+         (now() AT TIME ZONE 'Europe/Istanbul')::date - (f.first_at AT TIME ZONE 'Europe/Istanbul')::date AS age,
+         bool_or(a.story AND a.at - f.first_at <= interval '24 hours') AS activated,
+         bool_or(a.meaningful AND a.at - f.first_at <= interval '7 days') AS meaningful_7d,
+         array_agg(DISTINCT (a.at AT TIME ZONE 'Europe/Istanbul')::date - (f.first_at AT TIME ZONE 'Europe/Istanbul')::date) FILTER (WHERE a.meaningful) AS days,
+         count(DISTINCT date_trunc('week', a.at)) FILTER (WHERE a.meaningful AND a.at - f.first_at <= interval '28 days') AS weeks
+  FROM acts a JOIN firsts f USING (person) GROUP BY 1, 2
+)
+SELECT date_trunc('week', first_at)::date AS week, count(*) AS people,
+       count(*) FILTER (WHERE activated) AS activated, count(*) FILTER (WHERE meaningful_7d) AS meaningful_7d,
+       count(*) FILTER (WHERE age > 1) AS d1_of, count(*) FILTER (WHERE age > 1 AND 1 = ANY(days)) AS d1,
+       count(*) FILTER (WHERE age > 7) AS d7_of, count(*) FILTER (WHERE age > 7 AND 7 = ANY(days)) AS d7,
+       count(*) FILTER (WHERE age > 30) AS d30_of, count(*) FILTER (WHERE age > 30 AND 30 = ANY(days)) AS d30,
+       count(*) FILTER (WHERE age >= 28) AS weeks_of, count(*) FILTER (WHERE age >= 28 AND weeks >= 2) AS two_of_four
+FROM per WHERE first_at >= date_trunc('week', now()) - make_interval(weeks => %(weeks)s::int - 1)
+GROUP BY 1 ORDER BY 1
+"""
+
+
+def cohorts(db, weeks=12, demo=False):
+    return db.query(COHORT_SQL, dict(weeks=weeks, demo=demo))
+
+
+def pilot_kpis(db, days=30, demo=False):
+    """§9.2'nin öğrenme, saha, yayılma ve kalite sayıları. Hedef yok: ilk dört haftanın gerçek verisi görülmeden konmaz."""
+    return db.query("""
+        SELECT count(*) FILTER (WHERE type = 'heritage_story_started') AS stories_started,
+               count(*) FILTER (WHERE type = 'heritage_story_completed') AS stories_completed,
+               count(*) FILTER (WHERE type = 'knowledge_recalled' AND props->>'repetition_step' IN ('2', '3')) AS long_recalls,
+               count(*) FILTER (WHERE type = 'knowledge_recalled' AND props->>'repetition_step' IN ('2', '3') AND props->>'correct' = 'true') AS long_recalls_right,
+               count(*) FILTER (WHERE type = 'route_started') AS routes_started,
+               count(*) FILTER (WHERE type = 'route_completed') AS routes_completed,
+               count(DISTINCT session_id) FILTER (WHERE type = 'stamp' AND props->>'stamp_type' = 'onsite') AS onsite_people,
+               count(DISTINCT session_id) AS active_people,
+               count(*) FILTER (WHERE type = 'share_initiated') AS shares,
+               count(*) FILTER (WHERE type = 'share_opened') AS shares_opened,
+               count(*) FILTER (WHERE type = 'offline_package_downloaded') AS offline_packages,
+               count(*) FILTER (WHERE type = 'notification_opt_out') AS notification_opt_outs,
+               count(*) FILTER (WHERE type = 'api_error') AS api_errors
+        FROM analytics_event
+        WHERE at >= now() - make_interval(days => %(days)s::int) AND (%(demo)s::boolean OR NOT demo)
+          AND coalesce(props->>'dev', '') <> 'true'""", dict(days=days, demo=demo))[0]
+
+
 def dashboard(db, days=30, demo=True, pilot=True):
     """Panel analitiği: genel sayılar, günlük seyir, eserler, anlatım tercihleri, huni, arama, sohbet, kamera,
     profiller, beyan edilen kullanıcı bilgileri ve içerik önerileri."""
@@ -251,7 +364,9 @@ def dashboard(db, days=30, demo=True, pilot=True):
     for field in ('purposes', 'interests'):
         profile[field] = db.query(f"""SELECT x AS value, count(*) AS n FROM app_user, unnest({field}) x
                                      WHERE deleted_at IS NULL GROUP BY 1 ORDER BY 2 DESC""")
-    return dict(days=days, demo=demo, totals=totals, daily=daily, monuments=monuments,
+    platforms = db.query(f"""SELECT coalesce(props->>'platform', 'web') AS platform, count(DISTINCT session_id) AS visitors, count(*) AS events
+                             FROM analytics_event WHERE {win} AND coalesce(props->>'dev', '') <> 'true' GROUP BY 1 ORDER BY 2 DESC""", p)
+    return dict(days=days, demo=demo, totals=totals, daily=daily, monuments=monuments, wmhe=wmhe(db, demo=demo), cohorts=cohorts(db, demo=demo), kpis=pilot_kpis(db, days, demo), platforms=platforms,
                 modes=[dict(m, label=MODES.get(m['mode'], m['mode'])) for m in modes],
                 segments=[dict(id=k, name=n, description=d, visitors=seg_count.get(k, 0), any=seg_any.get(k, 0),
                                modes=dict(mode_by_seg.get(k, {}))) for k, n, d in SEGMENTS],

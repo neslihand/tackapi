@@ -32,6 +32,25 @@ class RoutesTest(unittest.TestCase):
         self.assertEqual(bursa['description'], '2 durak. İlçeler: Osmangazi ve Yıldırım. Dönemler: Erken Osmanlı.')
         self.assertEqual(self.c.get('/api/routes', params={'auto': 'false'}).json(), [])
 
+    def test_manifest_says_size_and_version_of_the_published_stops(self):
+        one = self.c.get('/api/routes/sehir-bursa/manifest', params={'pilot': 'true'}).json()
+        self.assertEqual([w['slug'] for w in one['works']], [CAMI, TURBE])     # taslak eser pakete girmez
+        self.assertGreater(one['size_bytes'], 0)
+        self.assertEqual(one, self.c.get('/api/routes/sehir-bursa/manifest', params={'pilot': 'true'}).json())   # kararlı
+        self.assertEqual(self.c.get('/api/routes/yok/manifest').status_code, 404)
+
+    def test_manifest_version_changes_with_the_content(self):
+        before = self.c.get('/api/routes/sehir-bursa/manifest', params={'pilot': 'true'}).json()
+        old = self.api.db.query('SELECT alt_names FROM monument WHERE slug = %(s)s', dict(s=TURBE))[0]['alt_names']
+        self.api.db.execute("UPDATE monument SET alt_names = ARRAY['Yeni ad'] WHERE slug = %(s)s", dict(s=TURBE))
+        try:
+            after = self.c.get('/api/routes/sehir-bursa/manifest', params={'pilot': 'true'}).json()
+            self.assertNotEqual(before['version'], after['version'])
+            self.assertEqual(before['works'][0], after['works'][0])      # değişmeyen durağın sürümü aynı
+            self.assertNotEqual(before['works'][1], after['works'][1])
+        finally:
+            self.api.db.execute('UPDATE monument SET alt_names = %(a)s WHERE slug = %(s)s', dict(a=old, s=TURBE))
+
     def test_written_route_from_panel(self):
         r = self.c.post('/api/admin/routes', headers=NES, json={'title': 'Erken Osmanlı Bursa', 'kicker': 'TEMATİK ROTA',
                                                                  'description': 'Yöneticinin yazdığı açıklama.'})

@@ -367,7 +367,8 @@ CREATE TABLE image (
     embedding           vector(1536),                  -- görselle arama: gemini-embedding-2 görsel embedding'i
     embedding_model     text,
     review_status       text NOT NULL DEFAULT 'draft' CHECK (review_status IN ('draft','reviewed','published','rejected')),  -- rejected: atıldı
-    created_at          timestamptz NOT NULL DEFAULT now()
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    reuse_allowed       boolean NOT NULL DEFAULT false      -- çevrimdışı saklama ve paylaşım kartı izni (göç 023)
 );
 CREATE INDEX image_monument_sort ON image (monument_id, sort);
 CREATE INDEX image_embedding_hnsw ON image USING hnsw (embedding vector_cosine_ops);
@@ -396,7 +397,9 @@ CREATE TABLE route (
     sort                int NOT NULL DEFAULT 0,
     published           boolean NOT NULL DEFAULT false,
     created_by          text,
-    updated_at          timestamptz
+    updated_at          timestamptz,
+    minutes             int CHECK (minutes IN (20, 45, 90, 60, 180, 360)),   -- editörün süresi (göç 019); boşsa tematik liste
+    access_note         text
 );
 CREATE TABLE route_stop (
     route_id            int NOT NULL REFERENCES route(id) ON DELETE CASCADE,
@@ -595,6 +598,77 @@ CREATE INDEX analytics_event_type ON analytics_event (type, at);
 CREATE INDEX analytics_event_monument ON analytics_event (monument_slug, type) WHERE monument_slug IS NOT NULL;
 
 -- Site ayarları (varsayılan anlatım biçimi, öne çıkan rota…). 'auto' değeri veriden hesaplanır.
+-- Detay Avı: günün görevi (hunt.py, göç 018)
+CREATE TABLE daily_hunt (
+    id                  serial PRIMARY KEY,
+    day                 date NOT NULL UNIQUE,                         -- Türkiye yerel yayın günü; bir güne tek görev
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    image_id            int NOT NULL REFERENCES image(id) ON DELETE RESTRICT,
+    question            text NOT NULL,
+    options             text[] NOT NULL CHECK (cardinality(options) BETWEEN 4 AND 6),
+    answer              int NOT NULL CHECK (answer >= 0 AND answer < cardinality(options)),
+    hints               text[] NOT NULL DEFAULT '{}',                 -- her yanlış tahminden sonra sıradaki
+    explanation         text NOT NULL,                                -- cevaptan sonra; kaynağa dayanmalı
+    rights_confirmed    boolean NOT NULL DEFAULT false,
+    published           boolean NOT NULL DEFAULT false,
+    created_by          text,
+    updated_at          timestamptz
+);
+
+-- Bir Eser, Üç Detay (master plan M03): Neden yapıldı, Neye dikkat etmelisin, Bugün neden önemli. Editör panelde kaynağıyla
+-- yazar, yapay zekâ yazmaz. Yayımlanmamış ya da kaynaksız detay ziyaretçiye gitmez. Sohbet kaynağı değildir.
+CREATE TABLE work_detail (
+    id                  serial PRIMARY KEY,
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    kind                text NOT NULL CHECK (kind IN ('why', 'look', 'today')),
+    body_tr             text NOT NULL,
+    body_en             text,
+    source              text NOT NULL,                                -- kitap ve sayfa ya da başka kaynak
+    published           boolean NOT NULL DEFAULT false,
+    created_by          text,
+    updated_at          timestamptz,
+    UNIQUE (monument_id, kind)
+);
+
+-- Haftanın Keşfi (master plan M09): bir eser, bir detay, gerekiyorsa bir rota. Editör panelde takvimler, yapay zekâ yazmaz.
+-- Hafta Türkiye saatiyle pazartesi başlar; bir haftaya tek kayıt. Günlük katılım istemez, kaçırılınca kaybolan bir şey yoktur.
+CREATE TABLE weekly_discovery (
+    id                  serial PRIMARY KEY,
+    week                date NOT NULL UNIQUE CHECK (extract(isodow FROM week) = 1),
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    hook                text NOT NULL,                                -- merak cümlesi
+    detail              text NOT NULL,                                -- eserde bakılacak tek detay
+    source              text NOT NULL,
+    route_slug          text,                                         -- isteğe bağlı: /api/routes kimliği
+    published           boolean NOT NULL DEFAULT false,
+    created_by          text,
+    updated_at          timestamptz
+);
+
+-- Cevabı Bekleyen Sorular (master plan M16): Esere Sor kaynakta cevap bulamayınca kişi takip etmeyi seçer, soru editör
+-- kuyruğuna düşer. Cevap kaynağıyla yazılır ve soran kişinin Sorularım ekranına gelir. Herkese açık değildir, sohbet kaynağı
+-- da değildir. Aynı soruyu takip eden herkes aynı cevabı alır (monument_id + question_norm).
+CREATE TABLE question_ticket (
+    id                  serial PRIMARY KEY,
+    user_id             int NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+    monument_id         int NOT NULL REFERENCES monument(id) ON DELETE CASCADE,
+    question            text NOT NULL,
+    question_norm       text NOT NULL,
+    lang                text NOT NULL DEFAULT 'tr' CHECK (lang IN ('tr', 'en')),
+    status              text NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted', 'researching', 'answered', 'unresolved', 'rejected')),
+    answer              text,
+    answer_source       text,
+    note                text,                                         -- çözülemedi ya da reddedildi: kişiye gösterilen gerekçe
+    reviewed_by         text,
+    answered_at         timestamptz,                                  -- kapanış zamanı (cevap, çözülemedi ya da ret)
+    seen_at             timestamptz,                                  -- kişi kapanışı gördü
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (user_id, monument_id, question_norm),
+    CHECK (status <> 'answered' OR (answer IS NOT NULL AND answer_source IS NOT NULL))
+);
+CREATE INDEX question_ticket_status ON question_ticket (status, created_at);
+CREATE INDEX question_ticket_user ON question_ticket (user_id, created_at DESC);
+
 CREATE TABLE site_setting (
     key                 text PRIMARY KEY,
     value               text NOT NULL,
@@ -682,7 +756,9 @@ INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_im
                                          ('010_monument_removed.sql'), ('011_para_split.sql'), ('012_geo.sql'),
                                          ('013_route.sql'), ('014_quiz.sql'),
                                          ('015_visitors.sql'), ('016_agent.sql'),
-                                         ('017_articles.sql');
+                                         ('017_articles.sql'), ('018_daily_hunt.sql'),
+                                         ('019_route_duration.sql'), ('020_work_detail.sql'), ('021_weekly_discovery.sql'),
+                                         ('022_question_ticket.sql'), ('023_image_reuse.sql');
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (
