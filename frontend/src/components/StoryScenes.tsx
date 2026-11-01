@@ -5,7 +5,7 @@ import type { NarrationMode } from '../lib/preferences';
 import { Link } from '../lib/navigation';
 import { t } from '../lib/i18n';
 import { Motif } from './StoryMotifs';
-import { storyScenes } from '../lib/motifs';
+import { buildingFor, ornamentsFor, storyScenes } from '../lib/motifs';
 
 // The chapters of a story page, drawn differently for each way of telling it:
 //   story (Hikâyeleştirerek) → CineChapter: full-screen scenes behind graphic-novel captions, a camera that moves
@@ -269,48 +269,93 @@ export function StoryReader({ artifact, text }: { artifact: Artifact; text: stri
   </section>;
 }
 
+// What Hüdhüd says beside the storybook: hello, two reading tips, and well done at the last page.
+const readerLines = () => [
+  t('Merhaba! Ben Hüdhüd. Bu yapının masalını birlikte okuyalım mı?', 'Hello! I am Hüdhüd the hoopoe. Shall we read this building’s tale together?'),
+  t('Her sayfayı okudukça bir yıldız kazanıyorsun. Hepsini toplayabilir misin?', 'You win a star for every page you read. Can you collect them all?'),
+  t('Kapaktaki çizime bak: kaç kubbe, kaç pencere sayabilirsin?', 'Look at the drawing on the cover: how many domes and windows can you count?'),
+  t('Harika! Eski yapıları korumak hepimizin görevi.', 'Wonderful! Looking after old buildings is a job for all of us.'),
+];
+const STICKER_TONES = ['turquoise', 'terracotta', 'sun', 'emerald'];
+
 /**
- * Çocuklar İçin, whole: the picture in its frame, then the text paragraph by paragraph. Hüdhüd the guide stays beside
- * the text as the child reads: it hops when a new paragraph comes into view and talks when tapped.
+ * Çocuklar İçin, whole: a picture book. The cover draws the work's building in a dawn window (no photograph); each
+ * paragraph is a page with a sticker of the era's ornaments; clouds drift as the page scrolls. Hüdhüd the guide stays
+ * beside the pages, hops when a new page comes up, talks when tapped, and lights a star for every page read.
  */
 export function TaleNarration({ artifact, text }: { artifact: Artifact; text: string }) {
   const parts = paragraphs(text);
+  const ornaments = ornamentsFor(artifact);
   const [talking, setTalking] = useState(false);
   const [at, setAt] = useState(0);
   const [hop, setHop] = useState(0);
-  const story = useRef<HTMLDivElement>(null);
+  const [read, setRead] = useState(() => new Set<number>());
+  const [inView, setInView] = useState(false);
+  const root = useRef<HTMLElement>(null);
   useEffect(() => {
-    const root = story.current;
-    if (!root || !('IntersectionObserver' in window)) return;
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+    const section = root.current;
+    if (!section || !('IntersectionObserver' in window)) return;
+    const pages = new IntersectionObserver(entries => entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       const k = Number((entry.target as HTMLElement).dataset.k);
-      setAt(k); setHop(h => h + 1);
-    }), { rootMargin: '-40% 0px -45% 0px' });
-    root.querySelectorAll('.tale-para').forEach(p => observer.observe(p));
-    return () => observer.disconnect();
+      setAt(k); setHop(h => h + 1); setRead(r => r.has(k) ? r : new Set([...r, k]));
+    }), { rootMargin: '-35% 0px -45% 0px' });
+    section.querySelectorAll('.kr-page').forEach(page => pages.observe(page));
+    // On a phone the guide floats in the corner of the screen, so it shows only while the tale is on screen.
+    const shown = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { rootMargin: '-20% 0px -20% 0px' });
+    shown.observe(section);
+    // The clouds drift a little against the pages (--sp, 0 → 1 through the tale).
+    let frame = 0;
+    const drift = () => {
+      frame = 0;
+      const box = section.getBoundingClientRect();
+      section.style.setProperty('--sp', Math.min(1, Math.max(0, (window.innerHeight - box.top) / (box.height + window.innerHeight))).toFixed(3));
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(drift); };
+    drift();
+    window.addEventListener('scroll', schedule, { passive: true });
+    return () => { pages.disconnect(); shown.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('scroll', schedule); };
   }, [text]);
-  const line = guideLines()[at === 0 ? 0 : at >= parts.length - 1 ? 3 : 1 + (at % 2)];
-  return <section className="story-chapter tale tale-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: ${t('çocuklar için', 'for children')}`}>
-    <div className="tale-page tale-cover">
-      <div className="tale-art">
-        <div className="tale-window" aria-hidden="true">
-          <img src={artifact.image} alt="" loading="lazy" draggable={false} />
-          {sparkles.map(([x, y], k) => <span key={k} className="tale-spark" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${k * -0.6}s` }} />)}
-          <span className="tale-shooting" /><span className="tale-cloud c1" /><span className="tale-cloud c2" />
-        </div>
-      </div>
-      <div className="tale-text"><span className="tale-page-no">{t('ÇOCUKLAR İÇİN', 'FOR CHILDREN')}</span><p className="tale-lead">{artifact.name} · {artifact.city}</p></div>
+  const done = read.size >= parts.length;
+  const line = readerLines()[done ? 3 : at === 0 ? 0 : 1 + (at % 2)];
+  return <section ref={root} className="story-chapter kr" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: ${t('çocuklar için', 'for children')}`}>
+    <div className="kr-sky" aria-hidden="true">
+      <span className="kr-cloud c1" /><span className="kr-cloud c2" /><span className="kr-cloud c3" /><span className="kr-cloud c4" />
+      {sparkles.map(([x, y], k) => <span key={k} className="kr-twinkle" style={{ left: `${x}%`, top: `${y * 3}%`, animationDelay: `${k * -0.7}s` }} />)}
     </div>
-    <div className="tale-story" ref={story}>
-      <div className="tale-story-text narrative">{parts.map((p, k) => <p key={k} data-k={k} className={`tale-para ${k === at ? 'now' : ''}`}>{p}</p>)}
-        <div className="tale-extras"><NarrationExtras artifact={artifact} mode="child" /></div></div>
-      <aside className="tale-companion">
+    <header className="kr-cover">
+      <div className="kr-window" aria-hidden="true">
+        <span className="kr-sun" /><span className="kr-hill back" /><span className="kr-hill front" />
+        <div className="kr-building"><Motif id={buildingFor(artifact)} /></div>
+        {sparkles.slice(0, 4).map(([x, y], k) => <span key={k} className="tale-spark" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${k * -0.6}s` }} />)}
+      </div>
+      <div className="kr-cover-text">
+        <span className="kr-chip">{t('ÇOCUKLAR İÇİN', 'FOR CHILDREN')}</span>
+        <h2>{artifact.name}</h2>
+        <p>{artifact.city} · {t(`${parts.length} sayfalık bir masal`, `a tale in ${parts.length} pages`)}</p>
+      </div>
+    </header>
+    <div className="kr-body">
+      <ol className="kr-pages">{parts.map((p, k) => <li key={k} data-k={k} className={`kr-page ${k === at ? 'now' : ''} ${read.has(k) ? 'read' : ''}`}>
+        <span className="kr-page-no">{t(`Sayfa ${k + 1} / ${parts.length}`, `Page ${k + 1} / ${parts.length}`)}</span>
+        <span className={`kr-sticker ${STICKER_TONES[k % STICKER_TONES.length]} ${k % 2 ? 'right' : 'left'}`} aria-hidden="true"><Motif id={ornaments[k % ornaments.length]} /></span>
+        <p>{p}</p>
+      </li>)}</ol>
+      <aside className={`kr-companion ${inView ? 'in' : ''}`}>
         {/* The drawing is remounted on each hop so its animation restarts; the button keeps its focus. */}
         <button type="button" className={`tale-guide ${talking ? 'talking' : ''} ${hop > 1 ? 'hop' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls="guide-whole" aria-label={t('Rehber kuş Hüdhüd ile konuş', 'Talk to Hüdhüd, the guide bird')}><Hoopoe key={hop} /></button>
         <p className={`tale-bubble ${talking ? 'open' : ''}`} id="guide-whole" aria-live="polite">{talking ? line : ''}</p>
+        <p className="kr-stars" aria-label={t(`Okunan sayfa: ${read.size} / ${parts.length}`, `Pages read: ${read.size} of ${parts.length}`)}>
+          {parts.map((_, k) => <span key={k} className={read.has(k) ? 'on' : ''} aria-hidden="true">★</span>)}
+        </p>
       </aside>
     </div>
+    <div className={`kr-finish ${done ? 'done' : ''}`}>
+      <span className="kr-medal" aria-hidden="true">★</span>
+      <div><strong>{t('Masalın sonuna geldin!', 'You reached the end of the tale!')}</strong>
+        <span>{t(`${read.size} yıldız topladın. Şimdi bu yapının yapbozunu çözebilir ya da bilgi yarışmasında kendini deneyebilirsin.`, `You collected ${read.size} stars. Now you can solve this building’s puzzle or try the quiz.`)}</span></div>
+    </div>
+    <div className="kr-extras"><NarrationExtras artifact={artifact} mode="child" /></div>
   </section>;
 }
 
