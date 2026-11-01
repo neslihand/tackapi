@@ -7,13 +7,13 @@
 import { useEffect, useRef, useState, type ComponentType, type Ref } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView as RNWebView, type WebViewMessageEvent, type WebViewProps } from 'react-native-webview';
+import { Notice } from './UI';
+import { t } from '@/lib/i18n';
+import { colors } from '@/lib/theme';
 
 // react-native-webview 14's class typings resolve to `never` props under @types/react 19.3; the runtime is fine
 type WebViewHandle = { injectJavaScript: (script: string) => void };
 const WebView = RNWebView as unknown as ComponentType<WebViewProps & { ref?: Ref<WebViewHandle> }>;
-import { Notice } from './UI';
-import { t } from '@/lib/i18n';
-import { colors } from '@/lib/theme';
 
 export type MapPin = { slug: string; name: string; lat: number; lon: number; approximate: boolean; radius: number | null; state: 'open' | 'read' | 'visit' };
 export type MapProps = { pins: MapPin[]; here: { lat: number; lon: number } | null; selected: string | null; onSelect: (slug: string | null) => void };
