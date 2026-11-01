@@ -6,7 +6,8 @@ import { Girih } from '../components/PlayArt';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
-import { t } from '../lib/i18n';
+import { currentLang, t } from '../lib/i18n';
+import { eraOptions, inEra } from '../lib/eras';
 import { normalize } from '../lib/progress';
 import { useProgress } from '../lib/store';
 import { track } from '../lib/analytics';
@@ -33,10 +34,12 @@ function Corridor({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   const row = [...artifacts, ...artifacts];
   return <div className="ex-corridor" ref={ref} aria-hidden="true">
     <motion.div className="ex-corridor-track" style={still ? undefined : { x }}>
-      {row.map((a, i) => <span key={i} className={`w${i % 3}`} style={{ animationDelay: `${0.35 + i * 0.07}s` }}>
+      {/* Each arch names its work and opens it on a click; the list below reaches the same works by keyboard. */}
+      {row.map((a, i) => <Link key={i} to={`/eser/${a.slug}`} tabIndex={-1} className={`w${i % 3}`} style={{ animationDelay: `${0.35 + i * 0.07}s` }} draggable={false}>
         <span className="ex-window"><motion.img src={a.image} alt="" loading="lazy" draggable={false} style={still ? undefined : { y: glide }} /></span>
         <b><i>{pad((i % artifacts.length) + 1)}</i>{a.city}</b>
-      </span>)}
+        <strong className="ex-corridor-name">{a.name}</strong>
+      </Link>)}
     </motion.div>
   </div>;
 }
@@ -93,7 +96,7 @@ export function Explore({ query }: { query: string }) {
 
   const filtered = useMemo(() => {
     const pool = season ? season.artifactIds.map(id => artifacts.find(a => a.id === id)).filter(a => a !== undefined) : artifacts;
-    return pool.filter(a => normalize(`${a.name} ${a.city}`).includes(normalize(search)) && (!city || a.city === city) && (!period || a.period === period) && (!category || a.category === category) && (!favorites || progress.favorites.includes(a.id)));
+    return pool.filter(a => normalize(`${a.name} ${a.city}`).includes(normalize(search)) && (!city || a.city === city) && inEra(period, a.period) && (!category || a.category === category) && (!favorites || progress.favorites.includes(a.id)));
   }, [artifacts, season, search, city, period, category, favorites, progress.favorites]);
 
   const activeFilters = [
@@ -128,6 +131,15 @@ export function Explore({ query }: { query: string }) {
   const seasonFound = season ? season.artifactIds.filter(id => progress.discovered[id]).length : 0;
   const waiting = filtered.filter(a => !progress.discovered[a.id]).length;
   const unique = (values: string[]) => [...new Set(values)].map(v => [v, v] as [string, string]);
+  // A route made of every work of one city is the city filter again; only routes that pick their own stops are offered.
+  // (A route opened from the home page still applies through ?season=, with its banner.)
+  const ownRoutes = seasons.filter(s => {
+    const cities = new Set(s.artifactIds.map(id => artifacts.find(a => a.id === id)?.city));
+    const [only] = cities;
+    return cities.size !== 1 || !only || s.artifactIds.length !== artifacts.filter(a => a.city === only).length;
+  });
+  // Eras in time order, each sub-era indented under its era ("Osmanlı Dönemi" gathers all the Ottoman ones).
+  const eras = eraOptions(artifacts.map(a => a.period), currentLang() === 'en').map(o => [o.value, o.child ? ` ${o.label}` : o.label] as [string, string]);
 
   return <div className="explore-page" data-nav-theme="dark">
     <Girih className="ex-girih" />
@@ -142,15 +154,15 @@ export function Explore({ query }: { query: string }) {
       <Corridor artifacts={artifacts} />
       {readOnly && <Discoveries />}
       <div className="ex-toolbar">
-        <p className="ex-toolbar-note"><em>{t('Süz', 'Filter')}</em> {t('şehre, döneme, rotaya ya da eser türüne göre', 'by city, era, route or type of work')}</p>
+        <p className="ex-toolbar-note"><em>{t('Süz', 'Filter')}</em> {ownRoutes.length ? t('şehre, döneme, rotaya ya da eser türüne göre', 'by city, era, route or type of work') : t('şehre, döneme ya da eser türüne göre', 'by city, era or type of work')}</p>
         <button ref={filterButton} type="button" className="ex-filter-toggle" onClick={() => setFiltersOpen(!filtersOpen)} aria-expanded={filtersOpen} aria-controls="ex-filter-panel"><SlidersHorizontal size={17} aria-hidden="true" /> {t('Filtreler', 'Filters')}{activeFilters.length > 0 && <span className="ex-filter-badge"><span className="sr-only">{t(', etkin filtre: ', ', active filters: ')}</span>{activeFilters.length}</span>}<ChevronDown size={15} aria-hidden="true" /></button>
         <button type="button" className="ex-favorites" onClick={() => setFavorites(!favorites)} aria-pressed={favorites}><Heart size={16} fill={favorites ? 'currentColor' : 'none'} aria-hidden="true" /> {t('Favorilerim', 'My favourites')} <span>{progress.favorites.length}</span></button>
       </div>
       <div id="ex-filter-panel" className="ex-filter-panel" hidden={narrow && !filtersOpen} onKeyDown={event => { if (event.key === 'Escape' && narrow) { event.preventDefault(); closeFilters(); } }}>
-        <div className="ex-capsule">
-          <FilterSegment icon={<Route size={14} aria-hidden="true" />} label={t('Keşif rotası', 'Discovery route')} all={t('Tüm rotalar', 'All routes')} value={seasonId} onChange={setSeasonId} options={seasons.map(s => [s.id, s.title])} />
+        <div className={`ex-capsule ${ownRoutes.length ? '' : 'three'}`}>
+          {ownRoutes.length > 0 && <FilterSegment icon={<Route size={14} aria-hidden="true" />} label={t('Keşif rotası', 'Discovery route')} all={t('Tüm rotalar', 'All routes')} value={seasonId} onChange={setSeasonId} options={ownRoutes.map(s => [s.id, s.title])} />}
           <FilterSegment icon={<Compass size={14} aria-hidden="true" />} label={t('Şehir', 'City')} all={t('Tüm şehirler', 'All cities')} value={city} onChange={setCity} options={unique(artifacts.map(a => a.city))} />
-          <FilterSegment icon={<Hourglass size={14} aria-hidden="true" />} label={t('Dönem', 'Era')} all={t('Tüm dönemler', 'All eras')} value={period} onChange={setPeriod} options={unique(artifacts.map(a => a.period))} />
+          <FilterSegment icon={<Hourglass size={14} aria-hidden="true" />} label={t('Dönem', 'Era')} all={t('Tüm dönemler', 'All eras')} value={period} onChange={setPeriod} options={eras} />
           <FilterSegment icon={<Landmark size={14} aria-hidden="true" />} label={t('Eser türü', 'Type of work')} all={t('Tüm türler', 'All types')} value={category} onChange={setCategory} options={unique(artifacts.map(a => a.category))} />
         </div>
         <button type="button" className="ex-filter-done" onClick={() => closeFilters(true)}>{t(`${filtered.length} eseri göster`, `Show ${filtered.length} works`)} <ArrowRight size={16} aria-hidden="true" /></button>

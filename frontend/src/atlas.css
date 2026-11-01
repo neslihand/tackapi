@@ -90,6 +90,17 @@
 .map-scene .map-artifact-list > button.active small { color: #d9c9a5; }
 .map-scene .map-artifact-list > button > svg { flex: none; color: var(--en-gold); opacity: .5; transition: opacity .4s, rotate .5s var(--pl-ease); }
 .map-scene .map-artifact-list > button:hover > svg, .map-scene .map-artifact-list > button.active > svg { opacity: 1; rotate: 45deg; }
+/* The chosen work, opened under its row: a large picture, its date and era, and the way into its story */
+.map-scene .map-item-detail { display: grid; gap: 12px; padding: 4px 6px 18px 38px; border-bottom: 1px solid var(--mp-line); background: linear-gradient(90deg, #e6d5ae14, transparent 80%); animation: map-item-open .45s var(--pl-ease, ease) both; }
+.map-scene .map-item-detail img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 10px; box-shadow: 0 0 0 1px #e6d5ae4d, 0 18px 30px -20px #000; }
+.map-scene .map-item-detail p { display: grid; gap: 4px; margin: 0; }
+.map-scene .map-item-detail small { font-size: 10px; font-weight: 600; letter-spacing: .16em; color: #d9c9a5; }
+.map-scene .map-item-detail em { font-family: var(--serif); font-size: 17px; color: #e7e4da; }
+.map-scene .map-item-open { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #15130d; border-radius: 999px; background: linear-gradient(180deg, #f1e5c6, #d6bc89); transition: box-shadow .3s; }
+.map-scene .map-item-open:hover { box-shadow: 0 0 0 3px #e6d5ae55; }
+.map-scene .map-item-open:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 3px; }
+@keyframes map-item-open { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .map-scene .map-item-detail { animation: none; } }
 .map-scene .map-empty { padding: 18px 4px; font-family: var(--serif); font-size: 18px; font-style: italic; color: #c9cfc8; }
 
 /* The chosen work, as an ivory museum label. */
@@ -134,8 +145,6 @@
 .heritage-marker.grouped:hover .map-pin[data-count]::after { transform: scale(1.12); }
 .mp-group-hint { position: absolute; top: 18px; left: 50%; z-index: 500; display: flex; align-items: center; gap: 10px; max-width: min(520px, calc(100% - 40px)); margin: 0; padding: 8px 16px 8px 8px; font-size: 13px; line-height: 1.45; color: #f3ecdf; border: 1px solid #e6d5ae55; border-radius: 999px; background: #061410d9; transform: translateX(-50%); pointer-events: none; }
 .mp-group-hint span { display: grid; place-items: center; flex: none; width: 24px; height: 24px; font-weight: 800; color: #15130d; border-radius: 50%; background: #e6d5ae; }
-.mp-zoom-hint { position: absolute; inset: 0; z-index: 600; display: grid; place-items: center; margin: 0; padding: 20px; font-size: 16px; font-weight: 500; text-align: center; color: #f3ecdf; background: #061410a6; opacity: 0; transition: opacity .3s; pointer-events: none; }
-.mp-zoom-hint.on { opacity: 1; }
 @media (min-width: 901px) { .mp-group-hint { left: calc(50% + clamp(160px, 13vw, 190px)); } }
 .heritage-marker.active .map-pin[data-count]::after { left: calc(50% + 8px); top: calc(50% - 34px); }
 @keyframes mp-raise { from { opacity: 0; translate: 0 18px; clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
@@ -167,6 +176,7 @@
   .map-scene .map-sidebar { padding: 26px var(--pl-left) 6px; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .map-scene .map-artifact-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
   .map-scene .map-artifact-list > button::before { left: -12px; }
+  .map-scene .map-item-detail { grid-column: 1 / -1; padding-left: 6px; }
   .map-scene .selected-map-artifact { left: var(--pl-left); right: calc(var(--pl-left) + 54px); bottom: 34px; }
   .mp-hud { top: 22px; }
 }
