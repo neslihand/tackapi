@@ -125,11 +125,10 @@
 
 /* ——— Motion ——— */
 @media (prefers-reduced-motion: no-preference) {
-  .cm-index { animation: en-fade-up .9s var(--pl-ease) .1s both; }
-  .cm-line > * { animation: en-rise 1.25s var(--pl-ease) .15s both; }
-  .cm-line + .cm-line > * { animation-delay: .27s; }
-  .cm-lede { animation: en-fade-up .9s var(--pl-ease) .45s both; }
-  .cm-notice { animation: en-fade-up .9s var(--pl-ease) .55s both; }
+  /* The title is there from the first frame: only the lines around it fade in, and quickly. */
+  .cm-index { animation: en-fade-up .26s var(--pl-ease) both; }
+  .cm-lede { animation: en-fade-up .26s var(--pl-ease) .04s both; }
+  .cm-notice { animation: en-fade-up .26s var(--pl-ease) .08s both; }
   .cm-finder { animation: cm-open 1.3s var(--pl-ease) .5s both; }
   .cm-arch path { animation: en-draw 2.2s cubic-bezier(.6, 0, .2, 1) .8s backwards; }
   .cm-arch .a1 { animation-delay: .95s; }

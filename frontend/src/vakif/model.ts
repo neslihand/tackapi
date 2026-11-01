@@ -7,6 +7,12 @@ export type Lang = 'tr' | 'en';
 export type PublicImage = { src: string; thumb: string; alt: string | null; width: number | null; height: number | null;
   caption?: string | null; source?: { book: string; page: number | null } | null; review_status?: string };
 
+// The picture at the top of a work's page: the first one as the backend orders them (the cover, otherwise the book's
+// first picture of the work), as the panel shows it. The developer chose this order over picking the largest picture.
+export function heroImage(images: PublicImage[]): PublicImage | undefined {
+  return images[0];
+}
+
 export type PublicItem = {
   slug: string; name: string; alt_names: string[]; kind: string; kind_label: string; city: { slug: string; name: string };
   district: string | null; neighborhood: string | null; period: { slug: string; name: string } | null;
@@ -62,7 +68,7 @@ const T = {
     notReady: 'Bu anlatım henüz hazırlanmadı.', usedSources: 'Bu anlatımda yararlanılan kaynaklar', noText: 'Bu eser için kitapta metin bulunmuyor.', storyNote: 'Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler kaynaklara dayanır.',
     sources: 'Kaynaklar', gallery: 'Fotoğraflar', timeline: 'Tarihçe', artworks: 'Süsleme ve sanat', text: 'Kitaptaki metin',
     children: 'Bu yapının parçaları', partOf: 'Bağlı olduğu yapı',
-    sourceBook: 'Kaynak kitap', pages: 'sayfa', authors: 'Yazarlar', photoSource: 'Fotoğraf', today: 'Bugünkü durumu',
+    sourceBook: 'Kaynak kitap', pages: 'sayfa', authors: 'Yazarlar', photoSource: 'Fotoğraf', trOnly: '', today: 'Bugünkü durumu',
     loading: 'Anlatım hazırlanıyor…', card: 'ESER', discover: 'Hikâyeyi keşfet', pending: 'onay bekliyor', noImage: 'GÖRSEL HAZIRLANIYOR',
     close: 'Kapat', prev: 'Önceki', next: 'Sonraki',
     map: 'Haritada', mapApprox: 'Yaklaşık konum: otomatik bulundu, henüz doğrulanmadı. Yapı bu dairenin içinde bir yerde olmalı.',
@@ -81,7 +87,7 @@ const T = {
     notReady: 'This narration is not ready yet.', usedSources: 'Sources used in this narration', noText: 'The book has no text for this monument.', storyNote: 'The atmosphere is a creative interpretation; historical facts come from the sources.',
     sources: 'Sources', gallery: 'Photographs', timeline: 'History', artworks: 'Decoration and art', text: 'Text from the book',
     children: 'Parts of this complex', partOf: 'Part of',
-    sourceBook: 'Source book', pages: 'pages', authors: 'Authors', photoSource: 'Photo', today: 'Current state',
+    sourceBook: 'Source book', pages: 'pages', authors: 'Authors', photoSource: 'Photo', trOnly: 'Recorded in Turkish only', today: 'Current state',
     loading: 'Preparing the narration…', card: 'MONUMENT', discover: 'Explore the story', pending: 'awaiting review', noImage: 'IMAGE IN PREPARATION',
     close: 'Close', prev: 'Previous', next: 'Next',
     map: 'On the map', mapApprox: 'Approximate location: found automatically, not yet verified. The building should be somewhere within this circle.',
@@ -95,6 +101,17 @@ const T = {
   },
 } as const;
 export const strings = (lang: Lang) => T[lang];
+
+// site: a picture's alternative text. The backend writes "<eser> – <kitap>, s. <sayfa>" when it knows nothing else about
+// a picture; that is its credit (the caption shows it), so the text names the work and the picture's place instead, or
+// the picture's own caption when it has one.
+export function photoAlt(img: PublicImage, name: string, index: number, count: number, lang: Lang) {
+  const alt = img.alt?.trim();
+  if (alt && !(img.source?.book && alt.includes(img.source.book))) return alt;
+  const caption = img.caption?.trim();
+  const place = count > 1 ? (lang === 'en' ? `photo ${index + 1} of ${count}` : `${count} fotoğraftan ${index + 1}.`) : (lang === 'en' ? 'photo' : 'fotoğrafı');
+  return `${name}, ${place}${caption ? ` — ${caption}` : ''}`;
+}
 
 const ROLES: Record<string, [string, string]> = {
   patron: ['Bânî', 'Patron'], founder: ['Kurucu', 'Founder'], architect: ['Mimar', 'Architect'], builder: ['Usta', 'Builder'],
@@ -134,6 +151,31 @@ export function osmLink(loc: PublicLocation): string {
 }
 
 /** '[1425,1427)' → '1425–1426' */
+// A work's history in time order, grouped by century. The book lists events as they come in the text (a restoration of
+// 1955 can come before an occupation of 1920); here they go by their first year. An event without a year is never given
+// one: no century is guessed for it (a book can list "in Süleyman the Magnificent's reign" after a 2011 event). Undated
+// events come last, in the book's order, under their own heading, with the book's own wording as their date.
+export type HistoryEvent = Card['events'][number];
+export const firstYear = (r: string | null | undefined) => { const m = /^\[(-?\d+),/.exec(r ?? ''); return m ? Number(m[1]) : null; };
+export function historyByCentury(events: HistoryEvent[]): { century: number | null; events: HistoryEvent[] }[] {
+  const order = events.map((e, i) => ({ e, key: firstYear(e.years), i })).sort((a, b) => (a.key ?? Infinity) - (b.key ?? Infinity) || a.i - b.i);
+  const groups: { century: number | null; events: HistoryEvent[] }[] = [];
+  for (const { e, key } of order) {
+    const century = key === null ? null : Math.floor((key - 1) / 100) + 1;
+    if (groups.at(-1)?.century !== century || !groups.length) groups.push({ century, events: [] });
+    groups.at(-1)!.events.push(e);
+  }
+  return groups;
+}
+const ROMAN: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+export function centuryLabel(century: number | null, lang: Lang) {
+  if (century === null) return lang === 'en' ? 'Undated' : 'Tarihi belirtilmemiş';
+  if (lang === 'en') return `${century}${century % 10 === 1 && century !== 11 ? 'st' : century % 10 === 2 && century !== 12 ? 'nd' : century % 10 === 3 && century !== 13 ? 'rd' : 'th'} century`;
+  let n = century, out = '';
+  for (const [v, r] of ROMAN) while (n >= v) { out += r; n -= v; }
+  return `${out}. yüzyıl`;
+}
+
 export function rangeText(r: string | null | undefined): string {
   const m = /^\[(-?\d+),(-?\d+)\)$/.exec(r ?? '');
   if (!m) return r ?? '';

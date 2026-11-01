@@ -86,7 +86,7 @@ export function PlayHero({ artifacts, children, footer }: { artifacts: Discovery
 
 // ——— Chapter: a section whose backdrop opens from an inset rounded panel to full width ———
 
-export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, children, className = '' }: { id: string; tone: 'night' | 'ivory'; n: number; total?: number; kicker: string; titleId: string; title: ReactNode; lede: ReactNode; children: ReactNode; className?: string }) {
+export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, children, className = '' }: { id: string; tone: 'night' | 'ivory'; n?: number; total?: number; kicker: string; titleId: string; title: ReactNode; lede: ReactNode; children: ReactNode; className?: string }) {
   const ref = useRef<HTMLElement>(null);
   const still = Boolean(useReducedMotion());
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start 25%'] });
@@ -94,15 +94,15 @@ export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, 
   const round = useTransform(scrollYProgress, [0, 1], [56, 0]);
   const clipPath = useMotionTemplate`inset(0% ${inset}% 0% ${inset}% round ${round}px ${round}px 0 0)`;
   const head = useRef<HTMLElement>(null);
-  const shown = useInView(head, { once: true, amount: 0.4 });
-  const rise = (delay: number) => still ? {} : { initial: { y: '105%' }, animate: shown ? { y: '0%' } : { y: '105%' }, transition: { duration: 1.1, delay, ease: [0.16, 1, 0.3, 1] as const } };
+  const shown = useInView(head, { once: true, amount: 0.1 });
+  const rise = (delay: number) => still ? {} : { initial: { y: '105%' }, animate: shown ? { y: '0%' } : { y: '105%' }, transition: { duration: 0.28, delay, ease: [0.16, 1, 0.3, 1] as const } };
   return <section ref={ref} id={id} className={`pl-chapter tone-${tone} ${className}`} data-nav-theme={tone === 'night' ? 'dark' : 'light'} aria-labelledby={titleId}>
     <motion.div className="pl-backdrop" aria-hidden="true" style={still ? undefined : { clipPath }} />
     <div className="pl-chapter-inner">
       <header className="pl-head" ref={head}>
-        <p className="pl-index"><span>{pad(n)}</span><i aria-hidden="true" /><span>{pad(total)}</span><b>{kicker}</b></p>
-        <h2 id={titleId} tabIndex={-1}><span className="pl-mask"><motion.span {...rise(0.05)}>{title}</motion.span></span></h2>
-        <motion.div className="pl-lede" initial={still ? false : { opacity: 0, y: 24 }} animate={shown ? { opacity: 1, y: 0 } : undefined} transition={{ duration: 0.9, delay: 0.25, ease: 'easeOut' }}>{lede}</motion.div>
+        <p className="pl-index">{n !== undefined && <><span>{pad(n)}</span><i aria-hidden="true" /><span>{pad(total)}</span></>}<b>{kicker}</b></p>
+        <h2 id={titleId} tabIndex={-1}><span className="pl-mask"><motion.span {...rise(0)}>{title}</motion.span></span></h2>
+        <motion.div className="pl-lede" initial={still ? false : { opacity: 0, y: 10 }} animate={shown ? { opacity: 1, y: 0 } : undefined} transition={{ duration: 0.26, delay: 0.05, ease: 'easeOut' }}>{lede}</motion.div>
       </header>
       {children}
     </div>

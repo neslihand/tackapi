@@ -131,7 +131,6 @@
   .hero-scroll .en-copy .hero-actions > :nth-child(2) { animation-delay: 1.25s; }
   .en-threshold { animation: en-grow 1.8s .7s cubic-bezier(.16, 1, .3, 1) backwards; }
   .en-bar > * { animation: en-fade 1s 1.35s backwards; }
-  .navigation.nav-intro { animation: en-nav 1s 1.3s cubic-bezier(.16, 1, .3, 1) backwards; }
   /* Ambient life: breathing light, drifting fog, rising dust, the scroll cue, a wave along the collection ticks. */
   .en-beam { animation: en-breathe 9s ease-in-out infinite; }
   .en-fog { animation: en-drift 28s ease-in-out infinite alternate; }
@@ -155,7 +154,6 @@
 @keyframes en-fade-up { from { opacity: 0; translate: 0 18px; } }
 @keyframes en-rise { from { transform: translateY(110%) rotate(3deg); } }
 @keyframes en-grow { from { transform: scaleX(0); } }
-@keyframes en-nav { from { opacity: 0; translate: 0 -18px; } }
 @keyframes en-breathe { 50% { opacity: .9; } }
 /* The fog drifts with `translate`, leaving `transform` to the scroll timeline that lifts it. */
 @keyframes en-drift { to { translate: 14% 0; } }
@@ -220,7 +218,7 @@
 .navigation > .brand { justify-self: start; }
 .navigation .desktop-nav { gap: clamp(22px, 2.8vw, 44px); padding: 0; border: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .navigation .desktop-nav::before, .navigation .desktop-nav::after { display: none; }
-.navigation .desktop-nav a { display: flex; align-items: baseline; gap: 7px; padding: 14px 0; font-size: 13.5px; letter-spacing: .01em; transition: color .3s; }
+.navigation .desktop-nav a { display: flex; align-items: baseline; gap: 7px; padding: 14px 0; font-size: 13.5px; letter-spacing: .01em; }
 .nav-num { font-family: var(--serif); font-size: 12.5px; font-style: italic; color: #765b38; transition: color .3s; }
 .nav-dark .nav-num { color: #cdb68c; }
 .navigation .desktop-nav a::after { bottom: 6px; left: 0; height: 1px; background: currentColor; box-shadow: none; transform: scaleX(0); transform-origin: right; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }

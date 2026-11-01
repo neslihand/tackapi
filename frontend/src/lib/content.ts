@@ -14,6 +14,31 @@ const isObject = (value: unknown): value is Loose => typeof value === 'object' &
 const filled = (value: unknown, max = 4000) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
 const httpsUrl = (value: unknown) => { try { return typeof value === 'string' && new URL(value).protocol === 'https:'; } catch { return false; } };
 
+// The collection's counts, worked out in one place so every page shows the same numbers. A city written with other
+// spacing or case counts once; a work with no city adds none.
+export function collectionStats(artifacts: { city: string }[]) {
+  const cities = new Set(artifacts.map(a => a.city.trim().toLocaleLowerCase('tr-TR')).filter(Boolean));
+  return { works: artifacts.length, cities: cities.size };
+}
+
+// Backend records say "Bilinmiyor" (unknown) where a fact is missing; pages leave such a value out rather than show it.
+export const known = (value?: string | null) => Boolean(value && value.trim() && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
+
+// An author's initials for their mark: the first and the last name, leaving out academic titles (Prof. Dr., Doç. Dr.,
+// Dr. Öğr. Üyesi, …). 'Dr. Öğr. Üyesi Doğan Yavaş' → 'DY', 'Berica Nevin Berberoğlu Şen' → 'BŞ'.
+const TITLE_WORDS = new Set(['üyesi', 'görevlisi']);
+export function monogram(name: string) {
+  const words = name.split(/\s+/).filter(w => w && !/\.$/.test(w) && !TITLE_WORDS.has(w.toLocaleLowerCase('tr-TR')));
+  return [words[0], words.length > 1 ? words.at(-1) : undefined].filter(Boolean).map(w => w![0]).join('').toLocaleUpperCase('tr-TR');
+}
+
+// The works the home page shows by name where it needs one example (the closing door, "Hafızaya Katkı"): their
+// pictures sit well in the site's colours. Matched loosely by name; works not in the collection are skipped.
+const spotlightNames = [['mahmut celebi', 'ecezade'], ['mihalic']];
+export function spotlight<T extends { name: string }>(artifacts: T[]): T[] {
+  return spotlightNames.map(keys => artifacts.find(a => keys.some(key => normalize(a.name).includes(key)))).filter((a): a is T => a !== undefined);
+}
+
 export function slugify(value: string) {
   return normalize(value).replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 }

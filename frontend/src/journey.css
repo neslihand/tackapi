@@ -1,16 +1,17 @@
 /* ——— The home page's step rail (JourneyRail.tsx) ———
    A small dark pill on the right edge, legible over ivory and night alike. Each step is a line; the current one is
-   longer and gold, its name shown for a moment when the step changes. Names show on hover or focus. Hidden on narrow
-   screens. */
+   longer and gold, its name shown for a moment when the step changes. Hovering or focusing the rail shows every name,
+   so the steps can be read before choosing one. It steps aside during the entrance and over the footer, out of the tab
+   order too. Hidden on narrow screens. */
 .journey { position: fixed; top: 50%; right: clamp(10px, 1.4vw, 22px); z-index: 40; translate: 0 -50%; padding: 12px 10px; border-radius: 999px; background: #061410a6; box-shadow: inset 0 0 0 1px #e6d5ae26; backdrop-filter: blur(10px); transition: opacity .5s, translate .5s cubic-bezier(.2, .7, .2, 1); }
-.journey.away { opacity: 0; translate: 16px -50%; pointer-events: none; }
+.journey.away { visibility: hidden; opacity: 0; translate: 16px -50%; pointer-events: none; transition: opacity .5s, translate .5s cubic-bezier(.2, .7, .2, 1), visibility 0s .5s; }
 .journey ol { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .journey button { position: relative; display: flex; align-items: center; justify-content: flex-end; width: 28px; height: 28px; padding: 0; border: 0; color: #f3ecdf; background: none; cursor: pointer; }
 .journey i { width: 12px; height: 2px; border-radius: 2px; background: #f3ecdf59; transition: width .4s cubic-bezier(.2, .7, .2, 1), background .4s; }
 .journey li.done i { background: #c7a96b99; }
 .journey li.on i { width: 24px; background: #e6d5ae; }
 .journey span { position: absolute; right: calc(100% + 14px); padding: 6px 12px; border-radius: 999px; white-space: nowrap; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #f3ecdf; background: #061410d9; opacity: 0; translate: 6px 0; pointer-events: none; transition: opacity .3s, translate .3s; }
-.journey.flash li.on span, .journey button:hover span, .journey button:focus-visible span { opacity: 1; translate: 0 0; }
+.journey.flash li.on span, .journey:hover span, .journey:focus-within span { opacity: 1; translate: 0 0; }
 .journey li.on span { color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); }
 .journey button:focus-visible { outline: 2px solid #e6d5ae; outline-offset: 2px; border-radius: 6px; box-shadow: none; }
 @media (max-width: 900px) { .journey { display: none; } }

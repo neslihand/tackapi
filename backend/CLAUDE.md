@@ -139,7 +139,11 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **Mobil kişiselleştirme (1 Kasım 2026):** öneri ve sıralama telefonda hesaplanır (`mobile/src/lib/personal.ts`). Arka uçta yalnızca `list_item.has_story/has_child`, `insights.recommend` içinde hesabın şehri ve hikâye/çocuk ilgileri, `preferences_changed` olayı, `personalization` düğmesi. Yaş kullanılmaz.
 - **Mobil master plan, ikinci tur (1 Kasım 2026):** göçler 019-023 gerçek veritabanında uygulandı (yalnızca yeni tablo ve sütun). `routes.walk_issues` (süreli rota yayın kuralı), `details.py` (üç detay), `weekly.py` (Haftanın Keşfi, `#/haftanin-kesfi`), `questions.py` (Cevabı Bekleyen Sorular, `#/bekleyen-sorular`; sohbet kaynağı değil), `image.reuse_allowed` (çevrimdışı ve paylaşım kartı izni, varsayılan kapalı; panelde kitap kitap), `site_setting.app_flags` (telefon modül düğmeleri), `rag.says_no_info`. **`calistir.sh` içinde `GEMINI_API_KEY` boş: Esere Sor bu makinede cevap vermiyor.**
 - **Mobil master plan işleri (1 Kasım 2026):** `share.py` (`/eser/<slug>` paylaşım sayfası: uygulamasız açılır, betik/çerez/fotoğraf yok), `GET /api/routes/{id}/manifest` (paket boyutu ve sürümü), `hunt.py` + göç `018_daily_hunt.sql` (Detay Avı; gerçek veritabanında 1 Kasım 2026'da uygulandı, görev yok; panelde `#/detay-avi`), `site_setting.medal_tiers` (kademeli madalyon eşikleri, panelden), `insights.cohorts`/`pilot_kpis`. Durum ve kararlar: `../audit/current-state.md`.
-- **Testler:** `python -m unittest discover -s tests` (267 test, `TZ=UTC` ile; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Kitap künyeleri (1 Kasım 2026):** Bursa II–III ve Konya I'in metin yazarları, editörü ve çevirmeni kitapların ilk
+  sayfasından `books.py`'ye eklendi; altı kitabın künyesi tam. Mevcut veritabanına `book_credits.py --report/--apply`
+  yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
+  Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
+- **Testler:** `python -m unittest discover -s tests` (270 test, `TZ=UTC` ile; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
@@ -161,7 +165,11 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   ziyaretçi terimleri ve makaleler sohbet kaynağı değildir. Metin biçimi: boş satır paragraf, `## ` ara başlık, `> `
   alıntı; sitede yayındaki terimler makalede ilk geçtikleri yerde açıklamalı işaretlenir. Kitap sözlüğünde yinelenen ya
   da İngilizce kalmış terimler var (Hünkar mahfili/Hünkâr Mahfili, Kitabe/kitâbe, Lectern, Plaster) ve çoğunun kategorisi
-  boş; panelin Terimler sayfasından düzeltilebilir. Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
+  boş; panelin Terimler sayfasından düzeltilebilir. **1 Kasım 2026:** `fix_terms.py --report/--apply` yazım hatalarını
+  ('Bani'de çift 'yapan'), eksik ve açıklama gibi uzun İngilizce karşılıkları (kural: 1–3 kelimelik ad) ve editör
+  terimlerinin İngilizce tanımlarını düzeltir; yinelenen 'hunkar-mahfili', 'kitabe' ve 'lectern' taslağa alınır (57
+  değişiklik + 3). Eski değer değişmişse atlar; `load_db.py` terimleri yeniden yüklerse yeniden çalıştırılmalı. Kitap
+  tanımlarının İngilizcesi eksik 13 terime dokunmaz. Gerçek veritabanında 1 Kasım 2026'da uygulandı (yayında 52 terim). Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
   paragraflar Türkçeyle hizalı değil); İngilizce başlık ve metin elle yazılırsa İngilizce sitede gösterilir.
 - **Yönetici asistanı (28 Ekim 2026):** `agent.py`, panelde `#/asistan`, `#/takvim`, `#/gundem`; ana sayfada "Gündem"
   bandı (`frontend/src/vakif/Agenda.tsx`). Göç `016_agent.sql` (gerçek veritabanında henüz uygulanmadı). Öneriyi açık

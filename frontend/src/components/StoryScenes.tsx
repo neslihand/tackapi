@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { MapPin, Plus, Search, X } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import type { Artifact } from '../data/artifacts';
 import type { NarrationMode } from '../lib/preferences';
 import { Link } from '../lib/navigation';
 import { t } from '../lib/i18n';
+import { Motif } from './StoryMotifs';
+import { buildingFor, ornamentsFor, storyScenes } from '../lib/motifs';
 
 // The chapters of a story page, drawn differently for each way of telling it:
 //   story (Hikâyeleştirerek) → CineChapter: full-screen scenes behind graphic-novel captions, a camera that moves
-//                              through the illustration, and an atmosphere that turns from night to dawn;
+//                              through the illustration, and an atmosphere that turns from night to dawn; a backend
+//                              work's whole story → StoryReader: a centred column with era and building motifs beside it;
 //   child (Çocuklar İçin)    → TaleChapter: the pages of a picture book with a guide bird, big words and surprises;
 //   short (Kısa ve Öz)       → BriefChapter: an editorial label beside an arched lens (Stage in Story.tsx).
 // The scroll animations live in Story.tsx; everything here reads correctly without them.
@@ -47,10 +50,8 @@ function ChapterExtras({ artifact, index, mode }: { artifact: Artifact; index: n
   const last = index === artifact.chapters.length - 1;
   return <>
     {mode !== 'short' && <small className="narrative-note">{mode === 'story' ? t('Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.', 'The atmosphere of the telling is a creative interpretation; the historical facts rest on the sources below.') : t('Çocuklar için hazırlanmış sadeleştirilmiş anlatım.', 'A simplified telling made for children.')}</small>}
-    {index === 0 && <div className="story-facts"><div><small>{t('DÖNEM', 'ERA')}</small><strong>{artifact.period}</strong></div><div><small>{t('MİMAR / USTA', 'ARCHITECT / MASTER')}</small><strong>{artifact.architect}</strong></div><div><small>{t('TARİH', 'DATE')}</small><strong>{artifact.year}</strong></div><div><small>{t('TÜR', 'TYPE')}</small><strong>{artifact.category}</strong></div></div>}
     {index === 0 && artifact.imageAlt && <details className="image-description"><summary>{t('GÖRSELDE NE VAR?', 'WHAT IS IN THE PICTURE?')}</summary><p>{artifact.imageAlt} {artifact.origin ? `${t('Fotoğraf', 'Photo')}: ${artifact.origin.photoCredit}.` : t('Bu çizim eserden esinlenen özgün bir yorumdur; fotoğraf veya rölöve değildir.', 'This drawing is an original interpretation inspired by the work; it is not a photograph or a survey drawing.')}</p></details>}
     {index === 2 && artifact.detail.title && <p className="detail-hint">{mode === 'child' ? <Search size={16} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}<span>{hints()[mode](artifact.detail.title.toLocaleLowerCase('tr-TR'))}</span></p>}
-    {last && <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>{t('Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et. Haritadaki konumlar yaklaşık yönlendirme içindir.', 'Before you set off, check current visiting conditions and restoration work with the institution in charge. Locations on the map are approximate.')} <Link to="/harita">{t('Haritada gör', 'See on the map')}</Link></p></div>}
   </>;
 }
 
@@ -193,73 +194,166 @@ export const paragraphs = (text: string) => text.split(/\n\s*\n/).map(p => p.rep
 function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: NarrationMode }) {
   return <>
     <small className="narrative-note">{mode === 'story' ? t('Anlatımdaki atmosfer yaratıcı bir yorumdur; tarihî bilgiler aşağıdaki kaynaklara dayanır.', 'The atmosphere of the telling is a creative interpretation; the historical facts rest on the sources below.') : mode === 'child' ? t('Çocuklar için hazırlanmış sadeleştirilmiş anlatım.', 'A simplified telling made for children.') : `${t('Envanter kitabındaki metin', 'The text of the inventory book')}: ${artifact.sourceReferences[0]?.title ?? ''}.`}</small>
-    <div className="story-facts"><div><small>{t('DÖNEM', 'ERA')}</small><strong>{artifact.period}</strong></div><div><small>{t('MİMAR / USTA', 'ARCHITECT / MASTER')}</small><strong>{artifact.architect}</strong></div><div><small>{t('TARİH', 'DATE')}</small><strong>{artifact.year}</strong></div><div><small>{t('TÜR', 'TYPE')}</small><strong>{artifact.category}</strong></div></div>
     {artifact.imageAlt && <details className="image-description"><summary>{t('GÖRSELDE NE VAR?', 'WHAT IS IN THE PICTURE?')}</summary><p>{artifact.imageAlt}{artifact.origin ? ` ${t('Fotoğraf', 'Photo')}: ${artifact.origin.photoCredit}.` : ''}</p></details>}
-    <div className="visit-note"><MapPin size={21} aria-hidden="true" /><p>{t('Yola çıkmadan önce güncel ziyaret koşullarını ve restorasyon durumunu ilgili kurumdan kontrol et.', 'Before you set off, check current visiting conditions and restoration work with the institution in charge.')} <Link to="/harita">{t('Haritada gör', 'See on the map')}</Link></p></div>
   </>;
 }
 
-/** Hikâyeleştirerek, whole: one night scene behind the photograph, the paragraphs rising over it as captions. */
-export function CineNarration({ artifact, text }: { artifact: Artifact; text: string }) {
-  const style = { '--fx': 50, '--fy': 50, '--zoom': 1.12, '--sx': 0, '--sy': 0 } as CSSProperties;
-  return <section className="story-chapter cine tone-lantern cine-whole" id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: ${t('hikâye', 'story')}`} style={style}>
-    <div className="cine-stage">
-      <div className="cine-camera" aria-hidden="true"><img src={artifact.image} alt="" loading="lazy" draggable={false} /></div>
-      <CineAtmosphere tone="lantern" />
-      <span className="cine-grade" aria-hidden="true" />
-      <span className="cine-bar top" aria-hidden="true" /><span className="cine-bar bottom" aria-hidden="true" />
-      <span className="cine-slate" aria-hidden="true">{artifact.city.toLocaleUpperCase('tr-TR')} <i>·</i> {artifact.year}</span>
-    </div>
-    <div className="cine-flow">
-      <header className="cine-title"><span className="cine-numeral" aria-hidden="true" /><span className="chapter-number">{t('HİKÂYELEŞTİREREK', 'AS A STORY')}</span></header>
-      <div className="narrative cine-captions">{paragraphs(text).map((p, k) => <p key={k} className={`cine-caption at-${k % 3}`}>{p}</p>)}</div>
-      <div className="cine-panel"><NarrationExtras artifact={artifact} mode="story" /></div>
+/**
+ * Hikâyeleştirerek, whole: the story read in one calm column in the middle of the night green. Beside it, line drawings
+ * of the work's building type and its era's ornaments (StoryMotifs.tsx) change with each paragraph and drift gently as
+ * the page scrolls. The text never sits on a picture, so it reads the same on any screen; the drawings only accompany it.
+ */
+// Specks of gold dust drifting up through the light, and a few stars that glint: [x %, y %, size px, delay s, length s].
+const MOTES: [number, number, number, number, number][] = Array.from({ length: 22 }, (_, i) => {
+  const r = (n: number) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1;
+  return [Math.round(r(1) * 100), Math.round(r(2) * 100), 1.5 + Math.round(r(3) * 25) / 10, Math.round(r(4) * 120) / 10, 9 + Math.round(r(5) * 10)];
+});
+
+export function StoryReader({ artifact, text }: { artifact: Artifact; text: string }) {
+  const parts = paragraphs(text);
+  const scenes = storyScenes(artifact, parts.length);
+  const [at, setAt] = useState(0);
+  const [seen, setSeen] = useState(() => new Set([0]));
+  const [ready, setReady] = useState(false);
+  const root = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const section = root.current;
+    if (!section || !('IntersectionObserver' in window)) return;
+    // Paragraphs fade in once as they come up (never hidden without this script or for less motion).
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setReady(true);
+    const items = [...section.querySelectorAll<HTMLElement>('.sr-text > p')];
+    const reading = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) setAt(Number((entry.target as HTMLElement).dataset.i));
+    }), { rootMargin: '-40% 0px -50% 0px' });
+    const reveal = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { const i = Number((entry.target as HTMLElement).dataset.i); setSeen(s => s.has(i) ? s : new Set([...s, i])); }
+    }), { rootMargin: '0px 0px 8% 0px' });
+    items.forEach(el => { reading.observe(el); reveal.observe(el); });
+    // Gentle parallax: how far through the story the reader is, for the drawings to drift a little against the text.
+    let frame = 0;
+    const drift = () => {
+      frame = 0;
+      const box = section.getBoundingClientRect();
+      const progress = Math.min(1, Math.max(0, (window.innerHeight - box.top) / (box.height + window.innerHeight)));
+      section.style.setProperty('--sp', progress.toFixed(3));
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(drift); };
+    drift();
+    window.addEventListener('scroll', schedule, { passive: true });
+    return () => { reading.disconnect(); reveal.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('scroll', schedule); };
+  }, [text]);
+  const state = (i: number) => i === at ? 'on' : i < at ? 'past' : '';
+  return <section ref={root} className={`story-chapter sr ${ready ? 'ready' : ''}`} id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: ${t('hikâye', 'story')}`}>
+    {/* The stage covers the story only: its pinned layer leaves with the last paragraph, never over what comes next. */}
+    <div className="sr-stage" aria-hidden="true"><div className="sr-pin">
+      <span className="sr-rays" />
+      <div className="sr-halo"><Motif id={scenes[0].right} /></div>
+      <div className="sr-motes">{MOTES.map(([x, y, size, delay, time], i) => <i key={i} style={{ '--x': `${x}%`, '--y': `${y}%`, '--size': `${size}px`, '--delay': `${delay}s`, '--time': `${time}s` } as CSSProperties} className={i % 4 ? '' : 'star'} />)}</div>
+      {(['left', 'right'] as const).map(side => <div key={side} className={`sr-side ${side}`}>
+        <span className="sr-glow" /><svg className="sr-ring" viewBox="0 0 200 200"><circle cx={100} cy={100} r={96} /><circle cx={100} cy={100} r={84} /></svg>
+        {scenes.map((scene, i) => <div key={i} className={`sr-motif ${state(i)}`}><Motif id={scene[side]} /></div>)}
+      </div>)}
+    </div></div>
+    <div className="sr-flow">
+      <header className="sr-head">
+        <p className="sr-kicker">{t('HİKÂYELEŞTİREREK', 'AS A STORY')}</p>
+        <h2>{artifact.name}</h2>
+        <p className="sr-meta">{[artifact.period, artifact.category, artifact.city].filter(Boolean).join(' · ')}</p>
+        <span className="sr-rule" aria-hidden="true"><i /></span>
+      </header>
+      <div className="narrative sr-text">{parts.map((p, i) => <p key={i} data-i={i} className={seen.has(i) ? 'seen' : ''}>{p}</p>)}</div>
+      <div className="sr-extras"><NarrationExtras artifact={artifact} mode="story" /></div>
     </div>
   </section>;
 }
 
+// What Hüdhüd says beside the storybook: hello, two reading tips, and well done at the last page.
+const readerLines = () => [
+  t('Merhaba! Ben Hüdhüd. Bu yapının masalını birlikte okuyalım mı?', 'Hello! I am Hüdhüd the hoopoe. Shall we read this building’s tale together?'),
+  t('Her sayfayı okudukça bir yıldız kazanıyorsun. Hepsini toplayabilir misin?', 'You win a star for every page you read. Can you collect them all?'),
+  t('Kapaktaki çizime bak: kaç kubbe, kaç pencere sayabilirsin?', 'Look at the drawing on the cover: how many domes and windows can you count?'),
+  t('Harika! Eski yapıları korumak hepimizin görevi.', 'Wonderful! Looking after old buildings is a job for all of us.'),
+];
+const STICKER_TONES = ['turquoise', 'terracotta', 'sun', 'emerald'];
+
 /**
- * Çocuklar İçin, whole: the picture in its frame, then the text paragraph by paragraph. Hüdhüd the guide stays beside
- * the text as the child reads: it hops when a new paragraph comes into view and talks when tapped.
+ * Çocuklar İçin, whole: a picture book. The cover draws the work's building in a dawn window (no photograph); each
+ * paragraph is a page with a sticker of the era's ornaments; clouds drift as the page scrolls. Hüdhüd the guide stays
+ * beside the pages, hops when a new page comes up, talks when tapped, and lights a star for every page read.
  */
 export function TaleNarration({ artifact, text }: { artifact: Artifact; text: string }) {
   const parts = paragraphs(text);
+  const ornaments = ornamentsFor(artifact);
   const [talking, setTalking] = useState(false);
   const [at, setAt] = useState(0);
   const [hop, setHop] = useState(0);
-  const story = useRef<HTMLDivElement>(null);
+  const [read, setRead] = useState(() => new Set<number>());
+  const [inView, setInView] = useState(false);
+  const root = useRef<HTMLElement>(null);
   useEffect(() => {
-    const root = story.current;
-    if (!root || !('IntersectionObserver' in window)) return;
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+    const section = root.current;
+    if (!section || !('IntersectionObserver' in window)) return;
+    const pages = new IntersectionObserver(entries => entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       const k = Number((entry.target as HTMLElement).dataset.k);
-      setAt(k); setHop(h => h + 1);
-    }), { rootMargin: '-40% 0px -45% 0px' });
-    root.querySelectorAll('.tale-para').forEach(p => observer.observe(p));
-    return () => observer.disconnect();
+      setAt(k); setHop(h => h + 1); setRead(r => r.has(k) ? r : new Set([...r, k]));
+    }), { rootMargin: '-35% 0px -45% 0px' });
+    section.querySelectorAll('.kr-page').forEach(page => pages.observe(page));
+    // On a phone the guide floats in the corner of the screen, so it shows only while the tale is on screen.
+    const shown = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { rootMargin: '-20% 0px -20% 0px' });
+    shown.observe(section);
+    // The clouds drift a little against the pages (--sp, 0 → 1 through the tale).
+    let frame = 0;
+    const drift = () => {
+      frame = 0;
+      const box = section.getBoundingClientRect();
+      section.style.setProperty('--sp', Math.min(1, Math.max(0, (window.innerHeight - box.top) / (box.height + window.innerHeight))).toFixed(3));
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(drift); };
+    drift();
+    window.addEventListener('scroll', schedule, { passive: true });
+    return () => { pages.disconnect(); shown.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('scroll', schedule); };
   }, [text]);
-  const line = guideLines()[at === 0 ? 0 : at >= parts.length - 1 ? 3 : 1 + (at % 2)];
-  return <section className="story-chapter tale tale-whole" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: ${t('çocuklar için', 'for children')}`}>
-    <div className="tale-page tale-cover">
-      <div className="tale-art">
-        <div className="tale-window" aria-hidden="true">
-          <img src={artifact.image} alt="" loading="lazy" draggable={false} />
-          {sparkles.map(([x, y], k) => <span key={k} className="tale-spark" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${k * -0.6}s` }} />)}
-          <span className="tale-shooting" /><span className="tale-cloud c1" /><span className="tale-cloud c2" />
-        </div>
-      </div>
-      <div className="tale-text"><span className="tale-page-no">{t('ÇOCUKLAR İÇİN', 'FOR CHILDREN')}</span><p className="tale-lead">{artifact.name} · {artifact.city}</p></div>
+  const done = read.size >= parts.length;
+  const line = readerLines()[done ? 3 : at === 0 ? 0 : 1 + (at % 2)];
+  return <section ref={root} className="story-chapter kr" id="chapter-0" data-chapter={0} aria-label={`${artifact.name}: ${t('çocuklar için', 'for children')}`}>
+    <div className="kr-sky" aria-hidden="true">
+      <span className="kr-cloud c1" /><span className="kr-cloud c2" /><span className="kr-cloud c3" /><span className="kr-cloud c4" />
+      {sparkles.map(([x, y], k) => <span key={k} className="kr-twinkle" style={{ left: `${x}%`, top: `${y * 3}%`, animationDelay: `${k * -0.7}s` }} />)}
     </div>
-    <div className="tale-story" ref={story}>
-      <div className="tale-story-text narrative">{parts.map((p, k) => <p key={k} data-k={k} className={`tale-para ${k === at ? 'now' : ''}`}>{p}</p>)}
-        <div className="tale-extras"><NarrationExtras artifact={artifact} mode="child" /></div></div>
-      <aside className="tale-companion">
+    <header className="kr-cover">
+      <div className="kr-window" aria-hidden="true">
+        <span className="kr-sun" /><span className="kr-hill back" /><span className="kr-hill front" />
+        <div className="kr-building"><Motif id={buildingFor(artifact)} /></div>
+        {sparkles.slice(0, 4).map(([x, y], k) => <span key={k} className="tale-spark" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${k * -0.6}s` }} />)}
+      </div>
+      <div className="kr-cover-text">
+        <span className="kr-chip">{t('ÇOCUKLAR İÇİN', 'FOR CHILDREN')}</span>
+        <h2>{artifact.name}</h2>
+        <p>{artifact.city} · {t(`${parts.length} sayfalık bir masal`, `a tale in ${parts.length} pages`)}</p>
+      </div>
+    </header>
+    <div className="kr-body">
+      <ol className="kr-pages">{parts.map((p, k) => <li key={k} data-k={k} className={`kr-page ${k === at ? 'now' : ''} ${read.has(k) ? 'read' : ''}`}>
+        <span className="kr-page-no">{t(`Sayfa ${k + 1} / ${parts.length}`, `Page ${k + 1} / ${parts.length}`)}</span>
+        <span className={`kr-sticker ${STICKER_TONES[k % STICKER_TONES.length]} ${k % 2 ? 'right' : 'left'}`} aria-hidden="true"><Motif id={ornaments[k % ornaments.length]} /></span>
+        <p>{p}</p>
+      </li>)}</ol>
+      <aside className={`kr-companion ${inView ? 'in' : ''}`}>
         {/* The drawing is remounted on each hop so its animation restarts; the button keeps its focus. */}
         <button type="button" className={`tale-guide ${talking ? 'talking' : ''} ${hop > 1 ? 'hop' : ''}`} onClick={() => setTalking(!talking)} aria-expanded={talking} aria-controls="guide-whole" aria-label={t('Rehber kuş Hüdhüd ile konuş', 'Talk to Hüdhüd, the guide bird')}><Hoopoe key={hop} /></button>
         <p className={`tale-bubble ${talking ? 'open' : ''}`} id="guide-whole" aria-live="polite">{talking ? line : ''}</p>
+        <p className="kr-stars" aria-label={t(`Okunan sayfa: ${read.size} / ${parts.length}`, `Pages read: ${read.size} of ${parts.length}`)}>
+          {parts.map((_, k) => <span key={k} className={read.has(k) ? 'on' : ''} aria-hidden="true">★</span>)}
+        </p>
       </aside>
     </div>
+    <div className={`kr-finish ${done ? 'done' : ''}`}>
+      <span className="kr-medal" aria-hidden="true">★</span>
+      <div><strong>{t('Masalın sonuna geldin!', 'You reached the end of the tale!')}</strong>
+        <span>{t(`${read.size} yıldız topladın. Şimdi bu yapının yapbozunu çözebilir ya da bilgi yarışmasında kendini deneyebilirsin.`, `You collected ${read.size} stars. Now you can solve this building’s puzzle or try the quiz.`)}</span></div>
+    </div>
+    <div className="kr-extras"><NarrationExtras artifact={artifact} mode="child" /></div>
   </section>;
 }
 

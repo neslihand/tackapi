@@ -110,6 +110,7 @@ export function DoorGallery({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   const row = (copy: number) => [...doors.map((a, i) => <li key={`${copy}-${a.id}`} className={`dg-card ${i === active ? 'on' : ''}`} style={{ '--i': i } as CSSProperties} aria-hidden={copy !== 1 || undefined}>
     <Link to={`/eser/${a.slug}`} tabIndex={copy === 1 ? undefined : -1} onFocus={event => bring(event.currentTarget.parentElement ?? undefined)} aria-label={`${a.name}, ${a.city}`} draggable={false}>
       <span className="dg-door" aria-hidden="true"><span className="dg-window"><img src={a.image} alt="" loading="lazy" draggable={false} /></span><i>{pad(i + 1)}</i></span>
+      <span className="dg-name" aria-hidden="true">{a.name}</span>
       <span className="dg-city" aria-hidden="true">{a.city.toLocaleUpperCase(locale())}</span>
     </Link>
   </li>),

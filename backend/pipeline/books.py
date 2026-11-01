@@ -33,14 +33,24 @@ BOOKS = {
         ]),
     'bursa-2': dict(
         file='bursa-envanteri-cilt-2.txt', pdf='bursa-envanteri-cilt-2.pdf', city='bursa', volume=2,
-        title='Bursa Vakıf Eserleri II. Cilt', en_quality='usable',
+        title='Bursa Vakıf Eserleri II. Cilt', published='2026-04-01', en_quality='usable',
+        isbn='978-625-99247-7-9', isbn_set='978-625-99247-5-5',
+        # künye (kitabın ilk sayfası): metin yazarları, editör ve çevirmen I. ciltle aynı
+        authors=['Prof. Dr. Hasan Basri Öcalan', 'Dr. Öğr. Üyesi Doğan Yavaş',
+                 'Dr. Öğr. Üyesi Sezai Sevim', 'Fikret Alkan', 'Aziz Elbas'],
+        editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
         parts=[
             ('skip', 1, 772, None),
             ('entries', 773, 16022, None),
         ]),
     'bursa-3': dict(
         file='bursa-envanteri-cilt-3.txt', pdf='bursa-envanteri-cilt-3.pdf', city='bursa', volume=3,
-        title='Bursa Vakıf Eserleri III. Cilt', en_quality='usable',
+        title='Bursa Vakıf Eserleri III. Cilt', published='2026-04-01', en_quality='usable',
+        isbn='978-625-99247-8-6', isbn_set='978-625-99247-5-5',
+        # künye (kitabın ilk sayfası): metin yazarları, editör ve çevirmen I. ciltle aynı
+        authors=['Prof. Dr. Hasan Basri Öcalan', 'Dr. Öğr. Üyesi Doğan Yavaş',
+                 'Dr. Öğr. Üyesi Sezai Sevim', 'Fikret Alkan', 'Aziz Elbas'],
+        editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
         parts=[
             ('skip', 1, 711, None),
             ('entries', 712, 10962, None),
@@ -49,6 +59,11 @@ BOOKS = {
     'konya-1': dict(
         file='konya_envanteri_1_cilt.txt', pdf='konya-envanteri-1_cilt-web.pdf', city='konya', volume=1,
         title='Konya Vakıf Eserleri I. Cilt', en_quality='unusable', heading_pos='before', toc_lines=(201, 905),
+        # künye: metin yazarları, editör ve çevirmen II. ciltle aynı ("Uzm. Sanat Tar." unvanı II. ciltteki yazımla bırakıldı)
+        authors=['Prof. Dr. Ali Boran', 'Prof. Dr. Hasan Bahar', 'Prof. Dr. Tolga Bozkurt',
+                 'Doç. Dr. Razan Aykaç', 'Dr. Erdal Elmas', 'Dr. Naci Bakırcı',
+                 'Dr. Mehmet Mutlu', 'Burhan Öztürk', 'Sema Şentürk'],
+        editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
         parts=[
             ('skip', 1, 905, None),
             ('city_history', 906, 1825, 'Konya Tarihi'),

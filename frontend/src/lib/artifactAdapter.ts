@@ -2,6 +2,7 @@ import type { Artifact } from '../data/artifacts';
 import type { ArtifactChapter, ArtifactFeedIssue, ArtifactFeedResult, DiscoveryArtifact } from './artifactContract';
 import type { Season } from '../data/collections';
 import { PLACEHOLDER_IMAGE, questionIssues } from './content.ts';
+import { t } from './i18n.ts';
 import type { QuizQuestion } from '../data/artifacts';
 
 type ObjectValue = Record<string, unknown>;
@@ -79,8 +80,9 @@ export function adaptArtifactFeed(input: unknown): ArtifactFeedResult {
       name: (value.name as string).trim(), city: (value.city as string).trim(),
       period: (value.period as string).trim(), category: (value.category as string).trim(),
       description: (value.description as string).trim(),
-      year: typeof value.year === 'string' ? value.year.trim() : 'Bilinmiyor',
-      architect: typeof value.architect === 'string' ? value.architect.trim() : 'Bilinmiyor',
+      // A missing fact reads "Bilinmiyor" / "Unknown"; pages that should not show it check known() first.
+      year: typeof value.year === 'string' ? value.year.trim() : t('Bilinmiyor', 'Unknown'),
+      architect: typeof value.architect === 'string' ? value.architect.trim() : t('Bilinmiyor', 'Unknown'),
       coordinates: coordinates == null ? null : [...coordinates as [number, number]],
       ...(coordinates != null && value.coordinatesApproximate === true ? { coordinatesApproximate: true } : {}),
       image: typeof value.image === 'string' ? value.image : PLACEHOLDER_IMAGE,

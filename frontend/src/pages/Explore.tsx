@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
-import { ArrowRight, ChevronDown, Compass, Heart, Hourglass, Landmark, LayoutGrid, List, Route, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, ChevronDown, Compass, Heart, Hourglass, Landmark, LayoutGrid, List, Route, Search, SlidersHorizontal, X } from 'lucide-react';
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { ArtifactCard } from '../components/ArtifactCard';
 import { Girih } from '../components/PlayArt';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import { useContent } from '../lib/contentStore';
 import { Link } from '../lib/navigation';
-import { t } from '../lib/i18n';
+import { currentLang, t } from '../lib/i18n';
+import { eraOptions, inEra } from '../lib/eras';
 import { normalize } from '../lib/progress';
 import { useProgress } from '../lib/store';
 import { track } from '../lib/analytics';
@@ -33,10 +34,12 @@ function Corridor({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   const row = [...artifacts, ...artifacts];
   return <div className="ex-corridor" ref={ref} aria-hidden="true">
     <motion.div className="ex-corridor-track" style={still ? undefined : { x }}>
-      {row.map((a, i) => <span key={i} className={`w${i % 3}`} style={{ animationDelay: `${0.35 + i * 0.07}s` }}>
+      {/* Each arch names its work and opens it on a click; the list below reaches the same works by keyboard. */}
+      {row.map((a, i) => <Link key={i} to={`/eser/${a.slug}`} tabIndex={-1} className={`w${i % 3}`} style={{ animationDelay: `${0.35 + i * 0.07}s` }} draggable={false}>
         <span className="ex-window"><motion.img src={a.image} alt="" loading="lazy" draggable={false} style={still ? undefined : { y: glide }} /></span>
         <b><i>{pad((i % artifacts.length) + 1)}</i>{a.city}</b>
-      </span>)}
+        <strong className="ex-corridor-name">{a.name}</strong>
+      </Link>)}
     </motion.div>
   </div>;
 }
@@ -93,7 +96,7 @@ export function Explore({ query }: { query: string }) {
 
   const filtered = useMemo(() => {
     const pool = season ? season.artifactIds.map(id => artifacts.find(a => a.id === id)).filter(a => a !== undefined) : artifacts;
-    return pool.filter(a => normalize(`${a.name} ${a.city}`).includes(normalize(search)) && (!city || a.city === city) && (!period || a.period === period) && (!category || a.category === category) && (!favorites || progress.favorites.includes(a.id)));
+    return pool.filter(a => normalize(`${a.name} ${a.city}`).includes(normalize(search)) && (!city || a.city === city) && inEra(period, a.period) && (!category || a.category === category) && (!favorites || progress.favorites.includes(a.id)));
   }, [artifacts, season, search, city, period, category, favorites, progress.favorites]);
 
   const activeFilters = [
@@ -106,12 +109,14 @@ export function Explore({ query }: { query: string }) {
     setSearch(''); setCity(''); setPeriod(''); setCategory(''); setSeasonId(''); setFavorites(false);
     resultsTitle.current?.focus({ preventScroll: true });
   }
-  function closeFilters(showResults = false) {
+  function showResults() {
+    resultsTitle.current?.focus({ preventScroll: true });
+    resultsTitle.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }
+  function closeFilters(show = false) {
     setFiltersOpen(false);
-    if (showResults) {
-      resultsTitle.current?.focus({ preventScroll: true });
-      resultsTitle.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
-    } else filterButton.current?.focus();
+    if (show) showResults();
+    else filterButton.current?.focus();
   }
   // Analitik: arama yazmayı bitirince, süzgeç ve rota seçildiğinde (yalnızca izin verildiyse gönderilir)
   useEffect(() => {
@@ -126,26 +131,38 @@ export function Explore({ query }: { query: string }) {
   const seasonFound = season ? season.artifactIds.filter(id => progress.discovered[id]).length : 0;
   const waiting = filtered.filter(a => !progress.discovered[a.id]).length;
   const unique = (values: string[]) => [...new Set(values)].map(v => [v, v] as [string, string]);
+  // A route made of every work of one city is the city filter again; only routes that pick their own stops are offered.
+  // (A route opened from the home page still applies through ?season=, with its banner.)
+  const ownRoutes = seasons.filter(s => {
+    const cities = new Set(s.artifactIds.map(id => artifacts.find(a => a.id === id)?.city));
+    const [only] = cities;
+    return cities.size !== 1 || !only || s.artifactIds.length !== artifacts.filter(a => a.city === only).length;
+  });
+  // Eras in time order, each sub-era indented under its era ("Osmanlı Dönemi" gathers all the Ottoman ones).
+  const eras = eraOptions(artifacts.map(a => a.period), currentLang() === 'en').map(o => [o.value, o.child ? ` ${o.label}` : o.label] as [string, string]);
 
   return <div className="explore-page" data-nav-theme="dark">
     <Girih className="ex-girih" />
     <div className="page-shell ex-shell">
       <div className="ex-top">
-        <div className="ex-heading"><p className="ex-kicker"><span>N° 01</span><i aria-hidden="true" />{t('Anadolu koleksiyonu', 'Anatolian collection')} · {pad(artifacts.length)} {t('eser', 'works')}</p><h1><span className="ex-line"><span>{t('Merakın nereye', 'Where will your')}</span></span> <span className="ex-line"><em>{t('götürür?', 'curiosity lead?')}</em></span></h1></div>
-        <label className="ex-search"><Search size={18} aria-hidden="true" /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('Bir eser veya şehir ara…', 'Search for a work or a city…')} aria-label={t('Eser veya şehir ara', 'Search for a work or a city')} />{search && <button type="button" onClick={() => { setSearch(''); searchInput.current?.focus(); }} aria-label={t('Aramayı temizle', 'Clear the search')}><X size={16} aria-hidden="true" /></button>}</label>
+        <div className="ex-heading"><p className="ex-kicker">{t('Anadolu koleksiyonu', 'Anatolian collection')} · {pad(artifacts.length)} {t('eser', 'works')}</p><h1><span className="ex-line"><span>{t('Merakın nereye', 'Where will your')}</span></span> <span className="ex-line"><em>{t('götürür?', 'curiosity lead?')}</em></span></h1></div>
+        {/* The results are far below the search, so the count shows right under it and Enter takes the visitor there.
+            Screen readers already hear the count from the results bar (role="status"), so this line is not a live region. */}
+        <div className="ex-search-wrap"><label className="ex-search"><Search size={18} aria-hidden="true" /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && search.trim()) { e.preventDefault(); showResults(); } }} enterKeyHint="search" placeholder={t('Bir eser veya şehir ara…', 'Search for a work or a city…')} aria-label={t('Eser veya şehir ara', 'Search for a work or a city')} />{search && <button type="button" onClick={() => { setSearch(''); searchInput.current?.focus(); }} aria-label={t('Aramayı temizle', 'Clear the search')}><X size={16} aria-hidden="true" /></button>}</label>
+          {search.trim() && <p className="ex-search-hint">{filtered.length ? t(`${filtered.length} eser bulundu`, `${filtered.length} works found`) : t('Eşleşen eser yok', 'No matching works')}<button type="button" onClick={showResults}>{filtered.length ? t('Sonuçları gör', 'See the results') : t('Önerilere bak', 'See the suggestions')} <ArrowDown size={14} aria-hidden="true" /></button></p>}</div>
       </div>
       <Corridor artifacts={artifacts} />
       {readOnly && <Discoveries />}
       <div className="ex-toolbar">
-        <p className="ex-toolbar-note"><em>{t('Süz', 'Filter')}</em> {t('şehre, döneme, rotaya ya da eser türüne göre', 'by city, era, route or type of work')}</p>
+        <p className="ex-toolbar-note"><em>{t('Süz', 'Filter')}</em> {ownRoutes.length ? t('şehre, döneme, rotaya ya da eser türüne göre', 'by city, era, route or type of work') : t('şehre, döneme ya da eser türüne göre', 'by city, era or type of work')}</p>
         <button ref={filterButton} type="button" className="ex-filter-toggle" onClick={() => setFiltersOpen(!filtersOpen)} aria-expanded={filtersOpen} aria-controls="ex-filter-panel"><SlidersHorizontal size={17} aria-hidden="true" /> {t('Filtreler', 'Filters')}{activeFilters.length > 0 && <span className="ex-filter-badge"><span className="sr-only">{t(', etkin filtre: ', ', active filters: ')}</span>{activeFilters.length}</span>}<ChevronDown size={15} aria-hidden="true" /></button>
         <button type="button" className="ex-favorites" onClick={() => setFavorites(!favorites)} aria-pressed={favorites}><Heart size={16} fill={favorites ? 'currentColor' : 'none'} aria-hidden="true" /> {t('Favorilerim', 'My favourites')} <span>{progress.favorites.length}</span></button>
       </div>
       <div id="ex-filter-panel" className="ex-filter-panel" hidden={narrow && !filtersOpen} onKeyDown={event => { if (event.key === 'Escape' && narrow) { event.preventDefault(); closeFilters(); } }}>
-        <div className="ex-capsule">
-          <FilterSegment icon={<Route size={14} aria-hidden="true" />} label={t('Keşif rotası', 'Discovery route')} all={t('Tüm rotalar', 'All routes')} value={seasonId} onChange={setSeasonId} options={seasons.map(s => [s.id, s.title])} />
+        <div className={`ex-capsule ${ownRoutes.length ? '' : 'three'}`}>
+          {ownRoutes.length > 0 && <FilterSegment icon={<Route size={14} aria-hidden="true" />} label={t('Keşif rotası', 'Discovery route')} all={t('Tüm rotalar', 'All routes')} value={seasonId} onChange={setSeasonId} options={ownRoutes.map(s => [s.id, s.title])} />}
           <FilterSegment icon={<Compass size={14} aria-hidden="true" />} label={t('Şehir', 'City')} all={t('Tüm şehirler', 'All cities')} value={city} onChange={setCity} options={unique(artifacts.map(a => a.city))} />
-          <FilterSegment icon={<Hourglass size={14} aria-hidden="true" />} label={t('Dönem', 'Era')} all={t('Tüm dönemler', 'All eras')} value={period} onChange={setPeriod} options={unique(artifacts.map(a => a.period))} />
+          <FilterSegment icon={<Hourglass size={14} aria-hidden="true" />} label={t('Dönem', 'Era')} all={t('Tüm dönemler', 'All eras')} value={period} onChange={setPeriod} options={eras} />
           <FilterSegment icon={<Landmark size={14} aria-hidden="true" />} label={t('Eser türü', 'Type of work')} all={t('Tüm türler', 'All types')} value={category} onChange={setCategory} options={unique(artifacts.map(a => a.category))} />
         </div>
         <button type="button" className="ex-filter-done" onClick={() => closeFilters(true)}>{t(`${filtered.length} eseri göster`, `Show ${filtered.length} works`)} <ArrowRight size={16} aria-hidden="true" /></button>
@@ -157,13 +174,13 @@ export function Explore({ query }: { query: string }) {
       {season && <div className="season-banner"><Route size={22} strokeWidth={1.4} aria-hidden="true" /><div><small>{season.kicker} · {t('KEŞİF SEZONU', 'DISCOVERY SEASON')}</small><h2>{season.title}</h2><p>{season.description}</p><Link className="season-quest" to="/oyun/gorevler">{t('Bu rotanın görevine bak', 'See this route’s quest')} <ArrowRight size={15} aria-hidden="true" /></Link></div><div className="season-progress"><strong>{seasonFound} / {season.artifactIds.length}</strong><span>{t('durak mühürlendi', 'stops stamped')}</span><i><b style={{ width: `${season.artifactIds.length ? seasonFound / season.artifactIds.length * 100 : 0}%` }} /></i></div></div>}
       <div className="ex-lower" data-nav-theme="light" data-unfold>
         <div className="ex-results-bar">
-          <div><p className="ex-results-kicker" aria-hidden="true"><span>N° 02</span><i />{t('Koleksiyon', 'Collection')}</p><h2 ref={resultsTitle} id="ex-results-title" tabIndex={-1}>{filtered.length} {t('eser', 'works')}</h2><p className="ex-count" role="status"><span className="sr-only">{t(`${filtered.length} eser listeleniyor. `, `${filtered.length} works listed. `)}</span>{waiting ? t(`${waiting} keşif seni bekliyor`, `${waiting} discoveries await you`) : filtered.length ? t('Hepsi pasaportunda', 'All in your passport') : t('Filtrelerini değiştirebilirsin', 'Try changing your filters')}</p></div>
+          <div><p className="ex-results-kicker" aria-hidden="true">{t('Koleksiyon', 'Collection')}</p><h2 ref={resultsTitle} id="ex-results-title" tabIndex={-1}>{filtered.length} {t('eser', 'works')}</h2><p className="ex-count" role="status"><span className="sr-only">{t(`${filtered.length} eser listeleniyor. `, `${filtered.length} works listed. `)}</span>{waiting ? t(`${waiting} keşif seni bekliyor`, `${waiting} discoveries await you`) : filtered.length ? t('Hepsi pasaportunda', 'All in your passport') : t('Filtrelerini değiştirebilirsin', 'Try changing your filters')}</p></div>
           <div className="ex-view-toggle" role="group" aria-label={t('Eser görünümü', 'View of the works')}>
             <button type="button" onClick={() => setPreferredView('cards')} aria-pressed={view === 'cards'} aria-label={t('Kart görünümü', 'Card view')}><LayoutGrid size={17} aria-hidden="true" /><span>{t('Kartlar', 'Cards')}</span></button>
             <button type="button" onClick={() => setPreferredView('list')} aria-pressed={view === 'list'} aria-label={t('Liste görünümü', 'List view')}><List size={18} aria-hidden="true" /><span>{t('Liste', 'List')}</span></button>
           </div>
         </div>
-        {filtered.length > 0 && <ul className={`ex-results ex-results-${view}`} aria-labelledby="ex-results-title" data-columns="1 0.86 1.1" onPointerLeave={preview.hide}>{filtered.map((artifact, index) => <li key={artifact.id} onPointerMove={view === 'list' && !narrow ? event => preview.move(event, artifact) : undefined}><ArtifactCard artifact={artifact} variant={view === 'list' ? 'compact' : 'catalog'} eager={index < 3} number={`${season ? 'DURAK' : 'ESER'} ${pad((season ? season.artifactIds.indexOf(artifact.id) : index) + 1)}`} /></li>)}</ul>}
+        {filtered.length > 0 && <ul className={`ex-results ex-results-${view}`} aria-labelledby="ex-results-title" onPointerLeave={preview.hide}>{filtered.map((artifact, index) => <li key={artifact.id} onPointerMove={view === 'list' && !narrow ? event => preview.move(event, artifact) : undefined}><ArtifactCard artifact={artifact} variant={view === 'list' ? 'compact' : 'catalog'} eager={index < 3} number={`${season ? 'DURAK' : 'ESER'} ${pad((season ? season.artifactIds.indexOf(artifact.id) : index) + 1)}`} /></li>)}</ul>}
         {!filtered.length && <div className="empty-state"><Search size={36} aria-hidden="true" /><h2>{t('Bu iz henüz koleksiyonda yok.', 'This trail is not in the collection yet.')}</h2><p>{t('Başka bir kelime deneyebilir veya filtreleri kaldırabilirsin.', 'Try another word, or remove the filters.')}</p><button type="button" className="button gold" onClick={clear}>{t('Tüm eserleri göster', 'Show every work')}</button></div>}
         {!readOnly && <p className="page-note">{t('Görseller eserlerden esinlenen özgün mimari illüstrasyonlardır; fotoğraf değildir.', 'The pictures are original architectural illustrations inspired by the works, not photographs.')}</p>}
       </div>

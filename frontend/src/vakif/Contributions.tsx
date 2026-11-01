@@ -54,6 +54,7 @@ export function Contributions({ slug, name }: { slug: string; name: string }) {
         <span>— {c.author}, {new Date(c.created_at).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</span></div>
     </li>)}</ul>}
     {message && <p className="v-note" role="status">{message}</p>}
+    <div className="v-contrib-invite">
     {!user ? <p className="v-note"><Link className="text-link" to={`/giris?sonra=${encodeURIComponent(`/eser/${slug}`)}`}>{t('Giriş yap ya da hesap aç', 'Sign in or open an account')}</Link>{t(', bu esere fotoğraf, anı ya da bilgi ekle.', ' to add a photo, memory or fact to this work.')}</p>
       : !open ? <div className="v-actions">
         <button className="button line" onClick={() => { setOpen('photo'); setMessage(''); }}><ImagePlus size={16} /> {t('Fotoğraf ekle', 'Add a photo')}</button>
@@ -71,5 +72,6 @@ export function Contributions({ slug, name }: { slug: string; name: string }) {
         <div className="v-actions"><button className="button dark" disabled={busy || (open === 'photo' ? !file : body.trim().length < 20)}>{busy ? t('Gönderiliyor…', 'Sending…') : t('Gönder', 'Send')}</button>
           <button type="button" className="text-link" onClick={() => { setOpen(null); setError(''); }}>{t('Vazgeç', 'Cancel')}</button></div>
       </form>}
+    </div>
   </section>;
 }

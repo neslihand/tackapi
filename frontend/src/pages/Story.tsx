@@ -1,5 +1,5 @@
-import { lazy, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUpRight, BookOpen, Check, Heart, MapPin, Puzzle, Sparkles, Stamp, Volume2, VolumeX } from 'lucide-react';
+import { lazy, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { ArrowLeft, ArrowUpRight, BookOpen, Check, Heart, MapPin, Puzzle, Sparkles, Stamp, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { type Artifact } from '../data/artifacts';
@@ -16,11 +16,13 @@ import { hasImmersiveStory } from '../lib/artifactAdapter';
 import { imageAlt, PLACEHOLDER_IMAGE } from '../lib/content';
 import { narrationLabel, narrationModes, useNarrationMode, type NarrationMode } from '../lib/preferences';
 import { useAmbience } from '../lib/ambience';
-import { BriefChapter, BriefNarration, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
+import { BriefChapter, BriefNarration, CineChapter, Hotspot, pad, shot, StoryReader, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
+import { HeroGallery } from '../components/HeroGallery';
 import { chatEndpoint } from '../lib/chatApi';
 import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
+import { known, monogram } from '../lib/content';
 import { track } from '../lib/analytics';
 // Loaded on demand: its map (Leaflet) needs a browser window and the demo pages do not use it.
 const VakifStory = lazy(() => import('../vakif/VakifStory').then(m => ({ default: m.VakifStory })));
@@ -40,6 +42,18 @@ function Stage({ artifact, chapter, detail, setDetail, whole = false }: { artifa
     {(whole || chapter === 2) && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
     <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM', 'ORIGINAL ARCHITECTURAL INTERPRETATION')}</small><strong>{whole ? artifact.name : artifact.chapters[chapter]?.title}</strong></div>
   </aside>;
+}
+
+// The work's summary in the opening: four lines, so the opening fits the screen, and the rest on request.
+function Lede({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = useState(false);
+  const [long, setLong] = useState(false);
+  useLayoutEffect(() => { const p = ref.current; if (p && !open) setLong(p.scrollHeight > p.clientHeight + 2); }, [text, open]);
+  return <>
+    <p ref={ref} id="hero-lede" className={open ? 'open' : ''}>{text}</p>
+    {(long || open) && <button type="button" className="story-hero-more" aria-expanded={open} aria-controls="hero-lede" onClick={() => setOpen(!open)}>{open ? t('Daha az göster', 'Show less') : t('Devamını oku', 'Read more')}</button>}
+  </>;
 }
 
 export function Story({ artifact }: { artifact: DiscoveryArtifact }) {
@@ -138,10 +152,23 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   const words = artifact.name.split(' ');
   const favorite = progress.favorites.includes(artifact.id);
   const [fx, fy] = artifact.detail.focus ?? [50, 50];
+  const slides = artifact.gallery?.length ? artifact.gallery : [{ src: artifact.image, credit: artifact.origin?.photoCredit ?? '', alt: artifact.origin ? t(`${artifact.name} fotoğrafı. ${imageAlt(artifact)}`, `Photo of ${artifact.name}. ${imageAlt(artifact)}`) : t(`${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`, `Original architectural illustration of ${artifact.name}. ${imageAlt(artifact)}`) }];
   const Chapter = mode === 'story' ? CineChapter : mode === 'child' ? TaleChapter : BriefChapter;
   // A backend monument tells its story and children's version whole, as stored: no chapters, no chapter titles.
   const whole = artifact.origin ? artifact.origin.narrations[mode] : null;
   useEffect(() => { if (chapter !== 2) setDetail(false); }, [chapter]);
+  // A hero taller than the screen pins only once its last line is in view, so nothing in it is left under the telling.
+  useEffect(() => {
+    const root = ref.current, hero = root?.querySelector<HTMLElement>('.story-hero');
+    if (!root || !hero) return;
+    // Set on the page, not the hero: the hero's own style attribute belongs to React.
+    const pin = () => root.style.setProperty('--hero-pin', `${Math.min(0, window.innerHeight - hero.offsetHeight)}px`);
+    pin();
+    const resized = new ResizeObserver(pin);
+    resized.observe(hero);
+    window.addEventListener('resize', pin);
+    return () => { resized.disconnect(); window.removeEventListener('resize', pin); };
+  }, [artifact.id]);
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
@@ -157,23 +184,26 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       const context = gsap.context(() => {
         // Opening: the title rises out of the dark while the camera pulls back from the detail to the whole building.
         gsap.from('.story-hero h1 .word > span', { yPercent: 110, duration: 1.1, ease: 'power3.out', stagger: 0.07, delay: 0.15 });
-        gsap.from('.story-hero-copy > :not(h1)', { y: 24, opacity: 0, duration: 0.9, ease: 'power2.out', stagger: 0.08, delay: 0.45 });
-        gsap.fromTo('.story-hero-image', { scale: 1.5 }, { scale: 1.02, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight * 1.1}`, scrub: true } });
-        gsap.to('.story-hero-copy', { yPercent: -25, ease: 'none', scrollTrigger: { trigger: '.story-curtain', start: 'top top', end: () => `+=${window.innerHeight}`, scrub: true } });
+        gsap.from('.story-hero-head > :not(h1), .story-hero .hg, .story-hero-lede > *', { y: 24, opacity: 0, duration: 0.9, ease: 'power2.out', stagger: 0.08, delay: 0.45 });
         gsap.fromTo('.reading-progress span', { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 60%', end: 'bottom 60%', scrub: true } });
         if (ref.current?.querySelector('.story-index-progress span')) gsap.fromTo('.story-index-progress span', { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '.story-chapters', start: 'top 50%', end: 'bottom 50%', scrub: true } });
         storyMotion(mode);
-        // Interlude: the camera pulls back from the facade while the date rises out of the stone.
-        const interlude = gsap.timeline({ scrollTrigger: { trigger: '.story-interlude', start: 'top top', end: 'bottom bottom', scrub: 0.8 } });
-        interlude.fromTo('.interlude-image', { scale: 1.7 }, { scale: 1, ease: 'none', duration: 1 }, 0)
-          .fromTo('.interlude-shade', { opacity: 1 }, { opacity: 0.75, ease: 'none', duration: 1 }, 0)
-          .fromTo('.interlude-year', { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, ease: 'power2.out', duration: 0.45 }, 0.05)
-          .fromTo('.interlude-copy > *', { y: 40, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08, duration: 0.3 }, 0.45);
       }, ref);
       return () => context.revert();
     });
     return () => { observer.disconnect(); rail.disconnect(); match.revert(); };
   }, [artifact.id, mode]);
+  // The hero stays pinned while the telling slides over it, so a control reached with the keyboard can be hidden under
+  // the telling: then the page goes back to the top. A click (the photo arrows) never moves the page, nor does a control
+  // that is already in sight.
+  function revealHero(event: React.FocusEvent<HTMLElement>) {
+    const el = event.target;
+    if (window.scrollY <= 0 || !el.matches(':focus-visible')) return;
+    const box = el.getBoundingClientRect();
+    const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    if (top && (top === el || el.contains(top))) return;
+    settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' });
+  }
   // Changing the telling rebuilds the chapters; a reader already inside them stays at the same chapter.
   function choose(next: NarrationMode) {
     if (next === mode) return;
@@ -189,11 +219,19 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
   return <div ref={ref} className={`story-page mode-${mode}`}>
     {/* The opening scene stays put while the telling slides up over it on a torn paper edge. */}
     <div className="story-curtain">
-    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={() => { if (window.scrollY > 0) { settleScroll(); window.scrollTo({ top: 0, behavior: 'instant' }); } }}><img className="story-hero-image" src={artifact.image} alt={artifact.origin ? t(`${artifact.name} fotoğrafı. ${imageAlt(artifact)}`, `Photo of ${artifact.name}. ${imageAlt(artifact)}`) : t(`${artifact.name} için özgün mimari illüstrasyon. ${imageAlt(artifact)}`, `Original architectural illustration of ${artifact.name}. ${imageAlt(artifact)}`)} /><div className="story-hero-shade" /><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
-      <div className="story-hero-copy"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul><p>{artifact.description}</p><button className="story-hero-cta" onClick={() => document.getElementById('story-reading')?.scrollIntoView({ behavior: smooth() })}>{t('Hikâyeyi keşfet', 'Discover the story')} <ArrowDown size={17} aria-hidden="true" /></button></div>
-      {stamped && <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span>}
-      {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}
-      <span className="story-art-note">{artifact.origin ? `${t('FOTOĞRAF', 'PHOTO')} · ${artifact.origin.photoCredit}` : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}</span></section>
+    {/* The opening: the words on the left, the work's photos in an arched card on the right (under the title on a phone).
+        The photos stay in the card; the background is the site's own night green, the same on every work. */}
+    <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={revealHero}><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
+      <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}>
+        <li><MapPin size={14} aria-hidden="true" /><span className="sr-only">{t('Şehir', 'City')}: </span>{artifact.city}</li>
+        {known(artifact.category) && <li><span className="sr-only">{t('Tür', 'Type')}: </span>{artifact.category}</li>}
+        {known(artifact.year) && <li><span className="sr-only">{t('Tarih', 'Date')}: </span>{artifact.year}</li>}
+        {known(artifact.architect) && <li><small>{t('Mimar / usta', 'Architect / master')}</small>{artifact.architect}</li>}
+      </ul></div>
+      <HeroGallery slides={slides} name={artifact.name} note={artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}
+        badge={stamped ? <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span> : undefined} />
+      <div className="story-hero-lede"><Lede text={artifact.description} /></div>
+      {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}</section>
     <div className="story-body" data-nav-theme={mode === 'story' ? 'dark' : 'light'}>
       <Girih className="story-girih" />
       <div className="story-tools" id="story-reading">
@@ -210,7 +248,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         <div className="story-index-progress" aria-hidden="true"><span /></div>
       </nav>}
       <div className="story-chapters">
-        {whole ? (mode === 'story' ? <CineNarration artifact={artifact} text={whole} /> : mode === 'child' ? <TaleNarration artifact={artifact} text={whole} />
+        {whole ? (mode === 'story' ? <StoryReader artifact={artifact} text={whole} /> : mode === 'child' ? <TaleNarration artifact={artifact} text={whole} />
             : <div className="brief-layout"><Stage artifact={artifact} chapter={0} detail={detail} setDetail={setDetail} whole /><div className="brief-entries"><BriefNarration artifact={artifact} text={whole} /></div></div>)
           : mode === 'short'
           ? <div className="brief-layout"><Stage artifact={artifact} chapter={chapter} detail={detail} setDetail={setDetail} /><div className="brief-entries">{artifact.chapters.map((_, i) => <BriefChapter key={i} artifact={artifact} index={i} detail={detail} setDetail={setDetail} />)}</div></div>
@@ -218,11 +256,6 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       </div>
     </div>
     </div>
-    <section className="story-interlude" data-nav-theme="dark" aria-label={`${artifact.name}: ${t('geçmişten bugüne', 'from the past to today')}`}>
-      <div className="interlude-sticky"><img className="interlude-image" src={artifact.image} alt="" loading="lazy" /><div className="interlude-shade" />
-        <span className="interlude-year" aria-hidden="true">{artifact.year.split(/[–-]/)[0]}</span>
-        <div className="interlude-copy"><p className="eyebrow light"><span />{t('GEÇMİŞTEN BUGÜNE', 'FROM THE PAST TO TODAY')}</p><h2>{t('Yüzyıllar geçti.', 'Centuries have passed.')}<br /><em>{t('Hikâye hâlâ burada.', 'The story is still here.')}</em></h2><p>{artifact.name} · {artifact.city} · {artifact.year}</p></div></div>
-    </section>
     {extras}
     <div className="story-end"><Girih className="story-girih" />
     <div className="end-wrap">
@@ -242,6 +275,13 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         </ul>
       </div>
     </section>
-    <section className="story-sources"><div><p className="story-sources-kicker">{t('KAYNAKÇA', 'SOURCES')}</p><h3>{t('Hikâyenin kaynakları', 'The story’s sources')}</h3><p>{artifact.origin ? artifact.origin.sourcesNote : t('Üç anlatım biçimi de önceden hazırlanmış içeriktir.', 'All three narration styles are prepared in advance.')}<br />{chatEndpoint() ? t('“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.', 'The answers of “Ask the Work” are written by AI and may contain mistakes.') : t('Bu sürümde yapay zekâ ile metin üretimi yapılmaz.', 'This version does not generate text with AI.')}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only">{t(' (yeni sekmede açılır)', ' (opens in a new tab)')}</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul></section>
+    <section className="story-sources"><div><p className="story-sources-kicker">{t('KAYNAKÇA', 'SOURCES')}</p><h3>{t('Hikâyenin kaynakları', 'The story’s sources')}</h3><p>{artifact.origin ? artifact.origin.sourcesNote : t('Üç anlatım biçimi de önceden hazırlanmış içeriktir.', 'All three narration styles are prepared in advance.')}<br />{chatEndpoint() ? t('“Esere Sor” yanıtları ise yapay zekâ ile üretilir ve hata içerebilir.', 'The answers of “Ask the Work” are written by AI and may contain mistakes.') : t('Bu sürümde yapay zekâ ile metin üretimi yapılmaz.', 'This version does not generate text with AI.')}</p></div><ul>{artifact.sourceReferences.map(source => <li key={source.url ?? source.title}>{source.url ? <a href={source.url} target="_blank" rel="noreferrer">{source.title}<span className="sr-only">{t(' (yeni sekmede açılır)', ' (opens in a new tab)')}</span><ArrowUpRight size={16} aria-hidden="true" /></a> : <span>{source.title}</span>}</li>)}</ul>
+      {/* The people who wrote the inventory book the page rests on, in large type with a monogram each. */}
+      {(artifact.origin?.authors?.length || artifact.origin?.editor) ? <div className="story-authors" role="group" aria-labelledby="authors-title">
+        <p className="story-sources-kicker" id="authors-title">{t('KİTABIN YAZARLARI', 'THE BOOK’S AUTHORS')}{artifact.origin.book && <span> · {artifact.origin.book}</span>}</p>
+        <ul>{[...(artifact.origin.authors ?? []).map(name => [name, '']), ...(artifact.origin.editor ? [[artifact.origin.editor, t('Editör', 'Editor')]] : [])].map(([name, role]) => <li key={`${role}${name}`}>
+          <span className="story-author-mark" aria-hidden="true">{monogram(name)}</span><span><b>{name}</b>{role && <small>{role}</small>}</span>
+        </li>)}</ul>
+      </div> : null}</section>
     <NextDoor artifact={next} /></div></div></div>;
 }

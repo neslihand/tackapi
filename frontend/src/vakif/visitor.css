@@ -50,12 +50,20 @@ body:has(.chat-panel.open) .consent-banner { display: none; }
 .v-contrib { padding-top: 60px; padding-bottom: 60px; border-top: 1px solid var(--line); background: var(--paper); }
 .v-contrib h2 { font-family: var(--serif); font-size: clamp(30px, 3.4vw, 44px); font-weight: 400; margin: 8px 0 8px; color: var(--teal); }
 .v-contrib-list { list-style: none; padding: 0; margin: 22px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-.v-contrib-list li { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--line); background: #fbf9f3; }
-.v-contrib-list img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.v-contrib-list li { display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 18px; border: 1px solid var(--line); border-radius: 12px; background: #fffdf8; box-shadow: 0 18px 36px -28px #1a140880; }
+.v-contrib-list li > div { padding: 0 6px; }
+.v-contrib-list li.text > div { position: relative; padding: 8px 8px 0 34px; }
+.v-contrib-list li.text > div::before { content: '“'; position: absolute; left: 4px; top: -6px; font-family: var(--serif); font-size: 56px; line-height: 1; color: #c3a869; }
+.v-contrib-list img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; border-radius: 8px; }
 .v-contrib-list small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #8a6a2e; }
 .v-contrib-list p { margin: 4px 0; font-family: var(--serif); font-size: 19px; line-height: 1.5; color: var(--ink); }
 .v-contrib-list span { font-size: 13px; color: var(--muted); }
 .v-contrib .v-form { max-width: 620px; margin-top: 16px; }
+/* Eser sayfasında: sayfa gövdesiyle aynı genişlik, katkı ekleme ise kesik çizgili bir davet paneli */
+.story-page .v-contrib, .vakif-story .v-contrib { max-width: 1100px; margin: 0 auto; padding-left: 6%; padding-right: 6%; border-top: 0; background: none; }
+.v-contrib .eyebrow { color: #765b38; }
+.v-contrib-invite { margin-top: 22px; padding: 22px 24px; border: 1px dashed #c3a869; border-radius: 12px; background: #f8f2e4; }
+.v-contrib-invite > .v-note { margin: 0; }
 
 /* Yeni keşif: öneriler */
 .v-discover { display: flex; flex-direction: column; gap: 40px; margin-top: 40px; }

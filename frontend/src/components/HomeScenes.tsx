@@ -6,6 +6,19 @@ import type { DiscoveryArtifact } from '../lib/artifactContract';
 import type { Season } from '../data/collections';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
+import { normalize } from '../lib/progress';
+
+// Where the collection's cities lie on the schematic map (/images/turkiye-gece.svg, 1200 × 600), in percent of its width
+// and height: the city's coordinates scaled to the map's outline, moved onto the land where the outline is simplified
+// (İstanbul and Antakya fall just off its coast). A city not listed here gets no pin.
+const CITY_PINS: Record<string, [number, number]> = {
+  bursa: [21, 32], konya: [36.5, 55], hatay: [53.4, 64.7], antakya: [53.4, 64.7], istanbul: [19.2, 25], edirne: [9.4, 16.2],
+  sivas: [57.2, 35.8], izmir: [12.8, 51], ankara: [38.2, 34],
+};
+const mapCities = (artifacts: DiscoveryArtifact[]) => [...new Map(artifacts.flatMap(a => {
+  const pin = CITY_PINS[normalize(a.city)];
+  return pin ? [[normalize(a.city), [a.city, pin] as [string, [number, number]]]] : [];
+})).values()];
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -71,7 +84,10 @@ export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Seaso
       </li>;
     })}
     <li className="season-card season-map" style={{ '--i': seasons.length } as CSSProperties}>
-      <Link to="/harita" className="map-teaser"><div className="map-lines" /><div className="map-teaser-pin p1" data-speed="1.08"><MapPin /></div><div className="map-teaser-pin p2" data-speed="0.94"><MapPin /></div><div className="map-teaser-pin p3" data-speed="1.12"><MapPin /></div><div className="route-copy"><span className="eyebrow">{pad(seasons.length + 1)} · {t('MİRAS HARİTASI', 'HERITAGE MAP')}</span><h3>{t('Yakınında bir', 'There is a story')}<br /><em>{t('hikâye var.', 'near you.')}</em></h3><span>{t('Haritada keşfet', 'Explore on the map')} <ArrowUpRight size={20} /></span></div></Link>
+      <Link to="/harita" className="map-teaser"><div className="map-lines" />
+        {/* The map once, at its own proportions, with a pin on each city of the collection where it lies on the map. */}
+        <div className="map-teaser-map" aria-hidden="true"><img src="/images/turkiye-gece.svg" alt="" loading="lazy" />
+          {mapCities(artifacts).map(([name, [x, y]]) => <span key={name} className="map-teaser-pin" style={{ left: `${x}%`, top: `${y}%` }}><MapPin /><b>{name}</b></span>)}</div><div className="route-copy"><span className="eyebrow">{pad(seasons.length + 1)} · {t('MİRAS HARİTASI', 'HERITAGE MAP')}</span><h3>{t('Yakınında bir', 'There is a story')}<br /><em>{t('hikâye var.', 'near you.')}</em></h3><span>{t('Haritada keşfet', 'Explore on the map')} <ArrowUpRight size={20} /></span></div></Link>
       <span className="season-dim" aria-hidden="true" />
     </li>
   </ol>;

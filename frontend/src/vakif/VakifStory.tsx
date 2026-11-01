@@ -44,7 +44,7 @@ export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
   if (!detail) return <div className="page-shell loading-state" role="status">{t(`${artifact.name} hazırlanıyor…`, `Preparing ${artifact.name}…`)}</div>;
   const immersive = toImmersive(item, detail);
   if (immersive) return <ImmersiveStory artifact={immersive}
-    extras={<><section className="vakif-extras pv" aria-label={t('Eserin fotoğrafları, tarihçesi ve konumu', 'The work’s photos, history and location')}><div className="pv-body"><MonumentSections item={item} detail={detail} lang={currentLang()} /></div></section>
+    extras={<><section className="vakif-extras pv" aria-label={t('Eserin tarihçesi, süslemeleri ve konumu', 'The work’s history, decoration and location')}><div className="pv-body"><MonumentSections item={item} detail={detail} lang={currentLang()} gallery={false} /></div></section>
       <Contributions slug={artifact.slug} name={artifact.name} /></>} />;
   const actions = <>
     <AskArtifact artifact={artifact} mode="short" />

@@ -7,6 +7,7 @@ import { Link } from '../lib/navigation';
 import { narrationLabel, narrationModes } from '../lib/preferences';
 import { locale, t } from '../lib/i18n';
 import { vakifApiEnabled } from '../lib/vakifApi';
+import { known } from '../lib/content';
 import '../anatomy.css';
 
 // "Bir eserin içi": an artifact's page drawn as an annotated plate. A parchment page in the middle (the building in a
@@ -15,7 +16,7 @@ import '../anatomy.css';
 // drawing, not the real page, so it is hidden from assistive technology; the notes carry the same information.
 const pad = (n: number) => String(n).padStart(2, '0');
 // Backend records say "Bilinmiyor" (unknown) where a fact is missing; those are left out rather than shown.
-export const known = (value?: string | null) => Boolean(value && value.trim() && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
+export { known };
 
 type Part = 'anlatim' | 'kaynak' | 'sor' | 'katki' | 'muhur';
 const notesAll = (): [Part, ReactNode, string, string][] => [

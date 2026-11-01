@@ -79,7 +79,7 @@ export function Camera() {
     <Girih className="cm-girih" />
     <div className="page-shell cm-page">
       <header className="cm-head">
-        <p className="cm-index"><span>N° 01</span><i aria-hidden="true" />{t('Bak, merak et, keşfet', 'Look, wonder, discover')}</p>
+        <p className="cm-index">{t('Bak, merak et, keşfet', 'Look, wonder, discover')}</p>
         <h1 className="cm-title"><span className="cm-line"><span>{t('Bir kareden', 'From one frame')}</span></span> <span className="cm-line"><em>{t('bir hikâyeye.', 'to a story.')}</em></span></h1>
         <p className="cm-lede">{api ? t('Yapının fotoğrafını çek ya da yükle; envanter kitaplarındaki fotoğraflarla karşılaştırıp hangi eser olduğunu bulalım.', 'Take or upload a photo of the building; we compare it with the photos in the inventory books and find which work it is.') : t('Kamera veya fotoğrafla başlayan keşif akışını deneyimle.', 'Try the discovery flow that starts with the camera or a photo.')}</p>
       </header>

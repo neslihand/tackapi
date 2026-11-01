@@ -134,7 +134,7 @@ export function HeroGate() {
         <div className="en-lantern" aria-hidden="true" />
         {/* The copy stands to the left of the door, over the shade, so the door keeps the centre of the picture. */}
         <div className="fc-copy">
-          <p className="en-index"><span>N° 01</span><i aria-hidden="true" /><span>{t('Anadolu’nun vakıf mirası', 'The waqf heritage of Anatolia')}</span></p>
+          <p className="en-index">{t('Anadolu’nun vakıf mirası', 'The waqf heritage of Anatolia')}</p>
           <h1 className="fc-title"><span className="fc-line"><span>{t('Taşa yazılmış', 'Trace kindness')}</span></span> <span className="fc-line"><span>{t('iyiliklerin', 'carved')}</span></span> <span className="fc-line"><span><em>{t('izini sür.', 'in stone.')}</em></span></span></h1>
           <div className="en-lede"><span className="en-rule" aria-hidden="true" /><p className="hero-description">{t('Camiler, çeşmeler, hanlar… Yüzyıllardır şehirlere hizmet eden vakıf eserleri, hikâyelerini anlatmak için seni bekliyor.', 'Mosques, fountains, caravanserais… The waqf works that have served our cities for centuries are waiting to tell you their stories.')}</p></div>
           {/* Two ways in: the door itself for the curious, the map for whoever already stands before a building. */}
@@ -157,7 +157,7 @@ export function HeroGate() {
             three verbs with the way in along the floor. */}
         <div className="cy-copy cy-mission">
           <div className="cy-kitabe">
-            <p className="cy-index cy-fade"><span>N° 02</span><i aria-hidden="true" />{t('Vakıf Eserleri Envanter Projesi', 'Waqf Works Inventory Project')}</p>
+            <p className="cy-index cy-fade">{t('Vakıf Eserleri Envanter Projesi', 'Waqf Works Inventory Project')}</p>
             <h2 tabIndex={-1}>{t('Kadim bir kültür,', 'An ancient culture,').split(' ').map((word, i) => <Fragment key={`a${i}`}>{i > 0 && ' '}<span className="reveal-line"><span>{word}</span></span></Fragment>)} {t('yaşayan bir hafıza.', 'a living memory.').split(' ').map((word, i) => <Fragment key={`b${i}`}>{i > 0 && ' '}<span className="reveal-line"><span><em>{word}</em></span></span></Fragment>)}</h2>
           </div>
           <p className="cy-fade cy-lead">{t('Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli. EŞİK, Vakıf Katılım’ın kadim vakıf kültürünü yaşatmak, kayıt altına almak ve gelecek nesillere aktarmak için yürüttüğü', 'Mosques, fountains, caravanserais and madrasas that have served our cities for centuries; each one an act of kindness set in stone. EŞİK is a digital discovery platform built within the')} <b>{t('Vakıf Eserleri Envanter Projesi', 'Waqf Works Inventory Project')}</b>{t(' kapsamında geliştirilen dijital keşif platformudur.', ', which Vakıf Katılım carries out to keep the ancient waqf culture alive, to record it and to hand it on to future generations.')}</p>

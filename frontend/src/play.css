@@ -381,6 +381,7 @@
 .quest-steps a { color: #232a27; text-decoration: underline; text-decoration-color: #969491; text-underline-offset: 3px; }
 .quest-steps a:hover { text-decoration-color: #765b38; }
 .quest-steps li.done { color: #50594c; }
+.quest-step-date { font-size: 12px; color: #765b38; white-space: nowrap; }
 .quest-step-icon { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; color: #765b38; border: 1px solid #a4a29f; background: #fdfaf4; }
 .quest-steps li.done .quest-step-icon { color: #e7dcb9; border-color: #0f2f26; background: linear-gradient(180deg, #255747, #0f2f26); }
 .quest-next { display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; min-height: 46px; margin-top: auto; padding: 0 22px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #e7dcb9; border: 1px solid #acaba8b3; background: linear-gradient(180deg, #255747, #0f2f26); box-shadow: 0 0 0 3px #acaba81a; transition: box-shadow .4s ease-in-out; }

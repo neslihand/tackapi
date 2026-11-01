@@ -12,6 +12,12 @@ export type Artifact = {
   image: string;
   // Text equivalent of what the illustration shows; used as alt text and as a visible image description.
   imageAlt?: string;
+  // Every picture of the work for the card at the top of its page, the first one being `image`; credit names where the
+  // picture comes from (empty when nothing is known). Without it the card shows `image` alone.
+  gallery?: { src: string; alt: string; credit: string }[];
+  // Backend codes of the building type ('mosque', 'bath', …) and era ('erken-osmanli', …); the story's motifs follow them.
+  kind?: string;
+  periodSlug?: string;
   // url is missing for a book citation (an inventory book has no web address)
   sourceReferences: { title: string; url?: string }[];
   chapters: { title: string; short: string; story: string; child: string }[];
@@ -20,7 +26,8 @@ export type Artifact = {
   // Set for a monument from the backend: the image is a photograph from the book (not an illustration); the three
   // tellings (the book's own text and two stored narrations) are shown whole, without chapters or chapter titles.
   // An empty detail title means there is no documented detail to point at.
-  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { short: string; story: string; child: string } };
+  // authors / editor: the inventory book's own credits, shown with the sources.
+  origin?: { photoCredit: string; shortLabel: string; sourcesNote: string; narrations: { short: string; story: string; child: string }; authors?: string[]; editor?: string | null; book?: string | null };
 };
 
 // Coordinates are approximate discovery markers, not entrances or navigation data.

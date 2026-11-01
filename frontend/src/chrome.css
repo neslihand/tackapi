@@ -18,6 +18,13 @@
 /* In the mobile menu the switch sits at the end, on its own row. */
 .mobile-menu .menu-lang { align-self: flex-start; margin-top: 14px; }
 
+/* The menu's rows lead inward (›), and the page that is open is marked in gold with a thin rule on its left. */
+.mobile-menu a { align-items: center; position: relative; }
+.mobile-menu a > svg { flex: none; opacity: .55; }
+#mobile-menu a[aria-current='page'] { padding-left: 14px; color: #e6d5ae; font-weight: 600; }
+#mobile-menu a[aria-current='page']::before { content: ''; position: absolute; top: 14px; bottom: 14px; left: 0; width: 2px; border-radius: 2px; background: #c7a96b; }
+#mobile-menu a[aria-current='page'] > svg { opacity: 1; }
+
 @media (max-width: 1320px) { .navigation .desktop-nav .nav-num { display: none; } }
 @media (max-width: 1180px) {
   .navigation .desktop-nav { gap: clamp(16px, 1.8vw, 26px); }

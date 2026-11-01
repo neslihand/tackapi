@@ -27,6 +27,11 @@
 .pv-body{max-width:1100px;margin:auto;padding:0 6% 40px}
 .pv-section{padding:46px 0;border-bottom:1px solid var(--line)}
 .pv-section h2{font-size:clamp(28px,3vw,40px);line-height:1.2;margin-bottom:22px}
+/* Bölüm başlıkları: serif başlık ve yanında altın bir çizgi (Tarihçe'nin yüzyıl başlıklarıyla aynı dil) */
+.pv-section>h2{display:flex;align-items:center;gap:18px}
+.pv-section>h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#c3a86999,transparent)}
+.vakif-extras .pv-section{border-bottom:0;padding:40px 0}
+.vakif-extras .pv-section+.pv-section{border-top:1px solid #d9d8d080}
 .pv-narration{padding:30px 0 46px;border-bottom:1px solid var(--line)}
 .pv-tools{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px}
 .pv-tools>div:first-child{display:flex;align-items:center;gap:11px;font-size:14px}
@@ -46,6 +51,23 @@
 .pv-gallery img{width:100%;height:100%;object-fit:cover;filter:saturate(.85);transition:transform .6s}
 .pv-gallery button:hover img{transform:scale(1.04)}
 .pv-pending{position:absolute;left:8px;top:8px;background:#efe4c7;color:#6b4e1f;font-size:11px;padding:3px 7px}
+/* Tarihçe: yüzyıl başlıkları, solda tarih, ortada altın çizgi ve halka, sağda olay kartı */
+.pv-chrono{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:30px}
+.pv-era{list-style:none}
+.pv-era-label{display:flex;align-items:center;gap:16px;margin:0 0 18px;font-family:var(--serif);font-size:22px;font-style:italic;color:#765b38}
+.pv-era-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#c3a86999,transparent)}
+.pv-era>ol{list-style:none;margin:0;padding:0;position:relative}
+.pv-era>ol::before{content:'';position:absolute;top:8px;bottom:8px;left:157px;width:1px;background:linear-gradient(180deg,#c3a869,#c3a86955)}
+.pv-event{display:grid;grid-template-columns:140px 36px minmax(0,1fr);align-items:start;padding-bottom:16px}
+.pv-event:last-child{padding-bottom:0}
+.pv-event-date{display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin:0;padding-top:12px;text-align:right}
+.pv-event-date b{font-family:var(--serif);font-size:24px;font-weight:500;line-height:1.1;color:var(--ink)}
+.pv-event-date small{font-size:11.5px;color:var(--muted)}
+.pv-event-dot{position:relative;z-index:1;justify-self:center;width:13px;height:13px;margin-top:18px;border:2px solid var(--gold);border-radius:50%;background:#fbf9f3;box-shadow:0 0 0 4px #fbf9f3}
+.pv-event-card{padding:14px 20px 16px;border:1px solid var(--line);border-radius:10px;background:#fffdf8;box-shadow:0 14px 30px -24px #1a140866}
+.pv-event-kind{display:block;margin-bottom:6px;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#765b38}
+.pv-event-card p{margin:0;font-size:15px;line-height:1.7;color:#3c4639}
+.pv-event-card .pv-event-person{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:13.5px;color:var(--ink)}
 .pv-timeline{list-style:none;margin:0;padding:0;border-left:1px solid #c9b98a}
 .pv-timeline li{position:relative;padding:0 0 22px 26px;display:grid;grid-template-columns:130px 1fr;gap:16px;font-size:14.5px;line-height:1.75;color:#4b5a4c}
 .pv-timeline li::before{content:'';position:absolute;left:-5px;top:9px;width:9px;height:9px;border-radius:50%;background:var(--gold)}
@@ -57,6 +79,9 @@
 .pv-list span{font-size:12.5px;color:#7a806c}
 .pv-relation{font-size:15px;margin-bottom:18px}
 .pv-visit{display:flex;gap:14px;align-items:flex-start;font-size:14px;line-height:1.8;color:#5f6b5a}
+.vakif-extras .pv-visit{margin-top:8px;padding:20px 24px;border:1px solid var(--line);border-radius:12px;background:#fffdf8;box-shadow:0 18px 36px -28px #1a140880;color:#3c4639}
+.pv-visit-icon{display:grid;place-items:center;flex:none;width:38px;height:38px;border:1px solid #c3a869;border-radius:50%;color:#765b38;background:#f6efe0}
+.pv-visit p{margin:0;padding-top:6px}
 .pv-fulltext>small{display:inline-flex;gap:8px;align-items:center}
 .pv-fulltext p{font-family:var(--serif);font-size:19px;line-height:1.8;color:#3d4c41;margin-top:18px;max-width:780px}
 .pv-answer>small{display:block;margin-top:10px}
@@ -79,16 +104,18 @@
 .pv-vs-debug b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
 .vs-admin{background:transparent;padding:6px 0}
 @media(max-width:800px){.pv-vs-pick{grid-template-columns:1fr;gap:22px}.pv-vs-grid{grid-template-columns:1fr}}
-.pv-art-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px 18px;margin-bottom:28px}
-.pv-art-card{margin:0;display:flex;flex-direction:column;gap:10px}
-.pv-art-card button{position:relative;aspect-ratio:4/3;overflow:hidden;background:#b5b8a3;padding:0}
+.pv-art-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px}
+/* Süsleme kartı: fildişi kart, içinde yuvarlak köşeli fotoğraf ve altında künyesi */
+.pv-art-card{margin:0;display:flex;flex-direction:column;gap:12px;padding:10px 10px 16px;border:1px solid var(--line);border-radius:12px;background:#fffdf8;box-shadow:0 18px 36px -28px #1a140880;transition:transform .4s,box-shadow .4s}
+.pv-art-card:hover{transform:translateY(-3px);box-shadow:0 24px 44px -28px #1a1408a0}
+.pv-art-card button{position:relative;aspect-ratio:4/3;overflow:hidden;background:#e4dccb;padding:0;border-radius:8px}
 .pv-art-card img{width:100%;height:100%;object-fit:cover;filter:saturate(.9);transition:transform .6s}
 .pv-art-card button:hover img{transform:scale(1.04)}
 .pv-art-card button:focus-visible{outline:2px solid #c8a46b;outline-offset:2px}
-.pv-art-count{position:absolute;right:8px;bottom:8px;background:#142e2ecc;color:var(--paper);font-size:12px;padding:3px 8px}
-.pv-art-card figcaption{display:flex;flex-direction:column;gap:3px;font-size:14px;line-height:1.5}
-.pv-art-card figcaption small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a2f}
-.pv-art-card figcaption strong{font-weight:500}
+.pv-art-count{position:absolute;right:8px;bottom:8px;background:#0c241cd9;color:#f3ecdf;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid #c3a86980}
+.pv-art-card figcaption{display:flex;flex-direction:column;gap:4px;padding:0 6px;font-size:14px;line-height:1.5}
+.pv-art-card figcaption small{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#765b38}
+.pv-art-card figcaption strong{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.2;color:var(--ink)}
 .pv-art-card figcaption span{font-size:12.5px;color:#7a806c}
 .pv-edit{display:flex;flex-direction:column;gap:12px}
 .pv-edit label{font-size:13px;color:#5f6d5b}
@@ -142,6 +169,12 @@
   .pv-hero-copy h1{font-size:44px}
   .pv-lead{font-size:20px;padding-top:30px}
   .pv-timeline li{grid-template-columns:1fr;gap:2px}
+  .pv-event{grid-template-columns:26px minmax(0,1fr)}
+  .pv-era>ol::before{left:12px}
+  .pv-event-date{grid-column:2;grid-row:1;flex-direction:row;align-items:baseline;gap:10px;padding:0 0 6px;text-align:left}
+  .pv-event-date b{font-size:20px}
+  .pv-event-dot{grid-column:1;grid-row:1;margin-top:6px}
+  .pv-event-card{grid-column:2;grid-row:2}
   .pv-sources{grid-template-columns:1fr;gap:16px}
   .pv-segmented button{padding:10px 12px}
 }
@@ -149,9 +182,17 @@
 /* Eser haritası (Leaflet + OpenStreetMap). z-index: Leaflet katmanları sayfadaki açılır pencerelerin üstüne çıkmasın. */
 .pv-map{height:360px;width:100%;border:1px solid var(--line);background:#e9e3d2;position:relative;z-index:0}
 .pv-map-note{margin-top:12px;font-size:13px;line-height:1.7;color:#5f6b5a}
+/* Harita kartı: harita ve notu tek bir çerçevede */
+.pv-map-card{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#fffdf8;box-shadow:0 18px 36px -28px #1a140880}
+.pv-map-card .pv-map{border:0;border-radius:0}
+.pv-map-card .pv-map-note{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;margin:0;padding:12px 18px;border-top:1px solid var(--line)}
 .pv-map-note a{display:inline-flex;gap:5px;align-items:center;color:var(--teal);text-decoration:underline}
 @media (max-width:640px){.pv-map{height:280px}}
 /* site: sabit üst menünün altında kalsın (ön yüzdeki .back-link ile aynı yer) */
 .pv-back{top:130px}
 @media(max-width:760px){.pv-back{top:108px}}
 .pv-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:26px 6.2%;border-bottom:1px solid var(--line);background:var(--paper)}
+
+/* An English page's note that a section is recorded in Turkish only */
+.pv-tr-only{display:inline-block;margin-left:12px;padding:3px 10px;font-family:Inter,sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;color:#765b38;border:1px solid #c3a86980;border-radius:999px;background:#f6efe0}
+.pv-section>h2 .pv-tr-only{flex:none;margin-left:0}

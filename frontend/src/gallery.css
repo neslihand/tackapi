@@ -17,6 +17,8 @@
 .dg-window img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(calc(.85 - var(--t) * .4)) contrast(1.04) brightness(calc(1 - var(--t) * .35)); }
 .dg-window::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, #061410b3); }
 .dg-door > i { position: absolute; bottom: 12px; left: 50%; z-index: 1; translate: -50% 0; font-family: var(--serif); font-size: 15px; font-style: italic; color: #e6d5ae; }
+/* Each door names its work, not only its city, so a visitor knows what a door opens before choosing it. */
+.dg-name { display: -webkit-box; max-width: 100%; margin-bottom: -8px; overflow: hidden; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; font-family: var(--serif); font-size: 17px; line-height: 1.2; text-align: center; color: #f3ecdf; }
 .dg-city { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; color: #d9c9a5; }
 .dg-card a:focus-visible { outline: none; }
 .dg-card a:focus-visible .dg-door::before { opacity: 1; inset: -5px; }

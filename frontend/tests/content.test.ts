@@ -80,3 +80,13 @@ test('Quiz turu en fazla beş soru seçer, tekrar etmez ve puanı 100 üzerinden
   assert.equal(roundScore(2, 3), 67);
   assert.equal(roundScore(0, 0), 0);
 });
+
+test('Yazar rozeti unvanları atlayıp ad ve soyadın baş harflerini alır', async () => {
+  const { monogram } = await import('../src/lib/content.ts');
+  assert.equal(monogram('Dr. Öğr. Üyesi Doğan Yavaş'), 'DY');
+  assert.equal(monogram('Prof. Dr. Hasan Basri Öcalan'), 'HÖ');
+  assert.equal(monogram('Berica Nevin Berberoğlu Şen'), 'BŞ');
+  assert.equal(monogram('Doç. Dr. Razan Aykaç'), 'RA');
+  assert.equal(monogram('Halil Agah'), 'HA');
+  assert.equal(monogram('İlhan'), 'İ');
+});

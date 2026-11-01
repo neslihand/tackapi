@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { toImmersive } from '../src/vakif/immersive.ts';
 import { adaptArtifactFeed } from '../src/lib/artifactAdapter.ts';
-import type { PublicDetail, PublicItem } from '../src/vakif/model.ts';
+import { centuryLabel, heroImage, historyByCentury, type PublicDetail, type PublicItem } from '../src/vakif/model.ts';
 
 const item = {
   slug: 'bursa-osmangazi-ulucami', name: 'Ulucami', alt_names: [], kind: 'mosque', kind_label: 'Cami', city: { slug: 'bursa', name: 'Bursa' },
@@ -58,4 +58,45 @@ test('Panelde yazılan sorular yalnızca kurallara uyuyor ve eser koleksiyondays
     { ...good, id: 'soru-3', options: ['Bursa', 'Bursa', 'Hatay', 'Edirne'] }, { ...good, id: 'soru-4', answer: 7 }, good] });
   assert.ok(feed.ok);
   assert.deepEqual(feed.quizQuestions, [good]);
+});
+
+test('Sayfanın üstüne ve kartın başına kitaptaki ilk görsel gelir; diğerleri sırasıyla kartta gezilir', () => {
+  const scan = detail.images[0];
+  const whole = { ...scan, src: '/media/books/bursa-1/cephe.webp', width: 1324, height: 888, source: { book: 'Bursa I', page: 13 } };
+  const upload = { src: '/media/uploads/drone.webp', thumb: '/media/thumbs/uploads/drone.webp', alt: 'Havadan', width: 2400, height: 1350, caption: 'Drone çekimi', source: null };
+  const a = toImmersive(item, { ...detail, images: [scan, whole, upload] } as unknown as PublicDetail)!;
+  // daha büyük görsel olsa da ilk görsel (kapak) önce gelir
+  assert.equal(a.image, scan.src);
+  assert.equal(a.origin?.photoCredit, 'Bursa I, s. 12');
+  assert.deepEqual(a.gallery?.map(g => g.src), [scan.src, whole.src, upload.src]);
+  // kitap görseli kitap adı ve sayfasıyla, eklenmiş fotoğraf altyazısıyla anılır
+  assert.equal(a.gallery?.[1].credit, 'Bursa I, s. 13');
+  assert.equal(a.gallery?.[2].credit, 'Drone çekimi');
+  assert.equal(heroImage([whole, scan])?.src, whole.src);
+  assert.equal(heroImage([]), undefined);
+});
+
+test('Tarihçe yıla göre sıralanır ve yüzyıllara ayrılır; yılı olmayan olaya yüzyıl uydurulmaz, sonda ayrı durur', () => {
+  const ev = (years: string | null, d: string) => ({ kind: 'other', years, date_text: null, date_text_hijri: null, basis: null, description_tr: d, person: null, page_start: null });
+  const groups = historyByCentury([ev('[1388,1389)', 'yapım'), ev('[1955,1956)', 'restorasyon'), ev(null, 'onarım'), ev('[1920,1921)', 'işgal'), ev('[2010,2011)', 'bugün')]);
+  assert.deepEqual(groups.map(g => [g.century, g.events.map(e => e.description_tr)]),
+    [[14, ['yapım']], [20, ['işgal', 'restorasyon']], [21, ['bugün']], [null, ['onarım']]]);
+  // Ayasofya (Orhan) Camii: kitap "Kanûnî döneminde" olan iki olayı 2011'den sonra sayar; XXI. yüzyıla düşmemeli
+  const ayasofya = historyByCentury([ev('[1331,1333)', 'camiye çevrildi'), ev('[2011,2012)', 'ibadete açıldı'), ev(null, 'Kanûnî döneminde onarım'), ev(null, 'Kanûnî döneminde yangın')]);
+  assert.deepEqual(ayasofya.map(g => [g.century, g.events.map(e => e.description_tr)]),
+    [[14, ['camiye çevrildi']], [21, ['ibadete açıldı']], [null, ['Kanûnî döneminde onarım', 'Kanûnî döneminde yangın']]]);
+  assert.deepEqual(historyByCentury([ev(null, 'a'), ev(null, 'b')]).map(g => g.century), [null]);
+  assert.equal(centuryLabel(14, 'tr'), 'XIV. yüzyıl');
+  assert.equal(centuryLabel(19, 'tr'), 'XIX. yüzyıl');
+  assert.equal(centuryLabel(21, 'en'), '21st century');
+  assert.equal(centuryLabel(null, 'tr'), 'Tarihi belirtilmemiş');
+});
+
+test('Kitabın yazarları ve editörü kaynakçaya taşınır', () => {
+  const a = toImmersive(item, { ...detail, source: { ...detail.source, credits: { authors: ['Prof. Dr. Ayşe Yılmaz', '', 'Dr. Zeynep Demir'], editor: 'Ali Şahin' } } } as PublicDetail)!;
+  assert.deepEqual(a.origin?.authors, ['Prof. Dr. Ayşe Yılmaz', 'Dr. Zeynep Demir']);
+  assert.equal(a.origin?.editor, 'Ali Şahin');
+  assert.equal(a.origin?.book, 'Bursa I');
+  // yazar bilgisi olmayan kitapta liste boş kalır
+  assert.deepEqual(toImmersive(item, detail)!.origin?.authors, []);
 });
