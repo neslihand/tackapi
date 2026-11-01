@@ -86,7 +86,7 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 | Gün | Görev | Prompt | Durum |
 |---|---|---|---|
 | Pzt 2 Kas | Hazırlık: önce ekran görüntüleri, çalışan ortam | P0 | [x] |
-| Pzt 2 Kas | Tasarım temeli: ortak bileşenler | P1 | [ ] |
+| Pzt 2 Kas | Tasarım temeli: ortak bileşenler | P1 | [x] |
 | Pzt 2 Kas | Sekmeler + Bugün ana sayfası + Keşfet (liste/harita) + tüm eserleri yükleme | P2 | [ ] |
 | Sal 3 Kas | Eser ekranı yenileme + anlatım seçici | P3 | [ ] |
 | Sal 3 Kas | İlk açılış | P4 | [ ] |
