@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowLeft, BookOpen, ChevronLeft, ChevronRight, MapPin, Pencil, Sparkles, X } from 'lucide-react';
 import { MonumentMap } from './MonumentMap';
 import { track } from '../lib/analytics';   // site: fotoğraf açma olayı
-import { artworkLabel, centuryLabel, eventLabel, heroImage, historyByCentury, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
+import { artworkLabel, centuryLabel, eventLabel, heroImage, historyByCentury, photoAlt, rangeText, roleLabel, strings, type Card, type Lang, type NarrationMode, type PublicDetail, type PublicImage, type PublicItem } from './model';
 
 type Mode = 'detail' | NarrationMode;
 const MODES: Mode[] = ['detail', 'story', 'child'];
@@ -73,7 +73,7 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
   const s = strings(lang);
   const c = detail.card;
   const [zoom, setZoom] = useState<number | null>(null);
-  const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number } | null>(null);
+  const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number; title: string } | null>(null);
   const artTitle = (a: Card['artworks'][number]) => [a.element, a.technique].filter(Boolean).join(' · ') || artworkLabel(a.kind, lang);
   const artworksWithPhotos = c.artworks.filter(a => a.images?.length);
   // The inventory books record the history, decoration and today's state in Turkish only: in English these sections
@@ -84,7 +84,7 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
   const trOnly = s.trOnly ? <span className="pv-tr-only">{s.trOnly}</span> : null;
   return <>
       {gallery && detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
-        <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => { setZoom(i); track('photo_open', item.slug); }} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
+        <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => { setZoom(i); track('photo_open', item.slug); }} aria-label={photoAlt(img, item.name, i, detail.images.length, lang)}>
           <img src={img.thumb} alt="" loading="lazy" />{img.review_status && img.review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}
         </button>)}</div></section>}
 
@@ -103,8 +103,8 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
       {/* yalnızca fotoğrafı olan süsleme kayıtları gösterilir; hiçbirinin fotoğrafı yoksa bölüm de yok */}
       {artworksWithPhotos.length > 0 && <section className="pv-section"><h2>{s.artworks}{trOnly}</h2>
         <div className="pv-art-grid" lang={inTurkish}>{artworksWithPhotos.map((a, i) => <figure key={i} className="pv-art-card">
-          <button onClick={() => setArtZoom({ images: a.images, index: 0 })} aria-label={`${artTitle(a)}: ${s.gallery}`}>
-            <img src={a.images[0].thumb} alt={a.images[0].alt ?? ''} loading="lazy" />
+          <button onClick={() => setArtZoom({ images: a.images, index: 0, title: `${item.name} — ${artTitle(a)}` })} aria-label={`${artTitle(a)}: ${s.gallery}`}>
+            <img src={a.images[0].thumb} alt="" loading="lazy" />
             {a.images.length > 1 && <span className="pv-art-count">+{a.images.length - 1}</span>}
             {a.images[0].review_status && a.images[0].review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}</button>
           <figcaption><small lang={pageLang}>{artworkLabel(a.kind, lang)}</small><strong>{artTitle(a)}</strong>
@@ -119,8 +119,8 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
       {detail.location && <MonumentMap location={detail.location} name={item.name} lang={lang} />}
 
       {c.current_state && <section className="pv-section pv-visit"><span className="pv-visit-icon" aria-hidden="true"><MapPin size={18} /></span><p><strong>{s.today}:</strong> <span lang={inTurkish}>{c.current_state}</span>{trOnly}</p></section>}
-    {zoom !== null && <Lightbox images={detail.images} index={zoom} lang={lang} onIndex={setZoom} onClose={() => setZoom(null)} />}
-    {artZoom && <Lightbox images={artZoom.images} index={artZoom.index} lang={lang} onIndex={i => setArtZoom({ ...artZoom, index: i })} onClose={() => setArtZoom(null)} />}
+    {zoom !== null && <Lightbox images={detail.images} name={item.name} index={zoom} lang={lang} onIndex={setZoom} onClose={() => setZoom(null)} />}
+    {artZoom && <Lightbox images={artZoom.images} name={artZoom.title} index={artZoom.index} lang={lang} onIndex={i => setArtZoom({ ...artZoom, index: i })} onClose={() => setArtZoom(null)} />}
   </>;
 }
 
@@ -175,16 +175,18 @@ function Narration({ lang, detail, paragraphs, generate, edit }: {
   </section>;
 }
 
-function Lightbox({ images, index, lang, onIndex, onClose }: { images: PublicDetail['images']; index: number; lang: Lang; onIndex: (i: number) => void; onClose: () => void }) {
+function Lightbox({ images, name, index, lang, onIndex, onClose }: { images: PublicDetail['images']; name: string; index: number; lang: Lang; onIndex: (i: number) => void; onClose: () => void }) {
   const s = strings(lang);
   const ref = useRef<HTMLDialogElement>(null);
   const img = images[index];
-  useEffect(() => { const d = ref.current; d?.showModal(); return () => d?.close(); }, []);
+  const alt = photoAlt(img, name, index, images.length, lang);
+  // closing puts the focus back on the picture that opened it
+  useEffect(() => { const d = ref.current, opener = document.activeElement as HTMLElement | null; d?.showModal(); return () => { d?.close(); if (opener?.isConnected) opener.focus(); }; }, []);
   const go = (step: number) => onIndex((index + step + images.length) % images.length);
-  return <dialog ref={ref} className="pv-lightbox" aria-label={img.alt ?? s.gallery} onCancel={e => { e.preventDefault(); onClose(); }}
+  return <dialog ref={ref} className="pv-lightbox" aria-label={alt} onCancel={e => { e.preventDefault(); onClose(); }}
     onKeyDown={e => { if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); }}>
     <button className="pv-lb-close" onClick={onClose} aria-label={s.close}><X /></button>
-    <figure><img src={img.src} alt={img.alt ?? ''} /><figcaption>{img.alt}{img.caption ? ` — ${img.caption}` : ''}{img.source ? ` · ${s.photoSource}: ${img.source.book}${img.source.page ? `, s. ${img.source.page}` : ''}` : ''} · {index + 1} / {images.length}</figcaption></figure>
+    <figure><img src={img.src} alt={alt} /><figcaption>{name}{img.caption ? ` — ${img.caption}` : ''}{img.source ? <> · {s.photoSource}: <span lang="tr">{img.source.book}</span>{img.source.page ? `, ${lang === 'en' ? 'p.' : 's.'} ${img.source.page}` : ''}</> : ''} · {index + 1} / {images.length}</figcaption></figure>
     {images.length > 1 && <><button className="pv-lb-nav prev" onClick={() => go(-1)} aria-label={s.prev}><ChevronLeft /></button><button className="pv-lb-nav next" onClick={() => go(1)} aria-label={s.next}><ChevronRight /></button></>}
   </dialog>;
 }

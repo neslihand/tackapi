@@ -3,9 +3,9 @@
 // the narrations stored in the backend. All three are shown whole, paragraph by paragraph, without chapters or
 // chapter titles (origin.narrations).
 import type { Artifact } from '../data/artifacts';
-import { artworkLabel, heroImage, type PublicDetail, type PublicImage, type PublicItem } from './model.ts';
+import { artworkLabel, heroImage, photoAlt, type PublicDetail, type PublicImage, type PublicItem } from './model.ts';
 import { makers } from '../lib/vakifApi.ts';
-import { t } from '../lib/i18n.ts';
+import { currentLang, t } from '../lib/i18n.ts';
 
 export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | null {
   const book = detail.text?.trim();
@@ -25,7 +25,7 @@ export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | 
   const creditOf = (img: PublicImage) => img.source ? `${img.source.book}${img.source.page ? `, ${t('s.', 'p.')} ${img.source.page}` : ''}` : img.caption ?? '';
   const credit = hero ? creditOf(hero) : detail.source.book ?? t('Vakıf Katılım envanter kitabı', 'Vakıf Katılım inventory book');
   // All the photos for the card at the top: the chosen one first, then the others in the panel's order.
-  const gallery = hero ? [hero, ...detail.images.filter(i => i !== hero)].map((img, i) => ({ src: img.src, alt: img.alt ?? t(`${item.name} fotoğrafı ${i + 1}`, `Photo ${i + 1} of ${item.name}`), credit: creditOf(img) })) : undefined;
+  const gallery = hero ? [hero, ...detail.images.filter(i => i !== hero)].map((img, i) => ({ src: img.src, alt: photoAlt(img, item.name, i, detail.images.length, currentLang()), credit: creditOf(img) })) : undefined;
   const [from, to] = detail.source.pages ?? [null, null];
   return {
     id: item.slug, slug: item.slug, name: item.name, city: item.city.name, period: item.period?.name ?? t('Dönemi belirtilmemiş', 'Era not given'),

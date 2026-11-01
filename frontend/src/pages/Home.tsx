@@ -33,16 +33,16 @@ const passportSteps = (): [string, string][] => [[t('Oku', 'Read'), t('Bir eseri
 const doors = (): [string, string, string][] => [['/kesfet', t('Koleksiyon', 'Collection'), t('Tüm eserler, tek bir yerde', 'Every work, in one place')], ['/harita', t('Miras Haritası', 'Heritage Map'), t('Yakınındaki eseri bul', 'Find a work near you')], ['/oyun', t('Oyna & Öğren', 'Play & Learn'), t('Oyunlar, görevler, yarışma', 'Games, quests, a quiz')]];
 function Threshold({ artifact, done, today, questions }: { artifact: { name: string; city: string; slug: string; image: string; year: string }; done: boolean; today: { name: string; city: string; slug: string; image: string; year: string }; questions: number }) {
   const ref = useRef<HTMLElement>(null);
-  const shown = useInView(ref, { once: true, amount: 0.35 });
+  const shown = useInView(ref, { once: true, amount: 0.1 });
   const still = Boolean(useReducedMotion());
-  const rise = (delay: number) => still ? {} : { initial: { y: '108%' }, animate: shown ? { y: '0%' } : undefined, transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const } };
+  const rise = (delay: number) => still ? {} : { initial: { y: '108%' }, animate: shown ? { y: '0%' } : undefined, transition: { duration: 0.28, delay, ease: [0.16, 1, 0.3, 1] as const } };
   return <section ref={ref} id="kapanis" className="hp-threshold" data-nav-theme="dark" aria-labelledby="final-gate-title">
     <p className="pl-index"><b>{t('YENİ BİR EŞİK', 'A NEW THRESHOLD')}</b></p>
     <div className="hp-arch" aria-hidden="true">
       <div className="hp-arch-window"><span className="hp-arch-reveal"><img src={artifact.image} alt="" loading="lazy" /></span></div>
       <svg className="final-gate-arch" viewBox="0 0 300 380"><path pathLength="1" d="M20 380V170C20 92 80 38 150 12C220 38 280 92 280 170V380" /><path pathLength="1" d="M4 380V166C4 82 70 24 150 -4C230 24 296 82 296 166V380" /></svg>
     </div>
-    <h2 id="final-gate-title" className="hp-threshold-title"><span className="hp-tw a"><motion.span {...rise(0)}>{t('Her kapı,', 'Every door')}</motion.span></span> <span className="hp-tw b"><motion.span {...rise(0.15)}><em>{t('bir başkasına açılır.', 'opens onto another.')}</em></motion.span></span></h2>
+    <h2 id="final-gate-title" className="hp-threshold-title"><span className="hp-tw a"><motion.span {...rise(0)}>{t('Her kapı,', 'Every door')}</motion.span></span> <span className="hp-tw b"><motion.span {...rise(0.05)}><em>{t('bir başkasına açılır.', 'opens onto another.')}</em></motion.span></span></h2>
     <div className="hp-threshold-foot">
       <p>{done ? t('Koleksiyonun tamamlandı. Günün eserine yeniden bakmaya ne dersin?', 'Your collection is complete. How about another look at today’s work?') : <>{t('Sıradaki kapı seni bekliyor:', 'The next door awaits you:')} <b>{artifact.name}</b> · {artifact.city}</>}</p>
       <div className="hp-actions"><Link className="hp-cta en-key" to={`/eser/${artifact.slug}`}><span className="en-key-label">{t('Sıradaki kapıyı aç', 'Open the next door')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link></div>

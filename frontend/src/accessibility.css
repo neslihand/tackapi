@@ -64,3 +64,16 @@ summary { min-height: 44px; }
 /* P19: under the passport, the call to sign in so the passport is not lost with the browser's data */
 .passport-bottom .passport-keep { display: inline-block; margin-left: 4px; font-weight: 700; color: #7a5c22; text-decoration: underline; text-decoration-color: #7a5c2266; text-underline-offset: 3px; }
 .passport-bottom .passport-keep:hover, .passport-bottom .passport-keep:focus-visible { text-decoration-color: currentColor; }
+
+/* P21: small gold and grey labels on the ivory pages reach 4.5:1 (they sat at 3.6–4.4:1). The darker gold keeps the
+   same hue. `:root` lifts these over the page sheets that load later with the same selectors. */
+:root .aa-corner, :root .ts-page small, :root .ts-count span, :root .v-tile-body small, :root .v-tile-go,
+:root .explore-page .ex-card .ex-stamp > span, :root .gl-entry dt small, :root .gl-where b, :root .v-contrib-list small,
+:root .v-status.pending, :root .pv-answer sup a, :root .pv-cites b, :root .rr-editor-bar small.short,
+:root .story-authors .story-sources-kicker span, :root .pv-facts em { color: #76581f; }
+:root .pv-cites, :root .pv-cites-title, :root .pv-sources p, :root .pv-list span, :root .pv-art-card figcaption span,
+:root .pv-card-meta, :root .pv-card > p, :root .pv-muted { color: #5c6455; }
+
+/* the TR/EN buttons: at least 44×44 px to tap, while the pill keeps its look (the extra height is invisible) */
+:root .lang-switch button { position: relative; min-width: 44px; }
+:root .lang-switch button::after { content: ''; position: absolute; inset: -7px 0; }

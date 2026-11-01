@@ -16,18 +16,18 @@
 
 /* ——— N° 01: the hall ——— */
 .explore-page .ex-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 380px); align-items: end; gap: 28px clamp(30px, 5vw, 90px); margin: 0; }
-.explore-page .ex-kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 clamp(18px, 2vw, 28px); font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; animation: en-fade-up .9s var(--pl-ease) .1s both; }
+.explore-page .ex-kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 clamp(18px, 2vw, 28px); font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; animation: en-fade-up .26s var(--pl-ease) both; }
 .explore-page .ex-kicker > span, .ex-results-kicker > span, .explore-page .ex-card-cta > span { white-space: nowrap; }
 .explore-page .ex-kicker > span { font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; }
 .explore-page .ex-kicker > i { width: 40px; height: 1px; background: currentColor; opacity: .5; }
 .explore-page .ex-top h1 { margin: 0; font-size: clamp(46px, 7.4vw, 128px); font-weight: 300; line-height: .9; letter-spacing: -.035em; color: var(--en-ivory); }
 .ex-line { display: block; overflow: hidden; padding: 0 .04em .1em; margin-bottom: -.1em; }
-.ex-line > * { display: inline-block; animation: en-rise 1.25s var(--pl-ease) .15s both; }
-.ex-line + .ex-line > * { animation-delay: .27s; }
+/* The title is there from the first frame: only the lines around it fade in, and quickly. */
+.ex-line > * { display: inline-block; }
 .explore-page .ex-top h1 em { padding-left: .9em; font-weight: 300; color: var(--en-gold-light); }
 
 /* The search as a line to write on. */
-.explore-page .ex-search { position: relative; min-width: 0; min-height: 60px; margin-bottom: .6em; padding: 0 0 0 2px; gap: 14px; border: 0; border-bottom: 1px solid #e6d5ae59; border-radius: 0; color: var(--en-gold-light); background: none; animation: en-fade-up .9s var(--pl-ease) .45s both; }
+.explore-page .ex-search { position: relative; min-width: 0; min-height: 60px; margin-bottom: .6em; padding: 0 0 0 2px; gap: 14px; border: 0; border-bottom: 1px solid #e6d5ae59; border-radius: 0; color: var(--en-gold-light); background: none; animation: en-fade-up .26s var(--pl-ease) .04s both; }
 .explore-page .ex-search::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 1px; background: var(--en-gold-light); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--pl-ease); }
 .explore-page .ex-search:focus-within { outline: 0; }
 .explore-page .ex-search:focus-within::after { height: 2px; transform: scaleX(1); }
@@ -257,7 +257,7 @@
   .explore-page .ex-card-compact h3 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .explore-page .ex-kicker, .ex-line > *, .explore-page .ex-search, .ex-corridor-track > a { animation: none; }
+  .explore-page .ex-kicker, .explore-page .ex-search, .ex-corridor-track > a { animation: none; }
   .ex-preview, .explore-page .ex-card h3, .explore-page .ex-card-compact::before { transition: none; }
 }
 @media (forced-colors: active) {

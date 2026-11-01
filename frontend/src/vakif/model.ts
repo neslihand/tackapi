@@ -102,6 +102,17 @@ const T = {
 } as const;
 export const strings = (lang: Lang) => T[lang];
 
+// site: a picture's alternative text. The backend writes "<eser> – <kitap>, s. <sayfa>" when it knows nothing else about
+// a picture; that is its credit (the caption shows it), so the text names the work and the picture's place instead, or
+// the picture's own caption when it has one.
+export function photoAlt(img: PublicImage, name: string, index: number, count: number, lang: Lang) {
+  const alt = img.alt?.trim();
+  if (alt && !(img.source?.book && alt.includes(img.source.book))) return alt;
+  const caption = img.caption?.trim();
+  const place = count > 1 ? (lang === 'en' ? `photo ${index + 1} of ${count}` : `${count} fotoğraftan ${index + 1}.`) : (lang === 'en' ? 'photo' : 'fotoğrafı');
+  return `${name}, ${place}${caption ? ` — ${caption}` : ''}`;
+}
+
 const ROLES: Record<string, [string, string]> = {
   patron: ['Bânî', 'Patron'], founder: ['Kurucu', 'Founder'], architect: ['Mimar', 'Architect'], builder: ['Usta', 'Builder'],
   restorer: ['Onaran', 'Restorer'], buried: ['Medfun', 'Buried here'], trustee: ['Mütevelli', 'Trustee'], imam: ['İmam', 'Imam'],

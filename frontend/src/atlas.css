@@ -16,15 +16,15 @@
 
 /* ——— N° 01: the heading ——— */
 .mp-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 380px); align-items: end; gap: 24px clamp(30px, 5vw, 90px); }
-.mp-index { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; animation: en-fade-up .9s var(--pl-ease) .1s both; }
+.mp-index { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; animation: en-fade-up .26s var(--pl-ease) both; }
 .mp-index > span { font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .mp-index > i { width: 40px; height: 1px; background: currentColor; opacity: .5; }
 .mp-title { margin: 0; font-size: clamp(46px, 7vw, 120px); font-weight: 300; line-height: .9; letter-spacing: -.035em; color: var(--en-ivory); }
 .mp-line { display: block; overflow: hidden; padding: 0 .04em .1em; margin-bottom: -.1em; }
-.mp-line > * { display: inline-block; animation: en-rise 1.25s var(--pl-ease) .15s both; }
-.mp-line + .mp-line > * { animation-delay: .27s; }
+/* The title is there from the first frame: only the lines around it fade in, and quickly. */
+.mp-line > * { display: inline-block; }
 .mp-title em { padding-left: 1.6em; font-weight: 300; color: var(--en-gold-light); }
-.mp-lede { margin: 0 0 .9em; font-size: 15px; line-height: 1.7; color: #c9cfc8; animation: en-fade-up .9s var(--pl-ease) .45s both; }
+.mp-lede { margin: 0 0 .9em; font-size: 15px; line-height: 1.7; color: #c9cfc8; animation: en-fade-up .26s var(--pl-ease) .04s both; }
 
 /* ——— The control bar: hairlines, small-caps labels and serif values ——— */
 .map-scene .map-controls { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: clamp(44px, 5vw, 72px) 0 0; border-top: 1px solid var(--mp-line); border-bottom: 1px solid var(--mp-line); }
@@ -216,7 +216,7 @@
   .map-scene .selected-map-artifact { left: 10px; right: 58px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mp-index, .mp-line > *, .mp-lede, .mp-hud > span + span, .mp-sel-copy, .map-scene .selected-map-artifact .mp-sel-media img, .heritage-marker.active .map-pin-model { animation: none; }
+  .mp-index, .mp-lede, .mp-hud > span + span, .mp-sel-copy, .map-scene .selected-map-artifact .mp-sel-media img, .heritage-marker.active .map-pin-model { animation: none; }
 }
 @media (forced-colors: active) {
   .map-scene .map-controls, .map-scene .map-sidebar, .map-scene .selected-map-artifact { border: 1px solid CanvasText; }

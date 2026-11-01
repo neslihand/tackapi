@@ -211,7 +211,7 @@
 /* ——— P17: more room to read on a work's page ———
    The bar slides away while the reader goes down (App.tsx adds .nav-tucked) and the reading toolbar takes its place at
    the top; the toolbar itself is slimmer, and on a short screen its label keeps only its icon. */
-.navigation { transition: background .3s, color .3s, height .3s, translate .45s cubic-bezier(.2, .7, .2, 1); }
+.navigation { transition: height .3s, translate .45s cubic-bezier(.2, .7, .2, 1); }
 .navigation.nav-tucked { translate: 0 -100%; }
 .story-tools { transition: top .45s cubic-bezier(.2, .7, .2, 1); }
 html.nav-tucked .story-tools { top: 0; }

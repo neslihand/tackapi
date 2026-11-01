@@ -227,7 +227,7 @@ export function StoryReader({ artifact, text }: { artifact: Artifact; text: stri
     }), { rootMargin: '-40% 0px -50% 0px' });
     const reveal = new IntersectionObserver(entries => entries.forEach(entry => {
       if (entry.isIntersecting) { const i = Number((entry.target as HTMLElement).dataset.i); setSeen(s => s.has(i) ? s : new Set([...s, i])); }
-    }), { rootMargin: '0px 0px -12% 0px' });
+    }), { rootMargin: '0px 0px 8% 0px' });
     items.forEach(el => { reading.observe(el); reveal.observe(el); });
     // Gentle parallax: how far through the story the reader is, for the drawings to drift a little against the text.
     let frame = 0;

@@ -71,9 +71,9 @@
 /* Settling in: the arches draw, the page rises, the marks pop, the rules run out to the notes. */
 @media (prefers-reduced-motion: no-preference) {
   .aa .aa-arches path { stroke-dashoffset: 1; transition: stroke-dashoffset 2.2s cubic-bezier(.6, 0, .2, 1); }
-  .aa .aa-page { opacity: 0; translate: 0 40px; transition: opacity 1s cubic-bezier(.2, .7, .2, 1), translate 1.2s cubic-bezier(.2, .7, .2, 1); }
+  .aa .aa-page { opacity: 0; translate: 0 16px; transition: opacity .28s ease-out, translate .28s cubic-bezier(.2, .7, .2, 1); }
   .aa .aa-badge { scale: 0; transition: scale .5s cubic-bezier(.3, 1.6, .5, 1); }
-  .aa .aa-note { opacity: 0; translate: 0 18px; transition: opacity .8s, translate .8s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(.7s + var(--n) * .14s); }
+  .aa .aa-note { opacity: 0; translate: 0 10px; transition: opacity .26s ease-out, translate .26s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(.1s + var(--n) * .04s); }
   .aa .aa-note::after { transform: scaleX(0); transition: transform .9s cubic-bezier(.6, 0, .2, 1) calc(.6s + var(--n) * .14s); }
   .aa .aa-note::before { scale: 0; transition: scale .4s calc(1.2s + var(--n) * .14s); }
   .aa.shown .aa-arches path { stroke-dashoffset: 0; }

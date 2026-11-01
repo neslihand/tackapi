@@ -84,7 +84,7 @@ export function Achievements() {
         const won = row.filter(a => a.value >= a.required).length;
         return <div key={metal} className={`vitrine-tier tier-${metal}`}>
           <header className="vitrine-head"><span className="vitrine-numeral" aria-hidden="true">{numeral}</span><div><h2>{title}</h2><p>{note}</p></div><span className="vitrine-count">{won} / {row.length}</span></header>
-          <ul className="medal-grid">{row.map((a, i) => <motion.li key={a.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.8, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}><MedalCard a={a} onInspect={() => inspect(a)} /></motion.li>)}</ul>
+          <ul className="medal-grid">{row.map((a, i) => <motion.li key={a.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.05 }} transition={{ duration: 0.28, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}><MedalCard a={a} onInspect={() => inspect(a)} /></motion.li>)}</ul>
         </div>;
       })}
       <div className="collection-bottom"><p>{t('Her yeni keşif,', 'Every new discovery')} <em>{t('yeni bir kapıyı aralar.', 'opens a new door.')}</em></p><div><Link className="button gold" to="/kesfet">{t('Keşfe devam et', 'Carry on exploring')} <ArrowRight size={18} aria-hidden="true" /></Link><Link className="text-link" to="/pasaport">{t('Pasaportumu aç', 'Open my passport')} <ArrowUpRight size={16} aria-hidden="true" /></Link></div></div>

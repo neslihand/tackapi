@@ -110,7 +110,7 @@ function build(el: HTMLElement, moved: HTMLElement[]) {
   }
   if (data.stagger !== undefined && el.children.length) {
     // A mask rather than a fade, so text never sits half transparent.
-    gsap.fromTo(el.children, { y: 48, clipPath: 'inset(100% 0% 0% 0%)' }, { y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 1, ease: 'power3.out', stagger: 0.09, clearProps: 'clipPath,transform', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
+    gsap.fromTo(el.children, { y: 16, clipPath: 'inset(100% 0% 0% 0%)' }, { y: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.28, ease: 'power3.out', stagger: 0.04, clearProps: 'clipPath,transform', scrollTrigger: { trigger: el, start: 'top bottom', once: true } });
   }
   if (data.curtain !== undefined) {
     gsap.fromTo(el, { yPercent: -28 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: el.closest('footer') ?? el, start: 'top bottom', end: 'bottom bottom', scrub: true } });

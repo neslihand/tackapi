@@ -110,7 +110,8 @@
   .orbit-coin { animation: orbit-counter 80s linear infinite; }
   .orbit-spin { animation: coin-sway 7s ease-in-out infinite; }
   .orbit-path { animation: en-breathe 6s ease-in-out infinite; }
-  .treasury-copy > * { animation: en-fade-up 1s calc(.3s + var(--n, 0) * .12s) var(--tr-ease) backwards; }
+  /* The title is there from the first frame: only the lines around it fade in, and quickly. */
+  .treasury-copy > :not(.treasury-title) { animation: en-fade-up .26s calc(var(--n, 0) * .04s) var(--tr-ease) backwards; }
   .treasury-copy > :nth-child(2) { --n: 1; }
   .treasury-copy > :nth-child(3) { --n: 2; }
   .treasury-copy > :nth-child(4) { --n: 3; }
