@@ -15,6 +15,9 @@ export type Artifact = {
   // Every picture of the work for the card at the top of its page, the first one being `image`; credit names where the
   // picture comes from (empty when nothing is known). Without it the card shows `image` alone.
   gallery?: { src: string; alt: string; credit: string }[];
+  // Backend codes of the building type ('mosque', 'bath', …) and era ('erken-osmanli', …); the story's motifs follow them.
+  kind?: string;
+  periodSlug?: string;
   // url is missing for a book citation (an inventory book has no web address)
   sourceReferences: { title: string; url?: string }[];
   chapters: { title: string; short: string; story: string; child: string }[];

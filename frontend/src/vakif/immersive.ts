@@ -29,7 +29,7 @@ export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | 
   const [from, to] = detail.source.pages ?? [null, null];
   return {
     id: item.slug, slug: item.slug, name: item.name, city: item.city.name, period: item.period?.name ?? t('Dönemi belirtilmemiş', 'Era not given'),
-    category: item.kind_label, year: item.built.label ?? 'Bilinmiyor', architect: makers(item) ?? 'Bilinmiyor',
+    category: item.kind_label, kind: item.kind, ...(item.period ? { periodSlug: item.period.slug } : {}), year: item.built.label ?? 'Bilinmiyor', architect: makers(item) ?? 'Bilinmiyor',
     description: item.summary ?? '', coordinates: detail.location ? [detail.location.lat, detail.location.lon] : [39, 35],
     image: image.src, ...(image.alt ? { imageAlt: image.alt } : {}), ...(gallery ? { gallery } : {}),
     sourceReferences: [{ title: [detail.source.book, from ? `${t('s.', 'p.')} ${from}${to && to !== from ? `–${to}` : ''}` : null].filter(Boolean).join(', ') || t('Vakıf Katılım envanter kitabı', 'Vakıf Katılım inventory book') }],

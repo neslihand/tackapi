@@ -16,7 +16,7 @@ import { hasImmersiveStory } from '../lib/artifactAdapter';
 import { imageAlt, PLACEHOLDER_IMAGE } from '../lib/content';
 import { narrationLabel, narrationModes, useNarrationMode, type NarrationMode } from '../lib/preferences';
 import { useAmbience } from '../lib/ambience';
-import { BriefChapter, BriefNarration, CineChapter, CineNarration, Hotspot, pad, shot, TaleChapter, TaleNarration } from '../components/StoryScenes';
+import { BriefChapter, BriefNarration, CineChapter, Hotspot, pad, shot, StoryReader, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
 import { HeroGallery } from '../components/HeroGallery';
@@ -231,7 +231,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
         <div className="story-index-progress" aria-hidden="true"><span /></div>
       </nav>}
       <div className="story-chapters">
-        {whole ? (mode === 'story' ? <CineNarration artifact={artifact} text={whole} /> : mode === 'child' ? <TaleNarration artifact={artifact} text={whole} />
+        {whole ? (mode === 'story' ? <StoryReader artifact={artifact} text={whole} /> : mode === 'child' ? <TaleNarration artifact={artifact} text={whole} />
             : <div className="brief-layout"><Stage artifact={artifact} chapter={0} detail={detail} setDetail={setDetail} whole /><div className="brief-entries"><BriefNarration artifact={artifact} text={whole} /></div></div>)
           : mode === 'short'
           ? <div className="brief-layout"><Stage artifact={artifact} chapter={chapter} detail={detail} setDetail={setDetail} /><div className="brief-entries">{artifact.chapters.map((_, i) => <BriefChapter key={i} artifact={artifact} index={i} detail={detail} setDetail={setDetail} />)}</div></div>

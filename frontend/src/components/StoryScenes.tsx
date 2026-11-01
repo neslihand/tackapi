@@ -4,10 +4,13 @@ import type { Artifact } from '../data/artifacts';
 import type { NarrationMode } from '../lib/preferences';
 import { Link } from '../lib/navigation';
 import { t } from '../lib/i18n';
+import { Motif } from './StoryMotifs';
+import { storyScenes } from '../lib/motifs';
 
 // The chapters of a story page, drawn differently for each way of telling it:
 //   story (Hikâyeleştirerek) → CineChapter: full-screen scenes behind graphic-novel captions, a camera that moves
-//                              through the illustration, and an atmosphere that turns from night to dawn;
+//                              through the illustration, and an atmosphere that turns from night to dawn; a backend
+//                              work's whole story → StoryReader: a centred column with era and building motifs beside it;
 //   child (Çocuklar İçin)    → TaleChapter: the pages of a picture book with a guide bird, big words and surprises;
 //   short (Kısa ve Öz)       → BriefChapter: an editorial label beside an arched lens (Stage in Story.tsx).
 // The scroll animations live in Story.tsx; everything here reads correctly without them.
@@ -197,21 +200,71 @@ function NarrationExtras({ artifact, mode }: { artifact: Artifact; mode: Narrati
   </>;
 }
 
-/** Hikâyeleştirerek, whole: one night scene behind the photograph, the paragraphs rising over it as captions. */
-export function CineNarration({ artifact, text }: { artifact: Artifact; text: string }) {
-  const style = { '--fx': 50, '--fy': 50, '--zoom': 1.12, '--sx': 0, '--sy': 0 } as CSSProperties;
-  return <section className="story-chapter cine tone-lantern cine-whole" id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: ${t('hikâye', 'story')}`} style={style}>
-    <div className="cine-stage">
-      <div className="cine-camera" aria-hidden="true"><img src={artifact.image} alt="" loading="lazy" draggable={false} /></div>
-      <CineAtmosphere tone="lantern" />
-      <span className="cine-grade" aria-hidden="true" />
-      <span className="cine-bar top" aria-hidden="true" /><span className="cine-bar bottom" aria-hidden="true" />
-      <span className="cine-slate" aria-hidden="true">{artifact.city.toLocaleUpperCase('tr-TR')} <i>·</i> {artifact.year}</span>
-    </div>
-    <div className="cine-flow">
-      <header className="cine-title"><span className="cine-numeral" aria-hidden="true" /><span className="chapter-number">{t('HİKÂYELEŞTİREREK', 'AS A STORY')}</span></header>
-      <div className="narrative cine-captions">{paragraphs(text).map((p, k) => <p key={k} className={`cine-caption at-${k % 3}`}>{p}</p>)}</div>
-      <div className="cine-panel"><NarrationExtras artifact={artifact} mode="story" /></div>
+/**
+ * Hikâyeleştirerek, whole: the story read in one calm column in the middle of the night green. Beside it, line drawings
+ * of the work's building type and its era's ornaments (StoryMotifs.tsx) change with each paragraph and drift gently as
+ * the page scrolls. The text never sits on a picture, so it reads the same on any screen; the drawings only accompany it.
+ */
+// Specks of gold dust drifting up through the light, and a few stars that glint: [x %, y %, size px, delay s, length s].
+const MOTES: [number, number, number, number, number][] = Array.from({ length: 22 }, (_, i) => {
+  const r = (n: number) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1;
+  return [Math.round(r(1) * 100), Math.round(r(2) * 100), 1.5 + Math.round(r(3) * 25) / 10, Math.round(r(4) * 120) / 10, 9 + Math.round(r(5) * 10)];
+});
+
+export function StoryReader({ artifact, text }: { artifact: Artifact; text: string }) {
+  const parts = paragraphs(text);
+  const scenes = storyScenes(artifact, parts.length);
+  const [at, setAt] = useState(0);
+  const [seen, setSeen] = useState(() => new Set([0]));
+  const [ready, setReady] = useState(false);
+  const root = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const section = root.current;
+    if (!section || !('IntersectionObserver' in window)) return;
+    // Paragraphs fade in once as they come up (never hidden without this script or for less motion).
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setReady(true);
+    const items = [...section.querySelectorAll<HTMLElement>('.sr-text > p')];
+    const reading = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) setAt(Number((entry.target as HTMLElement).dataset.i));
+    }), { rootMargin: '-40% 0px -50% 0px' });
+    const reveal = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { const i = Number((entry.target as HTMLElement).dataset.i); setSeen(s => s.has(i) ? s : new Set([...s, i])); }
+    }), { rootMargin: '0px 0px -12% 0px' });
+    items.forEach(el => { reading.observe(el); reveal.observe(el); });
+    // Gentle parallax: how far through the story the reader is, for the drawings to drift a little against the text.
+    let frame = 0;
+    const drift = () => {
+      frame = 0;
+      const box = section.getBoundingClientRect();
+      const progress = Math.min(1, Math.max(0, (window.innerHeight - box.top) / (box.height + window.innerHeight)));
+      section.style.setProperty('--sp', progress.toFixed(3));
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(drift); };
+    drift();
+    window.addEventListener('scroll', schedule, { passive: true });
+    return () => { reading.disconnect(); reveal.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('scroll', schedule); };
+  }, [text]);
+  const state = (i: number) => i === at ? 'on' : i < at ? 'past' : '';
+  return <section ref={root} className={`story-chapter sr ${ready ? 'ready' : ''}`} id="chapter-0" data-chapter={0} data-nav-theme="dark" aria-label={`${artifact.name}: ${t('hikâye', 'story')}`}>
+    {/* The stage covers the story only: its pinned layer leaves with the last paragraph, never over what comes next. */}
+    <div className="sr-stage" aria-hidden="true"><div className="sr-pin">
+      <span className="sr-rays" />
+      <div className="sr-halo"><Motif id={scenes[0].right} /></div>
+      <div className="sr-motes">{MOTES.map(([x, y, size, delay, time], i) => <i key={i} style={{ '--x': `${x}%`, '--y': `${y}%`, '--size': `${size}px`, '--delay': `${delay}s`, '--time': `${time}s` } as CSSProperties} className={i % 4 ? '' : 'star'} />)}</div>
+      {(['left', 'right'] as const).map(side => <div key={side} className={`sr-side ${side}`}>
+        <span className="sr-glow" /><svg className="sr-ring" viewBox="0 0 200 200"><circle cx={100} cy={100} r={96} /><circle cx={100} cy={100} r={84} /></svg>
+        {scenes.map((scene, i) => <div key={i} className={`sr-motif ${state(i)}`}><Motif id={scene[side]} /></div>)}
+      </div>)}
+    </div></div>
+    <div className="sr-flow">
+      <header className="sr-head">
+        <p className="sr-kicker">{t('HİKÂYELEŞTİREREK', 'AS A STORY')}</p>
+        <h2>{artifact.name}</h2>
+        <p className="sr-meta">{[artifact.period, artifact.category, artifact.city].filter(Boolean).join(' · ')}</p>
+        <span className="sr-rule" aria-hidden="true"><i /></span>
+      </header>
+      <div className="narrative sr-text">{parts.map((p, i) => <p key={i} data-i={i} className={seen.has(i) ? 'seen' : ''}>{p}</p>)}</div>
+      <div className="sr-extras"><NarrationExtras artifact={artifact} mode="story" /></div>
     </div>
   </section>;
 }
