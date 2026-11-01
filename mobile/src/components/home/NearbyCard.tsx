@@ -8,7 +8,7 @@ import { HorizontalRail, SectionHeader } from '@/components/Layout';
 import { Button, Notice } from '@/components/UI';
 import { WorkTile } from '@/components/WorkTile';
 import { byDistance, placed } from '@/lib/explore';
-import { hasLocationPermission, whereAmI, type Here } from '@/lib/geo';
+import { useHereIfAllowed, whereAmI, type Here } from '@/lib/geo';
 import { t } from '@/lib/i18n';
 import { formatDistance } from '@/lib/passport';
 import { useContent } from '@/lib/store';
@@ -25,11 +25,9 @@ export function NearbyCard() {
     setBusy(true); setError(null);
     whereAmI().then(setHere, e => setError(String(e?.message ?? e))).finally(() => setBusy(false));
   };
-  useEffect(() => {
-    let live = true;
-    hasLocationPermission().then(ok => { if (ok && live) whereAmI().then(h => { if (live) setHere(h); }, () => {}); });
-    return () => { live = false; };
-  }, []);
+  // with the permission already given, the reading Bugün's other cards share
+  const allowed = useHereIfAllowed();
+  useEffect(() => { if (allowed) setHere(h => h ?? allowed); }, [allowed]);
   if (!located) return null;
 
   if (near.length) return <HorizontalRail title={t('Yakınında', 'Near you')} actionLabel={t('Tümü', 'See all')} onAction={() => router.push('/kesfet')}

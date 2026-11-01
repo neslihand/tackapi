@@ -95,7 +95,7 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 | Çar 4 Kas | Esnek seri + kademeli madalyonlar + Pasaport ekranı | P5 | [ ] |
 | Çar 4 Kas | Detay Avı | P6 | [ ] |
 | Per 5 Kas | Hatırla kartları | P7 | [ ] |
-| Per 5 Kas | Seyahat modu | P8 | [ ] |
+| Per 5 Kas | Seyahat modu | P8 | [x] |
 | Cum 6 Kas | (İsteğe bağlı) Mobil analitik | P9 | [ ] |
 | Cum 6 Kas | Cila, erişilebilirlik, demo modu, sonra ekran görüntüleri | P10 | [ ] |
 | Cum 6 Kas | APK derlemesi ve telefonda tam deneme | P11 | [ ] |

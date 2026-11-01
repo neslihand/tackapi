@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { IconName } from '@/components/UI';
 import { colors, hit, radius, space, type } from '@/lib/theme';
 
-/** A filter chip; selected chips are filled and show a check, so state is not told by colour alone. */
+/** A filter chip; selected chips are filled and show a check, so state is not told by colour alone. Without onPress
+ *  it is a read-only label, as low as a StatPill (no touch target needed). */
 export function Chip({ label, selected, icon, onPress, accessibilityLabel }: {
   label: string; selected?: boolean; icon?: IconName; onPress?: () => void; accessibilityLabel?: string;
 }) {
@@ -12,7 +13,7 @@ export function Chip({ label, selected, icon, onPress, accessibilityLabel }: {
   const iconName = selected ? 'checkmark' : icon;
   return <Pressable accessibilityRole={onPress ? 'button' : 'text'} accessibilityLabel={accessibilityLabel ?? label}
     accessibilityState={{ selected: !!selected }} disabled={!onPress} onPress={onPress}
-    style={({ pressed }) => [styles.chip, selected && styles.chipOn, pressed && { opacity: 0.8 }]}>
+    style={({ pressed }) => [styles.chip, !onPress && styles.chipStatic, selected && styles.chipOn, pressed && { opacity: 0.8 }]}>
     {iconName && <Ionicons name={iconName} size={16} color={fg} />}
     <Text style={[styles.chipText, { color: fg }]}>{label}</Text>
   </Pressable>;
@@ -60,6 +61,7 @@ export function StatPill({ icon, value, label, tone = 'light' }: { icon: IconNam
 
 const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: hit, paddingHorizontal: space.m, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper },
+  chipStatic: { minHeight: 32, alignSelf: 'flex-start' },
   chipOn: { backgroundColor: colors.emerald, borderColor: colors.emerald },
   chipText: { fontWeight: '500', ...type.body },
   segments: { flexDirection: 'row', padding: space.xs, gap: space.xs, borderRadius: radius.m, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.parchmentDeep },
