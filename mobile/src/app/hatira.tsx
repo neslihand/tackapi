@@ -1,5 +1,6 @@
 // Hatıra Defterim: every memory, newest first, with the work it belongs to.
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Typography';
 import { MemoryCard } from '@/components/Journal';
 import { Empty, Eyebrow, Loading } from '@/components/UI';
 import { t } from '@/lib/i18n';
