@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { BarChart3, BookA, Building2, CalendarDays, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareHeart, Newspaper, Plus, Route, ScanSearch, Sparkles, SplitSquareVertical } from 'lucide-react';
+import { BarChart3, BookA, Building2, CalendarDays, ChevronRight, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, Menu, MessageSquareHeart, Newspaper, Plus, Route, ScanSearch, Sparkles, SplitSquareVertical, X } from 'lucide-react';
 import { api, getToken, handleUnauthorized, setToken } from './lib/api';
 import { Link, useRoute } from './lib/navigation';
 import { Brand, ToastProvider } from './components/UI';
@@ -26,21 +26,48 @@ import { ArticleEdit } from './pages/ArticleEdit';
 import { ArticleImport } from './pages/ArticleImport';
 import { TermsPage } from './pages/Terms';
 
-const NAV: [string, string, ReactNode][] = [
-  ['/', 'Pano', <LayoutDashboard size={17} />], ['/asistan', 'Asistan', <Sparkles size={17} />], ['/analitik', 'Ziyaretçi analitiği', <BarChart3 size={17} />],
-  ['/katkilar', 'Ziyaretçi katkıları', <MessageSquareHeart size={17} />], ['/makaleler', 'Makaleler', <Newspaper size={17} />], ['/terimler', 'Terimler', <BookA size={17} />],
-  ['/fotograflar', 'Fotoğraflar', <Images size={17} />],
-  ['/eserler', 'Eserler', <Building2 size={17} />], ['/bolumleme', 'Bölümleme', <SplitSquareVertical size={17} />], ['/yeni-eser', 'Yeni eser', <Plus size={17} />],
-  ['/gorsel-arama', 'Görselle arama', <ScanSearch size={17} />], ['/rotalar', 'Keşif rotaları', <Route size={17} />], ['/gundem', 'Gündem', <Megaphone size={17} />], ['/takvim', 'Takvim', <CalendarDays size={17} />],
-  ['/sorular', 'Yarışma soruları', <CircleHelp size={17} />],
-  ['/sehirler', 'Şehirler', <MapPinned size={17} />], ['/kayit', 'Değişiklik kaydı', <History size={17} />],
+type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number } | null;
+type NavItem = { to: string; label: string; icon: ReactNode; badge?: keyof NonNullable<Pending>; badgeTitle?: string };
+
+// Menü, işin türüne göre gruplanır; uzun liste kendi içinde kaydırılır, giriş bilgisi altta sabit kalır.
+const NAV: { title: string; items: NavItem[] }[] = [
+  { title: 'Genel', items: [
+    { to: '/', label: 'Pano', icon: <LayoutDashboard size={17} /> },
+    { to: '/asistan', label: 'Asistan', icon: <Sparkles size={17} />, badge: 'agent', badgeTitle: 'Asistanın açık önerisi' },
+    { to: '/analitik', label: 'Ziyaretçi analitiği', icon: <BarChart3 size={17} /> },
+  ] },
+  { title: 'Koleksiyon', items: [
+    { to: '/eserler', label: 'Eserler', icon: <Building2 size={17} /> },
+    { to: '/yeni-eser', label: 'Yeni eser', icon: <Plus size={17} /> },
+    { to: '/fotograflar', label: 'Fotoğraflar', icon: <Images size={17} />, badge: 'images', badgeTitle: 'Kontrol bekleyen fotoğraf' },
+    { to: '/bolumleme', label: 'Bölümleme', icon: <SplitSquareVertical size={17} />, badge: 'segmentation', badgeTitle: 'Bakılacak paragraf' },
+    { to: '/gorsel-arama', label: 'Görselle arama', icon: <ScanSearch size={17} /> },
+  ] },
+  { title: 'Ziyaretçi içeriği', items: [
+    { to: '/katkilar', label: 'Ziyaretçi katkıları', icon: <MessageSquareHeart size={17} />, badge: 'contributions', badgeTitle: 'Onay bekleyen katkı' },
+    { to: '/makaleler', label: 'Makaleler', icon: <Newspaper size={17} />, badge: 'articles', badgeTitle: 'Onay bekleyen makale' },
+    { to: '/terimler', label: 'Terimler', icon: <BookA size={17} />, badge: 'terms', badgeTitle: 'Onay bekleyen terim önerisi' },
+  ] },
+  { title: 'Keşif ve etkinlik', items: [
+    { to: '/rotalar', label: 'Keşif rotaları', icon: <Route size={17} /> },
+    { to: '/gundem', label: 'Gündem', icon: <Megaphone size={17} /> },
+    { to: '/takvim', label: 'Takvim', icon: <CalendarDays size={17} /> },
+    { to: '/sorular', label: 'Yarışma soruları', icon: <CircleHelp size={17} /> },
+  ] },
+  { title: 'Sistem', items: [
+    { to: '/sehirler', label: 'Şehirler', icon: <MapPinned size={17} /> },
+    { to: '/kayit', label: 'Değişiklik kaydı', icon: <History size={17} /> },
+  ] },
 ];
 
-type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number } | null;
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toLocaleUpperCase('tr-TR')).join('') || '?';
 
 function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void; pending: Pending }) {
   const { path, params } = useRoute();
+  const [menuOpen, setMenuOpen] = useState(false);
   const active = (to: string) => to === '/' ? path === '/' : path === to || path.startsWith(`${to}/`) || (to === '/eserler' && path.startsWith('/eser/')) || (to === '/makaleler' && (path.startsWith('/makale/') || path === '/makale-aktar'));
+  const current = NAV.flatMap(g => g.items.map(i => ({ group: g.title, ...i }))).find(i => active(i.to));
+  const waiting = pending ? Object.values(pending).reduce((a, b) => a + b, 0) : 0;
   let page: ReactNode;
   if (path === '/') page = <Dashboard />;
   else if (path === '/fotograflar') page = <ImageQueue params={params} />;
@@ -63,14 +90,37 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (/^\/makale\/\d+$/.test(path)) page = <ArticleEdit key={path} id={Number(path.slice(8))} />;
   else if (path === '/terimler') page = <TermsPage params={params} />;
   else page = <div className="empty">Bu sayfa bulunamadı. <Link className="text-link" to="/">Panoya dön</Link></div>;
-  useEffect(() => { document.getElementById('main')?.focus({ preventScroll: true }); }, [path]);
-  return <div className="shell">
+  useEffect(() => { document.getElementById('main')?.focus({ preventScroll: true }); setMenuOpen(false); }, [path]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+  return <div className={`shell ${menuOpen ? 'menu-open' : ''}`}>
     <a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>İçeriğe geç</a>
-    <aside className="sidebar"><Brand />
-      <nav aria-label="Yönetim menüsü">{NAV.map(([to, label, icon]) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>{icon}{label}{to === '/fotograflar' && pending?.images ? <b title="Kontrol bekleyen fotoğraf">{pending.images}</b> : null}{to === '/bolumleme' && pending?.segmentation ? <b title="Bakılacak paragraf">{pending.segmentation}</b> : null}{to === '/katkilar' && pending?.contributions ? <b title="Onay bekleyen katkı">{pending.contributions}</b> : null}{to === '/asistan' && pending?.agent ? <b title="Asistanın açık önerisi">{pending.agent}</b> : null}{to === '/makaleler' && pending?.articles ? <b title="Onay bekleyen makale">{pending.articles}</b> : null}{to === '/terimler' && pending?.terms ? <b title="Onay bekleyen terim önerisi">{pending.terms}</b> : null}</Link>)}</nav>
-      <div className="sidebar-foot"><span>Giriş: <strong>{user}</strong></span><button onClick={onLogout}><LogOut size={15} /> Çıkış yap</button></div>
+    <aside className="sidebar" id="sidebar">
+      <div className="sidebar-head"><Link to="/" aria-label="Panoya dön"><Brand /></Link>
+        <button className="icon-button sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Menüyü kapat"><X size={20} /></button></div>
+      <nav className="sidebar-nav" aria-label="Yönetim menüsü">{NAV.map(group => <div className="nav-group" key={group.title}>
+        <p className="nav-group-title">{group.title}</p>
+        {group.items.map(({ to, label, icon, badge, badgeTitle }) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>
+          {icon}<span>{label}</span>{badge && pending?.[badge] ? <b title={badgeTitle}>{pending[badge]}</b> : null}</Link>)}
+      </div>)}</nav>
+      <div className="sidebar-foot"><span className="avatar" aria-hidden="true">{initials(user)}</span>
+        <span className="sidebar-user"><small>Giriş yapan</small><strong>{user}</strong></span>
+        <button className="icon-button" onClick={onLogout} title="Çıkış yap" aria-label="Çıkış yap"><LogOut size={17} /></button></div>
     </aside>
-    <main id="main" tabIndex={-1} className="content">{page}</main>
+    <div className="sidebar-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+    <div className="workspace">
+      <header className="topbar">
+        <button className="icon-button menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Menüyü aç" aria-controls="sidebar" aria-expanded={menuOpen}>
+          <Menu size={21} />{waiting > 0 && <i className="menu-dot" aria-hidden="true" />}</button>
+        <p className="crumbs">{current ? <><span>{current.group}</span><ChevronRight size={14} aria-hidden="true" /><strong>{current.label}</strong></> : <strong>Yönetim paneli</strong>}</p>
+        <span className="topbar-date">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      </header>
+      <main id="main" tabIndex={-1} className="content">{page}</main>
+    </div>
   </div>;
 }
 
