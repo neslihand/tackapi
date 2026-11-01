@@ -1,13 +1,17 @@
-// "Tarihin İzinde": a round of five questions. ?eser=<slug> opens the round with a question about that work (a quest
-// step). The finished round goes to the passport: its score and the works answered right.
+// "Tarihin İzinde": a round of four questions, 25 points each, as on the site. ?eser=<slug> opens the round with a
+// question about that work (a quest step). A right answer is noted at once; the finished round adds its score.
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Typography';
 import { Button, Empty, Eyebrow, Loading } from '@/components/UI';
+import { track } from '@/lib/analytics';
 import { t } from '@/lib/i18n';
+import { completeActivity } from '@/lib/playSession';
 import { pickRound, quizPool } from '@/lib/quiz';
+import { roundScore } from '@/lib/quizRound';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
 
@@ -30,23 +34,28 @@ export default function Quiz() {
     setChosen(i);
     const ok = i === q.answer;
     Haptics.notificationAsync(ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
-    if (ok) setRight(r => [...r, q.artifactId]);
+    if (ok) { setRight(r => [...r, q.artifactId]); passport.answerRight(q.artifactId); }
+    track('knowledge_recalled', q.artifactId, { card_id: q.id, correct: ok, surface: 'quiz' });
   }
   function next() {
     if (index + 1 < questions.length) { setIndex(index + 1); setChosen(null); return; }
     // chosen is the last answer; right already holds it
-    passport.recordQuiz((right.length / questions.length) * 100, right);
+    const points = roundScore(right.length, questions.length);
+    passport.recordQuiz(points, right);
+    track('quiz_finish', undefined, { score: points });
+    completeActivity('quiz');
     setFinished(true);
   }
   function again() { setRound(r => r + 1); setIndex(0); setChosen(null); setRight([]); setFinished(false); }
 
   if (finished) {
-    const score = Math.round((right.length / questions.length) * 100);
+    const score = roundScore(right.length, questions.length);
     const asked = [...new Set(questions.map(x => x.artifactId))].map(bySlug).filter(Boolean);
     return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m }}>
       <View style={s.result}>
         <Eyebrow light>✦ {t('TUR TAMAMLANDI', 'ROUND COMPLETE')}</Eyebrow>
-        <Text style={s.score}>{right.length}/{questions.length}</Text>
+        <Text style={s.score} accessibilityLabel={t(`Puanın: 100 üzerinden ${score}`, `Your score: ${score} out of 100`)}>{score}<Text style={s.scoreOf}> / 100</Text></Text>
+        <Text style={s.resultText}>{t(`${questions.length} sorudan ${right.length} doğru`, `${right.length} of ${questions.length} right`)}</Text>
         <Text style={s.resultText}>{score === 100 ? t('Kusursuz! Tarihin izini iyi sürüyorsun.', 'Flawless! You follow history’s trail well.') : score >= 60 ? t('Güzel tur. Kaçırdıklarını eserlerin sayfasında bulabilirsin.', 'A good round. You can find what you missed on the works’ pages.') : t('Her yanlış yeni bir kapı: eserlere göz at ve yeniden dene.', 'Every miss is a new door: look at the works and try again.')}</Text>
         <Button kind="gold" icon="refresh" label={t('Yeni tur', 'New round')} onPress={again} />
       </View>
@@ -102,6 +111,7 @@ const s = StyleSheet.create({
   explainText: { color: colors.soft, fontSize: 14, lineHeight: 20 },
   result: { padding: space.l, borderRadius: 18, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine, gap: space.s, alignItems: 'center' },
   score: { fontFamily: serif, fontSize: 56, color: colors.gold },
+  scoreOf: { fontFamily: serif, fontSize: 22, color: colors.goldSoft },
   resultText: { color: '#e6e2d8', fontSize: 15, lineHeight: 22, textAlign: 'center' },
   work: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
   workText: { flex: 1, color: colors.ink, fontSize: 15 },
