@@ -8,7 +8,9 @@ gsap.registerPlugin(ScrollTrigger);
 // Site-wide scroll motion, after the reference sites (Monoform, Frentavo, Swash, Shopify Editions, Hart, Polpharma).
 //
 // Smooth scrolling: the wheel glides with inertia (Lenis), driven by GSAP's ticker so every ScrollTrigger scene stays
-// in step. Touch, keyboard, the scrollbar and nested scroll areas (chat, menus, dialogs, the map) scroll natively.
+// in step. Touch, keyboard, the scrollbar and nested scroll areas (chat, menus, dialogs) scroll natively. The maps are not
+// left out: they do not use the wheel (lib/mapZoom.ts zooms them on a pinch), and a native scroll starting over a map
+// while a glide was still running pulled the page two ways at once, so the page shook.
 //
 // Depth: elements opt in with data attributes and are picked up wherever they appear, also after lazy loads:
 //   data-speed="0.9"  travels at 0.9 of the scroll (it lags; above 1 it runs ahead). It sits at its laid-out place
@@ -29,7 +31,7 @@ export function useSmoothScroll() {
     const query = reducedMotion();
     const start = () => {
       if (query.matches || lenis) return;
-      lenis = new Lenis({ lerp: 0.09, autoRaf: false, allowNestedScroll: true, prevent: node => node.matches('dialog, [role="dialog"], .leaflet-container, .mobile-menu') });
+      lenis = new Lenis({ lerp: 0.09, autoRaf: false, allowNestedScroll: true, prevent: node => node.matches('dialog, [role="dialog"], .mobile-menu') });
       lenis.on('scroll', ScrollTrigger.update);
     };
     const stop = () => { lenis?.destroy(); lenis = null; };

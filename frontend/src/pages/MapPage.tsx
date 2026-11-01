@@ -9,6 +9,7 @@ import { locale, t } from '../lib/i18n';
 import { distanceKm, normalize } from '../lib/progress';
 import { ANATOLIA, GEO_LABELS, THRACE } from '../lib/turkeyOutline';
 import { track } from '../lib/analytics';
+import { pinchZoom } from '../lib/mapZoom';
 
 const TURKEY: L.LatLngBoundsExpression = [[35.8, 25.9], [42.1, 44.6]];
 const SVG = 'http://www.w3.org/2000/svg';
@@ -41,6 +42,7 @@ export function MapPage({ query = '' }: { query?: string }) {
   // The works folded into each pin that stands for several (pin's work id → their places), for zooming into a group.
   const groups = useRef(new Map<string, L.LatLng[]>());
   const [grouped, setGrouped] = useState(false);
+  const [zoomHint, setZoomHint] = useState(false);
 
   const linked = artifacts.find(a => a.id === new URLSearchParams(query).get('eser'));
   const [selected, setSelected] = useState((linked ?? artifacts[0]).id);
@@ -75,8 +77,11 @@ export function MapPage({ query = '' }: { query?: string }) {
     ]).addTo(map);
     map.attributionControl.addAttribution(t('EŞİK · Sadeleştirilmiş Türkiye haritası', 'EŞİK · Simplified map of Türkiye'));
     const resize = new ResizeObserver(() => map.invalidateSize()); resize.observe(ref.current);
+    // A pinch or Ctrl + wheel zooms the map, not the page; a plain wheel scrolls on and says how to zoom.
+    let hintTimer = 0;
+    const unpinch = pinchZoom(map, ref.current, () => { setZoomHint(true); clearTimeout(hintTimer); hintTimer = window.setTimeout(() => setZoomHint(false), 1600); });
     setReady(true);
-    return () => { alive.current = false; resize.disconnect(); map.remove(); mapRef.current = null; userMarker.current = null; };
+    return () => { alive.current = false; unpinch(); clearTimeout(hintTimer); resize.disconnect(); map.remove(); mapRef.current = null; userMarker.current = null; };
   }, []);
   useEffect(() => {
     const map = mapRef.current;
@@ -212,6 +217,7 @@ export function MapPage({ query = '' }: { query?: string }) {
           <div ref={ref} className="interactive-map" role="region" aria-label={t('Türkiye miras haritası. Eserleri yanındaki listeden de seçebilirsin.', 'Heritage map of Türkiye. You can also choose the works from the list beside it.')} />
           <span className="mp-frame" aria-hidden="true"><i /><i /><i /><i /></span>
           {/* A surveyor's readout for the chosen work: its place in the collection and its (approximate) position. */}
+          <p className={`mp-zoom-hint ${zoomHint ? 'on' : ''}`} aria-hidden="true">{t('Haritayı yakınlaştırmak için Ctrl + kaydır ya da iki parmakla sıkıştır', 'To zoom the map, use Ctrl + scroll or pinch with two fingers')}</p>
           {grouped && <p className="mp-group-hint"><span aria-hidden="true">+</span>{t('Yakın eserler tek pinde birleşir. Sayılı pine dokun ya da yakınlaştır, ayrılsınlar.', 'Works close together share one pin. Tap a numbered pin or zoom in to part them.')}</p>}
           <p className="mp-hud" aria-hidden="true"><span>N° {pad(currentIndex + 1)} <i>/ {pad(artifacts.length)}</i></span>{current.coordinates && <span key={current.id}>{degrees(current.coordinates[0])}° {t('K', 'N')} · {degrees(current.coordinates[1])}° {t('D', 'E')}</span>}</p>
           <div className="selected-map-artifact" ref={card}>

@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ExternalLink } from 'lucide-react';
 import { mapZoom, osmLink, strings, type Lang, type PublicLocation } from './model';
+import { pinchZoom } from '../lib/mapZoom';
 
 // OpenStreetMap karoları: ücretsiz, anahtarsız. Atıf yazısı kullanım koşuludur, kaldırılmamalı.
 export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -28,7 +29,9 @@ export function MonumentMap({ location, name, lang }: { location: PublicLocation
     } else {
       L.circleMarker(center, { radius: 9, color: '#fff', weight: 3, fillColor: MAP_COLOR, fillOpacity: 1 }).bindTooltip(name).addTo(map);
     }
-    return () => { map.remove(); };
+    // site: a pinch or Ctrl + wheel zooms this map, not the page (lib/mapZoom.ts)
+    const unpinch = pinchZoom(map, box.current);
+    return () => { unpinch(); map.remove(); };
   }, [location.lat, location.lon, location.approximate, location.radius_m, name, s.mapApprox]);
   // site: harita ve notu çerçeveli tek bir kartta (eser sayfasının kart diliyle)
   return <section className="pv-section"><h2>{s.map}</h2>
