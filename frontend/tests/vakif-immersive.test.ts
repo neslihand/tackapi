@@ -76,11 +76,15 @@ test('Sayfanın üstüne ve kartın başına kitaptaki ilk görsel gelir; diğer
   assert.equal(heroImage([]), undefined);
 });
 
-test('Tarihçe yıla göre sıralanır ve yüzyıllara ayrılır; tarihsiz olay kitaptaki komşusunun yanında kalır', () => {
+test('Tarihçe yıla göre sıralanır ve yüzyıllara ayrılır; yılı olmayan olaya yüzyıl uydurulmaz, sonda ayrı durur', () => {
   const ev = (years: string | null, d: string) => ({ kind: 'other', years, date_text: null, date_text_hijri: null, basis: null, description_tr: d, person: null, page_start: null });
   const groups = historyByCentury([ev('[1388,1389)', 'yapım'), ev('[1955,1956)', 'restorasyon'), ev(null, 'onarım'), ev('[1920,1921)', 'işgal'), ev('[2010,2011)', 'bugün')]);
   assert.deepEqual(groups.map(g => [g.century, g.events.map(e => e.description_tr)]),
-    [[14, ['yapım']], [20, ['işgal', 'restorasyon', 'onarım']], [21, ['bugün']]]);
+    [[14, ['yapım']], [20, ['işgal', 'restorasyon']], [21, ['bugün']], [null, ['onarım']]]);
+  // Ayasofya (Orhan) Camii: kitap "Kanûnî döneminde" olan iki olayı 2011'den sonra sayar; XXI. yüzyıla düşmemeli
+  const ayasofya = historyByCentury([ev('[1331,1333)', 'camiye çevrildi'), ev('[2011,2012)', 'ibadete açıldı'), ev(null, 'Kanûnî döneminde onarım'), ev(null, 'Kanûnî döneminde yangın')]);
+  assert.deepEqual(ayasofya.map(g => [g.century, g.events.map(e => e.description_tr)]),
+    [[14, ['camiye çevrildi']], [21, ['ibadete açıldı']], [null, ['Kanûnî döneminde onarım', 'Kanûnî döneminde yangın']]]);
   assert.deepEqual(historyByCentury([ev(null, 'a'), ev(null, 'b')]).map(g => g.century), [null]);
   assert.equal(centuryLabel(14, 'tr'), 'XIV. yüzyıl');
   assert.equal(centuryLabel(19, 'tr'), 'XIX. yüzyıl');
