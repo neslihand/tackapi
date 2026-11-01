@@ -162,7 +162,7 @@ export function MapPage({ query = '' }: { query?: string }) {
     <Girih className="map-girih" />
     <div className="page-shell map-page">
       <header className="mp-head">
-        <p className="mp-index"><span>N° 01</span><i aria-hidden="true" />{t('Yakınımdaki miras', 'Heritage near me')} · {pad(mapped)} {t('durak', 'stops')}</p>
+        <p className="mp-index">{t('Yakınımdaki miras', 'Heritage near me')} · {pad(mapped)} {t('durak', 'stops')}</p>
         <h1 className="mp-title"><span className="mp-line"><span>{t('Bir sonraki hikâye', 'Where is the')}</span></span> <span className="mp-line"><em>{t('nerede?', 'next story?')}</em></span></h1>
         <p className="mp-lede">{t('Bir şehrin sokaklarında, yüzyılların izini bul. Haritada bir yıldıza dokun ya da dizinden bir eser seç.', 'Find the trace of centuries in a city’s streets. Tap a star on the map, or choose a work from the index.')}</p>
       </header>

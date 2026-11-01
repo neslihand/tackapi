@@ -3,7 +3,7 @@ import { ArrowUpRight, BookOpen, Check, CircleHelp, Puzzle, Stamp } from 'lucide
 import { useContent } from '../lib/contentStore';
 import { PLACEHOLDER_IMAGE } from '../lib/content';
 import { Link } from '../lib/navigation';
-import { t } from '../lib/i18n';
+import { locale, t } from '../lib/i18n';
 import { buildQuests, questRoutes, type Quest, type QuestStepKind } from '../lib/quests';
 import { answerableArtifacts } from '../lib/quiz';
 import { useProgress } from '../lib/store';
@@ -20,6 +20,9 @@ export function useQuests() {
 function QuestCard({ quest }: { quest: Quest }) {
   const next = quest.steps.find(step => !step.done);
   const { artifacts } = useContent();
+  const { progress } = useProgress();
+  // The day a stop was stamped into the passport, shown beside its finished step.
+  const stamped = (id: string) => progress.discovered[id] ? new Date(progress.discovered[id]).toLocaleDateString(locale(), { day: 'numeric', month: 'long' }) : '';
   // The route's stops, in order, as a strip of pictures across the top of the ticket.
   const stops = [...new Set(quest.steps.map(step => step.artifactId))].map(id => artifacts.find(a => a.id === id)).filter(a => a && a.image !== PLACEHOLDER_IMAGE);
   return <article className={`quest-card ${quest.complete ? 'complete' : ''}`} aria-labelledby={`quest-${quest.id}`}>
@@ -32,7 +35,7 @@ function QuestCard({ quest }: { quest: Quest }) {
       const Icon = step.done ? Check : stepIcon[step.kind];
       return <li key={i} className={step.done ? 'done' : ''}>
         <span className="quest-step-icon" aria-hidden="true"><Icon size={15} strokeWidth={step.done ? 3 : 1.8} /></span>
-        {step.done ? <span>{step.label}<span className="sr-only">: {t('tamamlandı', 'done')}</span></span> : <Link to={step.to}>{step.label}</Link>}
+        {step.done ? <span>{step.label}<span className="sr-only">: {t('tamamlandı', 'done')}</span>{step.kind === 'read' && stamped(step.artifactId) && <small className="quest-step-date"> · {stamped(step.artifactId)}</small>}</span> : <Link to={step.to}>{step.label}</Link>}
       </li>;
     })}</ol>
     {quest.complete ? <p className="quest-done"><Stamp size={17} aria-hidden="true" />{t('GÖREV TAMAMLANDI', 'QUEST COMPLETE')}</p>

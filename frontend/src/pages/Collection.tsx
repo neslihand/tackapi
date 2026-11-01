@@ -55,7 +55,7 @@ export function Achievements() {
   return <div className="treasury">
     <section className="treasury-hero" data-nav-theme="dark" aria-labelledby="medals-title">
       <div className="treasury-copy">
-        <p className="pl-kicker"><span>N° 04</span><i aria-hidden="true" />{t('Madalyonlar · Merakının hazinesi', 'Medallions · The treasury of your curiosity')}</p>
+        <p className="pl-kicker">{t('Madalyonlar · Merakının hazinesi', 'Medallions · The treasury of your curiosity')}</p>
         <h1 id="medals-title" className="treasury-title"><span>{t('Hikâyeler birikir.', 'Stories add up.')}</span><em>{t('İzleri sende kalır.', 'Their traces stay with you.')}</em></h1>
         <p className="treasury-intro">{t('Her madalyon, attığın bir adımın hatırası. Yeni bir hikâye keşfet, koleksiyonunu büyüt.', 'Every medallion is the memory of a step you took. Discover a new story and grow your collection.')}</p>
         <section className="medal-summary" aria-label={t('Koleksiyon özeti', 'Collection summary')}>
