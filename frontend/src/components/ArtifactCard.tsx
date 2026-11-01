@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowUpRight, Heart, MapPin } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
-import { PLACEHOLDER_IMAGE } from '../lib/content';
+import { known, PLACEHOLDER_IMAGE } from '../lib/content';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 import { useContent } from '../lib/contentStore';
@@ -22,7 +22,7 @@ export function ArtifactCard({ artifact, number, eager = false, variant = 'galle
     <span className="ex-card-no" aria-hidden="true">{number.replace(/\D+/g, '')}</span>
     <button type="button" className={`ex-favorite ${favorite ? 'on' : ''}`} onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite} aria-label={`${t('Favori', 'Favourite')}: ${artifact.name}`}><Heart size={18} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" /></button>
     <div className="ex-card-body">
-      <p className="ex-card-meta"><span><MapPin size={13} aria-hidden="true" />{artifact.city}</span><span>{artifact.year}</span></p>
+      <p className="ex-card-meta"><span><MapPin size={13} aria-hidden="true" />{artifact.city}</span>{known(artifact.year) && <span>{artifact.year}</span>}</p>
       <h3>{artifact.name}</h3>
       {compact ? <p className="ex-card-era">{artifact.period}</p> : <p className="ex-card-text">{artifact.description}</p>}
       <div className="ex-card-foot">{progress.discovered[artifact.id] ? <span className="ex-stamp"><span aria-hidden="true">✦</span> {t('Mühürlendi', 'Stamped')}</span> : !compact && <span>{number}</span>}<Link className="ex-card-cta" to={`/eser/${artifact.slug}`} aria-label={`${t('Hikâyeyi keşfet', 'Discover the story')}: ${artifact.name}`}><span>{t('Hikâyeyi keşfet', 'Discover the story')}</span><i aria-hidden="true"><ArrowUpRight size={15} /></i></Link></div>

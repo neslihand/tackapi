@@ -192,3 +192,7 @@
 .pv-back{top:130px}
 @media(max-width:760px){.pv-back{top:108px}}
 .pv-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:26px 6.2%;border-bottom:1px solid var(--line);background:var(--paper)}
+
+/* An English page's note that a section is recorded in Turkish only */
+.pv-tr-only{display:inline-block;margin-left:12px;padding:3px 10px;font-family:Inter,sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;color:#765b38;border:1px solid #c3a86980;border-radius:999px;background:#f6efe0}
+.pv-section>h2 .pv-tr-only{flex:none;margin-left:0}

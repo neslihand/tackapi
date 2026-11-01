@@ -75,7 +75,8 @@ export function HeroGallery({ slides, name, note, badge }: { slides: Slide[]; na
       </>}
       <button ref={expand} type="button" className="hg-button hg-expand" onClick={() => setOpen(true)} aria-label={t('Fotoğrafı büyüt', 'Enlarge the photo')}><Expand size={16} aria-hidden="true" /></button>
     </div>
-    <p className="hg-caption">{[note, slide.credit].filter(Boolean).join(' · ')}</p>
+    {/* The credit names a Turkish book: marked Turkish so its capitals keep their dotted İ on the English page. */}
+    <p className="hg-caption">{note}{note && slide.credit && ' · '}{slide.credit && <span lang="tr">{slide.credit}</span>}</p>
     <dialog ref={dialog} className="hg-lightbox" aria-label={slide.alt} onCancel={e => { e.preventDefault(); setOpen(false); }} onKeyDown={many ? keys : undefined}>
       {open && <figure><img src={slide.src} alt={slide.alt} /><figcaption>{[slide.alt, slide.credit].filter(Boolean).join(' · ')}{many && ` · ${index + 1} / ${slides.length}`}</figcaption></figure>}
       <button type="button" className="hg-lb-close" onClick={() => setOpen(false)} aria-label={t('Kapat', 'Close')}><X aria-hidden="true" /></button>

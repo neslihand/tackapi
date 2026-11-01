@@ -22,14 +22,14 @@ export function toImmersive(item: PublicItem, detail: PublicDetail): Artifact | 
     text: [artworkLabel(art.kind, 'tr'), art.script, art.artist, art.date_text, art.text_translation_tr].filter(Boolean).join(' · '),
   } : null;
   // A book scan names its book and page; a photo added in the panel names only its caption, if it has one.
-  const creditOf = (img: PublicImage) => img.source ? `${img.source.book}${img.source.page ? `, s. ${img.source.page}` : ''}` : img.caption ?? '';
+  const creditOf = (img: PublicImage) => img.source ? `${img.source.book}${img.source.page ? `, ${t('s.', 'p.')} ${img.source.page}` : ''}` : img.caption ?? '';
   const credit = hero ? creditOf(hero) : detail.source.book ?? t('Vakıf Katılım envanter kitabı', 'Vakıf Katılım inventory book');
   // All the photos for the card at the top: the chosen one first, then the others in the panel's order.
   const gallery = hero ? [hero, ...detail.images.filter(i => i !== hero)].map((img, i) => ({ src: img.src, alt: img.alt ?? t(`${item.name} fotoğrafı ${i + 1}`, `Photo ${i + 1} of ${item.name}`), credit: creditOf(img) })) : undefined;
   const [from, to] = detail.source.pages ?? [null, null];
   return {
     id: item.slug, slug: item.slug, name: item.name, city: item.city.name, period: item.period?.name ?? t('Dönemi belirtilmemiş', 'Era not given'),
-    category: item.kind_label, kind: item.kind, ...(item.period ? { periodSlug: item.period.slug } : {}), year: item.built.label ?? 'Bilinmiyor', architect: makers(item) ?? 'Bilinmiyor',
+    category: item.kind_label, kind: item.kind, ...(item.period ? { periodSlug: item.period.slug } : {}), year: item.built.label ?? t('Bilinmiyor', 'Unknown'), architect: makers(item) ?? t('Bilinmiyor', 'Unknown'),
     description: item.summary ?? '', coordinates: detail.location ? [detail.location.lat, detail.location.lon] : [39, 35],
     image: image.src, ...(image.alt ? { imageAlt: image.alt } : {}), ...(gallery ? { gallery } : {}),
     sourceReferences: [{ title: [detail.source.book, from ? `${t('s.', 'p.')} ${from}${to && to !== from ? `–${to}` : ''}` : null].filter(Boolean).join(', ') || t('Vakıf Katılım envanter kitabı', 'Vakıf Katılım inventory book') }],

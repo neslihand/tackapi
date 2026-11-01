@@ -21,6 +21,9 @@ export function collectionStats(artifacts: { city: string }[]) {
   return { works: artifacts.length, cities: cities.size };
 }
 
+// Backend records say "Bilinmiyor" (unknown) where a fact is missing; pages leave such a value out rather than show it.
+export const known = (value?: string | null) => Boolean(value && value.trim() && !/^(bilinmiyor|unknown)$/i.test(value.trim()));
+
 // An author's initials for their mark: the first and the last name, leaving out academic titles (Prof. Dr., Doç. Dr.,
 // Dr. Öğr. Üyesi, …). 'Dr. Öğr. Üyesi Doğan Yavaş' → 'DY', 'Berica Nevin Berberoğlu Şen' → 'BŞ'.
 const TITLE_WORDS = new Set(['üyesi', 'görevlisi']);

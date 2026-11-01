@@ -20,10 +20,9 @@ import { BriefChapter, BriefNarration, CineChapter, Hotspot, pad, shot, StoryRea
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
 import { HeroGallery } from '../components/HeroGallery';
-import { known } from '../components/ArtifactAnatomy';
 import { chatEndpoint } from '../lib/chatApi';
 import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
-import { monogram } from '../lib/content';
+import { known, monogram } from '../lib/content';
 import { track } from '../lib/analytics';
 // Loaded on demand: its map (Leaflet) needs a browser window and the demo pages do not use it.
 const VakifStory = lazy(() => import('../vakif/VakifStory').then(m => ({ default: m.VakifStory })));

@@ -76,6 +76,12 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
   const [artZoom, setArtZoom] = useState<{ images: PublicImage[]; index: number } | null>(null);
   const artTitle = (a: Card['artworks'][number]) => [a.element, a.technique].filter(Boolean).join(' · ') || artworkLabel(a.kind, lang);
   const artworksWithPhotos = c.artworks.filter(a => a.images?.length);
+  // The inventory books record the history, decoration and today's state in Turkish only: in English these sections
+  // say so, and their text is marked Turkish so a screen reader reads it with Turkish sounds.
+  const inTurkish = lang === 'en' ? 'tr' : undefined, pageLang = lang === 'en' ? 'en' : undefined;
+  // The Hijri date under an event's date: written once with its "H.", and left out when the date already gives it.
+  const hijri = (e: Card['events'][number]) => { const h = e.date_text_hijri?.trim(); if (!h) return ''; const text = /^H\.?\s/i.test(h) ? h : `H. ${h}`; return e.date_text?.includes(text) ? '' : text; };
+  const trOnly = s.trOnly ? <span className="pv-tr-only">{s.trOnly}</span> : null;
   return <>
       {gallery && detail.images.length > 1 && <section className="pv-section"><h2>{s.gallery}</h2>
         <div className="pv-gallery">{detail.images.map((img, i) => <button key={img.src} onClick={() => { setZoom(i); track('photo_open', item.slug); }} aria-label={img.alt ?? `${s.gallery} ${i + 1}`}>
@@ -83,36 +89,36 @@ export function MonumentSections({ item, detail, lang, gallery = true }: { item:
         </button>)}</div></section>}
 
       {/* Tarihçe: yüzyıllara ayrılmış, kronolojik bir zaman çizgisi; solda tarih, ortada altın çizgi, sağda olay kartı */}
-      {c.events.length > 0 && <section className="pv-section pv-history" aria-labelledby="pv-history-title"><h2 id="pv-history-title">{s.timeline}</h2>
-        <ol className="pv-chrono">{historyByCentury(c.events).map((g, gi) => <li key={gi} className="pv-era">
-          <p className="pv-era-label"><span>{centuryLabel(g.century, lang)}</span></p>
+      {c.events.length > 0 && <section className="pv-section pv-history" aria-labelledby="pv-history-title"><h2 id="pv-history-title">{s.timeline}{trOnly}</h2>
+        <ol className="pv-chrono" lang={inTurkish}>{historyByCentury(c.events).map((g, gi) => <li key={gi} className="pv-era">
+          <p className="pv-era-label" lang={pageLang}><span>{centuryLabel(g.century, lang)}</span></p>
           <ol>{g.events.map((e, i) => <li key={i} className="pv-event">
-            <p className="pv-event-date"><b>{e.date_text || rangeText(e.years) || (lang === 'en' ? 'Undated' : 'Tarihsiz')}</b>{e.date_text_hijri && <small>H. {e.date_text_hijri}</small>}</p>
+            <p className="pv-event-date"><b>{e.date_text || rangeText(e.years) || (lang === 'en' ? 'Undated' : 'Tarihsiz')}</b>{hijri(e) && <small>{hijri(e)}</small>}</p>
             <span className="pv-event-dot" aria-hidden="true" />
-            <div className="pv-event-card"><small className="pv-event-kind">{eventLabel(e.kind, lang)}</small><p>{e.description_tr}</p>{e.person && <p className="pv-event-person">{e.person}</p>}</div>
+            <div className="pv-event-card"><small className="pv-event-kind" lang={pageLang}>{eventLabel(e.kind, lang)}</small><p>{e.description_tr}</p>{e.person && <p className="pv-event-person">{e.person}</p>}</div>
           </li>)}</ol>
         </li>)}</ol>
       </section>}
 
       {/* yalnızca fotoğrafı olan süsleme kayıtları gösterilir; hiçbirinin fotoğrafı yoksa bölüm de yok */}
-      {artworksWithPhotos.length > 0 && <section className="pv-section"><h2>{s.artworks}</h2>
-        <div className="pv-art-grid">{artworksWithPhotos.map((a, i) => <figure key={i} className="pv-art-card">
+      {artworksWithPhotos.length > 0 && <section className="pv-section"><h2>{s.artworks}{trOnly}</h2>
+        <div className="pv-art-grid" lang={inTurkish}>{artworksWithPhotos.map((a, i) => <figure key={i} className="pv-art-card">
           <button onClick={() => setArtZoom({ images: a.images, index: 0 })} aria-label={`${artTitle(a)}: ${s.gallery}`}>
             <img src={a.images[0].thumb} alt={a.images[0].alt ?? ''} loading="lazy" />
             {a.images.length > 1 && <span className="pv-art-count">+{a.images.length - 1}</span>}
             {a.images[0].review_status && a.images[0].review_status !== 'published' && <span className="pv-pending">{s.pending}</span>}</button>
-          <figcaption><small>{artworkLabel(a.kind, lang)}</small><strong>{artTitle(a)}</strong>
+          <figcaption><small lang={pageLang}>{artworkLabel(a.kind, lang)}</small><strong>{artTitle(a)}</strong>
             {(a.script || a.artist || a.date_text) && <span>{[a.script, a.artist, a.date_text].filter(Boolean).join(' · ')}</span>}</figcaption>
         </figure>)}</div></section>}
 
       {(c.parent || c.children.length > 0) && <section className="pv-section">
         {c.parent && <p className="pv-relation">{s.partOf}: <strong>{c.parent}</strong></p>}
-        {c.children.length > 0 && <><h2>{s.children}</h2><ul className="pv-list">{c.children.map(ch => <li key={ch.name_tr}><strong>{ch.name_tr}</strong></li>)}</ul></>}
+        {c.children.length > 0 && <><h2>{s.children}</h2><ul className="pv-list" lang={inTurkish}>{c.children.map(ch => <li key={ch.name_tr}><strong>{ch.name_tr}</strong></li>)}</ul></>}
       </section>}
 
       {detail.location && <MonumentMap location={detail.location} name={item.name} lang={lang} />}
 
-      {c.current_state && <section className="pv-section pv-visit"><span className="pv-visit-icon" aria-hidden="true"><MapPin size={18} /></span><p><strong>{s.today}:</strong> {c.current_state}</p></section>}
+      {c.current_state && <section className="pv-section pv-visit"><span className="pv-visit-icon" aria-hidden="true"><MapPin size={18} /></span><p><strong>{s.today}:</strong> <span lang={inTurkish}>{c.current_state}</span>{trOnly}</p></section>}
     {zoom !== null && <Lightbox images={detail.images} index={zoom} lang={lang} onIndex={setZoom} onClose={() => setZoom(null)} />}
     {artZoom && <Lightbox images={artZoom.images} index={artZoom.index} lang={lang} onIndex={i => setArtZoom({ ...artZoom, index: i })} onClose={() => setArtZoom(null)} />}
   </>;

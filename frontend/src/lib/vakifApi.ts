@@ -34,9 +34,9 @@ const items = new Map<string, VakifItem>();
 export const vakifItem = (slug: string) => items.get(slug);
 
 export function sourceTitle(source: VakifItem['source']): string {
-  const book = source.book?.trim() || 'Vakıf Katılım şehir envanteri';
+  const book = source.book?.trim() || t('Vakıf Katılım şehir envanteri', 'Vakıf Katılım city inventory');
   const [from, to] = source.pages ?? [null, null];
-  return from ? `${book}, s. ${from}${to && to !== from ? `–${to}` : ''}` : book;
+  return from ? `${book}, ${t('s.', 'p.')} ${from}${to && to !== from ? `–${to}` : ''}` : book;
 }
 
 /** "MİMAR / USTA": the architects, otherwise the builders (master craftsmen); never the patron. */
@@ -116,7 +116,7 @@ export function fromVakifChat(data: unknown): { answer: string; sources: { title
   if (typeof data !== 'object' || data === null || typeof (data as { answer?: unknown }).answer !== 'string') return null;
   const { answer, sources } = data as { answer: string; sources?: { book?: string; pages?: string }[] };
   // rag.fmt_pages already writes 's. 75–76'; a bare range gets the prefix
-  const pages = (p?: string) => p && (/^s\.\s/.test(p) ? p : `s. ${p}`);
+  const pages = (p?: string) => p && (/^s\.\s/.test(p) ? (currentLang() === 'en' ? p.replace(/^s\./, 'p.') : p) : `${t('s.', 'p.')} ${p}`);
   const titles = [...new Set((Array.isArray(sources) ? sources : []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
   return { answer: stripCitations(answer), sources: titles.map(title => ({ title })) };
 }
