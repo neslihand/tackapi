@@ -207,3 +207,33 @@
 @media (forced-colors: active) {
   .chapter-content, .story-page .story-stage, .next-story, .story-end .story-finish, .summary-scene .artifact-summary-content { border: 1px solid CanvasText; filter: none; }
 }
+
+/* ——— P17: more room to read on a work's page ———
+   The bar slides away while the reader goes down (App.tsx adds .nav-tucked) and the reading toolbar takes its place at
+   the top; the toolbar itself is slimmer, and on a short screen its label keeps only its icon. */
+.navigation { transition: background .3s, color .3s, height .3s, translate .45s cubic-bezier(.2, .7, .2, 1); }
+.navigation.nav-tucked { translate: 0 -100%; }
+.story-tools { transition: top .45s cubic-bezier(.2, .7, .2, 1); }
+html.nav-tucked .story-tools { top: 0; }
+.story-page .story-tools { padding-top: 9px; padding-bottom: 9px; }
+@media (max-height: 760px) {
+  .story-tools > div:first-child > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+/* the key facts under the title: a small label before a value that needs one (the architect) */
+.story-hero-tags li small { margin-right: 4px; font-family: Inter, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #d4bf9d; }
+@media (prefers-reduced-motion: reduce) { .navigation, .story-tools { transition: none; } }
+
+/* ——— The opening fits the screen: a title that shrinks with the screen's height, slimmer facts and spacing, and the
+   summary held to four lines with "Devamını oku" for the rest ——— */
+@media (min-width: 801px) {
+  .story-page .story-hero { padding-top: 112px; padding-bottom: 32px; }
+  .story-page .story-hero > .back-link { margin-bottom: 8px; }
+  .story-page .story-hero-head h1 { margin: 14px 0 16px; font-size: clamp(36px, min(4.6vw, 8.2svh), 84px); line-height: 1.04; }
+  .story-page .story-hero-tags { margin-bottom: 18px; gap: 8px; }
+  .story-page .story-hero-tags li { padding: 4px 12px; font-size: 16px; }
+}
+.story-page .story-hero-lede > p { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; font-size: 15.5px; line-height: 1.75; }
+.story-page .story-hero-lede > p.open { display: block; overflow: visible; }
+.story-hero-more { margin-top: 8px; padding: 6px 0; min-height: 36px; font-size: 13px; font-weight: 600; letter-spacing: .06em; color: #e6d5ae; text-decoration: underline; text-decoration-color: #e6d5ae66; text-underline-offset: 4px; }
+.story-hero-more:hover { text-decoration-color: #e6d5ae; }
+

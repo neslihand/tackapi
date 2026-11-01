@@ -6,9 +6,9 @@
 .story-hero-image { transform-origin: calc(var(--fx) * 1%) calc(var(--fy) * 1%); will-change: transform; }
 .story-curtain > .story-body::before { background: var(--edge-a, #fbf9f3); }
 .story-curtain > .story-body::after { background: var(--edge-b, #f0ece4); }
-.story-page.mode-story { --edge-a: #1b2b25; --edge-b: #06110d; }
-.story-page.mode-child { --edge-a: #fbf9f3; --edge-b: #f4f1eb; }
-.story-page.mode-short { --edge-a: #fbf9f3; --edge-b: #f4f1eb; }
+.story-page.mode-story { --edge-a: #06110d; --edge-b: #06110d; }
+.story-page.mode-child { --edge-a: #f7f2e8; --edge-b: #f4f1eb; }
+.story-page.mode-short { --edge-a: #f4f1eb; --edge-b: #f4f1eb; }
 .mode-story .story-body { color: #ece6d9; background: #06110d; }
 .mode-child .story-body { background: radial-gradient(ellipse 70% 40% at 20% 0, #fbf9f3, transparent 70%), linear-gradient(180deg, #f4f1eb, #eee8db 60%, #f4f1eb); }
 .mode-short .story-body { background: #f4f1eb; }
@@ -412,3 +412,9 @@
   .kr-page, .kr-sticker, .kr-stars span { transition: none; }
   .kr-page.now, .kr-page:nth-child(even).now, .kr-page.now .kr-sticker { transform: none; }
 }
+
+/* ——— The reading rises over the opening as a page with rounded top corners and a fine gold line along its top edge
+   (instead of a torn paper edge); the line follows the corners, above the reading toolbar ——— */
+.story-curtain > .story-body { overflow: clip; border-top: 1px solid #c3a86980; border-radius: 36px 36px 0 0; box-shadow: 0 -18px 40px -24px #c3a86933, 0 -30px 60px -30px #000c; }
+.story-curtain > .story-body::before, .story-curtain > .story-body::after { content: none; }
+@media (max-width: 800px) { .story-curtain > .story-body { border-radius: 24px 24px 0 0; } }

@@ -1,4 +1,4 @@
-import { lazy, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { lazy, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowLeft, ArrowUpRight, BookOpen, Check, Heart, MapPin, Puzzle, Sparkles, Stamp, Volume2, VolumeX } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -20,6 +20,7 @@ import { BriefChapter, BriefNarration, CineChapter, Hotspot, pad, shot, StoryRea
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
 import { HeroGallery } from '../components/HeroGallery';
+import { known } from '../components/ArtifactAnatomy';
 import { chatEndpoint } from '../lib/chatApi';
 import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
 import { monogram } from '../lib/content';
@@ -42,6 +43,18 @@ function Stage({ artifact, chapter, detail, setDetail, whole = false }: { artifa
     {(whole || chapter === 2) && artifact.detail.title && <Hotspot artifact={artifact} detail={detail} setDetail={setDetail} className="stage-hotspot" />}
     <div className="stage-caption"><small>{artifact.city} · {artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM', 'ORIGINAL ARCHITECTURAL INTERPRETATION')}</small><strong>{whole ? artifact.name : artifact.chapters[chapter]?.title}</strong></div>
   </aside>;
+}
+
+// The work's summary in the opening: four lines, so the opening fits the screen, and the rest on request.
+function Lede({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = useState(false);
+  const [long, setLong] = useState(false);
+  useLayoutEffect(() => { const p = ref.current; if (p && !open) setLong(p.scrollHeight > p.clientHeight + 2); }, [text, open]);
+  return <>
+    <p ref={ref} id="hero-lede" className={open ? 'open' : ''}>{text}</p>
+    {(long || open) && <button type="button" className="story-hero-more" aria-expanded={open} aria-controls="hero-lede" onClick={() => setOpen(!open)}>{open ? t('Daha az göster', 'Show less') : t('Devamını oku', 'Read more')}</button>}
+  </>;
 }
 
 export function Story({ artifact }: { artifact: DiscoveryArtifact }) {
@@ -210,10 +223,15 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
     {/* The opening: the words on the left, the work's photos in an arched card on the right (under the title on a phone).
         The photos stay in the card; the background is the site's own night green, the same on every work. */}
     <section className="story-hero" data-nav-theme="dark" style={{ '--fx': fx, '--fy': fy } as CSSProperties} onFocus={revealHero}><Link className="back-link" to="/kesfet"><ArrowLeft size={17} aria-hidden="true" /> {t('Koleksiyona dön', 'Back to the collection')}</Link>
-      <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}><li><MapPin size={14} aria-hidden="true" />{artifact.city}</li><li>{artifact.year}</li><li>{t('ESER', 'WORK')} {pad(position + 1)}</li></ul></div>
+      <div className="story-hero-head"><p className="story-hero-period">{artifact.period}</p><h1 aria-label={artifact.name}>{words.map((word, i) => <span className="word" key={i} aria-hidden="true"><span>{word}</span></span>)}</h1><ul className="story-hero-tags" aria-label={t('Eser künyesi', 'Key facts')}>
+        <li><MapPin size={14} aria-hidden="true" /><span className="sr-only">{t('Şehir', 'City')}: </span>{artifact.city}</li>
+        {known(artifact.category) && <li><span className="sr-only">{t('Tür', 'Type')}: </span>{artifact.category}</li>}
+        {known(artifact.year) && <li><span className="sr-only">{t('Tarih', 'Date')}: </span>{artifact.year}</li>}
+        {known(artifact.architect) && <li><small>{t('Mimar / usta', 'Architect / master')}</small>{artifact.architect}</li>}
+      </ul></div>
       <HeroGallery slides={slides} name={artifact.name} note={artifact.origin ? t('FOTOĞRAF', 'PHOTO') : t('ÖZGÜN MİMARİ YORUM · FOTOĞRAF DEĞİLDİR', 'ORIGINAL ARCHITECTURAL INTERPRETATION · NOT A PHOTOGRAPH')}
         badge={stamped ? <span className="ex-stamp story-hero-stamp">{t('MÜHÜRLENDİ', 'STAMPED')}<span className="ex-seal" aria-hidden="true">✦</span></span> : undefined} />
-      <div className="story-hero-lede"><p>{artifact.description}</p></div>
+      <div className="story-hero-lede"><Lede text={artifact.description} /></div>
       {!whole && <ol className="story-hero-chapters" aria-label={t('Hikâyenin bölümleri', 'The story’s chapters')}>{artifact.chapters.map((c, i) => <li key={i}><i>{pad(i + 1)}</i>{c.title}</li>)}</ol>}</section>
     <div className="story-body" data-nav-theme={mode === 'story' ? 'dark' : 'light'}>
       <Girih className="story-girih" />
