@@ -5,7 +5,9 @@ import type { IconName } from '@/components/UI';
 import { t, useLang } from '@/lib/i18n';
 import { colors, serif } from '@/lib/theme';
 
-const icon = (name: IconName) => ({ color, size }: { color: ColorValue; size: number }) => <Ionicons name={name} size={size} color={typeof color === 'string' ? color : undefined} />;
+const icon = (name: IconName) => function TabIcon({ color, size }: { color: ColorValue; size: number }) {
+  return <Ionicons name={name} size={size} color={typeof color === 'string' ? color : undefined} />;
+};
 
 export default function TabsLayout() {
   useLang();
