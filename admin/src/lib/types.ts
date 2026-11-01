@@ -12,7 +12,7 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
 export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
-  segmentation_pending: number; contributions_pending?: number; agent_open?: number; articles_pending?: number; terms_pending?: number;
+  segmentation_pending: number; contributions_pending?: number; agent_open?: number; articles_pending?: number; terms_pending?: number; questions_pending?: number;
   // MVP pilot seçkisi: şehir başına seçilen eser ve hedef (009 göçü yoksa boş)
   pilot?: { city: string; n: number; target: number | null }[] };
 
@@ -25,7 +25,7 @@ export type MonumentRow = {
 export type AdminImage = {
   id: number; file: string; source: 'book' | 'upload'; review_status: ImageStatus; is_cover: boolean; sort: number;
   alt_tr: string | null; alt_en?: string | null; caption_tr: string | null; printed_page: number | null; pdf_page: number | null;
-  match_method: string | null; edited: boolean; width: number | null; height: number | null;
+  match_method: string | null; edited: boolean; width: number | null; height: number | null; reuse_allowed?: boolean;
   // yalnızca kuyrukta (/images) gelenler
   src?: string; thumb?: string; section_title?: string | null; monument?: string | null; monument_name?: string | null;
   book?: string | null; book_title?: string | null;
@@ -81,12 +81,15 @@ export type DecisionResult = { slug: string; para_no: number; before: ParaDecisi
 // Keşif rotası (sitede "Keşif Sezonları"): panelde yazılır; durakları sıralı eserlerdir
 export type RouteStop = { slug: string; name_tr: string; city: string; review_status: string; pilot: boolean };
 export type AdminRoute = { id: number; slug: string; title: string; kicker: string | null; description: string | null; sort: number;
-  published: boolean; created_by: string | null; updated_at: string | null; stops: RouteStop[] };
+  published: boolean; created_by: string | null; updated_at: string | null; stops: RouteStop[]; minutes: number | null; access_note: string | null };
 export type AutoRoute = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
 
 // Bilgi yarışması sorusu (sitede "Tarihin İzinde"): panelde yazılır, bir esere bağlıdır
 export type QuizQuestion = { id: number; question: string; options: string[]; answer: number; explanation: string; published: boolean;
   created_by: string | null; updated_at: string | null; monument: string; monument_name: string; city: string; review_status: string; pilot: boolean };
+export type Hunt = { id: number; day: string; question: string; options: string[]; answer: number; hints: string[]; explanation: string; rights_confirmed: boolean; published: boolean;
+  created_by: string | null; updated_at: string | null; image: number; image_file: string; image_status: string; monument: string; monument_name: string; review_status: string };
+export type HuntFields = { day?: string; monument?: string; image?: number; question?: string; options?: string[]; answer?: number; hints?: string[]; explanation?: string; rights_confirmed?: boolean; published?: boolean };
 export type QuizFields = { monument?: string; question?: string; options?: string[]; answer?: number; explanation?: string; published?: boolean };
 
 // Ziyaretçi katkısı (fotoğraf ya da metin); panelde onaylanır, sitede kitap bilgisinden ayrı görünür
@@ -100,11 +103,17 @@ export type Contribution = { id: number; kind: 'photo' | 'text'; text_kind: 'mem
 export type Count2 = { value: string; n: number };
 export type SegmentRow = { id: string; name: string; description: string; visitors: number; any: number; modes: Record<string, number> };
 export type Suggestion = { kind: 'gap' | 'drop' | 'question' | 'search' | 'segment'; slug: string | null; title: string; detail: string; action: string };
-export type SiteSettings = { default_mode: string; featured_route: string | null };
+export type MedalTiers = { read: number[]; onsite: number[]; recall: number[]; city_read: number[]; master_onsite: number };
+export type SiteSettings = { default_mode: string; featured_route: string | null; medal_tiers: MedalTiers; app_flags: Record<string, boolean> };
 export type Insights = {
   days: number; demo: boolean;
   totals: { visitors: number; events: number; registered: number; active_users: number; demo_events: number; views_per_visitor: number };
   daily: { day: string; visitors: number; events: number }[];
+  wmhe: { week: string; explorers: number; mobile: number; stories: number; onsite: number; recalled: number; routes: number; contributions: number }[];
+  cohorts: { week: string; people: number; activated: number; meaningful_7d: number; d1_of: number; d1: number; d7_of: number; d7: number; d30_of: number; d30: number; weeks_of: number; two_of_four: number }[];
+  kpis: { stories_started: number; stories_completed: number; long_recalls: number; long_recalls_right: number; routes_started: number; routes_completed: number; onsite_people: number; active_people: number;
+    shares: number; shares_opened: number; offline_packages: number; notification_opt_outs: number; api_errors: number };
+  platforms: { platform: string; visitors: number; events: number }[];
   monuments: { slug: string; name_tr: string; city: string; visitors: number; questions: number; stamps: number; favorites: number;
     avg_seconds: number | null; deep: number }[];
   modes: { mode: string; label: string; n: number }[];
@@ -119,7 +128,15 @@ export type Insights = {
 };
 
 export type City = { slug: string; name_tr: string; name_en: string; lat: number | null; lon: number | null; monuments: number };
-export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number };
+export type Book = { slug: string; title: string; city: string | null; images_draft: number; images: number; images_reuse: number };
+export type WorkDetailKind = 'why' | 'look' | 'today';
+export type WorkDetail = { kind: WorkDetailKind; body_tr: string; body_en: string | null; source: string; published: boolean; created_by: string | null; updated_at: string | null };
+export type WeeklyItem = { id: number; week: string; hook: string; detail: string; source: string; route: string | null; published: boolean; created_by: string | null; updated_at: string | null;
+  monument: string; monument_name: string; review_status: string; pilot: boolean };
+export type WeeklyFields = { week?: string; monument?: string; hook?: string; detail?: string; source?: string; route?: string | null; published?: boolean };
+export type QuestionStatus = 'submitted' | 'researching' | 'answered' | 'unresolved' | 'rejected';
+export type QuestionRow = { id: number; question: string; lang: string; status: QuestionStatus; answer: string | null; answer_source: string | null; note: string | null; reviewed_by: string | null;
+  created_at: string; answered_at: string | null; monument: string; monument_name: string; followers: number };
 export type Period = { slug: string; name_tr: string; parent: string | null; city: string | null; start: number; end: number };
 export type LogRow = { at: string; actor: string; action: string; target: string; detail: Record<string, unknown> };
 

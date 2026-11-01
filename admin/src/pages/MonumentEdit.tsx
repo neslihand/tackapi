@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { ArrowRightLeft, Ban, Check, Eye, EyeOff, ImagePlus, Rocket, RotateCcw, Save, Scissors, Star, Trash2, X } from 'lucide-react';
+import { ArrowRightLeft, Ban, Check, Copyright, Eye, EyeOff, ImagePlus, Rocket, RotateCcw, Save, Scissors, Star, Trash2, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { BASIS_LABELS, changedFields, DECISION_LABELS, decisionMessage, fieldsFromForm, formatDate, formFromDetail, geoStatus, KIND_LABELS, methodLabel, monumentIssues, RULE_LABELS, STATE_LABELS, toNumber, type MonumentForm } from '../lib/format';
 import { ParagraphActions, SplitForm, type Split } from '../components/ParagraphActions';
@@ -11,6 +11,7 @@ import { Field, Issues, PageHead, Status, useLoad, useToast } from '../component
 import { MonumentPicker } from '../components/MonumentPicker';
 import { PagePhotos } from '../components/PagePhotos';
 import { LocationPicker } from '../components/LocationPicker';
+import { WorkDetails } from '../components/WorkDetails';
 
 export function MonumentEdit({ slug }: { slug: string }) {
   const detail = useLoad(() => api.monument(slug), [slug]);
@@ -25,6 +26,7 @@ export function MonumentEdit({ slug }: { slug: string }) {
     </PageHead>
     <DetailsForm d={d} onSaved={detail.reload} />
     <TextSection d={d} onSaved={detail.reload} />
+    <WorkDetails slug={d.slug} />
     <Gallery d={d} onChange={detail.reload} />
     <PagePhotos d={d} onChange={detail.reload} />
     {d.artworks?.length > 0 && <ArtworkPhotos d={d} onChange={detail.reload} />}
@@ -362,6 +364,7 @@ function GalleryCard({ img, busy, run }: { img: AdminImage; busy: boolean; run: 
       {img.review_status !== 'published' && <button className="button gold small" disabled={busy} onClick={() => run('Fotoğraf yayına alındı', () => api.updateImage(img.id, { review_status: 'published' }))}><Check size={14} /> Onayla</button>}
       {img.review_status === 'published' && !img.is_cover && <button className="button line small" disabled={busy} onClick={() => run('Kapak fotoğrafı değişti', () => api.updateImage(img.id, { is_cover: true }))}><Star size={14} /> Kapak yap</button>}
       {img.review_status === 'published' && <button className="button line small" disabled={busy} onClick={() => run('Fotoğraf taslağa alındı', () => api.updateImage(img.id, { review_status: 'draft' }))}><RotateCcw size={14} /> Taslağa al</button>}
+      <button className="button line small" disabled={busy} title="Telefonda çevrimdışı pakete girmesi ve paylaşım kartına basılması" onClick={() => run(img.reuse_allowed ? 'Çevrimdışı ve kart izni kaldırıldı' : 'Çevrimdışı ve kart izni verildi', () => api.updateImage(img.id, { reuse_allowed: !img.reuse_allowed }))}><Copyright size={14} /> {img.reuse_allowed ? 'İzni kaldır' : 'İzin var'}</button>
       {img.source === 'upload'
         ? <button className="button danger small" disabled={busy} onClick={() => confirm('Bu fotoğraf kalıcı olarak silinsin mi?') && run('Fotoğraf silindi', () => api.deleteImage(img.id))}><Trash2 size={14} /> Sil</button>
         : <button className="button danger small" disabled={busy} onClick={() => run('Fotoğraf atıldı', () => api.updateImage(img.id, { review_status: 'rejected' }))}><Ban size={14} /> At</button>}

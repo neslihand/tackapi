@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { BarChart3, BookA, Building2, CalendarDays, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareHeart, Newspaper, Plus, Route, ScanSearch, Sparkles, SplitSquareVertical } from 'lucide-react';
+import { BarChart3, BookA, Building2, CalendarDays, CalendarRange, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageCircleQuestion, MessageSquareHeart, Newspaper, Plus, Route, ScanSearch, Search, Sparkles, SplitSquareVertical } from 'lucide-react';
 import { api, getToken, handleUnauthorized, setToken } from './lib/api';
 import { Link, useRoute } from './lib/navigation';
 import { Brand, ToastProvider } from './components/UI';
@@ -16,6 +16,9 @@ import { Segmentation } from './pages/Segmentation';
 import { VisualSearchPage } from './pages/VisualSearchPage';
 import { RoutesPage } from './pages/Routes';
 import { QuizPage } from './pages/Quiz';
+import { HuntsPage } from './pages/Hunts';
+import { QuestionsPage } from './pages/Questions';
+import { WeeklyPage } from './pages/Weekly';
 import { ContributionsPage } from './pages/Contributions';
 import { InsightsPage } from './pages/Insights';
 import { AssistantPage } from './pages/Assistant';
@@ -32,11 +35,11 @@ const NAV: [string, string, ReactNode][] = [
   ['/fotograflar', 'Fotoğraflar', <Images size={17} />],
   ['/eserler', 'Eserler', <Building2 size={17} />], ['/bolumleme', 'Bölümleme', <SplitSquareVertical size={17} />], ['/yeni-eser', 'Yeni eser', <Plus size={17} />],
   ['/gorsel-arama', 'Görselle arama', <ScanSearch size={17} />], ['/rotalar', 'Keşif rotaları', <Route size={17} />], ['/gundem', 'Gündem', <Megaphone size={17} />], ['/takvim', 'Takvim', <CalendarDays size={17} />],
-  ['/sorular', 'Yarışma soruları', <CircleHelp size={17} />],
+  ['/sorular', 'Yarışma soruları', <CircleHelp size={17} />], ['/detay-avi', 'Detay Avı', <Search size={17} />], ['/haftanin-kesfi', 'Haftanın Keşfi', <CalendarRange size={17} />], ['/bekleyen-sorular', 'Bekleyen sorular', <MessageCircleQuestion size={17} />],
   ['/sehirler', 'Şehirler', <MapPinned size={17} />], ['/kayit', 'Değişiklik kaydı', <History size={17} />],
 ];
 
-type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number } | null;
+type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number; questions: number } | null;
 
 function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void; pending: Pending }) {
   const { path, params } = useRoute();
@@ -53,6 +56,9 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (path === '/gorsel-arama') page = <VisualSearchPage />;
   else if (path === '/rotalar') page = <RoutesPage />;
   else if (path === '/sorular') page = <QuizPage />;
+  else if (path === '/detay-avi') page = <HuntsPage />;
+  else if (path === '/haftanin-kesfi') page = <WeeklyPage />;
+  else if (path === '/bekleyen-sorular') page = <QuestionsPage />;
   else if (path === '/katkilar') page = <ContributionsPage params={params} />;
   else if (path === '/analitik') page = <InsightsPage />;
   else if (path === '/asistan') page = <AssistantPage params={params} />;
@@ -67,7 +73,7 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   return <div className="shell">
     <a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>İçeriğe geç</a>
     <aside className="sidebar"><Brand />
-      <nav aria-label="Yönetim menüsü">{NAV.map(([to, label, icon]) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>{icon}{label}{to === '/fotograflar' && pending?.images ? <b title="Kontrol bekleyen fotoğraf">{pending.images}</b> : null}{to === '/bolumleme' && pending?.segmentation ? <b title="Bakılacak paragraf">{pending.segmentation}</b> : null}{to === '/katkilar' && pending?.contributions ? <b title="Onay bekleyen katkı">{pending.contributions}</b> : null}{to === '/asistan' && pending?.agent ? <b title="Asistanın açık önerisi">{pending.agent}</b> : null}{to === '/makaleler' && pending?.articles ? <b title="Onay bekleyen makale">{pending.articles}</b> : null}{to === '/terimler' && pending?.terms ? <b title="Onay bekleyen terim önerisi">{pending.terms}</b> : null}</Link>)}</nav>
+      <nav aria-label="Yönetim menüsü">{NAV.map(([to, label, icon]) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>{icon}{label}{to === '/fotograflar' && pending?.images ? <b title="Kontrol bekleyen fotoğraf">{pending.images}</b> : null}{to === '/bolumleme' && pending?.segmentation ? <b title="Bakılacak paragraf">{pending.segmentation}</b> : null}{to === '/katkilar' && pending?.contributions ? <b title="Onay bekleyen katkı">{pending.contributions}</b> : null}{to === '/asistan' && pending?.agent ? <b title="Asistanın açık önerisi">{pending.agent}</b> : null}{to === '/makaleler' && pending?.articles ? <b title="Onay bekleyen makale">{pending.articles}</b> : null}{to === '/terimler' && pending?.terms ? <b title="Onay bekleyen terim önerisi">{pending.terms}</b> : null}{to === '/bekleyen-sorular' && pending?.questions ? <b title="Cevap bekleyen soru">{pending.questions}</b> : null}</Link>)}</nav>
       <div className="sidebar-foot"><span>Giriş: <strong>{user}</strong></span><button onClick={onLogout}><LogOut size={15} /> Çıkış yap</button></div>
     </aside>
     <main id="main" tabIndex={-1} className="content">{page}</main>
@@ -89,7 +95,7 @@ export function App() {
     if (!user) return;
     api.stats().then(s => setPending({ images: s.images.find(c => c.review_status === 'draft')?.n ?? 0,
       segmentation: s.segmentation_pending ?? 0, contributions: s.contributions_pending ?? 0, agent: s.agent_open ?? 0,
-      articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0 })).catch(() => {});
+      articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0, questions: s.questions_pending ?? 0 })).catch(() => {});
   }, [user, path]);
   useEffect(() => { document.title = 'EŞİK — Yönetim Paneli'; }, []);
   if (checking) return <div className="login" role="status"><p style={{ color: '#f4efe5' }}>Oturum denetleniyor…</p></div>;

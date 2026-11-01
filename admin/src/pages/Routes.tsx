@@ -5,6 +5,8 @@ import type { AdminRoute, RouteStop } from '../lib/types';
 import { Field, Issues, PageHead, Status, useLoad, useToast } from '../components/UI';
 import { MonumentPicker } from '../components/MonumentPicker';
 
+const DURATIONS: [number, string][] = [[20, '20 dakika'], [45, '45 dakika'], [90, '90 dakika'], [60, 'Seyahat: 1 saat'], [180, 'Seyahat: 3 saat'], [360, 'Seyahat: 6 saat']];
+
 /**
  * Keşif rotaları: sitede ana sayfadaki "Keşif Sezonları" ve "Keşif Görevleri". Rotanın adını, kısa etiketini ve
  * açıklamasını yönetici yazar (yapay zekâ yok); duraklar sıralı eserlerdir. Yalnızca yayındaki rotalar ve yayındaki
@@ -42,11 +44,11 @@ export function RoutesPage() {
 
 function RouteEditor({ route, onChange }: { route: AdminRoute; onChange: () => void }) {
   const notify = useToast();
-  const [f, setF] = useState({ title: route.title, kicker: route.kicker ?? '', description: route.description ?? '' });
+  const [f, setF] = useState({ title: route.title, kicker: route.kicker ?? '', description: route.description ?? '', minutes: route.minutes ?? 0, access: route.access_note ?? '' });
   const [stops, setStops] = useState<RouteStop[]>(route.stops);
   const [busy, setBusy] = useState(false);
   useEffect(() => { setStops(route.stops); }, [route.stops]);
-  const dirty = f.title !== route.title || f.kicker !== (route.kicker ?? '') || f.description !== (route.description ?? '');
+  const dirty = f.title !== route.title || f.kicker !== (route.kicker ?? '') || f.description !== (route.description ?? '') || f.minutes !== (route.minutes ?? 0) || f.access !== (route.access_note ?? '');
   const stopsDirty = stops.map(s => s.slug).join() !== route.stops.map(s => s.slug).join();
   async function run(job: () => Promise<unknown>, message: string) {
     setBusy(true);
@@ -62,10 +64,13 @@ function RouteEditor({ route, onChange }: { route: AdminRoute; onChange: () => v
         <Field label="Rota adı"><input maxLength={120} value={f.title} onChange={e => setF({ ...f, title: e.target.value })} /></Field>
         <Field label="Kısa etiket" hint="Örn. TEMATİK ROTA, ŞEHİR KOLEKSİYONU. Boşsa “KEŞİF ROTASI”."><input maxLength={40} value={f.kicker} onChange={e => setF({ ...f, kicker: e.target.value })} /></Field>
         <Field label="Açıklama" wide hint="Kısa bir giriş. Yalnızca eserlerin kaynaklarında yazanlara dayanın."><textarea rows={2} maxLength={600} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></Field>
+        <Field label="Süre (telefon)" hint="Yürüyerek ya da haritada kontrol ettiğiniz süre. Süre yazılınca yayın için bütün durakların konumu doğrulanmış olmalı."><select value={f.minutes} onChange={e => setF({ ...f, minutes: Number(e.target.value) })}>
+          <option value={0}>Süre yok (tematik liste)</option>{DURATIONS.map(([m, label]) => <option key={m} value={m}>{label}</option>)}</select></Field>
+        <Field label="Erişim notu (isteğe bağlı)" hint="Yalnızca doğruladığınız bilgi: basamak, kapalı gün, tekerlekli sandalye."><input maxLength={300} value={f.access} onChange={e => setF({ ...f, access: e.target.value })} /></Field>
       </div>
       <div className="admin-actions">
         <button type="button" className="button dark small" disabled={busy || !dirty || f.title.trim().length < 3}
-          onClick={() => run(() => api.updateRoute(route.id, { title: f.title.trim(), kicker: f.kicker.trim() || null, description: f.description.trim() || null }), 'Rota kaydedildi')}><Save size={15} /> Kaydet</button>
+          onClick={() => run(() => api.updateRoute(route.id, { title: f.title.trim(), kicker: f.kicker.trim() || null, description: f.description.trim() || null, minutes: f.minutes || null, access_note: f.access.trim() || null }), 'Rota kaydedildi')}><Save size={15} /> Kaydet</button>
         <button type="button" className="button line small" disabled={busy}
           onClick={() => run(() => api.updateRoute(route.id, { published: !route.published }), route.published ? 'Rota yayından kaldırıldı' : 'Rota yayında')}>{route.published ? <><EyeOff size={15} /> Yayından kaldır</> : <><Eye size={15} /> Yayına al</>}</button>
         <button type="button" className="text-link danger" disabled={busy}

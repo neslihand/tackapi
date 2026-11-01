@@ -11,14 +11,15 @@ export function MonumentPicker({ label, onPick, initial = '', city }: { label: s
   const [active, setActive] = useState(0);
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
+  const picked = useRef(initial);     // seçilen adı aramaya yeniden sokmaz: liste kapanmış kalır
   useEffect(() => {
-    if (q.trim().length < 2) { setItems([]); return; }
+    if (q.trim().length < 2 || q === picked.current) { setItems([]); return; }
     let alive = true;
     const t = setTimeout(() => api.monuments({ q: q.trim(), city, page_size: 12 })
       .then(r => { if (alive) { setItems(r.items); setActive(0); setOpen(true); } }).catch(() => {}), 250);
     return () => { alive = false; clearTimeout(t); };
   }, [q, city]);
-  function pick(m: MonumentRow) { onPick(m); setQ(m.name_tr); setOpen(false); }
+  function pick(m: MonumentRow) { picked.current = m.name_tr; onPick(m); setQ(m.name_tr); setOpen(false); }
   return <div className="combo admin-field"><span id={`${id}-label`}>{label}</span>
     <input ref={input} type="search" role="combobox" aria-labelledby={`${id}-label`} aria-expanded={open && items.length > 0}
       aria-controls={`${id}-list`} aria-autocomplete="list" aria-activedescendant={open && items[active] ? `${id}-${active}` : undefined}
