@@ -36,7 +36,11 @@ export function MapPage({ query = '' }: { query?: string }) {
   const schematic = useRef<L.LayerGroup | null>(null);
   const markers = useRef(new Map<string, L.Marker>());
   const sidebar = useRef<HTMLDivElement>(null);
+  const card = useRef<HTMLDivElement>(null);
   const chosen = useRef('');
+  // The works folded into each pin that stands for several (pin's work id → their places), for zooming into a group.
+  const groups = useRef(new Map<string, L.LatLng[]>());
+  const [grouped, setGrouped] = useState(false);
 
   const linked = artifacts.find(a => a.id === new URLSearchParams(query).get('eser'));
   const [selected, setSelected] = useState((linked ?? artifacts[0]).id);
@@ -57,7 +61,10 @@ export function MapPage({ query = '' }: { query?: string }) {
     if (!ref.current) return;
     const map = L.map(ref.current, { zoomControl: false, scrollWheelZoom: false, minZoom: 4.5, maxZoom: 16, zoomSnap: .25 });
     mapRef.current = map;
-    if (linked?.coordinates) show(linked.coordinates, 7, false); else map.fitBounds(TURKEY, { paddingTopLeft: [overlayInset(), 0] });
+    const places = artifacts.flatMap(a => a.coordinates ? [a.coordinates] : []);
+    if (linked?.coordinates) show(linked.coordinates, 7, false);
+    else if (places.length > 1) fit(L.latLngBounds(places), 9);
+    else map.fitBounds(TURKEY, { paddingTopLeft: [overlayInset(), 0] });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     // The night map: Türkiye's outline drawn in real coordinates, so the pins sit where the works are.
     const outline = { className: 'mp-land', interactive: false, color: '#e6d5ae', weight: 1.6, opacity: .85, fillColor: '#1d4636', fillOpacity: 1, smoothFactor: 0.6 };
@@ -94,7 +101,11 @@ export function MapPage({ query = '' }: { query?: string }) {
       const icon = L.divIcon({ className: 'heritage-marker', html: pin, iconSize: [44, 44], iconAnchor: [22, 22] });
       const marker = L.marker(a.coordinates, { icon, title: a.name, alt: a.name }).addTo(map);
       const tooltip = document.createElement('span'); tooltip.textContent = a.coordinatesApproximate ? `${a.name} · ${t('yaklaşık konum', 'approximate location')}` : a.name; marker.bindTooltip(tooltip, { direction: 'top', offset: [0, -20] });
-      marker.on('click', () => setSelected(a.id));
+      marker.on('click', () => {
+        const group = groups.current.get(a.id);
+        if (group && group.length > 1) fit(L.latLngBounds(group), 15, true);
+        setSelected(a.id);
+      });
       placed.set(a.id, marker);
     });
     declutter();
@@ -113,18 +124,27 @@ export function MapPage({ query = '' }: { query?: string }) {
   function declutter() {
     const map = mapRef.current;
     if (!map) return;
-    const shown: { x: number; y: number; pin: HTMLElement; count: number }[] = [];
+    const shown: { id: string; x: number; y: number; element: HTMLElement; pin: HTMLElement; places: L.LatLng[] }[] = [];
     const order = [...markers.current].sort(([a], [b]) => Number(b === chosen.current) - Number(a === chosen.current));
-    order.forEach(([, marker]) => {
+    order.forEach(([id, marker]) => {
       const element = marker.getElement();
       if (!element) return;
       const { x, y } = map.latLngToLayerPoint(marker.getLatLng());
       const host = shown.find(other => Math.max(Math.abs(other.x - x), Math.abs(other.y - y)) < 26);
       element.classList.toggle('folded', Boolean(host));
-      if (host) host.count += 1;
-      else shown.push({ x, y, pin: element.querySelector<HTMLElement>('.map-pin') ?? element, count: 1 });
+      if (host) host.places.push(marker.getLatLng());
+      else shown.push({ id, x, y, element, pin: element.querySelector<HTMLElement>('.map-pin') ?? element, places: [marker.getLatLng()] });
     });
-    shown.forEach(({ pin, count }) => { if (count > 1) pin.dataset.count = String(count); else delete pin.dataset.count; });
+    groups.current = new Map(shown.map(({ id, places }) => [id, places]));
+    shown.forEach(({ id, element, pin, places }) => {
+      const name = artifacts.find(a => a.id === id)?.name ?? '';
+      // A pin for several works says so, to the eye (the badge) and to a screen reader (its name).
+      const label = places.length > 1 ? t(`${name} ve ${places.length - 1} eser daha · yakınlaştır`, `${name} and ${places.length - 1} more works · zoom in`) : name;
+      element.setAttribute('title', label); element.setAttribute('aria-label', label);
+      element.classList.toggle('grouped', places.length > 1);
+      if (places.length > 1) pin.dataset.count = String(places.length); else delete pin.dataset.count;
+    });
+    setGrouped(shown.some(({ places }) => places.length > 1));
   }
   useEffect(() => {
     if (!mapRef.current || !online) return;
@@ -138,6 +158,15 @@ export function MapPage({ query = '' }: { query?: string }) {
   function overlayInset() {
     if (!window.matchMedia('(min-width: 901px)').matches || !sidebar.current || !ref.current) return 0;
     return sidebar.current.getBoundingClientRect().right - ref.current.getBoundingClientRect().left + 24;
+  }
+  // Fits a set of places into the part of the map left free by the list (left) and the chosen work's card (bottom).
+  function fit(bounds: L.LatLngBounds, maxZoom: number, glide = false) {
+    const map = mapRef.current;
+    if (!map) return;
+    const box = ref.current?.getBoundingClientRect(), panel = card.current?.getBoundingClientRect();
+    const below = box && panel && panel.height ? Math.max(0, box.bottom - panel.top) + 24 : 40;
+    const options = { paddingTopLeft: [overlayInset() + 40, 140] as L.PointTuple, paddingBottomRight: [70, below] as L.PointTuple, maxZoom };
+    if (glide && !reducedMotion()) map.flyToBounds(bounds, { ...options, duration: 1.1 }); else map.fitBounds(bounds, options);
   }
   // A new map has no view to fly from yet, so its first placement is immediate.
   function show(coords: L.LatLngExpression, zoom: number, glide = true) {
@@ -183,8 +212,9 @@ export function MapPage({ query = '' }: { query?: string }) {
           <div ref={ref} className="interactive-map" role="region" aria-label={t('Türkiye miras haritası. Eserleri yanındaki listeden de seçebilirsin.', 'Heritage map of Türkiye. You can also choose the works from the list beside it.')} />
           <span className="mp-frame" aria-hidden="true"><i /><i /><i /><i /></span>
           {/* A surveyor's readout for the chosen work: its place in the collection and its (approximate) position. */}
+          {grouped && <p className="mp-group-hint"><span aria-hidden="true">+</span>{t('Yakın eserler tek pinde birleşir. Sayılı pine dokun ya da yakınlaştır, ayrılsınlar.', 'Works close together share one pin. Tap a numbered pin or zoom in to part them.')}</p>}
           <p className="mp-hud" aria-hidden="true"><span>N° {pad(currentIndex + 1)} <i>/ {pad(artifacts.length)}</i></span>{current.coordinates && <span key={current.id}>{degrees(current.coordinates[0])}° {t('K', 'N')} · {degrees(current.coordinates[1])}° {t('D', 'E')}</span>}</p>
-          <div className="selected-map-artifact">
+          <div className="selected-map-artifact" ref={card}>
             <span className="mp-sel-media"><img key={current.id} src={current.image} alt="" /></span>
             <span className="mp-sel-copy" key={current.id}><small>N° {pad(currentIndex + 1)} · {current.city.toLocaleUpperCase(locale())} · {current.year}</small><strong>{current.name}</strong><em>{current.period}</em></span>
             <Link className="circle-link mp-open" to={`/eser/${current.slug}`} aria-label={`${t('Hikâyeyi aç', 'Open the story')}: ${current.name}`}><span>{t('Hikâyeyi aç', 'Open the story')}</span><i aria-hidden="true"><ArrowUpRight size={18} /></i></Link>
