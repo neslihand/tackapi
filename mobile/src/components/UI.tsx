@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { mediaUrl, type Item } from '@/lib/api';
-import { t } from '@/lib/i18n';
+import { currentLang, t } from '@/lib/i18n';
 import { colors, serif, space } from '@/lib/theme';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -54,7 +54,7 @@ export function WorkCard({ item, extra, stamped }: { item: Item; extra?: string;
     {photo ? <Image source={photo} alt="" style={styles.cardImage} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
       : <View style={[styles.cardImage, styles.cardPlaceholder]}><Ionicons name="business-outline" size={28} color={colors.goldLine} /></View>}
     <View style={styles.cardBody}>
-      <Text style={styles.cardKind}>{item.kind_label.toLocaleUpperCase('tr-TR')}</Text>
+      <Text style={styles.cardKind}>{item.kind_label.toLocaleUpperCase(currentLang() === 'tr' ? 'tr-TR' : 'en')}</Text>
       <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
       <Text style={styles.muted} numberOfLines={1}>{where}{item.built.label ? ` · ${item.built.label}` : ''}</Text>
       {(extra || stamped) && <View style={styles.cardFoot}>
