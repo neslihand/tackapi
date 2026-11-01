@@ -91,7 +91,7 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 | Pzt 2 Kas | Tasarım temeli: ortak bileşenler | P1 | [x] |
 | Pzt 2 Kas | Sekmeler + Bugün ana sayfası + Keşfet (liste/harita) + tüm eserleri yükleme | P2 | [x] |
 | Sal 3 Kas | Eser ekranı yenileme + anlatım seçici | P3 | [x] |
-| Sal 3 Kas | İlk açılış | P4 | [ ] |
+| Sal 3 Kas | İlk açılış | P4 | [x] |
 | Çar 4 Kas | Esnek seri + kademeli madalyonlar + Pasaport ekranı | P5 | [ ] |
 | Çar 4 Kas | Detay Avı | P6 | [ ] |
 | Per 5 Kas | Hatırla kartları | P7 | [ ] |

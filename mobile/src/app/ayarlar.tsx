@@ -1,4 +1,5 @@
-// Ayarlar: language, the two local notifications (both off until the visitor turns them on) and what stays where.
+// Ayarlar: language, the two local notifications (both off until the visitor turns them on), what stays where and the
+// welcome shown again.
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -10,6 +11,7 @@ import { t, useLang, type Lang } from '@/lib/i18n';
 import { allowNotifications, notificationsSupported } from '@/lib/notify';
 import { useSettings } from '@/lib/store';
 import { colors, space } from '@/lib/theme';
+import { clearOnboarded } from '@/lib/welcome';
 
 const HOURS = [8, 9, 12, 18, 21];
 
@@ -69,6 +71,12 @@ export default function Settings() {
         value={settings.streakReminder} onChange={v => toggle('streakReminder', v)} />
     </View>
     <Notice icon="lock-closed-outline">{t('Bildirimler telefonunda kurulur; sunucuya bir şey gönderilmez. Konumun ve ayarların bu cihazda kalır; pasaportun yalnızca giriş yaptıysan hesabınla eşitlenir.', 'Notifications are set up on your phone; nothing is sent to the server. Your location and settings stay on this device; your passport is synced with your account only if you sign in.')}</Notice>
+    <Eyebrow>{t('KARŞILAMA', 'WELCOME')}</Eyebrow>
+    <View style={s.card}>
+      <Text style={s.small}>{t('İlk açılıştaki üç adımı yeniden gör; keşif biçimini baştan seçebilirsin.', 'See the three first-run steps again; you can choose how to explore anew.')}</Text>
+      <Button kind="plain" icon="refresh-outline" label={t('Karşılamayı yeniden göster', 'Show the welcome again')}
+        onPress={() => { clearOnboarded().then(() => router.push('/karsilama')); }} />
+    </View>
     <Eyebrow>{t('SUNUCU', 'SERVER')}</Eyebrow>
     <View style={s.card}>
       <Text style={s.small}>{t('Uygulamanın bağlandığı arka uç. Boş bırakırsan yerleşik adres kullanılır. Demoda bilgisayarın yerel ağ adresini yaz, ör. http://192.168.1.20:8000.', 'The backend the app talks to. Leave it empty for the built-in address. At a demo, type the laptop’s local address, e.g. http://192.168.1.20:8000.')}</Text>

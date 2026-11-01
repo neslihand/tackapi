@@ -1,13 +1,14 @@
-import { Stack } from 'expo-router';
+import { router, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountProvider } from '@/lib/account';
 import { LangProvider, t, useLang } from '@/lib/i18n';
 import { JournalProvider } from '@/lib/journal';
-import { scheduleDailyWork, scheduleStreakReminder, setupNotifications, useNotificationTaps } from '@/lib/notify';
+import { openedFromNotification, scheduleDailyWork, scheduleStreakReminder, setupNotifications, useNotificationTaps } from '@/lib/notify';
 import { ContentProvider, PassportProvider, SettingsProvider, useContent, usePassport, useSettings } from '@/lib/store';
 import { colors, serif } from '@/lib/theme';
+import { isOnboarded } from '@/lib/welcome';
 
 setupNotifications();
 
@@ -34,6 +35,22 @@ function NotificationSync() {
   return null;
 }
 
+/** Opens the first-run welcome once, only when the app starts on Bugün: a link or a notification that opens a work
+ *  goes straight there, and the welcome waits for the next launch. */
+function WelcomeGate() {
+  const { ready } = useSettings();
+  const pathname = usePathname();
+  const decided = useRef(false);
+  const start = useRef(pathname); // where this launch began, before the settings were read
+  useEffect(() => {
+    if (!ready || decided.current) return;
+    decided.current = true;
+    if (start.current !== '/' || openedFromNotification()) return;
+    isOnboarded().then(seen => { if (!seen) router.push('/karsilama'); });
+  }, [ready]);
+  return null;
+}
+
 function Screens() {
   useLang(); // the titles below are re-read when the language changes
   return <Stack screenOptions={{ headerStyle: { backgroundColor: colors.emerald }, headerTintColor: colors.goldSoft,
@@ -53,6 +70,7 @@ function Screens() {
     <Stack.Screen name="giris" options={{ title: t('Giriş yap', 'Sign in') }} />
     <Stack.Screen name="hesap" options={{ title: t('Hesabım', 'My account') }} />
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
+    <Stack.Screen name="karsilama" options={{ headerShown: false, presentation: 'fullScreenModal', gestureEnabled: false }} />
   </Stack>;
 }
 
@@ -62,6 +80,7 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <NotificationSync />
       <Screens />
+      <WelcomeGate />
     </JournalProvider></AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
   </SafeAreaProvider>;
 }
