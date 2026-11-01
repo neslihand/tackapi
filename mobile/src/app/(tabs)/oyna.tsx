@@ -3,17 +3,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card } from '@/components/Card';
+import { huntScore } from '@/components/HuntZoom';
 import { Button, Empty, Eyebrow, Title } from '@/components/UI';
 import { mediaUrl } from '@/lib/api';
+import { outcome } from '@/lib/hunt';
+import { useHunt } from '@/lib/hunt-state';
 import { t } from '@/lib/i18n';
 import type { Quest } from '@/lib/quests';
 import { usePassport, useQuests } from '@/lib/store';
-import { colors, serif, space } from '@/lib/theme';
+import { colors, hit, serif, space, type } from '@/lib/theme';
 
 export default function Play() {
   const quests = useQuests();
   const { progress } = usePassport();
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
+    <HuntEntry />
     <View style={s.quiz}>
       <Eyebrow light>✦ {t('TARİHİN İZİNDE', 'ON THE TRAIL OF HISTORY')}</Eyebrow>
       <Title light size={26}>{t('Bilgi Yarışması', 'Knowledge Quiz')}</Title>
@@ -26,6 +31,24 @@ export default function Play() {
     {quests.length ? quests.map(q => <QuestCard key={q.route.id} quest={q} />)
       : <Empty title={t('Henüz rota yok.', 'No routes yet.')} body={t('Keşif rotaları eklendiğinde burada görünecek.', 'Discovery routes will appear here once they are added.')} />}
   </ScrollView>;
+}
+
+/** Today's Detay Avı, the same puzzle as Bugün's card. */
+function HuntEntry() {
+  const { ready, number, puzzle } = useHunt();
+  if (!ready || !puzzle) return null;
+  const o = outcome(puzzle);
+  const line = o.over ? huntScore(o.solved, puzzle.guesses.length, 'you') : t('Bir yakın çekim, dört eser. Herkes için aynı bulmaca.', 'One close-up, four works. The same puzzle for everyone.');
+  const title = t('Günün Detay Avı', 'Today’s Detail Hunt');
+  return <Card onPress={() => router.push('/detay-avi')} accessibilityLabel={`${title} #${number}. ${line}`} style={s.hunt}>
+    <View style={s.huntIcon}><Ionicons name={o.over ? 'checkmark' : 'search'} size={22} color={colors.goldSoft} /></View>
+    <View style={{ flex: 1 }}>
+      <Eyebrow>✦ {t(`DETAY AVI #${number}`, `DETAIL HUNT #${number}`)}</Eyebrow>
+      <Text style={s.huntTitle}>{title}</Text>
+      <Text style={s.small}>{line}</Text>
+    </View>
+    <Ionicons name="chevron-forward" size={20} color={colors.goldLine} />
+  </Card>;
 }
 
 function QuestCard({ quest }: { quest: Quest }) {
@@ -52,6 +75,9 @@ function QuestCard({ quest }: { quest: Quest }) {
 }
 
 const s = StyleSheet.create({
+  hunt: { flexDirection: 'row', alignItems: 'center', gap: space.m },
+  huntIcon: { width: hit, height: hit, borderRadius: hit / 2, backgroundColor: colors.emerald, alignItems: 'center', justifyContent: 'center' },
+  huntTitle: { fontFamily: serif, color: colors.ink, ...type.heading },
   quiz: { padding: space.l, borderRadius: 18, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine, gap: space.s },
   quizText: { color: '#e6e2d8', fontSize: 14, lineHeight: 20 },
   card: { padding: space.m, borderRadius: 16, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, gap: space.s },

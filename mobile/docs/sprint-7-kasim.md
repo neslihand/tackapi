@@ -93,7 +93,7 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 | Sal 3 Kas | Eser ekranı yenileme + anlatım seçici | P3 | [x] |
 | Sal 3 Kas | İlk açılış | P4 | [x] |
 | Çar 4 Kas | Esnek seri + kademeli madalyonlar + Pasaport ekranı | P5 | [x] |
-| Çar 4 Kas | Detay Avı | P6 | [ ] |
+| Çar 4 Kas | Detay Avı | P6 | [x] |
 | Per 5 Kas | Hatırla kartları | P7 | [ ] |
 | Per 5 Kas | Seyahat modu | P8 | [x] |
 | Cum 6 Kas | (İsteğe bağlı) Mobil analitik | P9 | [ ] |

@@ -1,19 +1,25 @@
 // The shareable card of a stamp or a medallion, previewed in a sheet; "Paylaş" turns the card into a picture
-// (share.ts). The card says only what the passport says: which work, where, when and how it was stamped.
+// (share.ts). The card says only what the passport says: which work, where, when and how it was stamped. A Detay Avı
+// card never names the work: only the puzzle's number, the tries and a blurred close-up.
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRef, useState, type ComponentRef } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { HuntMarks, huntScore, HuntZoom } from './HuntZoom';
 import { Button, Notice } from './UI';
+import type { Focus } from '@/lib/hunt';
 import { t } from '@/lib/i18n';
 import { CARD_HEIGHT, CARD_WIDTH, shareCard, shareVerb } from '@/lib/share';
-import { colors, metal as METAL, serif } from '@/lib/theme';
+import { colors, metal as METAL, overlay, serif, space } from '@/lib/theme';
 
 const ARCH = require('../../assets/icon.png');
 
 export type Shared =
   | { kind: 'stamp'; name: string; place: string; date: string; onSpot: boolean; photo: string | null }
-  | { kind: 'medal'; name: string; description: string; metal: keyof typeof METAL };
+  | { kind: 'medal'; name: string; description: string; metal: keyof typeof METAL }
+  | { kind: 'hunt'; number: number; marks: ('right' | 'wrong')[]; solved: boolean; photo: string | null; focus: Focus };
+
+const huntTitle = (n: number) => t(`EŞİK Detay Avı #${n}`, `EŞİK Detail Hunt #${n}`);
 
 export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose: () => void }) {
   const card = useRef<ComponentRef<typeof View>>(null);
@@ -22,7 +28,7 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
   async function share() {
     if (!shared) return;
     setBusy(true); setError(null);
-    try { await shareCard(card, shared.name); }
+    try { await shareCard(card, shared.kind === 'hunt' ? huntTitle(shared.number) : shared.name); }
     catch (e) { setError(String((e as Error)?.message ?? e)); }
     finally { setBusy(false); }
   }
@@ -31,7 +37,24 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
       <View style={s.sheet}>
         <Pressable onPress={onClose} style={s.close} accessibilityRole="button" accessibilityLabel={t('Kapat', 'Close')} hitSlop={10}>
           <Ionicons name="close" size={22} color={colors.goldSoft} /></Pressable>
-        {shared && <View ref={card} collapsable={false} style={s.card}>
+        {shared?.kind === 'hunt' ? <View ref={card} collapsable={false} style={s.card} accessible
+          accessibilityLabel={`${huntTitle(shared.number)}. ${huntScore(shared.solved, shared.marks.length, 'me')}`}>
+          <HuntZoom src={shared.photo} focus={shared.focus} scale={4} size={CARD_HEIGHT} blur={14} label=""
+            style={{ position: 'absolute', top: 0, left: (CARD_WIDTH - CARD_HEIGHT) / 2 }} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: shared.photo ? overlay.shadeStrong : colors.emerald }]} />
+          <View style={s.frame} />
+          <View style={s.top}>
+            <Image source={ARCH} alt="" style={s.arch} contentFit="cover" />
+            <Text style={s.kicker}>✦ {t('EŞİK DETAY AVI', 'EŞİK DETAIL HUNT')}</Text>
+          </View>
+          <View style={s.middle}>
+            <Text style={s.number}>#{shared.number}</Text>
+            <HuntMarks light marks={shared.marks} size={space.xl} label="" />
+            <Text style={[s.line, { textAlign: 'center' }]}>{huntScore(shared.solved, shared.marks.length, 'me')}</Text>
+            <Text style={[s.date, { textAlign: 'center' }]}>{t('Bugünün ayrıntısını sen de bul.', 'Find today’s detail too.')}</Text>
+          </View>
+          <Text style={s.foot}>EŞİK · {t('Tarihe Açılan Kapı', 'A Door to History')}</Text>
+        </View> : shared && <View ref={card} collapsable={false} style={s.card}>
           {shared.kind === 'stamp' && shared.photo && <Image source={shared.photo} alt="" style={StyleSheet.absoluteFill} contentFit="cover" />}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: shared.kind === 'stamp' && shared.photo ? '#082119c4' : colors.emerald }]} />
           <View style={s.frame} />
@@ -74,6 +97,7 @@ const s = StyleSheet.create({
   seal: { width: 58, height: 58, borderRadius: 29, borderWidth: 2, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
   sealText: { color: colors.gold, fontSize: 11, letterSpacing: 1.8, fontWeight: '700' },
   disc: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.goldSoft },
+  number: { fontFamily: serif, color: colors.goldSoft, fontSize: 64, lineHeight: 72 },
   name: { fontFamily: serif, color: colors.goldSoft, fontSize: 27, lineHeight: 33, textAlign: 'center' },
   line: { color: '#e6e2d8', fontSize: 14, lineHeight: 20 },
   date: { color: '#cfcab9', fontSize: 13 },
