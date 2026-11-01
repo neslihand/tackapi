@@ -130,6 +130,9 @@ function Router() {
     if (path !== '/') document.getElementById('main')?.focus({ preventScroll: true });
     track('page_view');
   }, [path, artifact]);
+  // paylaşım sayfasından gelindi (backend/pipeline/share.py); izin yoksa track hiçbir şey göndermez
+  const shared = artifact && new URLSearchParams(query).get('ref') === 'share' ? artifact.slug : null;
+  useEffect(() => { if (shared) track('share_opened', shared, { surface: 'web', content_type: 'heritage_item' }); }, [shared]);
   let page: ReactNode;
   // The backend collection keeps the home page (the gate entrance); other read-only feeds open on the catalogue.
   if (path === '/') page = readOnly && !vakifApiEnabled() ? <Explore key={query} query={query} /> : <Home />;
