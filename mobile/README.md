@@ -39,6 +39,22 @@ Uygulama `http://localhost:8081` adresinde açılır. Arka uç bu adrese varsay�
 (`src/lib/notify.web.ts` boş işlem yapar; ayarlar yine kaydedilir). Konum, kamera (dosya seçici) ve sesli rehber
 tarayıcının kendi olanaklarıyla çalışır. Titreşim ve gerçek bildirimler için telefonda dene.
 
+## Test
+
+```bash
+npm test             # lib/ altındaki iş kuralları (node --test)
+npm run typecheck
+npm run lint
+```
+
+Master planın envanteri ve durum tablosu: [../audit/current-state.md](../audit/current-state.md).
+
+Modüller panelden kapatılabilir (`#/analitik`, `lib/flags.ts`). Yeni göçlerden sonra `backend` tarafında `python migrate.py --apply` çalıştırılmalı.
+
+## Paylaşım bağlantısı
+
+"Bu eseri paylaş" bağlantısı `<sunucu>/eser/<slug>` olur; adres Ayarlar'daki sunucudan ya da `EXPO_PUBLIC_API_URL`'den gelir. Demoda yerel ağ adresi olduğundan bağlantı yalnızca aynı ağdan açılır. `esik://` geçişi geliştirme derlemesi ister, Expo Go'da çalışmaz. Universal link için gerekenler: `../audit/current-state.md`.
+
 ## Kurulabilir APK (demo için)
 
 `eas.json` içindeki `preview` profili, telefona doğrudan kurulan bir APK üretir. Derleme Expo'nun bulutunda yapılır;
