@@ -18,6 +18,17 @@ yapacağını bilirsin; bir eserin önünde durunca o an unutulmaz olur; öğren
 | U7 | "Harita" ve "Keşfet" aynı içeriğin iki görünümü ama ayrı sekmeler; Okuma Odası ve Sözlük ana sayfadaki iki küçük kısayola sıkışmış | sekmeler | Bilgi mimarisi dağınık |
 | U8 | Evde kullanmak için kısa, günlük bir sebep yok | — | Günlük dönüş zayıf |
 
+### Veri kapsamı (1 Kasım kararı)
+Uygulama bugün yalnızca 26 pilot eseri gösteriyor (`api.ts loadFeed` → `pilot=true`). **Karar: tüm yayındaki eserler
+listelenir.** API'de 1 Kasım itibarıyla: **750 eser** (Bursa 380 · Konya 292 · Hatay 78), **559'unun fotoğrafı**,
+yalnızca **26'sının konumu** var. Sonuçları:
+- Liste: `page_size` en fazla 200 → `loadFeed` 4 sayfa çeker; liste yükü ~0,9 MB, çevrimdışı önbelleğe sığar.
+  Keşfet listesi `FlatList` ile sanallaştırılmalı; arama/süzgeç 750 eserde akıcı kalmalı (P2).
+- Konuma bağlı her şey (harita, Yakınında, yerinde mühür, Seyahat modu, demo konumu) yalnızca konumu olan eserlerde
+  çalışır. Konumu olmayan eserde bu öğeler gizlenir, uydurma konum yazılmaz (kaynak kuralı).
+- Detay Avı havuzu: fotoğraflı eserler (559). Hatırla ve madalyon eşikleri (25 eser, şehir başına 15) artık anlamlı.
+- Rotalar (3) ve panel soruları için `pilot` süzgeci de kaldırılır.
+
 ## 2. Yeni bilgi mimarisi
 
 Sekmeler (5): **Bugün** · **Keşfet** (liste ⇄ harita geçişi tek sekmede) · **Tara** (kamera) · **Oyna** · **Pasaport**.
@@ -74,9 +85,9 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 
 | Gün | Görev | Prompt | Durum |
 |---|---|---|---|
-| Pzt 2 Kas | Hazırlık: önce ekran görüntüleri, çalışan ortam | P0 | [ ] |
+| Pzt 2 Kas | Hazırlık: önce ekran görüntüleri, çalışan ortam | P0 | [x] |
 | Pzt 2 Kas | Tasarım temeli: ortak bileşenler | P1 | [ ] |
-| Pzt 2 Kas | Sekmeler + Bugün ana sayfası + Keşfet (liste/harita) | P2 | [ ] |
+| Pzt 2 Kas | Sekmeler + Bugün ana sayfası + Keşfet (liste/harita) + tüm eserleri yükleme | P2 | [ ] |
 | Sal 3 Kas | Eser ekranı yenileme + anlatım seçici | P3 | [ ] |
 | Sal 3 Kas | İlk açılış | P4 | [ ] |
 | Çar 4 Kas | Esnek seri + kademeli madalyonlar + Pasaport ekranı | P5 | [ ] |

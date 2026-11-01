@@ -82,6 +82,9 @@ bileşenleri (src/components/) ve şu dosyaları incele: src/app/(tabs)/_layout.
 src/lib/daily.ts, src/lib/store.tsx, src/lib/geo.ts.
 
 Görev:
+0. Tüm eserleri yükle (sprint planı "Veri kapsamı"): src/lib/api.ts loadFeed `pilot=true` süzgecini kaldırsın ve
+   tüm sayfaları çeksin (API page_size en fazla 200; total'a göre sayfa sayısı). Rotalar ve panel soruları da
+   süzgeçsiz. Çevrimdışı önbellek tüm listeyi tutsun. Keşfet listesi FlatList ile sanallaştırılsın.
 1. Sekmeleri planlandığı gibi düzenle: Bugün · Keşfet · Tara · Oyna · Pasaport. Ayarlar düğmesi yalnızca Pasaport
    başlığında. Mevcut route'lar (eser, sor, rota, okuma…) aynen çalışmaya devam etmeli; bildirime dokununca eser açma
    (useNotificationTaps) bozulmamalı.
@@ -102,7 +105,8 @@ Kapsam dışı: eser ekranı, ilk açılış, seri mantığını değiştirmek, 
 
 Kabul ölçütleri:
 - Bugün ekranı 390×844'te kaydırmadan en az 3 farklı eylem gösteriyor; uzun eser listesi yok.
-- Keşfet'te arama ve şehir süzgeci eskisi gibi çalışıyor; harita görünümü açılıyor.
+- Keşfet 750 eserin tamamını gösteriyor; arama ve şehir süzgeci eskisi gibi ve akıcı çalışıyor; harita görünümü
+  açılıyor (yalnızca konumu olan eserler).
 - TR ve EN'de tüm metinler doğru; tüm dokunulabilir öğeler etiketli.
 - `npx tsc --noEmit` hatasız.
 
@@ -316,7 +320,7 @@ mobile/CLAUDE.md, mobile/docs/sprint-7-kasim.md (demo senaryosu ve başarı öl�
 dosyalarını oku. docs/ux/once ve docs/ux/sonra klasörlerindeki görüntülere bak.
 
 Görev:
-1. Demo modu: Ayarlar'ın en altında "Sunum" bölümü (7 kez sürüm satırına dokununca açılır): "Demo konumu" (eser seç →
+1. Demo modu: Ayarlar'ın en altında "Sunum" bölümü (7 kez sürüm satırına dokununca açılır): "Demo konumu" (konumu olan eserlerden seç →
    whereAmI o eserin konumunu döner), "Hatırla kartlarını şimdi getir", "Detay Avı'nı sıfırla", "Karşılamayı göster".
    Demo konumu açıkken tüm ekranlarda küçük "DEMO" etiketi. Varsayılan kapalı; yayın derlemesinde de görünmez değil
    ama gizli kalır.
