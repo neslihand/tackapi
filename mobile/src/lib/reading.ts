@@ -38,7 +38,7 @@ const qs = (params: Record<string, string | number | boolean | null | undefined>
 export const loadArticles = () => cachedGet<ArticleList>(`/api/articles${qs({ page_size: 60, lang: currentLang() })}`);
 export const loadArticle = (slug: string) => cachedGet<ArticleDetail>(`/api/articles/${encodeURIComponent(slug)}${qs({ lang: currentLang() })}`);
 export const loadTerms = () => cachedGet<{ enabled: boolean; items: GlossaryTerm[]; categories: { slug: string; label: string; n: number }[] }>(`/api/terms${qs({ lang: currentLang() })}`);
-export const loadTerm = (slug: string) => cachedGet<TermDetail>(`/api/terms/${encodeURIComponent(slug)}${qs({ lang: currentLang(), pilot: true })}`);
+export const loadTerm = (slug: string) => cachedGet<TermDetail>(`/api/terms/${encodeURIComponent(slug)}${qs({ lang: currentLang() })}`);
 
 // ------------------------------------------------------------------------------------------- text
 export type Block = { type: 'h' | 'p' | 'q'; text: string };

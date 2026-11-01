@@ -1,6 +1,6 @@
-// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. Like the site, the
-// MVP shows only the pilot selection. Every successful GET is kept on the device, so a work opened once still opens
-// without a connection (the photos are kept by expo-image's disk cache).
+// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. The app lists every
+// published work. Every successful GET is kept on the device, so a work opened once still opens without a connection
+// (the photos are kept by expo-image's disk cache).
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { currentLang, t } from './i18n';
@@ -87,15 +87,37 @@ export async function cachedGet<T>(path: string): Promise<{ data: T; stale: bool
   }
 }
 
+const PAGE_SIZE = 200; // the API's largest page
+
+/** Every published work, page by page; the device keeps the whole list under one key so it is never half there. */
+async function loadAllWorks(lang: string): Promise<{ data: Item[]; stale: boolean }> {
+  const key = cacheKey(`/api/monuments?all&lang=${lang}`);
+  try {
+    const page = (n: number) => request<{ total: number; items: Item[] }>(`/api/monuments?page=${n}&page_size=${PAGE_SIZE}&lang=${lang}`);
+    const first = await page(1);
+    const rest = await Promise.all(Array.from({ length: Math.ceil(first.total / PAGE_SIZE) - 1 }, (_, i) => page(i + 2)));
+    const data = [first, ...rest].flatMap(p => p.items);
+    AsyncStorage.setItem(key, JSON.stringify(data)).catch(() => {});
+    return { data, stale: false };
+  } catch (error) {
+    if (error instanceof ApiError && error.status !== 0 && error.status < 500) throw error;
+    const saved = await AsyncStorage.getItem(key).catch(() => null);
+    if (saved) return { data: JSON.parse(saved) as Item[], stale: true };
+    throw error;
+  }
+}
+
 export async function loadFeed(): Promise<Feed> {
   const lang = currentLang();
   // routes and written questions are optional: without them the collection still opens
   const [list, routes, quiz] = await Promise.all([
-    cachedGet<{ items: Item[] }>(`/api/monuments?pilot=true&page_size=200&lang=${lang}`),
+    loadAllWorks(lang),
+    // routes stay on the pilot works: unfiltered, a city route lists every work in the city (372 stops in Bursa), and
+    // only the pilot works have a location to walk to
     cachedGet<Season[]>('/api/routes?pilot=true').catch(() => ({ data: [] as Season[], stale: true })),
-    cachedGet<QuizQuestion[]>('/api/quiz?pilot=true').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
+    cachedGet<QuizQuestion[]>('/api/quiz').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
   ]);
-  return { items: list.data.items, seasons: routes.data, quiz: quiz.data, stale: list.stale };
+  return { items: list.data, seasons: routes.data, quiz: quiz.data, stale: list.stale };
 }
 
 export const loadMonument = (slug: string) => cachedGet<Detail>(`/api/monuments/${encodeURIComponent(slug)}?lang=${currentLang()}`);

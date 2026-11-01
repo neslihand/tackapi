@@ -11,6 +11,7 @@ import { ApiError, mediaUrl } from '@/lib/api';
 import { currentLang, t, useLang } from '@/lib/i18n';
 import { articleBlocks, loadArticle, loadTerms, markTerms, type ArticleDetail, type GlossaryTerm } from '@/lib/reading';
 import { speak, stopSpeaking } from '@/lib/speech';
+import { useContent } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
 
 export default function Article() {
@@ -22,6 +23,9 @@ export default function Article() {
   const [terms, setTerms] = useState<GlossaryTerm[]>([]);
   const [open, setOpen] = useState<GlossaryTerm | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  // every published work is in the app; one missing from the collection (not yet loaded or taken down) stays a label
+  const works = useContent();
+  const inApp = (work: string) => Boolean(works.bySlug(work));
   useEffect(() => {
     setA(null); setError(null);
     loadArticle(slug).then(r => { setA(r.data); setStale(r.stale); },
@@ -75,10 +79,10 @@ export default function Article() {
 
     {!!a.monuments.length && <View style={s.section}>
       <Eyebrow>{t('YAZIDAKİ ESERLER', 'WORKS IN THIS ARTICLE')}</Eyebrow>
-      {a.monuments.map(m => <Pressable key={m.slug} disabled={!m.pilot} onPress={() => router.push(`/eser/${m.slug}`)} style={s.work} accessibilityRole={m.pilot ? 'button' : undefined}>
+      {a.monuments.map(m => <Pressable key={m.slug} disabled={!inApp(m.slug)} onPress={() => router.push(`/eser/${m.slug}`)} style={s.work} accessibilityRole={inApp(m.slug) ? 'button' : undefined}>
         {m.image ? <Image source={mediaUrl(m.image.thumb)} alt="" style={s.thumb} contentFit="cover" accessibilityIgnoresInvertColors /> : <View style={[s.thumb, { backgroundColor: colors.parchmentDeep }]} />}
-        <View style={{ flex: 1 }}><Text style={s.workName}>{m.name}</Text><Text style={s.small}>{m.city}{m.pilot ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
-        {m.pilot && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
+        <View style={{ flex: 1 }}><Text style={s.workName}>{m.name}</Text><Text style={s.small}>{m.city}{inApp(m.slug) ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
+        {inApp(m.slug) && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
       </Pressable>)}
     </View>}
 

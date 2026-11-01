@@ -13,6 +13,11 @@ export async function whereAmI(): Promise<Here> {
   return { lat: fix.coords.latitude, lon: fix.coords.longitude, accuracy: fix.coords.accuracy };
 }
 
+/** True when the location may be read without asking; never opens the permission dialog. */
+export async function hasLocationPermission() {
+  try { return (await Location.getForegroundPermissionsAsync()).granted; } catch { return false; }
+}
+
 /** Follows the phone while a route is walked (about every 10 m); returns the function that stops it. */
 export async function followMe(onMove: (here: Here) => void): Promise<() => void> {
   const permission = await Location.requestForegroundPermissionsAsync();

@@ -21,6 +21,18 @@ export function teaser(item: Item) {
   return first.length > 150 ? `${first.slice(0, 147).trimEnd()}…` : first;
 }
 
+/** Bugün's greeting for the hour of `now`. */
+export function greeting(now: Date) {
+  const h = now.getHours();
+  return h >= 5 && h < 12 ? t('Günaydın', 'Good morning') : h >= 5 && h < 18 ? t('İyi günler', 'Good afternoon') : t('İyi akşamlar', 'Good evening');
+}
+
+/** About how long the phone's voice takes to read `text` (~2.3 words a second), rounded for a button label. */
+export function listenSeconds(text: string) {
+  const s = text.trim().split(/\s+/).filter(Boolean).length / 2.3;
+  return s < 60 ? Math.max(10, Math.round(s / 10) * 10) : Math.round(s / 60) * 60;
+}
+
 /** The works of the coming days: undiscovered ones first, a stable order so a reschedule keeps the same day's work. */
 export function dailyPicks(items: Item[], progress: Progress, from = new Date(), days = DAILY_DAYS) {
   const pool = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || a.slug.localeCompare(b.slug));

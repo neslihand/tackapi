@@ -13,6 +13,7 @@ import { openDirections, whereAmI } from '@/lib/geo';
 import { t, useLang } from '@/lib/i18n';
 import { useJournal } from '@/lib/journal';
 import { distanceM, formatDistance, stampRadius } from '@/lib/passport';
+import { rememberOpened } from '@/lib/recent';
 import { speak, stopSpeaking } from '@/lib/speech';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
@@ -43,6 +44,7 @@ export default function Work() {
       e => { if (live) setError(e instanceof ApiError && e.status === 404 ? t('Bu eser yayında değil.', 'This work is not published.') : String(e?.message ?? e)); });
     return () => { live = false; };
   }, [slug, lang]);
+  useEffect(() => { rememberOpened(slug).catch(() => {}); }, [slug]); // Bugün's "Devam et"
   useEffect(() => () => stopSpeaking(), []);
   useEffect(() => { stopSpeaking(); setSpeaking(false); }, [mode]);
 

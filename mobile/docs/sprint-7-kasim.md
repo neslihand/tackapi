@@ -27,7 +27,9 @@ yalnızca **26'sının konumu** var. Sonuçları:
 - Konuma bağlı her şey (harita, Yakınında, yerinde mühür, Seyahat modu, demo konumu) yalnızca konumu olan eserlerde
   çalışır. Konumu olmayan eserde bu öğeler gizlenir, uydurma konum yazılmaz (kaynak kuralı).
 - Detay Avı havuzu: fotoğraflı eserler (559). Hatırla ve madalyon eşikleri (25 eser, şehir başına 15) artık anlamlı.
-- Rotalar (3) ve panel soruları için `pilot` süzgeci de kaldırılır.
+- Panel soruları için `pilot` süzgeci kaldırılır. **Rotalar `pilot=true` ile kalır** (2 Kasım kararı): süzgeçsiz
+  şehir rotası şehirdeki tüm eserleri durak sayar (Bursa 372), pilot rotalar 14/5/7 duraklı ve konumu olan eserlerin
+  hepsi pilot, yani yürünebilen rotalar bunlar.
 
 ## 2. Yeni bilgi mimarisi
 
@@ -87,7 +89,7 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 |---|---|---|---|
 | Pzt 2 Kas | Hazırlık: önce ekran görüntüleri, çalışan ortam | P0 | [x] |
 | Pzt 2 Kas | Tasarım temeli: ortak bileşenler | P1 | [x] |
-| Pzt 2 Kas | Sekmeler + Bugün ana sayfası + Keşfet (liste/harita) + tüm eserleri yükleme | P2 | [ ] |
+| Pzt 2 Kas | Sekmeler + Bugün ana sayfası + Keşfet (liste/harita) + tüm eserleri yükleme | P2 | [x] |
 | Sal 3 Kas | Eser ekranı yenileme + anlatım seçici | P3 | [ ] |
 | Sal 3 Kas | İlk açılış | P4 | [ ] |
 | Çar 4 Kas | Esnek seri + kademeli madalyonlar + Pasaport ekranı | P5 | [ ] |

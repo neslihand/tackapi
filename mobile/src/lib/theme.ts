@@ -16,6 +16,7 @@ export const colors = {
   soft: '#50594D',
   line: '#BBBAB6',
   danger: '#8D3A30',
+  tabInactive: '#A4A29F',  // tab labels on emeraldDeep
 };
 
 export const serif = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
@@ -26,6 +27,7 @@ export const space = { xs: 4, s: 8, m: 16, l: 24, xl: 32 };
 export const overlay = {
   shade: '#082119b3',
   shadeStrong: '#082119e6',
+  paper: '#fdfaf4e6',       // labels floating over the map
 };
 
 export const type = {
