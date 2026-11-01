@@ -1,0 +1,44 @@
+// Aydınlatma metni: the site's notice (frontend/src/vakif/AccountPages.tsx PrivacyPage), with what only the phone does. It
+// says what the code really does; audit/permission-matrix.md keeps the same list. This is not a legal opinion: the text
+// waits for the institution's legal review (master plan §10.2).
+import { router } from 'expo-router';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Typography';
+import { Button, Eyebrow, Title } from '@/components/UI';
+import { useConsent } from '@/lib/analytics';
+import { t } from '@/lib/i18n';
+import { colors, serif, space } from '@/lib/theme';
+
+function Part({ title, children }: { title: string; children: string }) {
+  return <View style={{ gap: 6 }}>
+    <Text style={s.h} accessibilityRole="header">{title}</Text>
+    <Text style={s.p}>{children}</Text>
+  </View>;
+}
+
+export default function Privacy() {
+  const consent = useConsent();
+  return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
+    <Eyebrow>{t('AYDINLATMA METNİ · SÜRÜM 2026-10-28', 'PRIVACY NOTICE · VERSION 2026-10-28')}</Eyebrow>
+    <Title size={34}>{t('Verilerin ve senin hakların', 'Your data and your rights')}</Title>
+    <Text style={s.p}>{t('EŞİK, vakıf eserlerini tanıtan bir hackathon prototipidir. Verilerin yalnızca bu uygulamanın sunucusunda ve telefonunda tutulur; reklam ya da dış analitik servisi kullanılmaz.', 'EŞİK is a hackathon prototype that introduces foundation (vakıf) works. Your data is kept only on this app’s server and on your phone; no advertising or outside analytics service is used.')}</Text>
+
+    <Part title={t('Hesap olmadan', 'Without an account')}>{t('Hesap zorunlu değildir. Pasaportun, Keşif Defterin, Hatıra Defterin ve ayarların yalnızca bu telefonda kalır. Uygulamayı silmek bunları da siler.', 'An account is not required. Your passport, Discovery Notebook, Memory Book and settings stay on this phone only. Deleting the app deletes them too.')}</Part>
+    <Part title={t('Hesap açarsan', 'If you open an account')}>{t('E-posta adresin ve şifren (yalnızca geri çözülemeyen bir özeti) hesabın için saklanır; pasaportun cihazların arasında eşitlenir. Takma ad, yaş aralığı, yaşadığın şehir, geliş amacın ve ilgi alanların isteğe bağlıdır; sana eser önermek ve uygulamanın kimlere ulaştığını toplu olarak görmek için kullanılır. Ad-soyad ve doğum tarihi istemeyiz. 13 yaşından küçükler hesap açamaz.', 'Your email address and password (only a hash that cannot be reversed) are kept for your account, and your passport is synced between your devices. Nickname, age range, home city, reason for coming and interests are optional; they are used to suggest works to you and to see, in aggregate, whom the app reaches. We do not ask for your full name or date of birth. Children under 13 cannot open an account.')}</Part>
+    <Part title={t('Sana göre keşif', 'Explore arranged for you')}>{t('Şehrin, ilgi alanların, nasıl keşfetmek istediğin ve okuduklarından çıkan öneriler bu telefonda hesaplanır; sunucuya gitmez, izin istemez. Hesabın varsa şehrin ve ilgi alanların hesabına da yazılır. Yaşın öneride kullanılmaz. Ayarlar → Keşfet’i bana göre düzenle ile kapatabilirsin.', 'Your city, interests, how you like to explore and the suggestions from what you read are worked out on this phone; they do not go to the server and need no permission. If you have an account, your city and interests are kept on it too. Your age is not used for suggestions. You can turn this off in Settings → Arrange Explore for me.')}</Part>
+    <Part title={t('İzin verirsen', 'If you give permission')}>{t('Baktığın eserler, seçtiğin anlatım biçimi, okuduğun hikâyeler, aramaların, Esere Sor’a yazdığın sorular, oyun ve yarışma sonuçların bu telefonda üretilen rastgele bir kimlikle kaydedilir. IP adresin ve cihaz bilgin saklanmaz, konumun gönderilmez. Bunlarla sana öneriler hazırlar, uygulamanın hangi bölümlerinin işe yaradığını anlarız. Karar verene kadar kayıtlar telefonunda bekler ve gönderilmez; izin vermezsen silinir, uygulama aynen çalışır. Kararını Ayarlar’dan değiştirebilirsin; geri alınca bekleyen kayıtlar ve bu telefonun kimliği silinir.', 'The works you view, the narration style you choose, the stories you read, your searches, the questions you write to Ask the Work and your game and quiz results are recorded under a random ID created on this phone. Your IP address and device details are not kept, and your location is not sent. With these we prepare suggestions for you and learn which parts of the app work. Until you decide, records wait on your phone and are not sent; if you refuse they are deleted and the app works just the same. You can change your decision in Settings; withdrawing it deletes waiting records and this phone’s ID.')}</Part>
+    <Part title={t('Konum, kamera ve bildirim', 'Location, camera and notifications')}>{t('Konumun yalnızca sen istediğinde ve bu telefonda, mesafe ölçmek ve yerinde mührü doğrulamak için kullanılır; sunucuya gitmez. Hesabın varsa yalnızca hangi eseri yerinde mühürlediğin pasaporta yazılır. Kamerayla aramada fotoğrafın karşılaştırma için sunucuya gönderilir ve saklanmaz. Bildirimler telefonunda kurulur, sunucuya bir şey gitmez.', 'Your location is used only when you ask and on this phone, to measure distances and verify an on-the-spot stamp; it does not go to the server. If you have an account, only which work you stamped on the spot is written in the passport. In a camera search your photo is sent to the server for comparison and is not kept. Notifications are set up on your phone; nothing goes to the server.')}</Part>
+    <Part title={t('Esere Sor ve harita', 'Ask the Work and the map')}>{t('“Esere Sor”a yazdığın sorular yanıt üretmek için yapay zekâ servisine gönderilir; yanıtlar hata içerebilir. Kaynakta cevabı olmayan bir soruyu takip etmeyi seçersen soru hesabına bağlı saklanır; editörler soruyu ve kaç kişinin takip ettiğini görür, kim olduğunu görmez. Cevap yalnızca takip edenlere gelir, takibi bırakınca kaydın silinir. Harita karoları OpenStreetMap sunucularından istenir.', 'The questions you write to “Ask the Work” are sent to an AI service to produce an answer; answers may contain mistakes. If you choose to follow a question the sources cannot answer, it is kept with your account; editors see the question and how many people follow it, not who they are. The answer reaches only those following, and stopping deletes your record. Map tiles are requested from OpenStreetMap’s servers.')}</Part>
+    <Part title={t('Katkı yaparsan', 'If you contribute')}>{t('Gönderdiğin fotoğraf ve metinler yönetici onayından sonra eser sayfasında, makalelerin ve terim önerilerin Okuma Odası’nda takma adınla görünür. Fotoğrafların içindeki konum ve cihaz bilgisi kaydetmeden önce silinir. Katkılar kitaptaki bilgiden ayrı gösterilir ve sohbet asistanının kaynağı olarak kullanılmaz. Hatıra Defteri’ndeki not ve fotoğrafların hiçbir zaman gönderilmez.', 'Once an administrator approves them, the photos and texts you send appear on the work’s page, and your articles and term suggestions in the Reading Room, under your nickname. Location and device details inside your photos are removed before saving. Contributions are shown apart from the book’s information and are not used as a source by the chat assistant. The notes and photos in your Memory Book are never sent.')}</Part>
+    <Part title={t('Silme hakkın', 'Your right to deletion')}>{t('Hesabım → Hesabımı sil ile e-postan, şifren, profil bilgilerin, pasaportun, katkıların, yazıların ve takip ettiğin soruların silinir; daha önceki keşif kayıtların hesabından ayrılır ve kimliksiz kalır. Telefondaki veriler uygulamayla birlikte silinir.', 'My account → Delete my account deletes your email, password, profile details, passport, contributions, articles and followed questions; your earlier discovery records are separated from your account and stay anonymous. The data on your phone goes with the app.')}</Part>
+
+    <Text style={s.state}>{consent === 'granted' ? t('Şu an kullanım verisi paylaşımına izin verdin.', 'You currently allow sharing usage data.') : consent === 'denied' ? t('Şu an kullanım verisi paylaşımına izin vermedin.', 'You currently do not allow sharing usage data.') : t('Kullanım verisi için henüz karar vermedin; hiçbir şey gönderilmiyor.', 'You have not decided on usage data yet; nothing is being sent.')}</Text>
+    <Button kind="plain" icon="settings-outline" label={t('İznimi Ayarlar’dan değiştir', 'Change my permission in Settings')} onPress={() => router.push('/ayarlar')} />
+  </ScrollView>;
+}
+
+const s = StyleSheet.create({
+  h: { fontFamily: serif, fontSize: 24, lineHeight: 29, color: colors.ink },
+  p: { color: colors.soft, fontSize: 15, lineHeight: 23 },
+  state: { color: colors.goldText, fontSize: 14, fontWeight: '600', lineHeight: 20 },
+});

@@ -1,10 +1,13 @@
 // Giriş / hesap aç: the site's account. Whatever this phone has gathered goes into the account at sign-in and is
-// merged with the other devices' passports.
-import { router } from 'expo-router';
+// merged with the other devices' passports. ?sonra=<screen> returns there afterwards (a form or a work that asked for it).
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Text, TextInput } from '@/components/Typography';
+import { ProfileInputs, useProfileOptions } from '@/components/ProfileInputs';
 import { Button, Eyebrow, Notice, Title } from '@/components/UI';
-import { accountApi, useAccount } from '@/lib/account';
+import { useAccount, type ProfileFields } from '@/lib/account';
+import { afterSignIn } from '@/lib/contributionRules';
 import { t } from '@/lib/i18n';
 import { usePassport } from '@/lib/store';
 import { colors, space } from '@/lib/theme';
@@ -12,16 +15,22 @@ import { colors, space } from '@/lib/theme';
 export default function SignIn() {
   const account = useAccount();
   const { progress } = usePassport();
+  const { sonra } = useLocalSearchParams<{ sonra?: string }>();
+  const options = useProfileOptions();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [profile, setProfile] = useState<ProfileFields>({ purposes: [], interests: [] });
   const [agreed, setAgreed] = useState(false);
-  const [min, setMin] = useState(8);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { accountApi.options().then(o => setMin(o.password_min), () => {}); }, []);
-  useEffect(() => { if (account.user) router.replace('/hesap'); }, [account.user]);
+  const min = options?.password_min ?? 8;
+  // back to the screen that asked, with its half-written form; only a link opened from outside has nowhere to go back to
+  useEffect(() => {
+    if (!account.user) return;
+    if (sonra && router.canGoBack()) router.back();
+    else router.replace(afterSignIn(sonra) as never);
+  }, [account.user, sonra]);
 
   const found = Object.keys(progress.discovered).length;
   async function submit() {
@@ -32,7 +41,7 @@ export default function SignIn() {
     setBusy(true);
     try {
       if (mode === 'login') await account.login(email.trim(), password);
-      else await account.register({ email: email.trim(), password, consent: true, display_name: name.trim() || undefined });
+      else await account.register({ email: email.trim(), password, consent: true, ...profile, display_name: profile.display_name?.trim() || undefined, home_city: profile.home_city?.trim() || undefined });
     } catch (e) { setError(String((e as Error)?.message ?? e)); }
     finally { setBusy(false); }
   }
@@ -52,13 +61,14 @@ export default function SignIn() {
       <Field label={t('Şifre', 'Password')} value={password} onChange={setPassword} secure autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
         hint={mode === 'register' ? t(`En az ${min} karakter.`, `At least ${min} characters.`) : undefined} />
       {mode === 'register' && <>
-        <Field label={t('Takma ad (isteğe bağlı)', 'Nickname (optional)')} value={name} onChange={setName} autoComplete="nickname" />
+        <ProfileInputs value={profile} onChange={setProfile} options={options} />
         <View style={s.consent}>
           <Switch value={agreed} onValueChange={setAgreed} accessibilityLabel={t('Aydınlatma metnini onaylıyorum', 'I accept the privacy notice')}
             trackColor={{ true: colors.emeraldLight, false: colors.line }} thumbColor={agreed ? colors.gold : '#f4f3f0'} />
           <Text style={[s.small, { flex: 1 }]}>{t('Aydınlatma metnini okudum; e-postamın ve isteğe bağlı profil bilgilerimin hesabım için işlenmesini kabul ediyorum. 13 yaşından büyüğüm.', 'I have read the privacy notice and agree that my email and optional profile details are processed for my account. I am over 13.')}</Text>
         </View>
-        <Notice icon="lock-closed-outline">{t('Hesapta e-postan, takma adın ve pasaportun tutulur. Konumun sunucuya gitmez; yalnızca hangi eseri yerinde mühürlediğin pasaporta yazılır. Hesabını istediğin an silebilirsin.', 'The account keeps your email, nickname and passport. Your location never goes to the server; only which work you stamped on the spot is written in the passport. You can delete the account at any time.')}</Notice>
+        <Button kind="plain" icon="document-text-outline" label={t('Aydınlatma metnini oku', 'Read the privacy notice')} onPress={() => router.push('/gizlilik')} />
+        <Notice icon="lock-closed-outline">{t('Hesapta e-postan, verdiğin profil bilgileri ve pasaportun tutulur. Konumun sunucuya gitmez; yalnızca hangi eseri yerinde mühürlediğin pasaporta yazılır. Hesabını istediğin an silebilirsin.', 'The account keeps your email, the profile details you give and your passport. Your location never goes to the server; only which work you stamped on the spot is written in the passport. You can delete the account at any time.')}</Notice>
       </>}
       {error && <Notice tone="warn" icon="alert-circle-outline">{error}</Notice>}
       <Button label={mode === 'login' ? t('Giriş yap', 'Sign in') : t('Hesap aç', 'Create account')} icon="arrow-forward" onPress={submit} busy={busy} />
@@ -68,7 +78,7 @@ export default function SignIn() {
 
 function Field({ label, value, onChange, secure, hint, keyboardType, autoComplete }: {
   label: string; value: string; onChange: (v: string) => void; secure?: boolean; hint?: string;
-  keyboardType?: 'email-address'; autoComplete?: 'email' | 'current-password' | 'new-password' | 'nickname';
+  keyboardType?: 'email-address'; autoComplete?: 'email' | 'current-password' | 'new-password';
 }) {
   return <View style={{ gap: 4 }}>
     <Text style={s.label}>{label}</Text>
