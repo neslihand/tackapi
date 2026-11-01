@@ -166,7 +166,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   ('Bani'de çift 'yapan'), eksik ve açıklama gibi uzun İngilizce karşılıkları (kural: 1–3 kelimelik ad) ve editör
   terimlerinin İngilizce tanımlarını düzeltir; yinelenen 'hunkar-mahfili', 'kitabe' ve 'lectern' taslağa alınır (57
   değişiklik + 3). Eski değer değişmişse atlar; `load_db.py` terimleri yeniden yüklerse yeniden çalıştırılmalı. Kitap
-  tanımlarının İngilizcesi eksik 13 terime dokunmaz. Uygulamayı geliştirici kendi penceresinde yapacak. Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
+  tanımlarının İngilizcesi eksik 13 terime dokunmaz. Gerçek veritabanında 1 Kasım 2026'da uygulandı (yayında 52 terim). Kitaptan içe aktarılan metin yalnızca Türkçe gelir (İngilizce
   paragraflar Türkçeyle hizalı değil); İngilizce başlık ve metin elle yazılırsa İngilizce sitede gösterilir.
 - **Yönetici asistanı (28 Ekim 2026):** `agent.py`, panelde `#/asistan`, `#/takvim`, `#/gundem`; ana sayfada "Gündem"
   bandı (`frontend/src/vakif/Agenda.tsx`). Göç `016_agent.sql` (gerçek veritabanında henüz uygulanmadı). Öneriyi açık
