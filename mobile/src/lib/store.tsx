@@ -6,6 +6,7 @@ import { loadFeed, setServerOverride, type Feed, type Item } from './api';
 import { useLang } from './i18n';
 import { buildQuests } from './quests';
 import { answerable } from './quiz';
+import type { Telling } from './work';
 import { canonical, discover, emptyProgress, mergeProgress, parseProgress, recordQuiz, STORAGE_KEY, toggleFavorite, visit, type Progress } from './passport';
 
 // ------------------------------------------------------------------------------------------------ collection
@@ -87,10 +88,10 @@ export function usePassport() {
 }
 
 // ------------------------------------------------------------------------------------------------ settings
-// server: the backend address typed in Ayarlar ('' = the built-in one)
-export type Settings = { dailyWork: boolean; dailyHour: number; streakReminder: boolean; server: string };
+// server: the backend address typed in Ayarlar ('' = the built-in one); telling: the last telling chosen on a work
+export type Settings = { dailyWork: boolean; dailyHour: number; streakReminder: boolean; server: string; telling: Telling };
 const SETTINGS_KEY = 'esik:settings:v1';
-const defaults: Settings = { dailyWork: false, dailyHour: 9, streakReminder: false, server: '' };
+const defaults: Settings = { dailyWork: false, dailyHour: 9, streakReminder: false, server: '', telling: 'story' };
 const SettingsContext = createContext<{ settings: Settings; ready: boolean; change: (s: Partial<Settings>) => void } | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {

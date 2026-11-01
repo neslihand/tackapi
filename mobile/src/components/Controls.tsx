@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   chipOn: { backgroundColor: colors.emerald, borderColor: colors.emerald },
   chipText: { fontWeight: '500', ...type.body },
   segments: { flexDirection: 'row', padding: space.xs, gap: space.xs, borderRadius: radius.m, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.parchmentDeep },
-  segment: { flex: 1, minHeight: hit, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.s, borderRadius: radius.s },
+  segment: { flex: 1, minHeight: hit, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xs, borderRadius: radius.s },
   segmentOn: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.goldLine },
   segmentText: { color: colors.soft, fontWeight: '500', ...type.body },
   segmentTextOn: { color: colors.ink, fontWeight: '700' },

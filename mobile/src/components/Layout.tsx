@@ -1,7 +1,7 @@
 // Screen layout pieces: section headers, horizontal rails and the bottom action bar.
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactElement } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import type { ReactElement, ReactNode } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { IconName } from '@/components/UI';
 import { colors, hit, radius, serif, space, type } from '@/lib/theme';
@@ -30,22 +30,28 @@ export function HorizontalRail<T>({ title, actionLabel, onAction, data, renderIt
   </View>;
 }
 
-export type BarAction = { label: string; icon: IconName; onPress: () => void; kind?: 'dark' | 'gold' | 'plain'; accessibilityLabel?: string; disabled?: boolean };
+export type BarAction = { label: string; icon: IconName; onPress: () => void; kind?: 'dark' | 'gold' | 'plain'; accessibilityLabel?: string; disabled?: boolean; busy?: boolean };
 
-/** Fixed to the bottom of the screen above the safe area; 2–3 equal actions. Give the scroll view bottom padding. */
-export function StickyActionBar({ actions }: { actions: [BarAction, BarAction] | [BarAction, BarAction, BarAction] }) {
+/** The bar's height without the safe area; add insets.bottom for the scroll view's bottom padding. */
+export const ACTION_BAR_HEIGHT = 52 + space.s * 2;
+
+/** Fixed to the bottom of the screen above the safe area; 2–3 equal actions and an optional note above them. */
+export function StickyActionBar({ actions, note }: { actions: [BarAction, BarAction] | [BarAction, BarAction, BarAction]; note?: ReactNode }) {
   const insets = useSafeAreaInsets();
   return <View style={[styles.bar, { paddingBottom: space.s + insets.bottom }]}>
+    {note && <View style={styles.note}>{note}</View>}
+    <View style={styles.actions}>
     {actions.map(a => {
       const kind = a.kind ?? 'plain';
       const fg = kind === 'dark' ? colors.goldSoft : colors.ink;
       return <Pressable key={a.label} accessibilityRole="button" accessibilityLabel={a.accessibilityLabel ?? a.label}
-        accessibilityState={{ disabled: a.disabled }} disabled={a.disabled} onPress={a.onPress}
-        style={({ pressed }) => [styles.barAction, styles[kind], a.disabled && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.97 }] }]}>
-        <Ionicons name={a.icon} size={20} color={fg} />
+        accessibilityState={{ disabled: a.disabled || a.busy, busy: a.busy }} disabled={a.disabled || a.busy} onPress={a.onPress}
+        style={({ pressed }) => [styles.barAction, styles[kind], (a.disabled || a.busy) && { opacity: 0.5 }, pressed && { transform: [{ scale: 0.97 }] }]}>
+        {a.busy ? <ActivityIndicator color={fg} /> : <Ionicons name={a.icon} size={20} color={fg} />}
         <Text style={[styles.barLabel, { color: fg }]} numberOfLines={1}>{a.label}</Text>
       </Pressable>;
     })}
+    </View>
   </View>;
 }
 
@@ -57,7 +63,9 @@ const styles = StyleSheet.create({
   rail: { gap: space.xs },
   railHeader: { paddingHorizontal: space.m },
   railList: { paddingHorizontal: space.m, gap: space.m },
-  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', gap: space.s, paddingTop: space.s, paddingHorizontal: space.m, backgroundColor: colors.parchment, borderTopWidth: 1, borderTopColor: colors.line },
+  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: space.s, paddingTop: space.s, paddingHorizontal: space.m, backgroundColor: colors.parchment, borderTopWidth: 1, borderTopColor: colors.line },
+  note: { paddingBottom: space.xs },
+  actions: { flexDirection: 'row', gap: space.s },
   barAction: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: space.xs, borderRadius: radius.m, borderWidth: 1 },
   dark: { backgroundColor: colors.emerald, borderColor: colors.goldLine },
   gold: { backgroundColor: colors.gold, borderColor: colors.goldText },

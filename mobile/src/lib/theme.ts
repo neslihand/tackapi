@@ -35,6 +35,7 @@ export const type = {
   title: { fontSize: 26, lineHeight: 31 },
   heading: { fontSize: 18, lineHeight: 24 },
   body: { fontSize: 15, lineHeight: 22 },
+  reading: { fontSize: 17, lineHeight: 27 },   // long serif text on the work screen
   caption: { fontSize: 12, lineHeight: 16 },
 };
 
