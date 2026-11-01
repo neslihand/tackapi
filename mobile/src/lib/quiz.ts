@@ -4,11 +4,11 @@
 import { makers, type Item, type QuizQuestion } from './api';
 import { t } from './i18n';
 import { normalize } from './passport';
+import { ROUND_SIZE } from './quizRound';
 
 export type Random = () => number;
 const MAX_OPTIONS = 4;
 const MIN_OPTIONS = 3;
-export const ROUND_SIZE = 5;
 
 export function shuffle<T>(items: readonly T[], random: Random = Math.random) {
   const copy = [...items];

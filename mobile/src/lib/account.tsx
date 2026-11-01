@@ -48,7 +48,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const synced = useRef<string | null>(null);      // the passport the server last confirmed, in canonical form
   const latest = useRef(progress);
-  latest.current = progress;
+  useEffect(() => { latest.current = progress; }, [progress]);
 
   const signOutHere = useCallback(async () => {
     setSessionKey(null); await clearSecret(); setUser(null); synced.current = null; setSync('idle'); setLastSync(null);

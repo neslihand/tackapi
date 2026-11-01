@@ -13,3 +13,10 @@ export const shareVerb = () => t('Paylaş', 'Share');
 export async function shareCard(_card: RefObject<ComponentRef<typeof View> | null>, _name: string) {
   throw new Error(t('Paylaşım telefonda çalışır; tarayıcı sürümünde yalnızca kartın önizlemesi var.', 'Sharing works on the phone; the browser version only previews the card.'));
 }
+
+/** Most desktop browsers have no share sheet: the link is shown instead. */
+export async function shareLink(text: string, url: string): Promise<string | null> {
+  if (typeof navigator.share !== 'function') return url;
+  try { await navigator.share({ text, url }); return null; }
+  catch (e) { return (e as Error)?.name === 'AbortError' ? null : url; }
+}
