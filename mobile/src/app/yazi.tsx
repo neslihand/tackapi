@@ -5,7 +5,8 @@ import { Image } from 'expo-image';
 import type { ImagePickerAsset } from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputSelectionChangeEvent } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type TextInputSelectionChangeEvent } from 'react-native';
+import { Text, TextInput } from '@/components/Typography';
 import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { mediaUrl } from '@/lib/api';
@@ -33,7 +34,7 @@ export default function WriteArticle() {
     <Title>{t('Hikâyeni anlat.', 'Tell your story.')}</Title>
     <Text style={s.body}>{t('Bildiğin bir eserin, büyüdüğün mahallenin ya da bir vakıf geleneğinin hikâyesini yaz. Editörler okuyup onaylayınca Okuma Odası’nda takma adınla yayımlanır.',
       'Write the story of a work you know, the quarter you grew up in or a waqf tradition. Once the editors read and approve it, it is published in the Reading Room under your nickname.')}</Text>
-    <Button icon="person-circle-outline" label={t('Giriş yap ya da hesap aç', 'Sign in or create an account')} onPress={() => router.push('/giris')} />
+    <Button icon="person-circle-outline" label={t('Giriş yap ya da hesap aç', 'Sign in or create an account')} onPress={() => router.push('/giris?sonra=/yazi')} />
   </ScrollView>;
   if (editId && existing === null) return <Loading />;
   if (editId && existing === 'missing') return <Empty title={t('Bu yazı bulunamadı.', 'This article could not be found.')} />;

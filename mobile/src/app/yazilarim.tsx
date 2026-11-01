@@ -2,7 +2,8 @@
 // An unpublished article is corrected and sent again; anything can be withdrawn (a second tap confirms).
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Typography';
 import { Button, Empty, Eyebrow, Loading, Notice } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
@@ -33,7 +34,7 @@ export default function MyWriting() {
   }
 
   if (!account.ready) return <Loading />;
-  if (!account.user) return <Empty title={t('Önce giriş yap.', 'Sign in first.')} action={<Button icon="person-circle-outline" label={t('Giriş yap', 'Sign in')} onPress={() => router.push('/giris')} />} />;
+  if (!account.user) return <Empty title={t('Önce giriş yap.', 'Sign in first.')} action={<Button icon="person-circle-outline" label={t('Giriş yap', 'Sign in')} onPress={() => router.push('/giris?sonra=/yazilarim')} />} />;
   if (!articles) return <Loading />;
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }} refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.goldText} />}>
     <Eyebrow>✦ {t('YAZILARIM VE ÖNERİLERİM', 'MY WRITING AND SUGGESTIONS')}</Eyebrow>

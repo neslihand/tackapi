@@ -3,7 +3,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Typography';
 import { Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { ApiError } from '@/lib/api';
 import { t, useLang } from '@/lib/i18n';
@@ -16,8 +17,10 @@ export default function Term() {
   const [term, setTerm] = useState<TermDetail | null>(null);
   const [stale, setStale] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showing = `${slug}|${lang}`;
+  const [shown, setShown] = useState(showing);
+  if (showing !== shown) { setShown(showing); setTerm(null); setError(null); }
   useEffect(() => {
-    setTerm(null); setError(null);
     loadTerm(slug).then(r => { setTerm(r.data); setStale(r.stale); },
       e => setError(e instanceof ApiError && e.status === 404 ? t('Bu terim sözlükte yok.', 'This term is not in the glossary.') : String(e?.message ?? e)));
   }, [slug, lang]);

@@ -1,9 +1,10 @@
 // Terim öner: a visitor suggests a glossary term; it appears in the glossary once an editor approves it (it is never
 // a source for the chat assistant).
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text, TextInput } from '@/components/Typography';
 import { Button, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
@@ -14,7 +15,8 @@ const EMPTY: TermDraft = { term_tr: '', term_en: '', definition_tr: '', definiti
 
 export default function SuggestTerm() {
   const account = useAccount();
-  const [d, setD] = useState<TermDraft>(EMPTY);
+  const { terim } = useLocalSearchParams<{ terim?: string }>();      // a word the glossary search did not find
+  const [d, setD] = useState<TermDraft>(() => ({ ...EMPTY, term_tr: terim ?? '' }));
   const [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<MyTerm | null>(null);
@@ -25,7 +27,7 @@ export default function SuggestTerm() {
     <Eyebrow>✦ {t('TERİM ÖNER', 'SUGGEST A TERM')}</Eyebrow>
     <Title>{t('Sözlüğe bir kelime kat.', 'Add a word to the glossary.')}</Title>
     <Text style={s.body}>{t('Sözlükte olmayan bir mimari ya da vakıf terimini öner; editörler onaylayınca sözlükte görünür.', 'Suggest an architecture or waqf term the glossary does not have; once the editors approve it, it appears in the glossary.')}</Text>
-    <Button icon="person-circle-outline" label={t('Giriş yap ya da hesap aç', 'Sign in or create an account')} onPress={() => router.push('/giris')} />
+    <Button icon="person-circle-outline" label={t('Giriş yap ya da hesap aç', 'Sign in or create an account')} onPress={() => router.push(`/giris?sonra=${encodeURIComponent(`/terim-oner${terim ? `?terim=${terim}` : ''}`)}`)} />
   </ScrollView>;
 
   async function submit() {
