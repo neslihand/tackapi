@@ -140,7 +140,13 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   sayfasından `books.py`'ye eklendi; altı kitabın künyesi tam. Mevcut veritabanına `book_credits.py --report/--apply`
   yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
   Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
-- **Testler:** `python -m unittest discover -s tests` (190 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **PDF'ten doğrudan çıkarım (2 Kasım 2026, devam ediyor):** plan ve ilerleme `docs/pdf-cikarim-plani.md`. Kod
+  `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue`, pipeline klasöründen). Çıktılar
+  `data/pdfx/` altında ve git dışında; yalnızca `toc_overrides.json` izlenir. Kitap kuralları `books.py` → `pdfx`.
+  Adım 1–2 bitti: sayfa düzeni, 6 kitabın içindekileri, şehir kuyruğu. Veritabanına henüz yazılmadı. Kuyruğun pilot
+  kilidi `DATABASE_URL` ile yeniden üretilmeden (`pilot_check: "db"`) yükleme yapılmamalı. Hatay'da TR/EN konumla
+  değil, dil tespitiyle ayrılır.
+- **Testler:** `python -m unittest discover -s tests` (219 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
