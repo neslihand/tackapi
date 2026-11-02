@@ -32,7 +32,7 @@ export default function TabsLayout() {
     <Tabs.Screen name="kesfet" options={{ title: t('Keşfet', 'Explore'), headerTitle: t('Keşfet', 'Explore'), tabBarIcon: icon('compass-outline') }} />
     <Tabs.Screen name="kamera" options={{ title: t('Tara', 'Scan'), headerTitle: t('Tara', 'Scan'), tabBarIcon: icon('scan-outline') }} />
     <Tabs.Screen name="oyna" options={{ title: t('Oyna', 'Play'), headerTitle: t('Oyna & Öğren', 'Play & Learn'), tabBarIcon: icon('extension-puzzle-outline') }} />
-    <Tabs.Screen name="pasaport" options={{ title: t('Pasaport', 'Passport'), tabBarIcon: icon('ribbon-outline'), headerRight: settingsButton }} />
+    <Tabs.Screen name="pasaport" options={{ title: t('Profil', 'Profile'), tabBarIcon: icon('person-circle-outline'), headerRight: settingsButton }} />
   </Tabs>;
 }
 

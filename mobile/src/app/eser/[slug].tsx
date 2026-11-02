@@ -6,7 +6,7 @@ import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArchImage } from '@/components/brand/ArchImage';
+import { CoverImage } from '@/components/brand/CoverImage';
 import { NightGlow } from '@/components/brand/Gradient';
 import { Contributions } from '@/components/Contributions';
 import { Chip, SegmentedControl } from '@/components/Controls';
@@ -204,7 +204,7 @@ export default function Work() {
       {/* the title sits under the picture, never over it, so it shows whole on every screen size */}
       <View style={s.cover}>
         <NightGlow color={colors.emeraldLight} />
-        <ArchImage uri={mediaUrl(cover?.src)} size="lg" light alt={cover ? cover.alt ?? name : undefined} kind={item?.kind} kind_label={item?.kind_label} />
+        <CoverImage uri={mediaUrl(cover?.src)} light alt={cover ? cover.alt ?? name : undefined} kind={item?.kind} kind_label={item?.kind_label} />
         <View style={s.coverText}>
           <Title light>{name}</Title>
           {!!card.length && <Eyebrow light>{card.join(' · ')}</Eyebrow>}

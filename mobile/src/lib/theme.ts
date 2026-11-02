@@ -91,6 +91,11 @@ export const measure = { reading: 640 };
 // Arched pictures: small (a list row) and medium; large takes the full width at this height ratio, up to archMaxHeight.
 export const arch = { sm: { width: 56, height: 72 }, md: { width: 120, height: 156 }, lgRatio: 1.25, lgMax: 270 };
 
+// A work's cover plate: height = width × ratio (at most max); the inner frame sits `inset` in, its corner marks `corner` long.
+// The door of the loading screen is drawn on a w × h canvas.
+export const cover = { ratio: 0.72, max: 440, inset: 10, corner: 18 };
+export const door = { w: 72, h: 100 };
+
 // The gold button is 56 high, a secondary one 48; the gold button's icon sits in a square bay of the same height.
 export const control = { primary: 56, secondary: 48, frameGap: 4, ghostCircle: 40, tabBar: 64 };
 
