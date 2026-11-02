@@ -563,3 +563,52 @@ veritabanı olmadığı için atlandı, hepsi geçti.
 3. Adım 6 (`pdfx/report.py`): kitap başına doğrulama raporu (TOC sayısı, çapa, boş metin, EN oranı, paragraf farkı,
    izlenmeyen başlık, eski kayıtla benzerlik) ve tek bir kontrol listesi.
 4. Adım 7 (`pdfx/load.py`): `--rehearse` (ROLLBACK) ile prova, sonra turlarla yükleme. Pilot kilidi iki katlı.
+
+### 6. oturum (3 Kasım 2026): Adım 6, doğrulama raporu
+Veritabanına bir şey yazılmadı; rapor yalnızca dosya okur.
+
+**`pdfx/report.py`** → `data/pdfx/report.csv` (bütün kitaplar; önce engeller) ve `data/pdfx/<kitap>/report.csv`.
+Her eser için tek satır: ad, sayfalar, TR/EN paragraf ve karakter sayıları, fotoğraf sayısı, kuyruk durumu ve
+eşleşmesi, eski metinle kapsama, bayraklar, eski parçalar ve öneri. 1–2 saniyede çalışır.
+- **engel** (yüklenmez): `anchor_guess`, `empty_tr` (külliye girişi dışında), `toc_count_mismatch`.
+  `--mark-failed` bunları kuyrukta `failed` yapar (`failed_by='report'`); engel kalkınca aynı seçenek geri alır.
+- **kontrol** (yüklenir, panelde bakılır): dil oranı, paragraf farkı, İngilizce çapa tahmini, eski metinle kapsama
+  < 0,90 (`changed_vs_db`), ad farkı, sayfa kayması, eser gibi görünen izlenmeyen ara başlık, kuyruk çakışması,
+  `match_suspect`, `absorbs_old`, `absorbs_pilot`. Fotoğraf işaretleri yalnızca eski sayfa aralığı yöntemiyle
+  anlaşmayan fotoğraflarda sayılır (219 metinsiz fotoğraf sayfasının 175'inde iki yöntem aynı eseri söylüyor).
+- **bilgi:** `name_cased`, `complex_no_intro`, `pilot_locked`. Üst eseri pilot olan hazire de kilitlidir (pilota alt
+  eser eklenmez).
+
+**Metin denetimi (yeni):** Eski veritabanı ara başlıklardan kayıt kurmuştu ve bazı eski kayıtların adı metinleriyle
+uyuşmuyor. Örnekler:
+- "Başçı İbrahim Bey Camii" kaydı yok; metni '…Haziresi', '…Mezarı' ve '…Grave' kayıtlarına dağılmış.
+- Eski "Beyazıt Paşa (Çatalçeşme) Camii" kaydının metni 'Babadağ Camii…' diye başlıyor.
+
+Bu yüzden ad eşleşmesi tek başına yetmiyor. Rapor her eser için, sayfaları ±3 örtüşen eski kayıtlardan metninin
+(5'li sözcük dizilerinin) en az %80'i yeni eserde geçenleri bulur (`eski_parcalar`):
+- 574 eserde kuyruk eşleşmesi metinle doğrulanıyor.
+- 82 eser eşleşenden başka eski kayıtları da yutuyor (`absorbs_old`). Yüklenince bu eski kayıtların metni sitede
+  ikinci kez görünür; yükleyici (Adım 7) bunlar için karar vermeli.
+- 7 eşleşme şüpheli (`match_suspect`). Aksu Köyü Camii ve Haziresi kuyrukta eski hazire kaydına bağlı, metin
+  `bursa-kestel-aksu-koyu-camii` kaydında. Lala Mustafa Paşa Külliyesi İmareti kuyrukta külliye kaydına bağlı, metin
+  `…-imareti` kaydında.
+- **46 eser için `oneri_db_slug`:** eşleşmesiz ya da şüpheli eserin metni boştaki tek bir eski kayıtta. Bunların
+  21'i hazire alt eseri (Akbıyık Haziresi ← `bursa-osmangazi-akbiyik-haziresi`), 7'si Hatay'da (gövde adı alan 5
+  eser dahil).
+  **Otomatik uygulanmaz:** geliştirici onaylarsa `toc_overrides.json` → set → `db_slug` ile girer. Hazireler
+  içindekilerde olmadığı için onların eşlemesi yükleyicide yapılmalı. Gözle karar gerektirenler var: Molla Gürani
+  Mescidi ← eski 'molla-fenari-camii-ve-haziresi', Şifa Hamamı ← eski 'aksehir-mahkeme-yeni-hamami' (eski kayıtların
+  adı yanlış).
+
+**Sonuç:** 737 eser (TOC 707 + 30 hazire); **engel 0**, kontrol 224, tamam 513; pilot 26. Altı kitapta içindekiler
+ile çıkarılan eser sayısı birebir tutuyor.
+
+**Testler:** `tests/test_pdfx_report.py` (5 test: durumlar, şüpheli eşleşme ve öneri, hazire, `--mark-failed` ve
+geri alma, TOC sayısı engeli). Bütün takım: 271 test, 145'i veritabanı olmadığı için atlandı, hepsi geçti.
+
+**Sonraki oturumun ilk işi**
+1. Geliştirici `report.csv` içindeki 46 `oneri_db_slug` önerisini ve 7 `match_suspect` kaydını gözden geçirsin.
+   Onaylananlar overrides'a yazılacak (içindekiler kayıtları) ya da yükleyiciye eşleme listesi olarak verilecek
+   (hazireler).
+2. Adım 7 (`pdfx/load.py`) için karar: `absorbs_old` kayıtlarındaki eski kayıtlar ne olacak? Öneri: pilot değilse
+   `merged` taslağa alınsın (silinmez; `fix_titles.py`'deki birleştirmeyle aynı).

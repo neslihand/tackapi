@@ -142,7 +142,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
 - **PDF'ten doğrudan çıkarım (2 Kasım 2026, devam ediyor):** plan ve ilerleme `docs/pdf-cikarim-plani.md`. Kod
   `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue | pdfx.anchor | pdfx.text | pdfx.gold |
-  pdfx.photos`,
+  pdfx.photos | pdfx.report`,
   pipeline klasöründen). Çıktılar `data/pdfx/` altında ve git dışında; yalnızca `toc_overrides.json` izlenir. Kitap
   kuralları `books.py` → `pdfx`. Adım 1–4 bitti: sayfa düzeni, içindekiler, şehir kuyruğu (26/26 pilot kilitli,
   veritabanıyla doğrulandı), çapalar (`anchors.json`; TR ve ayrı EN başlangıcı) ve TR/EN paragraflar (`works.json`).
@@ -155,7 +155,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   Adım 5 (3 Kasım 2026): `pdfx.photos` 3.413 fotoğrafı çapaya göre bağlar (`photos.json`; WebP'ler mevcut, yeni dosya
   yok); eski bağlamayla 2.732 aynı, 313 farklı (farklarda eski kayıt hataları). Pilot Hatuniye Mescidi'ne eskiden
   Şems-i Tebrizi Camii'nin 11 fotoğrafı bağlanmıştı; panelde kontrol edilmeli.
-- **Testler:** `python -m unittest discover -s tests` (266 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+  Adım 6 (3 Kasım 2026): `pdfx.report` → `data/pdfx/report.csv` (737 eser; engel 0, kontrol 224). Metin denetimi eski
+  kayıtların ad/metin uyuşmazlığını bulur (`match_suspect` 7, `absorbs_old` 82) ve 46 eser için `oneri_db_slug` önerir;
+  öneriler otomatik uygulanmaz, geliştirici onaylar.
+- **Testler:** `python -m unittest discover -s tests` (271 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
