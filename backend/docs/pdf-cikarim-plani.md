@@ -284,3 +284,227 @@ Kuyruk: Bursa 351, Konya 280, Hatay 77 kayıt (eser + külliye). Şüpheli satı
 3. Adım 3 (`pdfx/anchor.py`): başlık yalnızca `title_tr` içinde değil, `heading_tr` içinde de aranacak (Konya II
    külliye üyeleri, Bursa hazireleri). İçindekilerde olmayan ara başlıklar `untracked_heading` olarak raporlanacak.
 4. Karar 3 henüz uygulanmadı: Konya `en_quality='usable'` ve CLAUDE.md'deki "Konya İngilizcesi kullanılmaz" kuralı.
+
+### 2. oturum (2 Kasım 2026, akşam): pilot kilidi düzeltmesi ve Adım 3 (çapa)
+Veritabanına hiçbir şey yazılmadı; `segment.py`, `finalize.py`, `images.py` ve `data/` altındaki eski dosyalar
+değişmedi. Oturumda `DATABASE_URL` yoktu. Pilot kilidi, eski çıkarım (`monuments_all.json`) ve geliştiricinin
+çıktısındaki 26 pilot slug'ıyla bellekte denendi.
+
+**Pilot kilidi** (geliştiricinin çalıştırmasında 25/26 kilit vardı ve 2 kayıt aynı pilota bağlanmıştı)
+- *I. Murad Hudâvendigâr Türbesi:* eski kaydın `toc_title` alanı kaymıştı ('… İmareti'). Bu yüzden İmaret kaydı da
+  Türbe pilotuna `name(page≠)` ile bağlanıyordu. Eşleştirme sırası artık şöyle: `name_tr` birebir → `name_tr` bulanık
+  (sayfa kesişimiyle) → `toc_title` birebir. `toc_title` en son denenir ve eşleşme türü `toc_title:…` olarak yazılır.
+- *Sultan Selim (Selimiye) Camii:* veritabanında aynı adlı ikinci bir kayıt (`-2`) var, bu yüzden ad tek değildi.
+  Birleştirilmiş taslaklar (`merged`) artık aday sayılmıyor. Belirsiz durumda pilot öne alınıyor.
+- **Bire bir kural:** bir veritabanı eseri tek kayda bağlanır. En güçlü eşleşme kalır (override > name+page > name >
+  … > fuzzy > toc_title). Diğer kayıtların bağı kalkar ve `db_conflict` alanına yazılır; bu kayıtlar yeni eser sayılır.
+  Pilotla ilgili çakışma `!`, diğerleri `·` ile raporlanır. Overrides'taki `db_slug` veritabanında yoksa `!` basılır.
+- Kırılgan 4 pilot `db_slug` ile sabitlendi: b1-0010 Türbe, b2-0046 Hz. Üftâde Tekkesi (slug İngilizce), b3-0101 Şeyh
+  Müftü Camii (slug İngilizce), k1-0054 Selimiye.
+- Simülasyon sonucu: **26/26 kilit, `!` satırı yok.** Kalan iki `·` satırı pilot değil: Lala Mustafa Paşa Arastası
+  bulanık eşleşmesi ve Konya I'deki ikinci Şeyh Ulema kaydı (aşağıda düzeltildi).
+  **Gerçek doğrulama için geliştirici `python -m pdfx.cityqueue` komutunu `DATABASE_URL` tanımlı pencerede
+  çalıştırmalı.** Hedef: "kuyrukta kilitlenen: 26", `!` satırı yok.
+
+**İçindekiler düzeltmesi:** Konya I içindekilerinde "Şeyh Ulema Yusuf Ağa Camii" iki kez basılmış (s. 279 ve 280).
+Gövdede s. 280'in başlığı "Aziziye Camii"; eski veride de `konya-karatay-aziziye-camii` 280–286 sayfalarında ve
+içindekilerde Aziziye hiç yok. k1-0110, overrides ile "Aziziye Camii / Aziziye Mosque" yapıldı.
+
+**Adım 3: `pdfx/anchor.py`** → `data/pdfx/<kitap>/anchors.json` (6 kitap yaklaşık 2 saniyede işlenir) ve
+`data/pdfx/anchor_report.csv`
+- Adaylar: `title_tr`, `heading_tr` (külliye üyeleri, hazireler), `vertical_tr` (Hatay), `district`, `section`.
+- Eşleştirme üç geçişte yapılır: (1) içindekiler sayfası ±1 ve benzerlik ≥ 0,85; (2) ±3 sayfa (`page_shift`); (3) tam
+  o sayfadaki tek eser başlığı ve benzerlik ≥ 0,5 (`name_differs`). Kitap sırası korunur. Baştaki ilçe adı atılır
+  ('ILGIN LALA MUSTAFA PAŞA KÜLLİYESİ …'). Kısaltılmış ya da uzatılmış başlıklar sözcük kapsamasıyla tutar
+  ('HUDÂVENDİGÂR MEDRESESİ').
+- `toc_overrides.json` → `set` içinde `anchor_text` alanıyla bir kaydın gövde başlığı elle belirtilebilir.
+- Gövdede ayracı olmayan sayfasız bölüm etiketleri `virtual` olur ve metin sınırı sayılmaz. Bunlar Bursa II–III'te
+  her ilçenin altındaki "CAMİLER VE HAZİRELER" gibi etiketlerdir; çapa alsalardı önceki eserin metnini keserlerdi.
+- Okunur ad (`name_tr_display`/`name_en_display`): ad içindekilerden gelir. Ad büyük harfliyse yazım gövde
+  başlığından alınır (yalnızca adlar aynıysa). Gövde başlığı da büyük harfliyse Türkçe kurallı dönüşüm yapılır ve
+  `name_cased` bayrağı konur. İngilizce adda Türkçe adla ortak sözcükler Türkçe yazılır ('Sheikh Hıdır Tomb').
+
+| Kitap | Kayıt | Başlık | Ara başlık | Dikey | İlçe/bölüm | Sanal | Tahmin | Sayfa ± | Ad farklı | Hazire | Külliye parçası | Eser? | Yazar | Ara |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Bursa I | 136 | 99 | 33 | 0 | 4 | 0 | 0 | 3 | 0 | 27 | 0 | 0 | 0 | 2 |
+| Bursa II | 136 | 104 | 17 | 0 | 8 | 7 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 1 |
+| Bursa III | 141 | 90 | 8 | 0 | 13 | 30 | 0 | 0 | 0 | 3 | 0 | 1 | 0 | 1 |
+| Konya I | 211 | 186 | 0 | 0 | 25 | 0 | 0 | 12 | 1 | 0 | 15 | 1 | 2 | 0 |
+| Konya II | 136 | 77 | 16 | 0 | 43 | 0 | 0 | 3 | 0 | 0 | 0 | 0 | 5 | 10 |
+| Hatay | 87 | 12 | 0 | 72 | 0 | 3 | 0 | 0 | 6 | 0 | 29 | 8 | 0 | 9 |
+
+Eser düzeyinde **tahmini çapa yok.** Eski çıkarımla çapraz denetimde (eşleşen 620 eser) 3 kaydın başlangıcı eski
+sayfa aralığının dışında kaldı. Üçünde de yeni çapa doğru, eski kayıt yanlıştı: Hoca Hasan Camii s. 344, Emir Sultan
+Hamamı s. 295, Dikmece-Şeyh Hızır Makamı s. 410.
+
+**Bulgular**
+1. **Hatay'da eser adları sol kenarda dikey yazılı** (aşağıdan yukarı; TR sütunu solda, EN sağda, uzun adlar ikişer
+   sütun). 1. oturumda bunlar "süs harfi" sanılıp `vertical` rolü almıştı. `layout.py` artık her sayfaya `vertical`
+   alanını (PyMuPDF'in okuduğu sırayla döndürülmüş satırlar) yazıyor. Bu alan için Hatay'ın `pages.jsonl` dosyası
+   yeniden üretildi; diğer kitaplarda dikey metin yok. Hatay gövde başlıkları da BÜYÜK HARF olduğu için okunur ad
+   dönüşümle kuruluyor (77 eserde `name_cased`; panelde kontrol edilmeli).
+2. **Hatay'da kitaba basılı kalmış iki dizgi notu var** (12 pt MinionPro, dikey): s. 408 "LİSTEDE TURBE BURDA MAKAM",
+   s. 436 "LİSTEDE TURBE BURDA ZIYARET". Başlığa girmiyorlar; `vertical_note` bayrağı ve `anchor.note` olarak
+   taşınıyorlar. İçindekiler ile gövde adının farklı olduğunu kitap da doğruluyor.
+3. Hatay'da içindekiler ile gövde başlığı farklı olan 6 eser var (`name_differs`; ad şimdilik içindekilerden):
+   KARHANE / KERHAN (YEMENİCİLER) MESCİDİ, RIFATAĞA (CİVELEK) / RIFAT AĞA MESCİDİ, SEMERCİLER CAMİİ / MESCİDİ,
+   ŞEYH HIZIR TÜRBESİ / GÖKMEYDAN-ŞEYH HIZIR MAKAMI, ŞEYH HIZIR TÜRBESİ / 5. MINTIKA 905 PARSEL HIZIR TÜRBESİ,
+   ŞEYH HASAN GATELLİ TÜRBESİ / … (ALBİTELLİ) ZİYARETİ. Hangi adın kullanılacağına geliştirici karar verecek.
+4. Konya I'de Mevlâna Külliyesi'nin gövde başlığı "Mevlâna Türbesi (Müze)". Kayıt `name_differs` ile bağlandı.
+   Külliyenin 14 bölümü ve giriş başlığı `complex_part` olarak çıktı (Semâhâne, Mescit, Mutfak, … Hasan Paşa Türbesi).
+5. Bursa'da 35 hazire/kabir ara başlığı `hazire` olarak çıktı (çoğu "X Camii ve Haziresi" kaydının içinde, birkaçı
+   "Selimzade Camii" gibi adında hazire geçmeyen kayıtlarda). Hatay külliyelerinde 29 üye başlığı (Cami, Medrese,
+   Şadırvan, İmaret…) var. Kanuni Sultan Süleyman Kervansarayı, Kantara ve Nakip camileri ve Kurşunlu Han
+   içinde ise 8 `work_like` başlık var (Cami, Kurtuluş Hamamı, Medrese, Han). Adım 4'te bunların alt eser mi yoksa ana eserin bölümü mü olacağına karar verilmeli.
+6. Sayfa kayması: Konya I'de 12 kayıt var (çoğu −1; s. 74–79 ve 142–187 arası), Bursa I'de 3, Konya II'de 3.
+   Gövde başlığı içindekiler sayfasından bir önceki sayfada. Basılı sayfa noları sayfadaki numaralarla tutarlı;
+   içindekilerin kendisi kaymış görünüyor. Kaynakçadaki sayfa için paragrafın basılı sayfası kullanılacak (Adım 4).
+7. **Adım 4 için önemli:** Hatay'da TR ve EN sütunları bazı sayfalarda o kadar yakın ki `layout.group_lines` ikisini
+   tek satırda birleştiriyor: 33 sayfada 379 gövde satırı ("Mescit eski Antakya'nın … The Masjid is located on
+   Uzun"). Bu satırların dili de yanlış (`en`). Adım 4'ten önce Hatay için sütun ayrımı düzeltilmeli; örneğin sayfa
+   başına sütun sınırı bulunabilir ya da dil değişiminden bölünebilir. *(3. oturumda düzeltildi. 379 sayısı
+   abartılıydı: tam genişlikteki tek sütun satırları da sayılmıştı. Gerçekte 3 sayfada 15 karışık satır vardı.)*
+8. Hatay içindekilerinde bir İngilizce bölüm adı bozuk okunuyor ("Glossary of Terms Contents"); yalnızca bölüm
+   düzeyinde, eserleri etkilemiyor.
+
+**Testler:** `tests/test_pdfx_anchor.py` (13 test; ad dönüşümü, dikey başlık, çapa sırası, sanal bölüm, sayfa
+kayması, ad farkı, izlenmeyen başlık türleri; yerelde `anchors.json` varsa gerçek sonuç denetimi). `test_pdfx_toc.py`
+dosyasına 3 kuyruk testi eklendi (kaymış `toc_title`, `merged` taslak, bire bir kural). Bütün takım: 237 test,
+145'i veritabanı olmadığı için atlandı, hepsi geçti.
+
+**Sonraki oturumun ilk işi**
+1. `$env:DATABASE_URL` tanımlı pencerede `python -m pdfx.toc --no-report` ve ardından `python -m pdfx.cityqueue`
+   çalıştırılacak (yalnızca okur). Hedef: "kuyrukta kilitlenen: 26" ve `!` satırı yok. Pilot kilidi tamam olmadan
+   yükleme yapılmayacak.
+2. Hatay'daki 6 ad farkı (bulgu 3) ve Bursa/Hatay alt başlıklarının (bulgu 5) nasıl kurulacağı için geliştirici
+   kararı alınacak.
+3. Adım 4 (`pdfx/text.py`): önce Hatay sütun birleşmesi (bulgu 7) düzeltilecek, sonra çapadan çapaya TR/EN
+   paragraflar çıkarılacak.
+
+### 3. oturum (2 Kasım 2026, gece): kararlar ve Adım 4 (TR/EN metin)
+Veritabanına hiçbir şey yazılmadı. Geliştirici `python -m pdfx.cityqueue` komutunu veritabanıyla çalıştırdı:
+**26/26 pilot kilitli, `!` satırı yok.** Kalan 3 `·` çakışması Konya II'deki pilot dışı eski kayıtlarda.
+
+**Geliştirici kararları (2 Kasım 2026)**
+1. Hatay'da içindekiler ile dikey gövde başlığı farklıysa **gövde başlığı** kullanılır (`name_from_body`; içindekiler
+   adı `name_tr` alanında saklanır). Bu 6 eseri kapsar: Kerhan (Yemeniciler) Mescidi, Rıfat Ağa Mescidi, Semerciler
+   Mescidi, Gökmeydan-Şeyh Hızır Makamı, 5. Mıntıka 905 Parsel Hızır Türbesi, Şeyh Hasan Gatelli (Albitelli) Ziyareti.
+   Konya I'deki Mevlâna Külliyesi bu kurala girmez ve içindekiler adını korur.
+2. **Hazireler alt eser olur** (CLAUDE.md kural 4). Hazire ara başlığı içinde kaldığı eserin çocuğu olarak kurulur:
+   `kind='hazire'`, `origin='heading'`, kimlik `<üst>-hz1`. Bursa I'de 23, Bursa II'de 4, Bursa III'te 3 hazire var.
+   Başlıkta özel ad yoksa ('HAZİRE ALANI') ad üst eserden kurulur (`name_built`). Kabir/mezar başlıkları (`grave`),
+   Mevlâna Külliyesi bölümleri, Hatay külliye üyeleri ve diğer ara başlıklar ana eserin metninde **ara başlık
+   paragrafı** (`kind='heading'`) olarak kalır.
+
+**Adım 1 düzeltmeleri (`layout.py`; Bursa I–III, Konya I–II ve Hatay `pages.jsonl` yeniden üretildi)**
+- *Hatay sütun aralığı* (`split_gutters`, yalnızca Hatay): gövde karakterlerinin hiç değmediği ≥ 8 pt'lik dikey şerit,
+  satırı oradan böler. TR/EN karışık satır kalmadı.
+- *Sözcük sonundaki `!`* (Bursa I–II): 'gömülmü!' → 'gömülmüş'. Yalnızca ş'li biçim sözlükte varsa düzeltilir
+  (`fix_final_bang`). `clean.py` değişmedi. Bursa I'de kalan 17 `!` gerçek ünlem (İngilizce dualar, şiir).
+- *Kalınlık kuralının yanıldığı paragraflar* (`check_weight_lang`): Konya I–II'de bazı Türkçe paragraflar Light,
+  bazı İngilizce paragraflar Regular dizilmiş. Paragraf işlev sözcükleri (ve/bir/ile… the/of/and…) ve ek kalıpları
+  açıkça öbür dili söylüyorsa dili değişir. Alıntılar değişmez; İngilizce metindeki Osmanlıca kitabe çevriyazısı
+  İngilizce akışta kalır. Değişen paragraf sayısı: Konya I'de 63, Konya II'de 23, Bursa I–II'de 0, Bursa III'te 2. Bursa
+  III'teki ikisi İngilizce akıştaki Osmanlıca şiir dizeleri (s. 299 ve 319) ve yanlış; bilerek bırakıldı.
+- *Hatay'da dil paragraf paragraf* (`para_runs`): aynı sütunda TR paragrafların hemen altında EN paragraflar aynı
+  fontla durup tek blok oluyordu (Terzi Mehmet Camii s. 392).
+
+**Adım 3 eklemeleri (`anchor.py`)**
+- Okuma sırası artık sütunu da içeriyor: `(sayfa, yarı, sütun, y)`. Yarı içinde x ≥ 400 olan satır ikinci sütundadır
+  (`col_of`).
+- **İngilizce çapa** (`anchor.en`, `assign_en`): İngilizce metin ayrı aktığı için İngilizce başlık çoğu zaman bir iki
+  sayfa sonra geliyor (Ali Paşa Camii Haziresi: TR s. 260, EN s. 261). Kitap sırasıyla ve adla eşleniyor.
+  788 eserin 9'unda bulunamadı (`en_anchor_guess`).
+- Sayfası bilinen ama gövdede bulunamayan bölümler (Hatay: Türbeler, Terimler Sözlüğü, Kaynakça) artık sanal değil;
+  sayfa başından başlıyor (`anchor_guess`). Böylece son esere arka bölüm metni karışmıyor.
+
+**Adım 4: `pdfx/text.py`** → `data/pdfx/<kitap>/works.json`
+- Her satır kendinden önce başlayan son kayda gider; TR akışı Türkçe çapaya, EN akışı İngilizce çapaya göre bölünür.
+  Çapa başlıkları metne girmez, diğer ara başlıklar `heading` paragrafı olur. Yazar satırları `authors` alanına
+  yazılır.
+- Paragraf sınırı: aynı sütunda satır başları arası > 1,45 × punto (harf kutusu punto boyundan uzun olduğu için
+  boşluk değil aralık ölçülür). Sütun veya sayfa geçişinde cümle bitmemişse paragraf sürer. Satır sonu tirelemesi
+  yalnızca küçük harfle süren satırda birleşir. Paragraf içindeki italik alıntı paragrafı bölmez.
+- `note` rolü (10 pt) kitaplarda dipnot için kullanılmamış: Konya I s. 241'de bir eserin gövdesi, Konya II'de
+  kaynakça. Gövdeye giriyor.
+- Denetim bayrakları: `empty_tr`, `empty_en`, `en_ratio` (0,6–1,6 dışı), `para_count_diff`.
+
+| Kitap | Eser | TR par. | EN par. | Boş TR | EN oranı | Par. farkı | Ara başlık |
+|---|---|---|---|---|---|---|---|
+| Bursa I | 155 | 1440 | 1427 | 5 külliye | 1 | 3 | 5 |
+| Bursa II | 125 | 1399 | 1407 | 4 külliye | 1 | 1 | 1 |
+| Bursa III | 101 | 935 | 927 | 2 külliye | 0 | 0 | 2 |
+| Konya I | 186 | 1421 | 1351 | 0 | 2 | 5 | 16 |
+| Konya II | 93 | 780 | 782 | 0 | 2 | 1 | 2 |
+| Hatay | 77 | 530 | 508 | 0 | 0 | 2 | 44 |
+
+- Bursa'daki boş kayıtlar 11 külliyedir. Kitapta külliye başlığının hemen altında ilk üyenin başlığı geliyor; külliyenin
+  ayrı bir giriş metni yok.
+- TR ve EN paragraf sayılarının bu kadar yakın olması paragraf bölmenin iki dilde tutarlı olduğunu gösteriyor.
+- Gözle kontrol edilecek 7 eser (`en_ratio`): b1-0116 ve b2-0044-hz1 (İngilizce çapa bulunamadı), k1-0007,
+  k1-0206 (bir Türkçe kitabe paragrafı EN akışında), k2-0010, k2-0013. Ayrıca k2-0014 ve k2-0015'in İngilizcesi boş
+  (İngilizce çapa yok).
+
+**Karşılaştırma: `pdfx/gold.py`**
+- `--dump` (geliştirici, `DATABASE_URL` ile): pilotların panelde düzeltilmiş Türkçe metnini
+  (`textfix_db.effective_paragraphs`, yalnızca SELECT) ve kitap İngilizcesini `data/pdfx/gold.json`'a döker.
+  Varsayılan çalıştırma yeni çıkarımı bu metinle karşılaştırır (hedef ≥ %97).
+- `--old`: eski çıkarımla (`monuments_all.json`) karşılaştırır. 654 eşleşen eserde Türkçe benzerlik ortancası
+  **0,989**. 423 eser ≥ 0,97, 504 eser ≥ 0,90. 0,90'ın altındaki 150 eserin baktıklarımın hepsinde **hata eski
+  çıkarımdaydı**: Nuriye Camii'nde yalnızca son paragraf vardı, eski külliye kayıtları üyelerin metnini de içeriyordu,
+  `-2` kayıtları birleşmişti. Bu yüzden asıl ölçüt pilot altın kümedir.
+
+**Testler:** `tests/test_pdfx_text.py` (14 test: birleştirme, paragraf, alıntı, iki dilin ayrı çapası, sütun
+aralığı, `!`, işlev sözcüğü dili, kalınlık denetimi; yerelde `works.json` varsa gerçek eserler). `test_pdfx_anchor.py`
+(17 test: hazire alt eseri, İngilizce çapa, okuma sırası, gövde adı kararı). Bütün takım: 255 test, 145'i
+veritabanı olmadığı için atlandı, hepsi geçti.
+
+**Sıra (pipeline klasöründen, hepsi çevrim dışı):** `python -m pdfx.layout` (yaklaşık 2,5 dk) → `pdfx.toc` →
+`pdfx.cityqueue` (veritabanıyla) → `pdfx.anchor` → `pdfx.text` → `pdfx.gold`.
+
+**Sonraki oturumun ilk işi**
+1. Geliştirici `$env:DATABASE_URL` tanımlı pencerede `python -m pdfx.gold --dump`, ardından `python -m pdfx.gold`
+   çalıştıracak. Hedef: 26 pilotta Türkçe benzerlik ≥ %97 ve eksik/fazla paragraf yok. Düşük çıkan pilotlar
+   incelenecek. Pilotlara yine hiçbir şey yazılmaz; bu yalnızca kural doğrulamasıdır.
+2. Yukarıdaki 7 `en_ratio` eseri ve 9 `en_anchor_guess` kaydı gözle kontrol edilecek.
+3. Adım 5 (`pdfx/images.py`): fotoğrafları çapaya göre bağlamak.
+4. Adım 6–7: `report.py` ve turlarla yükleme (`load.py --rehearse` önce).
+
+### 4. oturum (2 Kasım 2026, gece): pilot altın küme karşılaştırması
+Geliştirici `python -m pdfx.gold --dump` komutunu çalıştırdı; 26 pilotun panelde düzeltilmiş metni
+`data/pdfx/gold.json` dosyasına yazıldı. Veritabanına bir şey yazılmadı.
+
+**Sonuç: 26 pilotta yeni çıkarıma ait hata bulunmadı.** İlk ölçümde Türkçe benzerlik ortancası 0,982 idi; 17
+pilot ≥ 0,97, 2 pilot < 0,90 (İmaret (Hasan Paşa) Camii 0,656, Ulucami 0,797). Düşük çıkan 9 pilot cümle ve sözcük
+düzeyinde incelendi. Farkların hepsi altın metinden geliyor:
+- **Eski `.txt` dökümünün izleri panel düzeltmesinden sonra da duruyor:** araya girmiş ya da yarıda kesilmiş
+  cümleler ("köşeler ise pembe ve “Ve ca'alnâ … nedenle taşlarla kaplanmıştır."), İngilizce sütundan karışıp
+  **iki kez** geçen kitabe şiirleri (Hz. Üftâde Camii 180 sözcük, İnegöl Yıldırım Bayezid Camii, I. Murad Türbesi),
+  düzeltilmemiş `!` bozukluğu ('yıkılmı!').
+- **Eksik içerik:** İmaret (Hasan Paşa) Camii'nin altın metni 3 paragraf; kitapta s. 335–339'da 12 paragraf var
+  (minare, son cemaat yeri, mihrap…). Ahmediye Camii'nin altın İngilizcesinde şadırvan paragrafı yok. Koza Hanı'nın
+  altın İngilizcesinde ilk 144 sözcük yok. Habib-i Neccar'da paragraf başları kesik.
+- **İngilizce altın metin ham eski bölüm metnidir:** Hz. Üftâde Camii'nin altın İngilizcesi aslında komşu eserin,
+  Hz. Üftâde Tekke Camii'nin (b1-0124) metni. Yeni çıkarımda o metin doğru esere gidiyor.
+- **Paragraf sayısı farkı:** altın metin bazı paragrafları birleştirmiş. Örneğin Ulucami s. 37'de satır aralığı
+  normalde 13,7 iken iki paragraf arasında 27,9; yeni çıkarım kitaptaki bölünmeye uyuyor. Bu yüzden
+  `eksik/fazla paragraf` sayıları bu altın kümede anlamlı değil.
+
+**`gold.py` eklemeleri:** `kapsama` (altın metindeki 5'li sözcük dizilerinin yeni metinde bulunan oranı; paragraf
+bölünmesinden etkilenmez), `fazla` (yeni metinde olup altında olmayan oran), `--diff SLUG [--lang en]` (sözcük
+düzeyinde büyük farklar). Karşılaştırmada eski metindeki `!` ş sayılır. **Sonuç: Türkçe kapsama ortancası 0,982;
+26 pilotun 26'sı ≥ 0,90, 18'i ≥ 0,97.** En düşük olan İmaret (Hasan Paşa) Camii 0,945 ve fazla oranı 0,52; yeni
+metin altında olmayan 9 paragrafı içeriyor. Eski çıkarımla: 654 eserde kapsama ortancası 0,986.
+
+**Bu sırada bulunan çıkarım hatası (düzeltildi):** Bursa'da iki font parçasının sınırına düşen `!` ('mübe' +
+'!şer'), büyük harften sonraki `!` ('Â!ıka'), sözcük başındaki `!` ('!âh') ve sözlükte olmayan -miş ekleri
+('görülmemi!', 'müthi! bir') düzeltilmiyordu (`layout.fix_inner_bang`, `fix_final_bang`). Kalan `!` işaretleri
+gerçek ünlem: Bursa I'de 11 ('insanlar!', 'Haqq!'), Bursa II'de 13.
+
+**Testler:** 257 test (145'i veritabanı olmadığı için atlandı), hepsi geçti.
+
+**Sonraki oturumun ilk işi**
+1. İsteğe bağlı: geliştirici İmaret (Hasan Paşa) Camii'nin panelde 9 paragrafın bilerek mi gizlendiğine baksın.
+   Pilot olduğu için yeni metin zaten yüklenmeyecek.
+2. Adım 5 (`pdfx/images.py`): fotoğrafları çapaya göre bağlamak.
+3. Adım 6–7: `report.py` ve turlarla yükleme (`load.py --rehearse` önce).

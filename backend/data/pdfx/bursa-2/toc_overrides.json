@@ -1,4 +1,12 @@
 {
- "_not": "Selami Dergâhı Camii: içindekilerde 260 yazıyor, gövde başlığı s. 512 (2 Kasım 2026).",
- "ok": ["b2-0109"]
+ "_not": "Selami Dergâhı Camii: içindekilerde 260 yazıyor, gövde başlığı s. 512 (2 Kasım 2026). Hz. Üftâde Tekkesi pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş).",
+ "ok": [
+  "b2-0109"
+ ],
+ "set": {
+  "b2-0046": {
+   "_was": "Hz. Üftâde Tekkesi",
+   "db_slug": "bursa-osmangazi-hz-uftade-sufi-lodge"
+  }
+ }
 }

@@ -230,6 +230,33 @@ class QueueTest(unittest.TestCase):
                      p0=28, p1=30)]
         self.assertEqual(Q.match(rec, rows), (rows[0], 'name+page'))
 
+    def test_stale_toc_title_does_not_steal_a_pilot(self):
+        """Eski çıkarımda Türbe pilotunun toc_title'ı 'İmareti' kalmıştı: İmaret kaydı ona bağlanmamalı."""
+        tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'I. Murad Hudâvendigâr İmareti', 101),
+                                    ('monument', 'I. Murad Hudâvendigâr Türbesi', 107))}
+        rows = [dict(slug='imaret', name_tr='Murad Hudâvendigâr İmareti', toc_title='I. Murad Hudâvendigâr Medresesi',
+                     book='bursa-1', pilot=False, p0=99, p1=102),
+                dict(slug='turbe', name_tr='Murad Hudavendigar Türbesi', toc_title='I. Murad Hudâvendigâr İmareti',
+                     book='bursa-1', pilot=True, p0=104, p1=116)]
+        q = Q.make_queue(tocs, rows)['bursa']
+        self.assertEqual([(i['db_slug'], i['status']) for i in q], [('imaret', 'waiting'), ('turbe', 'pilot_locked')])
+
+    def test_merged_draft_is_not_a_candidate(self):
+        rec = dict(book='konya-1', name_tr='Sultan Selim (Selimiye) Camii', page=174)
+        rows = [dict(slug='s-2', name_tr='Sultan Selim (Selimiye) Camii', toc_title=None, book='konya-1', pilot=False,
+                     review_status='merged', p0=176, p1=184),
+                dict(slug='s', name_tr='Sultan Selim (Selimiye) Camii', toc_title=None, book='konya-1', pilot=True,
+                     review_status='published', p0=190, p1=191)]
+        self.assertEqual(Q.match(rec, rows, toc_unique=True), (rows[1], 'name(page≠)'))
+
+    def test_one_db_row_binds_one_record(self):
+        tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Koza Hanı', 15), ('monument', 'Koza Han', 16))}
+        tocs['bursa-1'][1]['db_slug'] = 'koza'
+        rows = [dict(slug='koza', name_tr='Koza Hanı', toc_title=None, book='bursa-1', pilot=True, p0=15, p1=20)]
+        q = Q.make_queue(tocs, rows)['bursa']
+        self.assertEqual([(i['db_slug'], i['status']) for i in q], [(None, 'waiting'), ('koza', 'pilot_locked')])
+        self.assertEqual(q[0]['db_conflict']['winner'], 'x1')
+
     def test_rerun_keeps_progress_but_never_unlocks_pilot(self):
         tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Muradiye Camii', 115), ('monument', 'Acemler Camii', 236))}
         old = {'cities': {'bursa': [dict(book='bursa-1', key='Muradiye Camii|115', status='loaded'),

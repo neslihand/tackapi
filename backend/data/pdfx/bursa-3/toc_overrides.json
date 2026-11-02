@@ -1,0 +1,9 @@
+{
+ "_not": "Şeyh Müftü Camii pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş).",
+ "set": {
+  "b3-0101": {
+   "_was": "Şeyh Müftü Camii",
+   "db_slug": "bursa-mustafakemalpasa-seyh-mufti-mosque"
+  }
+ }
+}

@@ -15,6 +15,7 @@ Her satır ve span şu etiketleri taşır (kurallar books.py → `pdfx`):
                 biblio | vertical (Hatay dikey süs harfleri) | other
   lang          tr | en | None
   block         sayfa içi blok no (aynı yarı, yatayda örtüşen, dikey boşluğu < 1,4 satır aralığı)
+Sayfa kaydında ayrıca `vertical`: döndürülmüş satırlar (Hatay eser adları; bkz. vertical_lines).
 
 Çıktı: data/pdfx/<kitap>/pages.jsonl (PDF sayfası başına bir satır; `i` 0 tabanlı PDF sayfa dizini).
 
@@ -58,8 +59,38 @@ def page_chars(page):
     return out
 
 
-def group_lines(chars, width):
-    """Karakterleri satırlara toplar. Döner: [{half, x0, y0, x1, y1, base, spans: [{text, font, size, x0, x1}]}]."""
+def gutters(chars, width, min_w=8.0):
+    """Yan yana sütunlar arasındaki boş şerit (yarı başına x sınırları). Gövde boyutundaki (10–15 pt) karakterlerin
+    hiç değmediği, en az `min_w` genişliğinde ve mürekkep aralığının ortasında (%30–70) kalan dikey şerit. Hatay'da TR
+    ve EN sütunları ~19 pt boşlukla ayrılır; satır bölme eşiği (1,6 × boyut) bunu yakalamaz."""
+    spread = width > 1000
+    out = {}
+    for half, (lo, hi) in (('L', (0, width / 2)), ('R', (width / 2, width))) if spread else (('L', (0, width)),):
+        cs = [c for c in chars if 10 <= c[7] <= 15 and not c[5].isspace() and lo <= (c[0] + c[2]) / 2 < hi]
+        if len(cs) < 200:
+            continue
+        a, b = int(min(c[0] for c in cs)), int(max(c[2] for c in cs)) + 1
+        cov = [0] * (b - a + 1)
+        for c in cs:
+            for x in range(int(c[0]) - a, int(c[2]) - a + 1):
+                cov[x] += 1
+        cuts, start = [], None
+        for k, v in enumerate(cov):
+            if v == 0 and start is None:
+                start = k
+            elif v and start is not None:
+                mid = a + (start + k) / 2
+                if k - start >= min_w and a + 0.3 * (b - a) <= mid <= a + 0.7 * (b - a):
+                    cuts.append(mid)
+                start = None
+        if cuts:
+            out[half] = cuts
+    return out
+
+
+def group_lines(chars, width, cuts=None):
+    """Karakterleri satırlara toplar. Döner: [{half, x0, y0, x1, y1, base, spans: [{text, font, size, x0, x1}]}].
+    cuts: {yarı: [x]}: bu x'leri geçen satır bölünür (gutters)."""
     spread = width > 1000
     mid = width / 2
     by_half = collections.defaultdict(list)
@@ -85,7 +116,8 @@ def group_lines(chars, width):
                     if seg:
                         seg.append(c)
                     continue
-                if last is not None and c[0] - last > GAP_SPLIT * max(c[7], 6):
+                if last is not None and (c[0] - last > GAP_SPLIT * max(c[7], 6)
+                                         or any(last <= g <= c[0] for g in (cuts or {}).get(half, ()))):
                     lines.extend(make_line(half, s) for s in split_numbers(seg))
                     seg = []
                 seg.append(c)
@@ -244,6 +276,17 @@ def classify(lines, cfg, i, W, H):
         l['role'], l['lang'] = weight.most_common(1)[0][0]
 
 
+def para_runs(ls, pitch=1.45):
+    """Bloğun satırları → paragraflar (satır başları arası > pitch × punto; text.paragraphs ile aynı kural)."""
+    runs = []
+    for l in sorted(ls, key=lambda l: l['y0']):
+        if runs and l['y0'] - runs[-1][-1]['y0'] <= pitch * l['size']:
+            runs[-1].append(l)
+        else:
+            runs.append([l])
+    return runs
+
+
 def resolve_lang(lines):
     """lang='detect' olan satırlara blok metninden dil verir; rol adlarını dile göre tamamlar."""
     blocks = collections.defaultdict(list)
@@ -253,17 +296,20 @@ def resolve_lang(lines):
     for ls in sorted(blocks.values(), key=lambda ls: ls[0]['role'] in ('title', 'heading')):
         if not any(l['lang'] == 'detect' or any(s['lang'] == 'detect' for s in l['spans']) for l in ls):
             continue
-        text = ' '.join(l['text'] for l in ls)
         if ls[0]['role'] in ('title', 'heading'):
-            lg = heading_lang(text) or body_below(lines, ls) or (clean.lang_of(text) or (None,))[0]
+            text = ' '.join(l['text'] for l in ls)
+            runs = [(ls, heading_lang(text) or body_below(lines, ls) or (clean.lang_of(text) or (None,))[0])]
         else:
-            lg = (clean.lang_of(text) or (None,))[0]
-        for l in ls:
-            if l['lang'] == 'detect':
-                l['lang'] = lg
-            for s in l['spans']:
-                if s['lang'] == 'detect':
-                    s['lang'] = lg
+            # gövdede dil paragraf paragraf bulunur: Hatay'da aynı sütunda TR paragrafların hemen altında EN
+            # paragraflar aynı fontla durur ve tek blok olur (s. 392)
+            runs = [(run, (clean.lang_of(' '.join(l['text'] for l in run)) or (None,))[0]) for run in para_runs(ls)]
+        for run, lg in runs:
+            for l in run:
+                if l['lang'] == 'detect':
+                    l['lang'] = lg
+                for s in l['spans']:
+                    if s['lang'] == 'detect':
+                        s['lang'] = lg
     # dili bulunamayan gövde bloğu: aynı yarıda bir önceki gövde bloğunun dili
     prev = {}
     for l in sorted(lines, key=lambda l: (l['half'], l['y0'], l['x0'])):
@@ -349,17 +395,127 @@ def vocab():
     return _VOCAB
 
 
+def vertical_lines(page, W, pp):
+    """Döndürülmüş (dikey) satırlar, PyMuPDF'in okuma sırasıyla. Hatay'da eser adları sol kenarda aşağıdan yukarı
+    yazılıdır (TR kalın sütun + EN sütun); karakter düzeyinde `vertical` rolü alırlar, metni buradan okunur."""
+    out = []
+    for b in page.get_text('dict')['blocks']:
+        for l in b.get('lines', []):
+            if l['dir'] == (1.0, 0.0):
+                continue
+            text = re.sub(r' {2,}', ' ', clean.norm(''.join(s['text'] for s in l['spans']))).strip()
+            if not text:
+                continue
+            x0, y0, x1, y1 = l['bbox']
+            half = 'L' if W <= 1000 or (x0 + x1) / 2 < W / 2 else 'R'
+            out.append(dict(text=text, half=half, printed_page=pp[0] if half == 'L' else pp[1], x0=round(x0, 1),
+                            y0=round(y0, 1), x1=round(x1, 1), y1=round(y1, 1), font=l['spans'][0]['font'],
+                            size=round(l['spans'][0]['size'], 1), dir=[round(v) for v in l['dir']]))
+    return out
+
+
+def fix_final_bang(text, v, stats):
+    """Sözcük sonundaki '!' de ş'dir ('gömülmü!' → 'gömülmüş'); clean.fix_glyphs yalnızca harf arasını düzeltir.
+    Değişir: ş'li biçim sözlükte varsa, sözcük -mi/-mı/-mu/-mü ile bitiyorsa ('görülmemi!') ya da cümle küçük harfle
+    sürüyorsa ('müthi! bir'). Gerçek ünlemden sonra büyük harf ya da satır sonu gelir ('Haqq!', 'people!'). Sözcük
+    başında harften önceki '!' de ş'dir ('!âh' → 'şâh')."""
+    def rep(m):
+        w, rest = m.group(1), text[m.end():]
+        if v.get(clean.tr_lower(w + 'ş'), 0) > 0 or re.search(r'm[iıuü]$', w) \
+                or re.match(r'\s+[a-zçğıöşü]', rest):
+            stats['bang'] += 1
+            return w + 'ş'
+        return m.group(0)
+    text = re.sub(r"(?<![^\W\d_])!(?=[a-zçğıöşüâîû])", lambda m: (stats.__setitem__('bang', stats['bang'] + 1), 'ş')[1],
+                  text)
+    return re.sub(r"([A-Za-zçğıöşüÇĞİÖŞÜâîû]+)!(?![A-Za-zçğıöşü])", rep, text)
+
+
+LETTER = r"[^\W\d_]"
+
+
+def fix_inner_bang(spans, stats):
+    """İki harf arasındaki '!' her zaman ş'dir; font değişiminde iki span'ın sınırına düşen ('mübe' + '!şer') ve büyük
+    harften sonra gelen ('Â!ıka') durumlar clean.fix_glyphs'e görünmez. Span'lar yerinde düzeltilir."""
+    for k, s in enumerate(spans):
+        before = ''.join(x['text'] for x in spans[:k])
+        t = s['text']
+        out = []
+        for j, ch in enumerate(t):
+            prev = (before + ''.join(out))[-1:] if j == 0 else out[-1]
+            nxt = t[j + 1:j + 2] or (spans[k + 1]['text'][:1] if k + 1 < len(spans) else '')
+            if ch == '!' and re.match(LETTER, prev or ' ') and re.match(LETTER, nxt or ' '):
+                ch = 'ş'
+                stats['bang'] += 1
+            out.append(ch)
+        s['text'] = ''.join(out)
+
+
+FLIP_MIN_CHARS = 40
+FUNC = dict(tr=set('ve bir bu ile olarak da de için olan ise gibi daha kadar sonra olup şu çok ancak ayrıca'.split()),
+            en=set('the of and in is was to a an which with by from that are were this it its on as'.split()))
+QUOTE_START = ('“', '"', '‘', "'", '«')
+
+
+def func_lang(text):
+    """İşlev sözcüklerine göre dil: bir dilin en az 4 işlev sözcüğü var ve öbürünün en çok 1 ise o dil. Kısa blokta öbür
+    dilin hiç işlev sözcüğü yoksa ve ek kalıpları (clean.lang_of) bu dili söylüyorsa yine o dil: en az 2 işlev
+    sözcüğüyle her farkta, hiç işlev sözcüğü yoksa farkı ≥ 3 iken ('Cami, Karatay, … Sokak üzerinde yer almaktadır.').
+    Yoksa None. Yer ve kişi adları (Çatalhöyük, Karatay) tek başına dili belirlemez."""
+    words = [clean.tr_lower(w) for w in re.findall(r"[^\W\d_]+", text)]
+    n = {lg: sum(w in FUNC[lg] for w in words) for lg in FUNC}
+    for lg, other in (('tr', 'en'), ('en', 'tr')):
+        if n[lg] >= 4 and n[other] <= 1:
+            return lg
+        det = clean.lang_of(text) or (None, 0)
+        if n[other] == 0 and det[0] == lg and (n[lg] >= 2 or det[1] >= 3):
+            return lg
+    return None
+
+
+def check_weight_lang(lines, cfg):
+    """Kalınlık kuralının (Regular → tr, Light → en) yanıldığı gövde blokları: Konya I'in bazı sayfalarında Türkçe metin
+    de Light dizilmiş ('Yapının inşa tarihi ve bânisi …'), bazı İngilizce paragraflar Regular. Blok metni yeterince
+    uzunsa (≥ 40 karakter) ve işlev sözcükleri açıkça öbür dili söylüyorsa (func_lang) blok o dile geçer. Alıntılar
+    (quote rolü ya da tırnakla başlayan blok) değişmez: İngilizce metindeki Osmanlıca kitabe çevriyazısı Türkçe görünür
+    ama İngilizce akışındadır. Denetim paragraf paragraf yapılır (para_runs): TR ve EN paragraflar aynı sütunda alt
+    alta tek blok olabilir. Döner: değişen paragraf sayısı."""
+    if cfg.get('lang_rule') != 'font_weight':
+        return 0
+    blocks = collections.defaultdict(list)
+    for l in lines:
+        if l['role'] == 'body' and l['lang'] in ('tr', 'en'):
+            blocks[(l['half'], l['block'])].append(l)
+    flips = 0
+    runs = [run for ls in blocks.values() for run in para_runs(ls)]   # aynı sütunda TR ve EN paragraflar alt alta
+    for ls in runs:
+        text = ' '.join(l['text'] for l in ls)
+        if text.startswith(QUOTE_START) or len(text) < FLIP_MIN_CHARS:
+            continue
+        lg = func_lang(text)
+        if lg and lg != ls[0]['lang']:
+            flips += 1
+            for l in ls:
+                l['lang'] = lg
+                for s in l['spans']:
+                    if s['lang'] in ('tr', 'en'):
+                        s['lang'] = lg
+    return flips
+
+
 def page_layout(book, page, i, pp, stats=None):
     cfg = BOOKS[book].get('pdfx', {})
     W, H = page.rect.width, page.rect.height
-    lines = split_page_numbers(group_lines(page_chars(page), W), H)
+    chars = page_chars(page)
+    lines = split_page_numbers(group_lines(chars, W, gutters(chars, W) if cfg.get('split_gutters') else None), H)
     if cfg.get('fix_glyphs'):
         st = stats if stats is not None else {'pct': 0, 'pct_unresolved': [], 'bang': 0, 'digit': 0}
         v = vocab()
         for l in lines:
             if re.search(r'[%!(]', l['text']):
                 for s in l['spans']:
-                    s['text'] = clean.fix_glyphs(s['text'], v, st)
+                    s['text'] = fix_final_bang(clean.fix_glyphs(s['text'], v, st), v, st)
+                fix_inner_bang(l['spans'], st)
                 l['text'] = re.sub(r' {2,}', ' ', ''.join(s['text'] for s in l['spans'])).strip()
     left, right, est = pp
     for l in lines:
@@ -369,8 +525,12 @@ def page_layout(book, page, i, pp, stats=None):
     classify(lines, cfg, i, W, H)
     assign_blocks(lines)
     resolve_lang(lines)
+    flips = check_weight_lang(lines, cfg)
+    if stats is not None:
+        stats['lang_flip'] = stats.get('lang_flip', 0) + flips
     lines.sort(key=lambda l: (l['half'], l['block'], l['y0'], l['x0']))
-    return dict(i=i, width=round(W, 1), height=round(H, 1), printed=[left, right], est=est, lines=lines)
+    return dict(i=i, width=round(W, 1), height=round(H, 1), printed=[left, right], est=est, lines=lines,
+                vertical=vertical_lines(page, W, pp))
 
 
 def build(book, verbose=True):
@@ -390,6 +550,8 @@ def build(book, verbose=True):
         print('  karakter (rol, dil):', ', '.join(f'{r}/{lg or "-"}={n}' for (r, lg), n in roles.most_common()))
         if stats['pct'] or stats['bang']:
             print(f"  fix_glyphs: % {stats['pct']}, ! {stats['bang']}, çözülemeyen {len(stats['pct_unresolved'])}")
+        if stats.get('lang_flip'):
+            print(f"  kalınlık kuralına aykırı dil, metinden düzeltilen paragraf: {stats['lang_flip']}")
     return path
 
 

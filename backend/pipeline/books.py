@@ -126,7 +126,8 @@ BOOKS = {
         title='Hatay İli Vakıf Eserleri', en_quality='needs_review', toc_lines=(205, 305), heading_pos='after', boundary_mode='heading',
         authors=['Halil Agah', 'Prof. Dr. Nusret Çam', 'Berica Nevin Berberoğlu Şen'],
         editor='Özlem Çelik', translator='Zeynep Burçak Tarlan',
-        pdfx=dict(toc_pages=(4, 5), lang_rule='detect', roles=_HATAY_ROLES, toc_style='dotted'),  # TR/EN konumla ayrılmıyor
+        pdfx=dict(toc_pages=(4, 5), lang_rule='detect', roles=_HATAY_ROLES, toc_style='dotted',
+                  split_gutters=True),  # TR/EN konumla ayrılmıyor; yan yana sütunlar dar boşlukla ayrılır
         parts=[
             ('skip', 1, 1246, None),
             ('city_history', 1247, 1375, 'Hatay İlinin Konumu ve Tarihçesi'),

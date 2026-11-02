@@ -141,12 +141,17 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
   Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
 - **PDF'ten doğrudan çıkarım (2 Kasım 2026, devam ediyor):** plan ve ilerleme `docs/pdf-cikarim-plani.md`. Kod
-  `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue`, pipeline klasöründen). Çıktılar
-  `data/pdfx/` altında ve git dışında; yalnızca `toc_overrides.json` izlenir. Kitap kuralları `books.py` → `pdfx`.
-  Adım 1–2 bitti: sayfa düzeni, 6 kitabın içindekileri, şehir kuyruğu. Veritabanına henüz yazılmadı. Kuyruğun pilot
-  kilidi `DATABASE_URL` ile yeniden üretilmeden (`pilot_check: "db"`) yükleme yapılmamalı. Hatay'da TR/EN konumla
-  değil, dil tespitiyle ayrılır.
-- **Testler:** `python -m unittest discover -s tests` (219 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+  `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue | pdfx.anchor | pdfx.text | pdfx.gold`,
+  pipeline klasöründen). Çıktılar `data/pdfx/` altında ve git dışında; yalnızca `toc_overrides.json` izlenir. Kitap
+  kuralları `books.py` → `pdfx`. Adım 1–4 bitti: sayfa düzeni, içindekiler, şehir kuyruğu (26/26 pilot kilitli,
+  veritabanıyla doğrulandı), çapalar (`anchors.json`; TR ve ayrı EN başlangıcı) ve TR/EN paragraflar (`works.json`).
+  Veritabanına henüz yazılmadı. Geliştirici kararları (2 Kasım 2026): Hatay'da içindekiler ile gövde adı farklıysa
+  gövde adı; hazireler alt eser (`<üst>-hz1`), diğer alt başlıklar ana metinde ara başlık. Kuyruk eşleştirmesi bire
+  birdir; 4 kırılgan pilot overrides'ta `db_slug` ile sabit. Hatay'da dil metinden bulunur, eser adları sol kenarda
+  dikey yazılıdır (`layout` → `vertical`). Konya'da bazı paragraflar ters kalınlıkta dizilmiş; dili metinden
+  düzeltilir (`check_weight_lang`). Pilot altın küme (`pdfx.gold`; 2 Kasım 2026): 26 pilotun hepsinde Türkçe
+  kapsama ≥ 0,90 (ortanca 0,982); düşük farkların kaynağı altın metindeki eski `.txt` izleri, çıkarım hatası bulunmadı.
+- **Testler:** `python -m unittest discover -s tests` (257 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.

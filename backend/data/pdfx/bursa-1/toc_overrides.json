@@ -1,4 +1,14 @@
 {
- "_not": "Ulucami kitapta da büyük harfli tek kayıt; Davutpaşa ve Paşa Camii sayfaları içindekilerde baskı hatası, gövde başlığından bulundu (2 Kasım 2026).",
- "ok": ["b1-0003", "b1-0065", "b1-0104"]
+ "_not": "Ulucami kitapta da büyük harfli tek kayıt; Davutpaşa ve Paşa Camii sayfaları içindekilerde baskı hatası, gövde başlığından bulundu (2 Kasım 2026). I. Murad Hudâvendigâr Türbesi pilotu db_slug ile bağlandı: eski kaydın toc_title'ı kaymıştı ('İmareti').",
+ "ok": [
+  "b1-0003",
+  "b1-0065",
+  "b1-0104"
+ ],
+ "set": {
+  "b1-0010": {
+   "_was": "I. Murad Hudâvendigâr Türbesi",
+   "db_slug": "bursa-osmangazi-murad-hudavendigar-turbesi"
+  }
+ }
 }

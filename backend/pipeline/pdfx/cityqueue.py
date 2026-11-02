@@ -69,29 +69,42 @@ def match(rec, rows, toc_unique=False):
 
     toc_unique: bu ad kitabın içindekilerinde bir kez geçiyor. O zaman veritabanında da tek olan ad, sayfa aralığı
     tutmasa da eşleşir ('name(page≠)'): panelde düzeltilen eserlerin (pilotlar) sayfaları etkin paragraflardan yeniden
-    hesaplandığı için içindekiler sayfasıyla kesişmeyebilir."""
+    hesaplandığı için içindekiler sayfasıyla kesişmeyebilir.
+
+    Birleştirilmiş taslaklar (`merged`) aday olmaz; belirsiz durumda pilot öne alınır (kilit kaçmasın). Sıra: `name_tr`
+    birebir → `name_tr` bulanık (sayfa kesişimiyle) → `toc_title` birebir. `toc_title` en sona kalır: eski çıkarımda bazen
+    bir önceki kaydın adıdır (I. Murad Hudâvendigâr Türbesi'nde 'İmareti')."""
     key = bare(rec['name_tr'], rec['book'])
-    cands = [r for r in rows if r['book'] == rec['book']]
-    exact = [r for r in cands if key in (bare(r.get('toc_title') or '', r['book']), bare(r['name_tr'], r['book']))]
-    if exact:
-        paged = [r for r in exact if page_overlap(rec, r)]
-        if len(paged) == 1:
-            return paged[0], 'name+page'
-        if len(exact) == 1 and page_overlap(rec, exact[0]) is not False:
-            return exact[0], 'name'
-        if paged:
-            return paged[0], 'name+page?'
-        if len(exact) == 1 and toc_unique:
-            return exact[0], 'name(page≠)'
+    cands = [r for r in rows if r['book'] == rec['book'] and r.get('review_status') != 'merged']
+    cands.sort(key=lambda r: not r['pilot'])
+    hit = by_name(rec, [r for r in cands if key == bare(r['name_tr'], r['book'])], toc_unique)
+    if hit[0]:
+        return hit
     best, score = None, 0
     for r in cands:
         if not page_overlap(rec, r):
             continue
-        s = max(difflib.SequenceMatcher(None, key, bare(t, r['book'])).ratio() for t in (r.get('toc_title') or '', r['name_tr']))
+        s = difflib.SequenceMatcher(None, key, bare(r['name_tr'], r['book'])).ratio()
         if s > score:
             best, score = r, s
     if best and score >= 0.85:
         return best, f'fuzzy{score:.2f}'
+    m, kind = by_name(rec, [r for r in cands if key == bare(r.get('toc_title') or '', r['book'])], toc_unique)
+    return (m, 'toc_title:' + kind) if m else (None, None)
+
+
+def by_name(rec, exact, toc_unique):
+    if not exact:
+        return None, None
+    paged = [r for r in exact if page_overlap(rec, r)]
+    if len(paged) == 1:
+        return paged[0], 'name+page'
+    if len(exact) == 1 and page_overlap(rec, exact[0]) is not False:
+        return exact[0], 'name'
+    if paged:
+        return paged[0], 'name+page?'
+    if len(exact) == 1 and toc_unique:
+        return exact[0], 'name(page≠)'
     return None, None
 
 
@@ -113,17 +126,51 @@ def make_queue(tocs, rows, old=None):
             if rows is not None:
                 if r.get('db_slug'):           # toc_overrides.json → set: {"db_slug": "..."} (elle eşleme)
                     m, kind = next((x for x in rows if x['slug'] == r['db_slug']), None), 'override'
+                    if not m:
+                        it['db_override_missing'] = r['db_slug']
                 else:
                     m, kind = match(r, rows, toc_unique=names[bare(r['name_tr'], book)] == 1)
                 if m:
                     it['db_slug'], it['db_match'] = m['slug'], kind
                     if m['pilot']:
                         it['status'] = 'pilot_locked'
-            prev = old_items.get((book, it['key']))
+            cities[it['city']].append(it)
+    one_to_one(cities)
+    for items in cities.values():
+        for it in items:
+            prev = old_items.get((it['book'], it['key']))
             if prev and prev.get('status') in KEEP and it['status'] != 'pilot_locked':
                 it['status'] = prev['status']
-            cities[it['city']].append(it)
     return cities
+
+
+MATCH_RANK = ['override', 'name+page', 'name', 'name+page?', 'name(page≠)']
+
+
+def match_rank(kind):
+    """Küçük olan güçlü: override < name… < fuzzy (benzerliğe göre) < toc_title:…"""
+    if kind in MATCH_RANK:
+        return MATCH_RANK.index(kind)
+    if kind.startswith('fuzzy'):
+        return len(MATCH_RANK) + 1 - float(kind[5:])
+    return len(MATCH_RANK) + 2 + MATCH_RANK.index(kind.split(':', 1)[1])
+
+
+def one_to_one(cities):
+    """Bir veritabanı eseri tek kayda bağlanır: en güçlü eşleşme kalır, diğerlerinin bağı kalkar (`db_conflict`).
+    Bağı kalkan kayıt yeni eser olarak yüklenir; pilotu hiçbir durumda değiştirmez."""
+    by_slug = collections.defaultdict(list)
+    for items in cities.values():
+        for it in items:
+            if it['db_slug']:
+                by_slug[it['db_slug']].append(it)
+    for slug, its in by_slug.items():
+        if len(its) < 2:
+            continue
+        its.sort(key=lambda i: match_rank(i['db_match']))
+        for it in its[1:]:
+            it.update(db_conflict=dict(slug=slug, match=it['db_match'], winner=its[0]['id']),
+                      db_slug=None, db_match=None, status='waiting')
 
 
 def build(use_db=True, verbose=True):
@@ -152,6 +199,7 @@ def report(data, rows):
         pilots = [r for r in rows if r['pilot']]
         locked = {i['db_slug'] for items in data['cities'].values() for i in items if i['status'] == 'pilot_locked'}
         miss = [r['slug'] for r in pilots if r['slug'] not in locked]
+        pilot_slugs = {r['slug'] for r in pilots}
         print(f'pilot eser: {len(pilots)}, kuyrukta kilitlenen: {len(locked)}')
         by_slug = collections.defaultdict(list)
         for items in data['cities'].values():
@@ -162,6 +210,15 @@ def report(data, rows):
             for i in its:
                 warn = '  ! birden çok kayıt aynı pilota bağlandı' if len(its) > 1 else ''
                 print(f"  kilit  {slug:<55} ← {i['id']} s.{i['page'] or '-':<4} {i['db_match']:<12} {i['name_tr'][:40]}{warn}")
+        for items in data['cities'].values():
+            for i in items:
+                if i.get('db_override_missing'):
+                    print(f"  ! overrides db_slug veritabanında yok: {i['id']} → {i['db_override_missing']}")
+                if i.get('db_conflict'):
+                    c = i['db_conflict']
+                    mark = '!' if c['slug'] in pilot_slugs else '·'
+                    print(f"  {mark} çakışma: {i['id']} {i['name_tr'][:40]} ({c['match']}) de {c['slug']} eserine bağlanıyordu;"
+                          f" {c['winner']} kaldı, bu kayıt yeni eser sayılır")
         for s in miss:
             print(f'  ! içindekilerle eşleşmeyen pilot: {s} (overrides ile eşlenmeli; yükleyici yine de dokunmaz)')
 
