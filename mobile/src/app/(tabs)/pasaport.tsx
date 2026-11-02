@@ -115,7 +115,7 @@ const s = StyleSheet.create({
   locked: { backgroundColor: colors.parchment, borderColor: colors.line },
   disc: { width: hit, height: hit, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.goldLine, alignItems: 'center', justifyContent: 'center' },
   discLocked: { backgroundColor: colors.parchmentDeep, borderColor: colors.soft, borderStyle: 'dashed' },
-  name: { fontFamily: serif, color: colors.ink, textAlign: 'center', ...type.body },
+  name: { ...type.body, fontFamily: serif, color: colors.ink, textAlign: 'center' },
   subtitle: { color: colors.ink, fontWeight: '600', textAlign: 'center', ...type.caption },
   status: { color: colors.soft, textAlign: 'center', ...type.caption },
   small: { color: colors.soft, ...type.caption },

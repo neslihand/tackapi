@@ -1,5 +1,12 @@
+import { CormorantGaramond_500Medium } from '@expo-google-fonts/cormorant-garamond/500Medium';
+import { CormorantGaramond_500Medium_Italic } from '@expo-google-fonts/cormorant-garamond/500Medium_Italic';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import { router, Stack, usePathname } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -14,6 +21,7 @@ import { colors, serif, space, type } from '@/lib/theme';
 import { isOnboarded } from '@/lib/welcome';
 
 setupNotifications();
+SplashScreen.preventAutoHideAsync().catch(() => {}); // until the fonts are in, so the titles never jump
 
 /** Keeps the scheduled notifications in step with the settings, the passport and the collection. */
 function NotificationSync() {
@@ -98,6 +106,11 @@ function Screens() {
 }
 
 export default function RootLayout() {
+  const [fontsReady, fontError] = useFonts({ CormorantGaramond_500Medium, CormorantGaramond_500Medium_Italic,
+    Inter_400Regular, Inter_500Medium, Inter_600SemiBold });
+  const loaded = fontsReady || Boolean(fontError); // a missing font falls back to the system one, never blocks the app
+  useEffect(() => { if (loaded) SplashScreen.hideAsync().catch(() => {}); }, [loaded]);
+  if (!loaded) return null;
   return <SafeAreaProvider>
     <LangProvider><SettingsProvider><ContentProvider><PassportProvider><AccountProvider><JournalProvider>
       <StatusBar style="light" />

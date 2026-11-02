@@ -76,5 +76,5 @@ const s = StyleSheet.create({
   mapFilters: { borderBottomWidth: 1, borderBottomColor: colors.line },
   pad: { paddingHorizontal: space.m },
   row: { paddingHorizontal: space.m },
-  count: { fontFamily: serif, color: colors.goldText, ...type.body },
+  count: { ...type.body, fontFamily: serif, color: colors.goldText },
 });

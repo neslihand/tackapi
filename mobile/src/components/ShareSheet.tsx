@@ -56,7 +56,7 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
           <Text style={s.foot}>EŞİK · {t('Tarihe Açılan Kapı', 'A Door to History')}</Text>
         </View> : shared && <View ref={card} collapsable={false} style={s.card}>
           {shared.kind === 'stamp' && shared.photo && <Image source={shared.photo} alt="" style={StyleSheet.absoluteFill} contentFit="cover" />}
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: shared.kind === 'stamp' && shared.photo ? '#082119c4' : colors.emerald }]} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: shared.kind === 'stamp' && shared.photo ? overlay.shade : colors.emerald }]} />
           <View style={s.frame} />
           <View style={s.top}>
             <Image source={ARCH} alt="" style={s.arch} contentFit="cover" />
@@ -85,11 +85,11 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
 }
 
 const s = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: '#000000b3', alignItems: 'center', justifyContent: 'center', padding: 16 },
+  backdrop: { flex: 1, backgroundColor: overlay.backdrop, alignItems: 'center', justifyContent: 'center', padding: 16 },
   sheet: { alignItems: 'center', gap: 14, width: CARD_WIDTH },
   close: { alignSelf: 'flex-end', padding: 4 },
   card: { width: CARD_WIDTH, height: CARD_HEIGHT, borderRadius: 18, overflow: 'hidden', backgroundColor: colors.emerald, justifyContent: 'space-between', padding: 26 },
-  frame: { ...StyleSheet.absoluteFill, margin: 10, borderRadius: 12, borderWidth: 1, borderColor: '#c3a86980' },
+  frame: { ...StyleSheet.absoluteFill, margin: 10, borderRadius: 12, borderWidth: 1, borderColor: colors.goldLine },
   top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   arch: { width: 34, height: 34, borderRadius: 8 },
   kicker: { color: colors.gold, fontSize: 11, letterSpacing: 2, fontWeight: '700' },
@@ -99,7 +99,7 @@ const s = StyleSheet.create({
   disc: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.goldSoft },
   number: { fontFamily: serif, color: colors.goldSoft, fontSize: 64, lineHeight: 72 },
   name: { fontFamily: serif, color: colors.goldSoft, fontSize: 27, lineHeight: 33, textAlign: 'center' },
-  line: { color: '#e6e2d8', fontSize: 14, lineHeight: 20 },
-  date: { color: '#cfcab9', fontSize: 13 },
+  line: { color: colors.mist, fontSize: 14, lineHeight: 20 },
+  date: { color: colors.mist, fontSize: 13 },
   foot: { color: colors.gold, fontSize: 12, letterSpacing: 1, textAlign: 'center', fontFamily: serif },
 });

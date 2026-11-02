@@ -91,7 +91,7 @@ const s = StyleSheet.create({
   explainText: { color: colors.soft, fontSize: 14, lineHeight: 20 },
   result: { padding: space.l, borderRadius: 18, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine, gap: space.s, alignItems: 'center' },
   score: { fontFamily: serif, fontSize: 56, color: colors.gold },
-  resultText: { color: '#e6e2d8', fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  resultText: { color: colors.mist, fontSize: 15, lineHeight: 22, textAlign: 'center' },
   work: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
   workText: { flex: 1, color: colors.ink, fontSize: 15 },
 });
