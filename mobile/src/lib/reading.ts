@@ -40,7 +40,7 @@ export const loadArticles = (f: { kind?: ArticleKind | null; city?: string | nul
   cachedGet<ArticleList>(`/api/articles${qs({ kind: f.kind, city: f.city, q: f.q, page: f.page ?? 1, page_size: PAGE, lang: currentLang() })}`);
 export const loadArticle = (slug: string) => cachedGet<ArticleDetail>(`/api/articles/${encodeURIComponent(slug)}${qs({ lang: currentLang() })}`);
 export const loadTerms = () => cachedGet<{ enabled: boolean; items: GlossaryTerm[]; categories: { slug: string; label: string; n: number }[] }>(`/api/terms${qs({ lang: currentLang() })}`);
-export const loadTerm = (slug: string) => cachedGet<TermDetail>(`/api/terms/${encodeURIComponent(slug)}${qs({ lang: currentLang(), pilot: true })}`);
+export const loadTerm = (slug: string) => cachedGet<TermDetail>(`/api/terms/${encodeURIComponent(slug)}${qs({ lang: currentLang() })}`);
 
 export const formatDay = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleDateString(currentLang() === 'en' ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';

@@ -1,25 +1,34 @@
-import { Stack, type ErrorBoundaryProps } from 'expo-router';
+import { CormorantGaramond_500Medium } from '@expo-google-fonts/cormorant-garamond/500Medium';
+import { CormorantGaramond_500Medium_Italic } from '@expo-google-fonts/cormorant-garamond/500Medium_Italic';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
+import { router, Stack, usePathname, type ErrorBoundaryProps } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo } from 'react';
-import { View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button } from '@/components/UI';
 import { AccountProvider, useAccount } from '@/lib/account';
 import { initAnalytics, track } from '@/lib/analytics';
+import { useDemoPlace } from '@/lib/geo';
 import { LangProvider, t, useLang } from '@/lib/i18n';
 import { JournalProvider } from '@/lib/journal';
-import { setupNotifications, syncNotifications, useNotificationTaps } from '@/lib/notify';
+import { openedFromNotification, setupNotifications, syncNotifications, useNotificationTaps } from '@/lib/notify';
 import { planInput } from '@/lib/notifyPlan';
 import { preferenceTiers } from '@/lib/personal';
 import { quizPool } from '@/lib/quiz';
 import { nextRecallDay } from '@/lib/recall';
-import { ContentProvider, PassportProvider, SettingsProvider, useContent, usePassport, useSettings } from '@/lib/store';
-import { colors, serif, space } from '@/lib/theme';
+import { ContentProvider, PassportProvider, SettingsProvider, useContent, useFlags, usePassport, useSettings } from '@/lib/store';
+import { colors, serif, space, type } from '@/lib/theme';
 import { usePreferences } from '@/lib/usePreferences';
-import { BrandFonts, Text, useBrandFonts } from '@/components/Typography';
-import { Button } from '@/components/UI';
 
 setupNotifications();
 initAnalytics();
+SplashScreen.preventAutoHideAsync().catch(() => {}); // until the fonts are in, so the titles never jump
 
 // a shared link or a notification opens one work directly: the back button still leads home
 export const unstable_settings = { anchor: '(tabs)' };
@@ -60,17 +69,55 @@ function PreferenceSync() {
   return null;
 }
 
+/** Opens the first-run welcome once, only when the app starts on Bugün for someone new: a link or a notification that
+ *  opens a work goes straight there, and a passport with stamps has already found its way. */
+function WelcomeGate() {
+  const { settings } = useSettings();
+  const { progress, ready } = usePassport();
+  const flags = useFlags();
+  const pathname = usePathname();
+  // where this launch began and whether a notification opened it, read before anything navigates
+  const [start] = useState(() => ({ path: pathname, notified: openedFromNotification() }));
+  const decided = useRef(false);
+  useEffect(() => {
+    if (!ready || decided.current) return;
+    decided.current = true;
+    if (start.path !== '/' || start.notified) return;
+    if (flags.onboarding_v2 && !settings.onboarded && !Object.keys(progress.discovered).length) router.push('/karsilama');
+  }, [ready, start, flags.onboarding_v2, settings.onboarded, progress.discovered]);
+  return null;
+}
+
+/** While the demo location is on, a thin strip above every screen says so; it takes the status bar's place in the
+ *  layout, so the screens below lay out without it and no header or tab bar is covered. */
+function DemoStrip({ children }: { children: ReactNode }) {
+  const place = useDemoPlace();
+  const insets = useSafeAreaInsets();
+  const { bySlug } = useContent();
+  const name = place ? bySlug(place.slug)?.name ?? '' : '';
+  // the same tree with and without the strip, so turning it on never redraws the screens
+  return <View style={s.fill}>
+    {place && <View style={[s.strip, { paddingTop: insets.top + space.xs }]} accessible accessibilityRole="text"
+      accessibilityLabel={t(`Demo konumu açık: ${name}`, `Demo location on: ${name}`)}>
+      <Ionicons name="location" size={14} color={colors.goldSoft} />
+      <Text style={s.stripText} numberOfLines={1}>{`DEMO${name ? ` · ${name}` : ''}`}</Text>
+    </View>}
+    <SafeAreaInsetsContext.Provider value={place ? { ...insets, top: 0 } : insets}>{children}</SafeAreaInsetsContext.Provider>
+  </View>;
+}
+
 function Screens() {
   useLang(); // the titles below are re-read when the language changes
-  const fonts = useBrandFonts();
-  return <Stack screenOptions={{ headerStyle: { backgroundColor: colors.emerald }, headerTintColor: colors.goldSoft,
-    headerTitleStyle: { fontFamily: fonts ? serif : undefined, fontSize: 24 }, contentStyle: { backgroundColor: colors.parchment } }}>
+  return <Stack screenOptions={{ headerStyle: { backgroundColor: colors.emeraldDeep }, headerShadowVisible: false, headerTintColor: colors.goldSoft,
+    headerTitleStyle: { fontFamily: serif }, contentStyle: { backgroundColor: colors.parchment } }}>
     <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('Geri', 'Back') }} />
     <Stack.Screen name="eser/[slug]" options={{ title: '' }} />
     <Stack.Screen name="sor/[slug]" options={{ title: t('Esere Sor', 'Ask the Work'), presentation: 'modal' }} />
     <Stack.Screen name="sorularim" options={{ title: t('Sorularım', 'My questions') }} />
     <Stack.Screen name="tercihler" options={{ title: t('Sana göre', 'For you') }} />
     <Stack.Screen name="quiz" options={{ title: t('Tarihin İzinde', 'On the Trail of History') }} />
+    <Stack.Screen name="detay-avi" options={{ title: t('Detay Avı', 'Detail Hunt') }} />
+    <Stack.Screen name="hatirla" options={{ title: t('Hatırla', 'Recall') }} />
     <Stack.Screen name="rota/[id]" options={{ title: t('Rota Yürüyüşü', 'Route Walk') }} />
     <Stack.Screen name="okuma" options={{ title: t('Okuma Odası', 'Reading Room') }} />
     <Stack.Screen name="makale/[slug]" options={{ title: t('Makale', 'Article') }} />
@@ -80,8 +127,6 @@ function Screens() {
     <Stack.Screen name="yazilarim" options={{ title: t('Yazılarım', 'My writing') }} />
     <Stack.Screen name="hatira" options={{ title: t('Hatıra Defterim', 'My Memory Book') }} />
     <Stack.Screen name="defter" options={{ title: t('Keşif Defterim', 'My Discovery Notebook') }} />
-    <Stack.Screen name="hatirla" options={{ title: t('Hatırla', 'Remember') }} />
-    <Stack.Screen name="detay-avi" options={{ title: t('Detay Avı', 'Detail Hunt') }} />
     <Stack.Screen name="yapboz" options={{ title: t('Kayıp Parçalar', 'The Lost Pieces') }} />
     <Stack.Screen name="dedektif" options={{ title: t('Miras Dedektifi', 'Heritage Detective') }} />
     <Stack.Screen name="kartlar" options={{ title: t('Bilgi Kartları', 'Knowledge Cards') }} />
@@ -90,6 +135,7 @@ function Screens() {
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
     <Stack.Screen name="gizlilik" options={{ title: t('Gizlilik', 'Privacy') }} />
     <Stack.Screen name="proje" options={{ title: t('Proje ve kaynaklar', 'Project and sources') }} />
+    <Stack.Screen name="karsilama" options={{ headerShown: false, presentation: 'fullScreenModal', gestureEnabled: false }} />
   </Stack>;
 }
 
@@ -97,19 +143,31 @@ function Screens() {
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   useEffect(() => { track('client_error', undefined, { message: error.message, surface: 'screen' }); }, [error]);
   return <View style={{ flex: 1, justifyContent: 'center', padding: space.l, gap: space.m, backgroundColor: colors.parchment }}>
-    <Text accessibilityRole="header" style={{ fontSize: 24, color: colors.ink }}>{t('Bu ekran açılamadı.', 'This screen could not be opened.')}</Text>
-    <Text style={{ fontSize: 15, lineHeight: 22, color: colors.soft }}>{t('Pasaportun ve notların güvende. Yeniden deneyebilirsin; sorun sürerse uygulamayı kapatıp aç.', 'Your passport and notes are safe. You can try again; if it keeps happening, close and reopen the app.')}</Text>
+    <Text accessibilityRole="header" style={{ fontFamily: serif, color: colors.ink, ...type.title }}>{t('Bu ekran açılamadı.', 'This screen could not be opened.')}</Text>
+    <Text style={{ color: colors.soft, ...type.body }}>{t('Pasaportun ve notların güvende. Yeniden deneyebilirsin; sorun sürerse uygulamayı kapatıp aç.', 'Your passport and notes are safe. You can try again; if it keeps happening, close and reopen the app.')}</Text>
     <Button icon="refresh" label={t('Yeniden dene', 'Try again')} onPress={retry} />
   </View>;
 }
 
 export default function RootLayout() {
-  return <SafeAreaProvider><BrandFonts>
+  const [fontsReady, fontError] = useFonts({ CormorantGaramond_500Medium, CormorantGaramond_500Medium_Italic,
+    Inter_400Regular, Inter_500Medium, Inter_600SemiBold });
+  const loaded = fontsReady || Boolean(fontError); // a missing font falls back to the system one, never blocks the app
+  useEffect(() => { if (loaded) SplashScreen.hideAsync().catch(() => {}); }, [loaded]);
+  if (!loaded) return null;
+  return <SafeAreaProvider>
     <LangProvider><SettingsProvider><ContentProvider><PassportProvider><AccountProvider><JournalProvider>
       <StatusBar style="light" />
       <NotificationSync />
       <PreferenceSync />
-      <Screens />
+      <DemoStrip><Screens /></DemoStrip>
+      <WelcomeGate />
     </JournalProvider></AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
-  </BrandFonts></SafeAreaProvider>;
+  </SafeAreaProvider>;
 }
+
+const s = StyleSheet.create({
+  fill: { flex: 1, backgroundColor: colors.parchment },
+  strip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingBottom: space.xs, paddingHorizontal: space.m, backgroundColor: colors.emeraldDeep },
+  stripText: { color: colors.goldSoft, fontWeight: '700', letterSpacing: 1, ...type.caption },
+});

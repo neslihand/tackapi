@@ -109,7 +109,7 @@ export default function Account() {
         <Notice tone="warn" icon="warning-outline">{t('Emin misin? Hesabın kalıcı olarak silinecek.', 'Are you sure? Your account will be deleted for good.')}</Notice>
         <View style={{ flexDirection: 'row', gap: space.s }}>
           <Button style={{ flex: 1 }} kind="plain" label={t('Vazgeç', 'Cancel')} onPress={() => setConfirm(false)} />
-          <Button style={{ flex: 1, backgroundColor: colors.danger, borderColor: colors.danger }} icon="trash-outline" label={t('Evet, sil', 'Yes, delete')} busy={busy} onPress={() => run(account.remove)} />
+          <Button light style={{ flex: 1, backgroundColor: colors.danger, borderColor: colors.danger }} icon="trash-outline" label={t('Evet, sil', 'Yes, delete')} busy={busy} onPress={() => run(account.remove)} />
         </View>
       </> : <Button kind="plain" icon="trash-outline" label={t('Hesabımı sil', 'Delete my account')} onPress={() => setConfirm(true)} />}
     </View>

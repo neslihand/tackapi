@@ -28,7 +28,7 @@ export function PhotoGallery({ images, title }: { images: Photo[]; title: string
           <ScrollView style={{ maxHeight: '30%' }} contentContainerStyle={{ padding: 20, gap: 8 }}>
             <Text style={{ color: colors.ivory }}>{photo.caption || photo.alt || title}</Text>
             {photo.source && <Text style={{ color: colors.goldSoft }}>{photo.source.book}{photo.source.page ? `, ${t('s.', 'p.')} ${photo.source.page}` : ''}</Text>}
-            <Text accessibilityLiveRegion="polite" style={{ color: colors.lightMuted }}>{index! + 1} / {images.length}</Text>
+            <Text accessibilityLiveRegion="polite" style={{ color: colors.mist }}>{index! + 1} / {images.length}</Text>
           </ScrollView>
           <View style={{ flexDirection: 'row', padding: 16, gap: 12 }}>
             <Button style={{ flex: 1 }} kind="gold" label={t('Önceki', 'Previous')} disabled={index === 0} onPress={() => setIndex(i => Math.max(0, (i ?? 0) - 1))} />
@@ -71,7 +71,7 @@ export function MonumentDetails({ detail, name, slug }: { detail: Detail; name: 
     {loc && <View style={s.section}><SectionHeading title={t('Haritada', 'On the map')} />
       <View style={{ height: 260 }}><HeritageMap here={null} selected={slug} onSelect={() => {}} pins={[{ slug, name, ...loc, radius: loc.radius_m, state: 'open' }]} /></View>
       {loc.approximate && <Notice>{t('Yaklaşık konum: yapı işaretli alanın içinde olabilir; henüz doğrulanmadı.', 'Approximate location: the work may be within this area; it has not been verified.')}</Notice>}
-      <Button kind="plain" icon="map-outline" label={t('Miras Haritasında aç', 'Open in Heritage Map')} onPress={() => router.navigate(`/yakin?eser=${encodeURIComponent(slug)}`)} />
+      <Button kind="plain" icon="map-outline" label={t('Miras Haritasında aç', 'Open in Heritage Map')} onPress={() => router.navigate(`/kesfet?eser=${encodeURIComponent(slug)}`)} />
     </View>}
     {c?.current_state && <View style={s.section}><SectionHeading title={t('Bugünkü durumu', 'Current state')} /><Text style={s.body}>{c.current_state}</Text></View>}
   </View>;

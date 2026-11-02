@@ -41,7 +41,7 @@ export default function MyQuestions() {
   if (!list.length) return <Empty title={t('Takip ettiğin soru yok.', 'You are not following any questions.')} body={t('Esere Sor kaynakta cevap bulamazsa soruyu buradan takip edebilirsin.', 'When Ask the Work finds nothing in the sources, you can follow the question here.')} />;
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
     <Eyebrow>✦ {t('SORULARIM', 'MY QUESTIONS')}</Eyebrow>
-    <Title size={28}>{t('Kaynağıyla gelen cevaplar', 'Answers that come with a source')}</Title>
+    <Title>{t('Kaynağıyla gelen cevaplar', 'Answers that come with a source')}</Title>
     <Text style={s.small}>{t('Bu cevapları editörler yazar, yalnızca takip edenler görür. Yanıt garantisi yoktur: kaynakta bulunmayan bir şey için “bulunamadı” denir.', 'These answers are written by editors and seen only by those following. An answer is not guaranteed: what is not in the sources is reported as not found.')}</Text>
     {error && <Notice tone="warn" icon="cloud-offline-outline">{error}</Notice>}
     {list.map(q => <QuestionCard key={q.id} q={q} fresh={fresh.includes(q.id)} onRemoved={() => setList(rows => rows && rows.filter(x => x.id !== q.id))} />)}

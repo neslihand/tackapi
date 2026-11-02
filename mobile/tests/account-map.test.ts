@@ -1,8 +1,9 @@
-// Öneriler, katkı kuralları, girişten dönüş ve harita filtreleri.
+// Öneriler, katkı kuralları, girişten dönüş ve Keşfet'in arama ve filtreleri.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { afterSignIn, canSend, photoProblem, TEXT_MAX } from '../src/lib/contributionRules';
-import { filterPlaces } from '../src/lib/mapFilter';
+import type { Item } from '../src/lib/api';
+import { byDistance, filterWorks, searchIndex } from '../src/lib/explore';
 import { capitalizeReason, openableWorks, pickForYou, pickPopular } from '../src/lib/suggestions';
 
 const has = (slug: string) => ['a', 'b'].includes(slug);
@@ -45,23 +46,23 @@ test('Girişten sonra yalnızca uygulamanın ekranına dönülür', () => {
   assert.equal(afterSignIn('//kotu.example'), '/hesap');
 });
 
-const place = (name: string, city: string, kind: string, loc?: [number, number]) => ({ name, kind, city: { slug: city.toLowerCase(), name: city }, location: loc ? { lat: loc[0], lon: loc[1] } : null });
+const place = (name: string, city: string, kind: string, loc?: [number, number]) => ({ slug: name, name, kind, kind_label: kind, alt_names: [], district: null,
+  city: { slug: city.toLowerCase(), name: city }, location: loc ? { lat: loc[0], lon: loc[1], approximate: false, radius_m: null } : null }) as unknown as Item;
 const list = [place('Ulucami', 'Bursa', 'mosque', [40.18, 29.06]), place('Yeşil Türbe', 'Bursa', 'tomb', [40.18, 29.07]), place('Karatay', 'Konya', 'madrasa', [37.87, 32.5]), place('Konumsuz Han', 'Bursa', 'han')];
-const none = { city: null, kind: null, search: '' };
+const index = searchIndex(list);
+const none = { query: '', city: null, kind: null };
 const names = (r: { name: string }[]) => r.map(x => x.name);
 
-test('Harita araması ad ve şehirde, Türkçe harflerle', () => {
-  assert.deepEqual(names(filterPlaces(list, { ...none, search: 'ULUCAMI' }, null, 0)), ['Ulucami']);
-  assert.deepEqual(names(filterPlaces(list, { ...none, search: 'yok böyle' }, null, 0)), []);
-  assert.deepEqual(names(filterPlaces(list, { ...none, search: 'YEŞİL' }, null, 0)), ['Yeşil Türbe']);
-  assert.deepEqual(names(filterPlaces(list, { ...none, search: 'konya' }, null, 0)), ['Karatay']);
+test('Keşfet araması ad ve şehirde, Türkçe harflerle', () => {
+  assert.deepEqual(names(filterWorks(list, index, { ...none, query: 'ULUCAMI' })), ['Ulucami']);
+  assert.deepEqual(names(filterWorks(list, index, { ...none, query: 'yok böyle' })), []);
+  assert.deepEqual(names(filterWorks(list, index, { ...none, query: 'YEŞİL' })), ['Yeşil Türbe']);
+  assert.deepEqual(names(filterWorks(list, index, { ...none, query: 'konya' })), ['Karatay']);
 });
 
-test('Şehir, tür, arama ve mesafe birlikte çalışır', () => {
-  assert.deepEqual(names(filterPlaces(list, { city: 'bursa', kind: 'tomb', search: '' }, null, 0)), ['Yeşil Türbe']);
+test('Şehir, tür ve arama birlikte çalışır; mesafe sırası yalnızca konumu olanları alır', () => {
+  assert.deepEqual(names(filterWorks(list, index, { query: '', city: 'bursa', kind: 'tomb' })), ['Yeşil Türbe']);
   const bursa = { lat: 40.19, lon: 29.06 };
-  assert.deepEqual(names(filterPlaces(list, none, bursa, 10)), ['Ulucami', 'Yeşil Türbe']);       // konumsuz ve uzak çıkar
-  assert.deepEqual(names(filterPlaces(list, none, bursa, 250)), ['Ulucami', 'Yeşil Türbe']);
-  assert.equal(filterPlaces(list, none, bursa, 0).length, 4);                                     // mesafe seçilmedi: hepsi
-  assert.equal(filterPlaces(list, none, null, 10).length, 4);                                     // konum yok: mesafe uygulanmaz
+  assert.deepEqual(byDistance(list, bursa).map(n => n.item.name), ['Ulucami', 'Yeşil Türbe', 'Karatay']);
+  assert.equal(byDistance(list, bursa, 1).length, 1);
 });

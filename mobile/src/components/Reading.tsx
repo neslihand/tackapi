@@ -9,7 +9,7 @@ import { Button, Eyebrow, Title } from './UI';
 import { mediaUrl } from '@/lib/api';
 import { currentLang, t } from '@/lib/i18n';
 import { capitalize, type ArticleItem, type ArticleKind, type GlossaryTerm } from '@/lib/reading';
-import { colors, serif, space } from '@/lib/theme';
+import { colors, overlay, serif, space } from '@/lib/theme';
 
 const KIND_COLOR = { city_history: '#255747', heritage: '#765b38', culture: '#3e4f6b' };
 
@@ -17,7 +17,7 @@ const KIND_COLOR = { city_history: '#255747', heritage: '#765b38', culture: '#3e
 export function ReadingBand({ kicker, title, italic, lede, note, action }: { kicker: string; title: string; italic: string; lede: string; note: string; action: ReactNode }) {
   return <View style={s.band}>
     <Eyebrow light>{kicker}</Eyebrow>
-    <Title light size={34}>{title}</Title>
+    <Title light>{title}</Title>
     <Text style={s.bandItalic}>{italic}</Text>
     <Text style={s.bandLede}>{lede}</Text>
     {action}
@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   band: { padding: space.l, borderRadius: 18, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine, gap: space.s },
   bandItalic: { fontFamily: serif, fontStyle: 'italic', fontSize: 34, lineHeight: 38, color: colors.gold, marginTop: -space.s },
   bandLede: { color: '#e6e2d8', fontSize: 14, lineHeight: 21 },
-  bandNote: { color: colors.lightMuted, fontSize: 12, lineHeight: 18 },
+  bandNote: { color: colors.mist, fontSize: 12, lineHeight: 18 },
   card: { flexDirection: 'row', backgroundColor: colors.paper, borderRadius: 14, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   cardWide: { flexDirection: 'column' },
   cover: { width: 96, minHeight: 124 },
@@ -86,7 +86,7 @@ const s = StyleSheet.create({
   titleWide: { fontSize: 26, lineHeight: 31 },
   summary: { color: colors.soft, fontSize: 13, lineHeight: 18 },
   meta: { color: colors.soft, fontSize: 12, marginTop: 2 },
-  backdrop: { flex: 1, backgroundColor: '#00000080', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: overlay.backdrop, justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
   sheetHead: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   term: { fontFamily: serif, fontSize: 22, color: colors.ink, flex: 1 },

@@ -43,15 +43,20 @@ function choices(correct: string, others: string[], random: Random) {
   return { options, answer: options.indexOf(correct) };
 }
 
-export function generateQuestions(items: readonly Item[], random: Random = Math.random): QuizQuestion[] {
+/** The questions about one work; the wrong choices come from the other works in `items`. */
+export function questionsFor(item: Item, items: readonly Item[], random: Random = Math.random): QuizQuestion[] {
   const out: QuizQuestion[] = [];
-  for (const item of items) for (const tpl of templates) {
+  for (const tpl of templates) {
     const correct = tpl.value(item);
     if (!correct) continue;
     const picked = choices(correct, items.filter(a => a.slug !== item.slug).map(tpl.value).filter((v): v is string => Boolean(v)), random);
     if (picked) out.push({ id: `veri:${tpl.kind}:${item.slug}`, question: tpl.question(item), ...picked, explanation: tpl.explanation(item, correct), artifactId: item.slug });
   }
   return out;
+}
+
+export function generateQuestions(items: readonly Item[], random: Random = Math.random): QuizQuestion[] {
+  return items.flatMap(item => questionsFor(item, items, random));
 }
 
 export function quizPool(written: readonly QuizQuestion[], items: readonly Item[], random: Random = Math.random) {

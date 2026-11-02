@@ -36,7 +36,7 @@ export function LevelPicker({ level, onChange, describe }: { level: GameLevel; o
     {GAME_LEVELS.map(value => <Pressable key={value} onPress={() => { if (value !== level) onChange(value); }} accessibilityRole="radio" accessibilityState={{ checked: level === value }} aria-checked={level === value}
       style={[s.level, level === value && s.levelOn]}>
       <Text style={[s.levelName, level === value && { color: colors.goldSoft }]}>{levelName(value)}</Text>
-      <Text style={[s.levelNote, level === value && { color: colors.lightMuted }]}>{describe(value)}</Text>
+      <Text style={[s.levelNote, level === value && { color: colors.mist }]}>{describe(value)}</Text>
     </Pressable>)}
   </View>;
 }

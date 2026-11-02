@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import type { Item } from '../src/lib/api';
 import { dailyPicks } from '../src/lib/daily';
 import { emptyProgress, setLabel, toggleFavorite, type Progress } from '../src/lib/passport';
-import { catalogOrder, citySlugOf, discoveryProfile, homeOrder, intentFromProfile, leadFor, leadWork, noPreferences, preferenceTiers, routesFirst, suggestFor, type Preferences } from '../src/lib/personal';
+import { cardOrder, catalogOrder, citySlugOf, discoveryProfile, homeOrder, intentFromProfile, leadFor, leadWork, noPreferences, preferenceTiers, routesFirst, suggestFor, type Preferences } from '../src/lib/personal';
 
 const work = (slug: string, city: string, kind: string, extra: Partial<Item> = {}): Item => ({ slug, name: slug, alt_names: [], kind, kind_label: kind, city: { slug: city.toLowerCase(), name: city }, district: null, neighborhood: null,
   period: { slug: 'osmanli', name: 'Osmanlı' }, built: { from: null, to: null, label: null }, summary: 'Özet.', image: null, source: { book: null, pages: null }, ...extra });
@@ -150,4 +150,16 @@ test('Günün Eşiği önce kişinin şehrinden gelir, yeterince eser yoksa büt
 test('Rotalarda kişinin şehri öne gelir, sıra başka türlü bozulmaz', () => {
   assert.deepEqual(routesFirst(['a', 'b', 'c'], (r, city) => city === 'konya' && r === 'c', withPrefs({ homeCity: 'konya' })), ['c', 'a', 'b']);
   assert.deepEqual(routesFirst(['a', 'b'], () => true, noPreferences), ['a', 'b']);
+});
+
+test('Bugün kartları kişinin sırasını izler; süren iş kişinin kendi kartından hemen sonra gelir', () => {
+  const off = cardOrder(homeOrder(withPrefs({ on: false })));
+  assert.equal(off[0], 'continue');
+  assert.equal(off.includes('lead'), false);
+  const play = cardOrder(homeOrder(withPrefs({ intent: 'play' })));
+  assert.deepEqual(play.slice(0, 3), ['lead', 'ask', 'continue']);
+  assert.ok(play.indexOf('hunt') < play.indexOf('weekly'));
+  const near = cardOrder(homeOrder(withPrefs({ intent: 'nearby' })));
+  assert.ok(near.indexOf('nearby') < near.indexOf('forYou'));
+  for (const order of [off, play, near]) assert.equal(new Set(order).size, order.length);
 });

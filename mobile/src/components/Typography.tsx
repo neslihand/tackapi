@@ -1,42 +1,24 @@
-import { useFonts } from 'expo-font';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text as NativeText, TextInput as NativeInput, View, type TextProps, type TextInputProps } from 'react-native';
-import { colors, sans, serif } from '@/lib/theme';
+import { StyleSheet, Text as NativeText, TextInput as NativeInput, type TextProps, type TextInputProps, type TextStyle } from 'react-native';
+import { fonts } from '@/lib/theme';
 
-const FontContext = createContext(false);
-export const useBrandFonts = () => useContext(FontContext);
-
-/** Local TTF files also work in Expo Go. A failed load never prevents discovery. */
-export function BrandFonts({ children }: { children: ReactNode }) {
-  const [loaded, error] = useFonts([
-    { fontFamily: serif, fontDefinitions: [
-      { path: require('../../assets/fonts/CormorantGaramond.ttf'), weight: 400 },
-      { path: require('../../assets/fonts/CormorantGaramond-Italic.ttf'), weight: 400, style: 'italic' },
-    ] },
-    { fontFamily: sans, fontDefinitions: [{ path: require('../../assets/fonts/Inter.ttf'), weight: 400 }] },
-  ]);
-  const [expired, setExpired] = useState(false);
-  useEffect(() => { const timer = setTimeout(() => setExpired(true), 5000); return () => clearTimeout(timer); }, []);
-  if (!loaded && !error && !expired) return <View style={{ flex: 1, backgroundColor: colors.parchment, justifyContent: 'center' }}><ActivityIndicator color={colors.goldText} accessibilityLabel="EŞİK" /></View>;
-  return <FontContext.Provider value={loaded}>{children}</FontContext.Provider>;
-}
-
-function useFontStyle(style: TextProps['style']) {
-  const loaded = useBrandFonts();
-  const family = StyleSheet.flatten(style)?.fontFamily;
-  if (loaded) return undefined;
-  if (family === serif) return { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' };
-  if (!family || family === sans) return { fontFamily: undefined };
+// The fonts are loaded in src/app/_layout.tsx, where each weight is its own family. A screen that asks for a weight or
+// italics on the sans or serif family gets the matching family, so the text never falls back to a faux bold.
+function family(style: TextStyle | undefined) {
+  const name = style?.fontFamily ?? fonts.sans;
+  const weight = String(style?.fontWeight ?? '');
+  if (name === fonts.serif && style?.fontStyle === 'italic') return { fontFamily: fonts.serifItalic, fontStyle: 'normal' as const };
+  if (name !== fonts.sans) return { fontFamily: name };
+  if (['600', '700', '800', '900', 'bold'].includes(weight)) return { fontFamily: fonts.sansSemi, fontWeight: 'normal' as const };
+  if (weight === '500') return { fontFamily: fonts.sansMedium, fontWeight: 'normal' as const };
+  return { fontFamily: name };
 }
 
 // Cormorant's default digits are old-style: its 0 reads as "o" and its 1 as "I". The site uses lining digits everywhere
 // (frontend/src/styles.css), and so does the phone.
 export function Text({ style, ...props }: TextProps) {
-  const fallback = useFontStyle(style);
-  return <NativeText {...props} style={[{ fontFamily: sans, fontVariant: ['lining-nums'] }, style, fallback]} />;
+  return <NativeText {...props} style={[{ fontVariant: ['lining-nums'] }, style, family(StyleSheet.flatten(style) ?? undefined)]} />;
 }
 
 export function TextInput({ style, ...props }: TextInputProps) {
-  const fallback = useFontStyle(style);
-  return <NativeInput {...props} style={[{ fontFamily: sans }, style, fallback]} />;
+  return <NativeInput {...props} style={[style, family(StyleSheet.flatten(style) ?? undefined)]} />;
 }

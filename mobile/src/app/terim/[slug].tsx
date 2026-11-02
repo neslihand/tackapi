@@ -9,6 +9,8 @@ import { Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { ApiError } from '@/lib/api';
 import { t, useLang } from '@/lib/i18n';
 import { capitalize, loadTerm, type TermDetail } from '@/lib/reading';
+import { rememberTerm } from '@/lib/recall-state';
+import { useContent } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
 
 export default function Term() {
@@ -20,8 +22,11 @@ export default function Term() {
   const showing = `${slug}|${lang}`;
   const [shown, setShown] = useState(showing);
   if (showing !== shown) { setShown(showing); setTerm(null); setError(null); }
+  // every published work is in the app; one missing from the collection (not yet loaded or taken down) stays a label
+  const { bySlug } = useContent();
+  const inApp = (work: string) => Boolean(bySlug(work));
   useEffect(() => {
-    loadTerm(slug).then(r => { setTerm(r.data); setStale(r.stale); },
+    loadTerm(slug).then(r => { setTerm(r.data); setStale(r.stale); rememberTerm(slug); },
       e => setError(e instanceof ApiError && e.status === 404 ? t('Bu terim sözlükte yok.', 'This term is not in the glossary.') : String(e?.message ?? e)));
   }, [slug, lang]);
 
@@ -42,9 +47,9 @@ export default function Term() {
     <Text style={s.small}>{origin}</Text>
 
     {!!term.monuments.length && <><Eyebrow>{t('GEÇTİĞİ ESERLER', 'WORKS WITH THIS TERM')}</Eyebrow>
-      {term.monuments.map(m => <Pressable key={m.slug} disabled={!m.pilot} onPress={() => router.push(`/eser/${m.slug}`)} style={s.row} accessibilityRole={m.pilot ? 'button' : undefined}>
-        <View style={{ flex: 1 }}><Text style={s.rowName}>{m.name}</Text><Text style={s.small}>{m.city}{m.pilot ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
-        {m.pilot && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
+      {term.monuments.map(m => <Pressable key={m.slug} disabled={!inApp(m.slug)} onPress={() => router.push(`/eser/${m.slug}`)} style={s.row} accessibilityRole={inApp(m.slug) ? 'button' : undefined}>
+        <View style={{ flex: 1 }}><Text style={s.rowName}>{m.name}</Text><Text style={s.small}>{m.city}{inApp(m.slug) ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
+        {inApp(m.slug) && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
       </Pressable>)}</>}
 
     {!!term.articles.length && <><Eyebrow>{t('GEÇTİĞİ YAZILAR', 'ARTICLES WITH THIS TERM')}</Eyebrow>

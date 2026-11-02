@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AnswerOption } from '@/components/Controls';
 import { Text } from '@/components/Typography';
 import { Button, Empty, Eyebrow, Loading } from '@/components/UI';
 import { track } from '@/lib/analytics';
@@ -74,17 +75,9 @@ export default function Quiz() {
       <View style={s.dots}>{questions.map((_, i) => <View key={i} style={[s.dot, i < index && { backgroundColor: colors.goldLine }, i === index && { backgroundColor: colors.gold }]} />)}</View>
     </View>
     <Text style={s.question} accessibilityRole="header">{q.question}</Text>
-    <View style={{ gap: space.s }} accessibilityRole="radiogroup">
-      {q.options.map((o, i) => {
-        const state = chosen === null ? 'open' : i === q.answer ? 'right' : i === chosen ? 'wrong' : 'other';
-        return <Pressable key={i} onPress={() => answer(i)} disabled={chosen !== null} accessibilityRole="radio" accessibilityState={{ checked: chosen === i, disabled: chosen !== null }} aria-checked={chosen === i}
-          accessibilityLabel={`${o}${state === 'right' ? t(', doğru cevap', ', the right answer') : state === 'wrong' ? t(', yanlış', ', wrong') : ''}`}
-          style={[s.option, state === 'right' && s.right, state === 'wrong' && s.wrong, state === 'other' && { opacity: 0.55 }]}>
-          <Text style={[s.optionText, state === 'right' && { color: colors.goldSoft }]}>{o}</Text>
-          {state === 'right' && <Ionicons name="checkmark" size={20} color={colors.gold} />}
-          {state === 'wrong' && <Ionicons name="close" size={20} color={colors.danger} />}
-        </Pressable>;
-      })}
+    <View style={{ gap: space.s }}>
+      {q.options.map((o, i) => <AnswerOption key={i} label={o} onPress={() => answer(i)}
+        state={chosen === null ? 'open' : i === q.answer ? 'right' : i === chosen ? 'wrong' : 'other'} />)}
     </View>
     {chosen !== null && <View style={s.explain} accessibilityLiveRegion="polite">
       <Text style={s.explainHead}>{chosen === q.answer ? t('Doğru!', 'Right!') : t('Bu sefer olmadı.', 'Not this time.')}</Text>
@@ -102,17 +95,13 @@ const s = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.parchmentDeep, borderWidth: 1, borderColor: colors.goldLine },
   question: { fontFamily: serif, fontSize: 24, lineHeight: 31, color: colors.ink },
-  option: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 54, paddingHorizontal: 18, borderRadius: 14, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper },
-  optionText: { flex: 1, color: colors.ink, fontSize: 16 },
-  right: { backgroundColor: colors.emerald, borderColor: colors.gold },
-  wrong: { borderColor: colors.danger, backgroundColor: '#f6e9e6' },
   explain: { padding: space.m, borderRadius: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, borderLeftWidth: 3, borderLeftColor: colors.gold, gap: space.s },
   explainHead: { fontFamily: serif, fontSize: 19, color: colors.ink },
   explainText: { color: colors.soft, fontSize: 14, lineHeight: 20 },
   result: { padding: space.l, borderRadius: 18, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine, gap: space.s, alignItems: 'center' },
   score: { fontFamily: serif, fontSize: 56, color: colors.gold },
   scoreOf: { fontFamily: serif, fontSize: 22, color: colors.goldSoft },
-  resultText: { color: '#e6e2d8', fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  resultText: { color: colors.mist, fontSize: 15, lineHeight: 22, textAlign: 'center' },
   work: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
   workText: { flex: 1, color: colors.ink, fontSize: 15 },
 });

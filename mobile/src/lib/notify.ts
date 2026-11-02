@@ -40,6 +40,12 @@ export async function allowNotifications(): Promise<boolean> {
   return (await Notifications.requestPermissionsAsync()).granted;
 }
 
+/** True when the app was opened by tapping one of its notifications (the welcome then waits for the next launch). */
+export function openedFromNotification() {
+  const response = Notifications.getLastNotificationResponse();
+  return response?.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER;
+}
+
 /** A tapped notification opens its work or screen, once: the response is cleared so a restart does not repeat it. */
 export function useNotificationTaps(onOpen: () => void) {
   const response = Notifications.useLastNotificationResponse();

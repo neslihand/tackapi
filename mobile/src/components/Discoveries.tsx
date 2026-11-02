@@ -1,10 +1,10 @@
-// Keşfet's optional parts: the panel's notices and what the server suggests. They load on their own and quietly stay away
+// Bugün's optional parts: the panel's notices and what the server suggests. They load on their own and quietly stay away
 // when the server has nothing or cannot be reached: the collection never waits for them.
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from './Typography';
 import { Button, Eyebrow, Title } from './UI';
 import { useAccount } from '@/lib/account';
@@ -18,10 +18,12 @@ import { capitalizeReason, openableWorks, pickForYou, pickPopular, type Announce
 import { colors, serif, space } from '@/lib/theme';
 
 const LIMIT = 4;
+// each block takes its own outer style, so a block with nothing to show leaves no empty frame (and no gap) behind
+type Outer = { style?: StyleProp<ViewStyle> };
 
 /** "Haftanın Keşfi": one work, one detail and perhaps a route, chosen by an editor for this week. No week's entry, no card;
  *  nothing is lost by missing it. */
-export function Weekly() {
+export function Weekly({ style }: Outer) {
   const { bySlug, seasons } = useContent();
   const { settings } = useSettings();
   const [week, setWeek] = useState<WeeklyDiscovery | null>(null);
@@ -34,7 +36,7 @@ export function Weekly() {
   if (!week?.available || !item) return null;
   const route = seasons.find(r => r.id === week.route);
   const photo = mediaUrl(item.image?.thumb);
-  return <View style={s.week}>
+  return <View style={[s.week, style]}>
     <Eyebrow>✦ {t('HAFTANIN KEŞFİ', 'DISCOVERY OF THE WEEK')}</Eyebrow>
     {!!photo && <Image source={photo} alt="" contentFit="cover" style={s.weekPhoto} accessibilityIgnoresInvertColors />}
     <Text style={s.noticeTitle} accessibilityRole="header">{item.name}</Text>
@@ -47,7 +49,7 @@ export function Weekly() {
 }
 
 /** "Gündem": notices published in the panel while their dates last. Nothing is drawn when there are none. */
-export function Agenda() {
+export function Agenda({ style }: Outer) {
   const { bySlug } = useContent();
   const { settings } = useSettings();
   const [notices, setNotices] = useState<Announcement[]>([]);
@@ -57,7 +59,7 @@ export function Agenda() {
     return () => { live = false; };
   }, [settings.server]);
   if (!notices.length) return null;
-  return <>{notices.map(a => <View key={a.id} style={s.notice}>
+  return <View style={[s.agenda, style]}>{notices.map(a => <View key={a.id} style={s.notice}>
     <Eyebrow>✦ {t('GÜNDEM', 'AGENDA')}</Eyebrow>
     <Text style={s.noticeTitle} accessibilityRole="header">{a.title}</Text>
     <Text style={s.noticeBody}>{a.body}</Text>
@@ -65,14 +67,14 @@ export function Agenda() {
       onPress={() => { track('recommendation_click', slug, { list: 'agenda', announcement: a.id }); router.push(`/eser/${slug}`); }}>
       <Text style={s.noticeLinkText}>{bySlug(slug)!.name}</Text><Ionicons name="arrow-forward" size={15} color={colors.goldText} />
     </Pressable>)}
-  </View>)}</>;
+  </View>)}</View>;
 }
 
 /** The first card on Keşfet: one thing to do now, the way this person likes it. */
-export function LeadCard({ lead }: { lead: Lead }) {
-  return <View style={s.lead}>
+export function LeadCard({ lead, style }: { lead: Lead } & Outer) {
+  return <View style={[s.lead, style]}>
     <View style={s.leadHead}><Ionicons name={lead.icon} size={22} color={colors.gold} /><Eyebrow light>✦ {lead.kicker}</Eyebrow></View>
-    <Title light size={28}>{lead.title}</Title>
+    <Title light>{lead.title}</Title>
     <Text style={s.leadBody}>{lead.body}</Text>
     <Button kind="gold" icon="arrow-forward" label={lead.cta} onPress={() => { track('recommendation_click', undefined, { list: 'lead', source: 'device' }); router.push(lead.href as never); }} />
     <Pressable accessibilityRole="link" onPress={() => router.push('/tercihler')} style={s.leadLink}><Text style={s.leadLinkText}>{t('Tercihlerimi değiştir', 'Change my choices')}</Text></Pressable>
@@ -80,11 +82,11 @@ export function LeadCard({ lead }: { lead: Lead }) {
 }
 
 /** Asked once, after the first screen and never on it: the first visit needs no answers (master plan M01). */
-export function AskPreferences() {
+export function AskPreferences({ style }: Outer) {
   const { settings, change } = useSettings();
   const { prefs } = usePreferences();
   if (settings.personalAsked || !settings.onboarded || prefs.homeCity || prefs.interests.length) return null;
-  return <View style={s.notice}>
+  return <View style={[s.notice, style]}>
     <Eyebrow>✦ {t('SANA GÖRE', 'FOR YOU')}</Eyebrow>
     <Text style={s.noticeTitle} accessibilityRole="header">{t('Keşfet senin gibi olsun mu?', 'Shall Explore be more like you?')}</Text>
     <Text style={s.noticeBody}>{t('Şehrini ve ilgi alanlarını seçersen öneriler, harita ve Günün Eşiği ona göre gelir. Yalnızca bu telefonda kalır.', 'Choose your city and interests, and suggestions, the map and Today’s Threshold will follow them. It stays on this phone only.')}</Text>
@@ -97,7 +99,7 @@ export function AskPreferences() {
 
 /** "Senin için": what this phone can say from the visitor's own choices and reading, each with its reason, needing no account or
  *  permission. The server's suggestions fill the rest, and only when they really are personal. */
-export function ForYou({ skip = [] }: { skip?: readonly (string | undefined)[] }) {
+export function ForYou({ skip = [], style }: { skip?: readonly (string | undefined)[] } & Outer) {
   const { items, bySlug } = useContent();
   const { progress } = usePassport();
   const { settings } = useSettings();
@@ -124,10 +126,11 @@ export function ForYou({ skip = [] }: { skip?: readonly (string | undefined)[] }
   const server = pickForYou(mine, slug => Boolean(bySlug(slug)) && !skip.includes(slug) && !known.has(slug) && !progress.discovered[slug]).slice(0, LIMIT - local.length);
   const profile = discoveryProfile(prefs, narration, progress);
   const label = profile?.name ?? mine?.segments[0]?.name;
-  return <View style={{ gap: space.s }}>
+  if (!local.length && !server.length && !prefs.interests.includes('photography')) return null;
+  return <View style={[{ gap: space.s }, style]}>
     {(local.length > 0 || server.length > 0) && <>
       <Eyebrow>{t('SENİN İÇİN', 'FOR YOU')}</Eyebrow>
-      <Title size={26}>{t('Keşfine göre sıradaki kapılar', 'Next doors for your discovery')}</Title>
+      <Title>{t('Keşfine göre sıradaki kapılar', 'Next doors for your discovery')}</Title>
       {!!label && <Pressable accessibilityRole="link" onPress={() => router.push('/tercihler')} style={{ minHeight: 28, justifyContent: 'center' }}><Text style={s.segment}>{label}</Text></Pressable>}
       {local.map((r, i) => <Tile key={r.item.slug} item={r.item} note={r.reason} onOpen={() => track('recommendation_click', r.item.slug, { list: 'for_you', source: 'device', rank: i + 1 })} />)}
       {server.map((r, i) => <Tile key={r.slug} item={bySlug(r.slug)!} note={r.reason && currentLang() === 'tr' ? capitalizeReason(r.reason) : t('Önerilen', 'Recommended')}
@@ -138,7 +141,7 @@ export function ForYou({ skip = [] }: { skip?: readonly (string | undefined)[] }
 }
 
 /** "En çok merak edilenler", from the last seven days. Nothing is drawn when the server has nothing or cannot be reached. */
-export function Popular() {
+export function Popular({ style }: Outer) {
   const { bySlug } = useContent();
   const { settings } = useSettings();
   const { lang } = useLang();
@@ -151,9 +154,9 @@ export function Popular() {
   const trending = pickPopular(popular, slug => Boolean(bySlug(slug)));
   if (!trending.length) return null;
   const locale = lang === 'en' ? 'en-GB' : 'tr-TR';
-  return <View style={{ gap: space.s }}>
+  return <View style={[{ gap: space.s }, style]}>
     <Eyebrow>{t('EN ÇOK MERAK EDİLENLER', 'MOST WONDERED ABOUT')}</Eyebrow>
-    <Title size={26}>{t('Bu hafta en çok bakılanlar', 'Most viewed this week')}</Title>
+    <Title>{t('Bu hafta en çok bakılanlar', 'Most viewed this week')}</Title>
     {trending.map((p, i) => <Tile key={p.slug} item={bySlug(p.slug)!} rank={i + 1} note={t(`${p.visitors.toLocaleString(locale)} ziyaretçi baktı`, `${p.visitors.toLocaleString(locale)} visitors looked`)}
       onOpen={() => track('recommendation_click', p.slug, { list: 'popular', rank: i + 1 })} />)}
   </View>;
@@ -174,9 +177,10 @@ function Tile({ item, note, rank, onOpen }: { item: Item; note: string; rank?: n
 }
 
 const s = StyleSheet.create({
+  agenda: { gap: space.m },
   lead: { gap: space.s, padding: space.l, borderRadius: 16, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine },
   leadHead: { flexDirection: 'row', alignItems: 'center', gap: space.s },
-  leadBody: { color: colors.lightMuted, fontSize: 15, lineHeight: 22 },
+  leadBody: { color: colors.mist, fontSize: 15, lineHeight: 22 },
   leadLink: { minHeight: 36, justifyContent: 'center', alignSelf: 'center' },
   leadLinkText: { color: colors.goldSoft, fontSize: 13, textDecorationLine: 'underline' },
   week: { gap: space.s, padding: space.m, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.goldLine, borderRadius: 16 },

@@ -69,6 +69,8 @@ type Passport = {
   noteHuntWork: (day: string, slug: string) => void;
   recordQuiz: (score: number, rightAbout: string[]) => void;
   answerRight: (slug: string) => void;
+  /** Today counts for the rhythm (a finished puzzle, a review session…). */
+  markActiveDay: () => void;
   /** The result of a mini game; says the best before it and the medallions it opened, for the result screen. */
   finishGame: (game: GameKind, slug: string, level: GameLevel, result: number) => GameOutcome;
   /** Takes in a passport from the account (another device's progress); returns the merged one. */
@@ -115,6 +117,7 @@ export function PassportProvider({ children }: { children: ReactNode }) {
     noteHuntWork: (day, slug) => update(p => noteHuntWork(p, day, slug)),
     recordQuiz: (score, rightAbout) => update(p => recordQuiz(p, score, rightAbout)),
     answerRight: slug => update(p => answerRight(p, slug)),
+    markActiveDay: () => update(p => keepDay(p)),
     finishGame: (game, slug, level, result) => {
       const outcome: GameOutcome = { previous: progress.games[game][slug]?.[level], unlocked: [] };
       track('game_finish', slug, { game, level, result });

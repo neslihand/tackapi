@@ -16,6 +16,7 @@ import { currentLang, t, useLang } from '@/lib/i18n';
 import { articleBlocks, capitalize, formatDay, loadArticle, loadTerms, markTerms, type ArticleDetail, type GlossaryTerm } from '@/lib/reading';
 import { shareLink } from '@/lib/share';
 import { speak, stopSpeaking } from '@/lib/speech';
+import { useContent } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
 
 export default function Article() {
@@ -37,6 +38,9 @@ export default function Article() {
   const showing = `${slug}|${lang}`;
   const [shown, setShown] = useState(showing);
   if (showing !== shown) { setShown(showing); setA(null); setError(null); }
+  // every published work is in the app; one missing from the collection (not yet loaded or taken down) stays a label
+  const works = useContent();
+  const inApp = (work: string) => Boolean(works.bySlug(work));
   useEffect(() => {
     let live = true;
     loadArticle(slug).then(r => { if (!live) return; setA(r.data); setStale(r.stale); track('article_view', undefined, { article: slug, kind: r.data.kind }); },
@@ -135,10 +139,10 @@ export default function Article() {
 
       {!!a.monuments.length && <View style={s.section}>
         <Eyebrow>{t('BU YAZIDAKİ ESERLER', 'WORKS IN THIS ARTICLE')}</Eyebrow>
-        {a.monuments.map(m => <Pressable key={m.slug} disabled={!m.pilot} onPress={() => router.push(`/eser/${m.slug}`)} style={s.work} accessibilityRole={m.pilot ? 'button' : undefined}>
+        {a.monuments.map(m => <Pressable key={m.slug} disabled={!inApp(m.slug)} onPress={() => router.push(`/eser/${m.slug}`)} style={s.work} accessibilityRole={inApp(m.slug) ? 'button' : undefined}>
           {m.image ? <Image source={mediaUrl(m.image.thumb)} alt="" style={s.thumb} contentFit="cover" accessibilityIgnoresInvertColors /> : <View style={[s.thumb, { backgroundColor: colors.parchmentDeep }]} />}
-          <View style={{ flex: 1 }}><Text style={s.workName}>{m.name}</Text><Text style={s.small}>{m.city}{m.pilot ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
-          {m.pilot && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
+          <View style={{ flex: 1 }}><Text style={s.workName}>{m.name}</Text><Text style={s.small}>{m.city}{inApp(m.slug) ? '' : t(' · uygulamada henüz yok', ' · not in the app yet')}</Text></View>
+          {inApp(m.slug) && <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />}
         </Pressable>)}
       </View>}
 
@@ -165,7 +169,7 @@ const s = StyleSheet.create({
   cover: { width: '100%', height: 220, backgroundColor: colors.parchmentDeep },
   hero: { padding: space.m, paddingBottom: space.l, gap: space.s, backgroundColor: colors.emerald },
   lede: { fontFamily: serif, fontSize: 19, lineHeight: 27, color: colors.goldSoft, fontStyle: 'italic' },
-  heroMeta: { color: colors.lightMuted, fontSize: 13, lineHeight: 19 },
+  heroMeta: { color: colors.mist, fontSize: 13, lineHeight: 19 },
   section: { paddingHorizontal: space.m, paddingTop: space.l, gap: space.s + 2 },
   progress: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: '#0000' },
   progressFill: { height: 3, backgroundColor: colors.gold },

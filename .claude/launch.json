@@ -42,6 +42,44 @@
         "VITE_VAKIF_API": ""
       },
       "port": 5175
+    },
+    {
+      "name": "mobile-web-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "mobile",
+        "run",
+        "web",
+        "--",
+        "--port",
+        "8082"
+      ],
+      "env": {
+        "CI": "1",
+        "EXPO_PUBLIC_API_URL": "http://127.0.0.1:8001"
+      },
+      "port": 8082,
+      "autoPort": false
+    },
+    {
+      "name": "mobile-web-faz2",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "mobile",
+        "run",
+        "web",
+        "--",
+        "--port",
+        "8083"
+      ],
+      "env": {
+        "CI": "1",
+        "EXPO_PUBLIC_API_URL": "http://127.0.0.1:8001"
+      },
+      "port": 8083,
+      "autoPort": false
     }
   ]
 }

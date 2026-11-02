@@ -118,6 +118,21 @@ export function homeOrder(prefs: Preferences): HomeBlock[] {
   }
 }
 
+export type HomeCardKey = 'lead' | 'continue' | 'ask' | 'weekly' | 'agenda' | 'hunt' | 'recall' | 'consent' | 'forYou' | 'travel' | 'nearby' | 'season' | 'popular' | 'reading';
+// the blocks above as Bugün's cards; Günün Eşiği is always in the night band at the top, so `today` has none here
+const HOME_CARDS: Record<HomeBlock, HomeCardKey[]> = {
+  lead: ['lead'], ask: ['ask'], weekly: ['weekly'], agenda: ['agenda'], today: [], status: ['hunt', 'recall', 'consent'],
+  forYou: ['forYou'], routes: ['travel', 'nearby', 'season'], popular: ['popular'], reading: ['reading'],
+};
+
+/** Bugün's cards in order: the work under way comes right after the visitor's own card, or first when there is none. */
+export function cardOrder(blocks: readonly HomeBlock[]): HomeCardKey[] {
+  const keys = blocks.flatMap(b => HOME_CARDS[b]);
+  const at = keys.findIndex(k => k !== 'lead' && k !== 'ask');
+  const cut = at < 0 ? keys.length : at;
+  return [...keys.slice(0, cut), 'continue', ...keys.slice(cut)];
+}
+
 export type LeadPick = { item: Item; reason?: string };
 /** The work the first card is about: the best suggestion that really can be what the card promises, then today's work. A family is
  *  never promised a telling for children that the work does not have. */
@@ -141,7 +156,7 @@ export function leadFor(prefs: Preferences, pick: LeadPick | undefined, cityName
   if (!prefs.intent) return work && pick?.reason ? { kicker, icon: 'compass-outline', title: work.name, body: pick.reason, cta: t('Hikâyesini aç', 'Open its story'), href: about(work.slug) } : null;
   switch (prefs.intent) {
     case 'listen': return work ? { kicker, icon: 'headset-outline', title: t('Bugünün kısa hikâyesi', 'Today’s short story'), body: t(`${work.name}: yarım dakikada, kaynağıyla.`, `${work.name}: half a minute, with its source.`), cta: t('Dinle', 'Listen'), href: `${about(work.slug)}?dinle=1` } : null;
-    case 'nearby': return { kicker, icon: 'navigate-outline', title: cityName ? t(`${cityName} eserleri`, `Works in ${cityName}`) : t('Yakınındaki eserler', 'Works near you'), body: cityName ? t('Listeyi aç; konum verirsen mesafeleri de görürsün.', 'Open the list; share your location to see the distances too.') : t('Konumunla ya da seçtiğin şehirle.', 'By your location or a city you choose.'), cta: t('Yakınımdakiler', 'Near me'), href: '/yakin?gorunum=liste' };
+    case 'nearby': return { kicker, icon: 'navigate-outline', title: cityName ? t(`${cityName} eserleri`, `Works in ${cityName}`) : t('Yakınındaki eserler', 'Works near you'), body: cityName ? t('Listeyi aç; konum verirsen mesafeleri de görürsün.', 'Open the list; share your location to see the distances too.') : t('Konumunla ya da seçtiğin şehirle.', 'By your location or a city you choose.'), cta: t('Yakınımdakiler', 'Near me'), href: '/kesfet?gorunum=yakin' };
     case 'play': return { kicker, icon: 'extension-puzzle-outline', title: t('Oyun sırası sende', 'Your turn to play'), body: t('Detay Avı, yapboz, dedektif ve yarışma; hepsi eserlerin gerçek bilgilerinden.', 'Detail Hunt, puzzle, detective and quiz, all from the works’ real records.'), cta: t('Oyna', 'Play'), href: '/oyna' };
     case 'family': return work ? { kicker, icon: 'people-outline', title: t('Çocuğunla bir hikâye', 'A story with your child'), body: t(`${work.name}: çocuklar için anlatımıyla.`, `${work.name}: in its telling for children.`), cta: t('Birlikte oku', 'Read together'), href: about(work.slug, 'child') } : null;
     case 'deep': return work ? { kicker, icon: 'library-outline', title: t('Derin okuma', 'Reading in depth'), body: t(`${work.name}: kitaptaki ayrıntılı metin ve kaynakları.`, `${work.name}: the book’s detailed text and its sources.`), cta: t('Metni aç', 'Open the text'), href: about(work.slug, 'text') } : null;

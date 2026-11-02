@@ -1,6 +1,6 @@
-// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. Like the site, the
-// MVP shows only the pilot selection. Every successful GET is kept on the device, so a work opened once still opens
-// without a connection (the photos are kept by expo-image's disk cache).
+// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. The app lists every
+// published work. Every successful GET is kept on the device, so a work opened once still opens without a connection
+// (the photos are kept by expo-image's disk cache).
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { currentLang, t } from './i18n';
@@ -81,13 +81,26 @@ export const setSessionKey = (key: string | null) => { sessionKey = key; };
 let reporter: ((path: string, status: number) => void) | null = null;
 export const setApiReporter = (fn: typeof reporter) => { reporter = fn; };
 
+// React Native's fetch has no timeout on Android: an unreachable server (another Wi-Fi, a dropped packet) would keep the
+// spinner forever instead of falling back to the device copy. Reads should be quick; chat, photo search and uploads may not.
+const READ_TIMEOUT_MS = 15_000;
+const WRITE_TIMEOUT_MS = 120_000;
+
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   const headers: Record<string, string> = { accept: 'application/json', ...(init?.headers as Record<string, string> | undefined) };
   if (typeof init?.body === 'string' && !headers['content-type']) headers['content-type'] = 'application/json';
   if (sessionKey) headers.authorization = `Bearer ${sessionKey}`;
-  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers }); }
-  catch { reporter?.(path, 0); throw new ApiError(t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0); }
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), !init?.method || init.method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS);
+  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers, signal: abort.signal }); }
+  catch {
+    reporter?.(path, 0);
+    throw new ApiError(abort.signal.aborted
+      ? t('Sunucu yanıt vermedi. Ayarlar’daki sunucu adresini ve aynı Wi-Fi’de olduğunu kontrol et.', 'The server did not answer. Check the server address in Settings and that you are on the same Wi-Fi.')
+      : t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0);
+  }
+  finally { clearTimeout(timer); }
   if (!response.ok) {
     reporter?.(path, response.status);
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
@@ -115,18 +128,40 @@ export async function cachedGet<T>(path: string): Promise<{ data: T; stale: bool
   }
 }
 
+const PAGE_SIZE = 200; // the API's largest page
+
+/** Every published work, page by page; the device keeps the whole list under one key so it is never half there. */
+async function loadAllWorks(lang: string): Promise<{ data: Item[]; stale: boolean }> {
+  const key = cacheKey(`/api/monuments?all&lang=${lang}`);
+  try {
+    const page = (n: number) => request<{ total: number; items: Item[] }>(`/api/monuments?page=${n}&page_size=${PAGE_SIZE}&lang=${lang}`);
+    const first = await page(1);
+    const rest = await Promise.all(Array.from({ length: Math.ceil(first.total / PAGE_SIZE) - 1 }, (_, i) => page(i + 2)));
+    const data = [first, ...rest].flatMap(p => p.items);
+    AsyncStorage.setItem(key, JSON.stringify(data)).catch(() => {});
+    return { data, stale: false };
+  } catch (error) {
+    if (error instanceof ApiError && error.status !== 0 && error.status < 500) throw error;
+    const saved = await AsyncStorage.getItem(key).catch(() => null);
+    if (saved) return { data: JSON.parse(saved) as Item[], stale: true };
+    throw error;
+  }
+}
+
 export async function loadFeed(): Promise<Feed> {
   const lang = currentLang();
   // routes and written questions are optional: without them the collection still opens
   const [list, routes, quiz, site] = await Promise.all([
-    cachedGet<{ items: Item[] }>(`/api/monuments?pilot=true&page_size=200&lang=${lang}`),
+    loadAllWorks(lang),
+    // routes stay on the pilot works: unfiltered, a city route lists every work in the city (372 stops in Bursa), and
+    // only the pilot works have a location to walk to
     cachedGet<Season[]>('/api/routes?pilot=true').catch(() => ({ data: [] as Season[], stale: true })),
-    cachedGet<QuizQuestion[]>('/api/quiz?pilot=true').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
+    cachedGet<QuizQuestion[]>('/api/quiz').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
     cachedGet<SiteSettings>('/api/site-settings').catch(() => ({ data: defaultSiteSettings, stale: true })),
   ]);
   const settings = site.data && ['short', 'story', 'child'].includes(site.data.default_mode) ? site.data : defaultSiteSettings;
   const featured = routes.data.find(r => r.id === settings.featured_route);
-  return { items: list.data.items, seasons: featured ? [featured, ...routes.data.filter(r => r !== featured)] : routes.data,
+  return { items: list.data, seasons: featured ? [featured, ...routes.data.filter(r => r !== featured)] : routes.data,
     quiz: quiz.data, stale: list.stale, site: settings };
 }
 

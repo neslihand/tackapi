@@ -7,5 +7,6 @@ import type { Progress } from './passport';
 export const notificationsSupported = false;
 export function setupNotifications() {}
 export async function allowNotifications() { return false; }
+export function openedFromNotification() { return false; }
 export function useNotificationTaps(_onOpen: () => void) {}
 export async function syncNotifications(_input: PlanInput, _items: Item[], _progress: Progress, _tiers?: readonly ((item: Item) => boolean)[]) {}

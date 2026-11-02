@@ -20,7 +20,7 @@ export default function Privacy() {
   const consent = useConsent();
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
     <Eyebrow>{t('AYDINLATMA METNİ · SÜRÜM 2026-10-28', 'PRIVACY NOTICE · VERSION 2026-10-28')}</Eyebrow>
-    <Title size={34}>{t('Verilerin ve senin hakların', 'Your data and your rights')}</Title>
+    <Title>{t('Verilerin ve senin hakların', 'Your data and your rights')}</Title>
     <Text style={s.p}>{t('EŞİK, vakıf eserlerini tanıtan bir hackathon prototipidir. Verilerin yalnızca bu uygulamanın sunucusunda ve telefonunda tutulur; reklam ya da dış analitik servisi kullanılmaz.', 'EŞİK is a hackathon prototype that introduces foundation (vakıf) works. Your data is kept only on this app’s server and on your phone; no advertising or outside analytics service is used.')}</Text>
 
     <Part title={t('Hesap olmadan', 'Without an account')}>{t('Hesap zorunlu değildir. Pasaportun, Keşif Defterin, Hatıra Defterin ve ayarların yalnızca bu telefonda kalır. Uygulamayı silmek bunları da siler.', 'An account is not required. Your passport, Discovery Notebook, Memory Book and settings stay on this phone only. Deleting the app deletes them too.')}</Part>

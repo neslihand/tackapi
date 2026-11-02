@@ -35,7 +35,7 @@ export default function Preferences() {
 
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
     <Eyebrow>✦ {t('SANA GÖRE', 'FOR YOU')}</Eyebrow>
-    <Title size={30}>{t('Keşfet senin gibi olsun', 'Make Explore yours')}</Title>
+    <Title>{t('Keşfet senin gibi olsun', 'Make Explore yours')}</Title>
     <Text style={s.small}>{account.user ? t('Şehrin ve ilgi alanların hesabına yazılır, Hesabım’dakilerle aynıdır. Diğerleri bu telefonda kalır. Yaşın öneride kullanılmaz.', 'Your city and interests are kept on your account, the same as in My Account. The rest stays on this phone. Your age is not used for suggestions.')
       : t('Hepsi yalnızca bu telefonda kalır; hesap ya da izin gerekmez. Hiçbirini seçmek zorunda değilsin.', 'All of this stays on this phone only; no account or permission is needed. You do not have to choose any of it.')}</Text>
 
@@ -64,7 +64,7 @@ export default function Preferences() {
 
     <View style={s.card}>
       <Eyebrow>{t('KEŞİF BİÇİMİN', 'HOW YOU EXPLORE')}</Eyebrow>
-      {profile ? <><Title size={26}>{profile.name}</Title><Text style={s.small}>{profile.because}.</Text></>
+      {profile ? <><Title>{profile.name}</Title><Text style={s.small}>{profile.because}.</Text></>
         : <Text style={s.small}>{t('Henüz bilmiyoruz. Bir seçim yapınca ya da birkaç eser okuyunca burada görünür.', 'We do not know yet. It appears here once you choose something or read a few works.')}</Text>}
       <Text style={s.small}>{signals ? t(`Öneriler ayrıca okuduğun, kaydettiğin ve ziyaret ettiğin eserlerden çıkar (${signals} kayıt). Bunları Keşif Defteri’nden ve pasaporttan görebilirsin.`, `Suggestions also come from the works you read, saved and visited (${signals} records). You can see them in your notebook and passport.`)
         : t('Öneriler ayrıca okuduğun, kaydettiğin ve ziyaret ettiğin eserlerden çıkar.', 'Suggestions also come from the works you read, saved and visited.')}</Text>

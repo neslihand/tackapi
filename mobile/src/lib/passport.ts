@@ -207,20 +207,11 @@ export function toggleFavorite(p: Progress, slug: string): Progress {
   return { ...p, favorites: p.favorites.includes(slug) ? p.favorites.filter(s => s !== slug) : [...p.favorites, slug] };
 }
 
-/** A finished quiz round: the count, the best score (percent) and the works with a question answered right. */
-export function recordQuiz(p: Progress, score: number, rightAbout: string[]): Progress {
-  return { ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, Math.min(100, Math.max(0, Math.round(score)))) },
+/** A finished quiz round: the count, the best score (percent) and the works with a question answered right; a right
+ *  answer keeps the streak too. */
+export function recordQuiz(p: Progress, score: number, rightAbout: string[], now = new Date()): Progress {
+  return { ...p, days: rightAbout.length ? withDay(p, now) : p.days, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, Math.min(100, Math.max(0, Math.round(score)))) },
     answered: [...new Set([...p.answered, ...rightAbout])] };
-}
-
-/** Consecutive days with a discovery, ending today (or yesterday, when today is still open). */
-export function streak(p: Progress, now = new Date()) {
-  const days = new Set(p.days);
-  let day = dayKey(now);
-  if (!days.has(day)) day = addDays(day, -1);
-  let n = 0;
-  while (days.has(day)) { n += 1; day = addDays(day, -1); }
-  return { days: n, today: days.has(dayKey(now)) };
 }
 
 /** Metres between two points (haversine). */

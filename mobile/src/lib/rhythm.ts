@@ -59,3 +59,17 @@ export function rhythmLine(rhythm: Rhythm, days: readonly string[], now = new Da
   const run = dailyRun(days, now).days;
   return run ? t(`${run} günlük keşif ritmin sürüyor.`, `Your ${run}-day discovery rhythm goes on.`) + thisWeek : t('Bir hikâye oku, kendi izini bırak.', 'Read a story and leave your own trace.');
 }
+
+export type RhythmState = { count: number; unit: 'day' | 'week'; /** today (daily) or this week (weekly) already counts */ periodDone: boolean };
+/** The run for Bugün and the passport; null when the visitor keeps no rhythm. */
+export function rhythmState(rhythm: Rhythm, days: readonly string[], now = new Date()): RhythmState | null {
+  if (rhythm === 'off') return null;
+  if (rhythm === 'weekly') return { count: weeklyRun(days, now), unit: 'week', periodDone: daysThisWeek(days, now) > 0 };
+  const run = dailyRun(days, now);
+  return { count: run.days, unit: 'day', periodDone: run.today };
+}
+
+/** The longest daily run ever, by the same rules (rest days included). */
+export function longestDailyRun(days: readonly string[]) {
+  return [...new Set(days)].reduce((best, d) => { const [y, m, dd] = d.split('-').map(Number); return Math.max(best, dailyRun(days, new Date(y, m - 1, dd, 12)).days); }, 0);
+}

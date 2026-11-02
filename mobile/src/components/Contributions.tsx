@@ -67,7 +67,7 @@ export function Contributions({ slug, name }: { slug: string; name: string }) {
   const left = TEXT_MIN - body.trim().length;
   return <View style={{ gap: space.s + 2 }}>
     <Eyebrow>✦ {t('ZİYARETÇİ KATKILARI', 'VISITOR CONTRIBUTIONS')}</Eyebrow>
-    <Title size={28}>{t('Bu eserle ilgili senin hikâyen', 'Your story about this work')}</Title>
+    <Title>{t('Bu eserle ilgili senin hikâyen', 'Your story about this work')}</Title>
     <Text style={s.note}>{t('Ziyaretçilerin eklediği fotoğraf ve anılar. Kitaptaki bilgiden ayrıdır, yönetici onayından geçer ve sohbet asistanının kaynağı değildir.', 'Photos and memories added by visitors. They are separate from the book’s information, are reviewed by an administrator and are not a source for the chat assistant.')}</Text>
     {items.map(c => <View key={c.id} style={s.item}>
       {!!c.image && <Image source={mediaUrl(c.image.thumb)} contentFit="cover" style={[s.photo, c.image.width && c.image.height ? { aspectRatio: c.image.width / c.image.height } : null]} accessibilityLabel={c.body ?? t(`${name}: ziyaretçi fotoğrafı`, `${name}: visitor photo`)} />}

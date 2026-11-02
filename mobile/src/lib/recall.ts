@@ -1,6 +1,7 @@
-// Hatırla (master plan M08): short reviews of the works the visitor has already discovered, at 1, 3, 7 and 21 days. A
-// card is a question from the quiz pool, so its answer and explanation come from the work's own record. The schedule
-// lives in the passport: it works offline and follows the account.
+// Hatırla (master plan M08): short reviews of the works the visitor has already discovered and the glossary terms they
+// opened, at 1, 3, 7 and 21 days. A work's card is a question from the quiz pool, so its answer and explanation come from
+// the work's own record; a term's card shows the glossary definition. The schedule lives in the passport: it works
+// offline and follows the account. Which terms were opened, and when, stays on the phone (recall-state.ts).
 import type { QuizQuestion } from './api';
 import { addDays, dayKey, type Progress, type RecallState } from './passport';
 
@@ -54,6 +55,33 @@ export function nextRecallDay(pool: readonly QuizQuestion[], progress: Progress)
     if (!first) continue;
     const state = progress.recall[card.id];
     const day = state ? state.due : addDays(dayKey(new Date(first)), RECALL_DAYS[0]);
+    if (day && (!next || day < next)) next = day;
+  }
+  return next;
+}
+
+export const termCardId = (slug: string) => `term:${slug}`;
+
+/** Term cards due today, the longest waiting first: a term's first card opens the day after it was opened. */
+export function dueTermCards(opened: Readonly<Record<string, string>>, known: ReadonlySet<string>, progress: Progress, now = new Date()) {
+  const today = dayKey(now);
+  const due: { id: string; slug: string; since: string; state: RecallState | undefined }[] = [];
+  for (const [slug, first] of Object.entries(opened)) {
+    if (!known.has(slug)) continue;
+    const id = termCardId(slug);
+    const state = progress.recall[id];
+    const since = state ? state.due : addDays(first, RECALL_DAYS[0]);
+    if (since && since <= today && state?.last !== today) due.push({ id, slug, since, state });
+  }
+  return due.sort((a, b) => a.since.localeCompare(b.since) || a.id.localeCompare(b.id));
+}
+
+/** The day the next term card opens; null when none is waiting. */
+export function nextTermDay(opened: Readonly<Record<string, string>>, progress: Progress) {
+  let next: string | null = null;
+  for (const [slug, first] of Object.entries(opened)) {
+    const state = progress.recall[termCardId(slug)];
+    const day = state ? state.due : addDays(first, RECALL_DAYS[0]);
     if (day && (!next || day < next)) next = day;
   }
   return next;

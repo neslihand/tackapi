@@ -37,7 +37,7 @@
 | ESK-001 Repo audit | Bitti | Bu belge ve `api-inventory.md` |
 | ESK-002 İçerik ve hak audit'i | Bitti, açık bulgularla | `content-inventory.md`, `permission-matrix.md` |
 | ESK-003 Olay istemcisi + WMHE | Bitti | Panelde kart var. Gerçek cihaz verisi henüz yok |
-| ESK-004 Niyet ekranı | Bitti | `components/Onboarding.tsx`, beş seçenek de gerçek içeriğe gidiyor |
+| ESK-004 Niyet ekranı | Bitti | `app/karsilama.tsx`, beş seçenek de gerçek içeriğe gidiyor |
 | ESK-005 Kısa anlatım ve kaynak | Motor bitti, **üç detay içeriği yok** | Kısa özet, seçili anlatımın kaynakları, %75 ölçümü ve üç detay (`work_detail`, panelde eser sayfası). Sürümlü `story_variant` yok: anlatımlar eskisi gibi tek kayıt |
 | ESK-006 Dijital / yerinde mühür | Bitti | Veride ve pasaportta ayrı |
 | ESK-007 Defter + giriş sonrası birleşme | Bitti | Birleşme birim testli; tarayıcıda gerçek hesapla denenmedi |
@@ -72,7 +72,7 @@ Master planla ayrı bir belge. 1 Kasım'da M06, M07, M08, M09, M10 ve M12 ile M1
 | E13 Yarışma | Bitti | Dört soru, 25 puan, 100 üzerinden sonuç; doğru yanıt tur bitmeden görev adımına sayılır |
 | E14 Oturum özeti | Bitti | Oyna'da "Bu oturum", bellekte tutulur. Sitede adı Keşif Defteri; telefonda o ad etiket defterine ait olduğu için farklı |
 | E20 Okuma Odası | Bitti | Sunucu filtresi ve sayfalama, site başlıkları, içindekiler, okuma ilerlemesi, bağlantı paylaşımı, çocuk açıklamaları, harf dizini, "Geçtiği yerler". Metin kuralları `tests/article-text.test.ts` ile sitenin koduyla karşılaştırılır. **Yerel veritabanında 0 makale var; makaleler panelden içe aktarılmalı** (`#/makale-aktar`). Sözlükte 55 terim dolu |
-| E06 Harita | Bitti | Arama ve mesafe (10/50/250 km), sitedeki kuralla (`lib/mapFilter.ts`). Gerçek harita cihazda denenmedi |
+| E06 Harita | Bitti | Keşfet'in Harita görünümü; arama, şehir ve tür süzgeciyle (`lib/explore.ts`). Gerçek harita cihazda denenmedi |
 | E15 Senin için, popüler, duyurular | Bitti | Keşfet'te. Kişisel olmayan liste kişisel gösterilmez, servis yoksa katalog bekler. "Senin için" sahte sunucu cevabıyla denendi; gerçek kullanımla oluşması veri ister |
 | E17 Ziyaretçi katkıları | Bitti | Gönderme, onay bekleme, panel onayı ve reddi, gerekçe. Fotoğraf seçimi tarayıcıda denendi, telefon galerisinde denenmedi |
 | E18 Profil | Bitti | Kayıtta ve Hesabım'da, seçenekler sunucudan |
@@ -87,14 +87,14 @@ Master planla ayrı bir belge. 1 Kasım'da M06, M07, M08, M09, M10 ve M12 ile M1
 
 | Plan | Kod | Durum |
 |---|---|---|
-| S00 Niyet seçimi | `components/Onboarding.tsx` (Keşfet üstünde tam ekran) | Var |
-| S01 Keşfet | `(tabs)/index.tsx` | Var |
-| S02 Arama ve filtre | `(tabs)/index.tsx` | Var |
+| S00 Niyet seçimi | `karsilama.tsx` (ilk açılışta tam ekran, tek seçim) | Var |
+| S01 Bugün / Keşfet | `(tabs)/index.tsx` (Bugün kartları, kişiye göre sıra), `(tabs)/kesfet.tsx` (liste, harita, yakınımda) | Var |
+| S02 Arama ve filtre | `(tabs)/kesfet.tsx` (arama, şehir, tür) | Var; dönem, rota ve favori süzgeci yok |
 | S03 Eser detayı | `eser/[slug].tsx` | Var, üç detay editör yazınca görünür |
-| S04 Yakınımdakiler | `(tabs)/yakin.tsx` | Var |
+| S04 Yakınımdakiler | `(tabs)/kesfet.tsx` (Yakınımda), Bugün'deki Yakınında kartı | Var; mesafe süzgeci (10/50/250 km) yok |
 | S05 / S06 Rota | `(tabs)/oyna.tsx`, `rota/[id].tsx` | Var, tek ekranda |
-| S07 Detay Avı | `detay-avi.tsx` | Var, görev bekliyor |
-| S08 Hatırla | `hatirla.tsx` | Var |
+| S07 Detay Avı | `detay-avi.tsx` | Var: editör görevi varsa o, yoksa koleksiyon fotoğraflarından otomatik bulmaca (M07 "kaliteli yedek") |
+| S08 Hatırla | `hatirla.tsx`, `lib/recall.ts`, `lib/recall-state.ts` | Var: eser ve sözlük terimi kartları, takvim pasaportta |
 | S09 Keşif Defteri | `defter.tsx` | Var |
 | S10 Pasaport | `(tabs)/pasaport.tsx` | Var |
 | Mini oyunlar, bilgi kartları | `yapboz.tsx`, `dedektif.tsx`, `kartlar.tsx` | Var |

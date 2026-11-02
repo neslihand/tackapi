@@ -8,6 +8,17 @@ import type { Progress } from './passport';
 export type QuestStep = { kind: 'read' | 'puzzle' | 'quiz'; slug: string; label: string; done: boolean };
 export type Quest = { route: Season; stops: Item[]; steps: QuestStep[]; done: number; complete: boolean; visited: number };
 
+/** The quest under way: some steps done, not finished. */
+export const questInProgress = (quests: readonly Quest[]) => quests.find(q => q.done > 0 && !q.complete);
+
+/** Bugün's season route: the first unfinished quest that "Devam et" is not already showing. */
+export function seasonQuest(quests: readonly Quest[]) {
+  const going = questInProgress(quests);
+  return quests.find(q => !q.complete && q !== going);
+}
+
+export const stepHref = (step: QuestStep) => step.kind === 'quiz' ? `/quiz?eser=${encodeURIComponent(step.slug)}` : `/eser/${step.slug}`;
+
 export function buildQuests(routes: readonly Season[], items: readonly Item[], progress: Progress, canAsk: ReadonlySet<string>): Quest[] {
   const bySlug = new Map(items.map(i => [i.slug, i]));
   return routes.flatMap(route => {

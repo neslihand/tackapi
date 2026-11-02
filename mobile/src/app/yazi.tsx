@@ -109,7 +109,7 @@ function Writer({ existing }: { existing: MyArticle | null }) {
       <View style={{ gap: space.s }} accessibilityRole="radiogroup">{(['heritage', 'city_history', 'culture'] as ArticleKind[]).map(k =>
         <Pressable key={k} onPress={() => set('kind', k)} accessibilityRole="radio" accessibilityLabel={`${kindName(k)}. ${kindNote(k)}`} accessibilityState={{ checked: d.kind === k }} aria-checked={d.kind === k} style={[s.kind, d.kind === k && s.kindOn]}>
           <Text style={[s.kindName, d.kind === k && { color: colors.goldSoft }]}>{kindName(k)}</Text>
-          <Text style={[s.small, d.kind === k && { color: '#e6e2d8' }]}>{kindNote(k)}</Text>
+          <Text style={[s.small, d.kind === k && { color: colors.mist }]}>{kindNote(k)}</Text>
         </Pressable>)}</View>
 
       <Field label={t('Başlık', 'Title')} count={`${d.title.length} / ${LIMITS.title[1]}`}>

@@ -108,7 +108,7 @@ function Card({ item, number, front, width }: { item: Item; number: number; fron
       </ScrollView>
       <View style={{ flexDirection: 'row', gap: space.s }}>
         <Button style={{ flex: 1 }} icon="book-outline" label={t('Keşfet', 'Explore')} onPress={() => router.push(`/eser/${item.slug}`)} />
-        {!!item.location && <Button style={{ flex: 1 }} kind="plain" icon="map-outline" label={t('Haritada', 'On the map')} onPress={() => router.navigate(`/yakin?eser=${encodeURIComponent(item.slug)}`)} />}
+        {!!item.location && <Button style={{ flex: 1 }} kind="plain" icon="map-outline" label={t('Haritada', 'On the map')} onPress={() => router.navigate(`/kesfet?eser=${encodeURIComponent(item.slug)}`)} />}
       </View>
       <Button kind="plain" icon="return-up-back-outline" label={t('Öne dön', 'Back to the front')} onPress={() => turn(false)} />
     </View>}

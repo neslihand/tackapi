@@ -8,6 +8,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { Text, TextInput } from '@/components/Typography';
 import { ArticleCard, ReadingBand } from '@/components/Reading';
 import { Button, Empty, Loading, Notice } from '@/components/UI';
+import { useContent } from '@/lib/store';
 import { track } from '@/lib/analytics';
 import { currentLang, t, useLang } from '@/lib/i18n';
 import { capitalize, fold, letterGroups, loadArticles, loadTerm, loadTerms, TURKISH_ALPHABET, type ArticleItem, type ArticleKind, type ArticleList, type GlossaryTerm, type TermDetail } from '@/lib/reading';
@@ -150,7 +151,9 @@ function TermEntry({ x, child, open, onToggle }: { x: GlossaryTerm; child: boole
     loadTerm(x.slug).then(r => { if (live) setDetail(r.data); }, () => { if (live) setFailed(true); });
     return () => { live = false; };
   }, [open, detail, x.slug]);
-  const works = detail?.monuments.filter(m => m.pilot) ?? [];
+  // every published work is in the app; one missing from the collection (not yet loaded or taken down) is left out
+  const { bySlug } = useContent();
+  const works = detail?.monuments.filter(m => bySlug(m.slug)) ?? [];
   return <View style={s.term}>
     <Text style={s.termName}>{capitalize(x.term)}{x.term_en ? <Text style={s.termEn}> · {x.term_en}</Text> : null}</Text>
     {!!x.category_label && <Text style={s.termCat}>{x.category_label}</Text>}
