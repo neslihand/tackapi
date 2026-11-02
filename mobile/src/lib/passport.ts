@@ -127,6 +127,10 @@ export function distanceM(a: { lat: number; lon: number }, b: { lat: number; lon
 export const STAMP_RADIUS_M = 150;
 export const stampRadius = (loc: { approximate: boolean; radius_m: number | null }) => STAMP_RADIUS_M + (loc.approximate ? loc.radius_m ?? 350 : 0);
 
+/** Orders plain keys (slugs, ids, ISO dates) by code unit. Not localeCompare: on Android Hermes every call goes
+ *  through a Java collator, and sorting the whole collection with it froze the app for minutes. */
+export const compareKeys = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
 /** For search: case and Turkish letters folded (İ/ı → i, ç → c, …). */
 export const normalize = (value: string) => value.toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
 

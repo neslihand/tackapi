@@ -2,7 +2,7 @@
 // Pure functions; the saved state (esik:recall:v1, recall-state.ts) keeps only ids, boxes and days, never text.
 import type { Item, QuizQuestion } from './api';
 import { fromKey, hash, localDays } from './hunt';
-import { dayKey, type Progress } from './passport';
+import { compareKeys, dayKey, type Progress } from './passport';
 import { questionsFor, type Random } from './quiz';
 import type { GlossaryTerm } from './reading';
 
@@ -84,7 +84,7 @@ export const dueDay = (state: RecallState, card: Candidate) => state.cards[card.
 export function dueCards(state: RecallState, candidates: readonly Candidate[], now: Date): Candidate[] {
   const today = dayKey(now);
   return candidates.filter(c => daysUntil(dueDay(state, c), now) <= 0)
-    .sort((a, b) => dueDay(state, a).localeCompare(dueDay(state, b)) || hash(`${today}:${a.id}`) - hash(`${today}:${b.id}`) || a.id.localeCompare(b.id));
+    .sort((a, b) => compareKeys(dueDay(state, a), dueDay(state, b)) || hash(`${today}:${a.id}`) - hash(`${today}:${b.id}`) || compareKeys(a.id, b.id));
 }
 
 /** The soonest day any card comes back, or null with no cards. */

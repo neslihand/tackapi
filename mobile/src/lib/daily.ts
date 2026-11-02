@@ -2,7 +2,7 @@
 // the notifications (notify.ts) pick the same work on every platform.
 import type { Item } from './api';
 import { t } from './i18n';
-import type { Progress } from './passport';
+import { compareKeys, type Progress } from './passport';
 
 export const DAILY_DAYS = 7;
 
@@ -35,7 +35,7 @@ export function listenSeconds(text: string) {
 
 /** The works of the coming days: undiscovered ones first, a stable order so a reschedule keeps the same day's work. */
 export function dailyPicks(items: Item[], progress: Progress, from = new Date(), days = DAILY_DAYS) {
-  const pool = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || a.slug.localeCompare(b.slug));
+  const pool = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || compareKeys(a.slug, b.slug));
   if (!pool.length) return [];
   const epoch = Math.floor(new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime() / 86400000);
   return Array.from({ length: days }, (_, i) => pool[(epoch + i) % pool.length]);

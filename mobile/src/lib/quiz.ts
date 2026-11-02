@@ -16,6 +16,11 @@ export function shuffle<T>(items: readonly T[], random: Random = Math.random) {
   return copy;
 }
 
+// The same few values (3 cities, a handful of eras) are compared over and over; on Android Hermes every normalize()
+// is a call into Java, so a million of them froze the app. Each distinct value is normalized once.
+const keys = new Map<string, string>();
+const keyOf = (value: string) => { let key = keys.get(value); if (key === undefined) { key = normalize(value); keys.set(value, key); } return key; };
+
 const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && !/^(bilinmiyor|unknown|dönemi belirtilmemiş)$/i.test(value.trim()));
 const centuryOf = (year: string | null | undefined) => { const found = year?.match(/\d{3,4}/); return found ? Math.floor((Number(found[0]) - 1) / 100) + 1 : null; };
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
@@ -30,10 +35,10 @@ const templates: Template[] = [
 ];
 
 function choices(correct: string, others: string[], random: Random) {
-  const seen = new Set([normalize(correct)]);
+  const seen = new Set([keyOf(correct)]);
   const wrong: string[] = [];
   for (const value of shuffle(others, random)) {
-    const key = normalize(value);
+    const key = keyOf(value);
     if (seen.has(key)) continue;
     seen.add(key); wrong.push(value);
     if (wrong.length === MAX_OPTIONS - 1) break;
@@ -76,5 +81,16 @@ export function pickRound(pool: readonly QuizQuestion[], size = ROUND_SIZE, focu
   return round;
 }
 
-/** Works the quiz can ask about (does not depend on the shuffle). */
-export const answerable = (written: readonly QuizQuestion[], items: readonly Item[]) => new Set(quizPool(written, items).map(q => q.artifactId));
+/** Works the quiz can ask about (does not depend on the shuffle). The same answer as quizPool without building every
+ *  question: a work gets a question for a field when it has a value and the field has MIN_OPTIONS distinct values in all
+ *  (its own and at least two others). */
+export function answerable(written: readonly QuizQuestion[], items: readonly Item[]) {
+  const slugs = new Set(items.map(i => i.slug));
+  const out = new Set(written.filter(q => slugs.has(q.artifactId)).map(q => q.artifactId));
+  for (const tpl of templates) {
+    const values = items.map(tpl.value);
+    if (new Set(values.filter((v): v is string => Boolean(v)).map(keyOf)).size < MIN_OPTIONS) continue;
+    items.forEach((item, i) => { if (values[i]) out.add(item.slug); });
+  }
+  return out;
+}

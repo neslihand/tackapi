@@ -13,6 +13,7 @@ import { syncLabel, useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
 import { useJournal } from '@/lib/journal';
 import { earnedText, fullName, medalFamilies, nextText, nextUp, tierName, type MedalFamily } from '@/lib/medals';
+import { compareKeys } from '@/lib/passport';
 import { useContent, usePassport, useSettings } from '@/lib/store';
 import { bestStreak, streakState } from '@/lib/streak';
 import { colors, hit, metal, radius, serif, space, type } from '@/lib/theme';
@@ -24,7 +25,7 @@ export default function Passport() {
   const account = useAccount();
   const [shared, setShared] = useState<Shared | null>(null);
   const memories = useJournal().memories.length;
-  const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => progress.discovered[b.slug].localeCompare(progress.discovered[a.slug])), [items, progress]);
+  const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => compareKeys(progress.discovered[b.slug], progress.discovered[a.slug])), [items, progress]);
   const visits = Object.keys(progress.visits).length;
   const cities = new Set(found.map(i => i.city.slug)).size;
   const run = streakState(progress.days, settings.streakMode, new Date());
