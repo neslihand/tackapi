@@ -41,7 +41,7 @@ export function ContinueCard() {
       <ProgressBar value={quest.done} max={quest.steps.length}
         accessibilityLabel={t(`${quest.steps.length} adımın ${quest.done} tanesi tamam`, `${quest.done} of ${quest.steps.length} steps done`)} />
       <Text style={home.small}>{t('Sıradaki', 'Next')}: {next.label}</Text>
-      <Button icon="arrow-forward" label={t('Sıradaki adım', 'Next step')} onPress={() => router.push(stepHref(next))} />
+      <Button kind="gold" icon="arrow-forward" label={t('Sıradaki adım', 'Next step')} onPress={() => router.push(stepHref(next))} />
     </Card>
   </View>;
 }

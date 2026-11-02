@@ -97,7 +97,7 @@ Her görev `docs/promptlar.md`'deki aynı numaralı prompt'la, **ayrı bir Claud
 | Per 5 Kas | Hatırla kartları | P7 | [x] |
 | Per 5 Kas | Seyahat modu | P8 | [x] |
 | Cum 6 Kas | (İsteğe bağlı) Mobil analitik | P9 | [ ] |
-| Cum 6 Kas | Cila, erişilebilirlik, demo modu, sonra ekran görüntüleri | P10 | [ ] |
+| Cum 6 Kas | Cila, erişilebilirlik, demo modu, sonra ekran görüntüleri | P10 | [x] |
 | Cum 6 Kas | APK derlemesi ve telefonda tam deneme | P11 | [ ] |
 | Cmt 7 Kas | Prova; yeni özellik yok, yalnızca hata düzeltme | — | [ ] |
 
@@ -123,3 +123,5 @@ kendi kart bileşenini o klasöre ekler.
 - APK telefonda çevrimdışı açılıyor; Günün Eşiği ve Detay Avı ağ olmadan da son hâliyle görünüyor.
 
 > P10a yapıldı (2 Kas): gizli demo modu (Ayarlar → sürüm satırına 7 dokunuş → Sunum) ve mühür/doğru cevap mikro anları; P10b (tutarlılık, erişilebilirlik, "sonra" görüntüleri) bekliyor.
+>
+> P10b yapıldı (2 Kas): tutarlılık turu (18 sapma, ortak bileşenlere taşındı), Kasım erişilebilirlik denetimi (`docs/erisilebilirlik.md`), "sonra" görüntüleri ve `docs/ux/once-sonra.md`.

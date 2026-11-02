@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { mediaUrl, type Item } from '@/lib/api';
 import { currentLang, t } from '@/lib/i18n';
-import { colors, serif, space } from '@/lib/theme';
+import { colors, radius, serif, shadow, space, type } from '@/lib/theme';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -13,8 +13,8 @@ export function Eyebrow({ children, light }: { children: ReactNode; light?: bool
   return <Text style={[styles.eyebrow, light && { color: colors.gold }]}>{children}</Text>;
 }
 
-export function Title({ children, light, size = 30 }: { children: ReactNode; light?: boolean; size?: number }) {
-  return <Text accessibilityRole="header" style={[styles.title, { fontSize: size, lineHeight: size * 1.18 }, light && { color: colors.goldSoft }]}>{children}</Text>;
+export function Title({ children, light, size = 'title' }: { children: ReactNode; light?: boolean; size?: 'title' | 'display' }) {
+  return <Text accessibilityRole="header" style={[styles.title, type[size], light && { color: colors.goldSoft }]}>{children}</Text>;
 }
 
 export function Button({ label, icon, onPress, kind = 'dark', disabled, busy, style }: {
@@ -59,31 +59,31 @@ export function WorkCard({ item, extra, stamped }: { item: Item; extra?: string;
       <Text style={styles.muted} numberOfLines={1}>{where}{item.built.label ? ` · ${item.built.label}` : ''}</Text>
       {(extra || stamped) && <View style={styles.cardFoot}>
         {extra && <Text style={styles.cardExtra}>{extra}</Text>}
-        {stamped && <Ionicons name={stamped === 'visit' ? 'ribbon' : 'checkmark-circle'} size={16} color={stamped === 'visit' ? colors.gold : colors.emeraldLight} />}
+        {stamped && <Ionicons name={stamped === 'visit' ? 'ribbon' : 'checkmark-circle'} size={16} color={stamped === 'visit' ? colors.goldText : colors.emeraldLight} />}
       </View>}
     </View>
   </Pressable>;
 }
 
 export const styles = StyleSheet.create({
-  eyebrow: { color: colors.goldText, fontSize: 12, letterSpacing: 2, fontWeight: '600', marginBottom: space.xs },
+  eyebrow: { color: colors.goldText, letterSpacing: 2, fontWeight: '600', marginBottom: space.xs, ...type.caption },
   title: { fontFamily: serif, color: colors.ink },
-  muted: { color: colors.soft, fontSize: 14, lineHeight: 20 },
-  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 48, paddingHorizontal: 22, borderRadius: 999, borderWidth: 1 },
+  muted: { color: colors.soft, ...type.small },
+  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.s, minHeight: 48, paddingHorizontal: space.l, borderRadius: radius.pill, borderWidth: 1 },
   dark: { backgroundColor: colors.emerald, borderColor: colors.goldLine },
   gold: { backgroundColor: colors.gold, borderColor: colors.goldText },
-  plain: { backgroundColor: '#ffffff80', borderColor: colors.goldLine },
-  buttonText: { fontSize: 15, fontWeight: '600' },
-  notice: { flexDirection: 'row', gap: 10, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.line, borderLeftWidth: 3, borderLeftColor: colors.goldLine, backgroundColor: colors.paper },
-  noticeText: { flex: 1, color: colors.soft, fontSize: 13, lineHeight: 19 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: space.xl },
-  emptyTitle: { fontFamily: serif, fontSize: 22, color: colors.ink, textAlign: 'center' },
-  card: { flexDirection: 'row', backgroundColor: colors.paper, borderRadius: 14, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
+  plain: { backgroundColor: colors.paper, borderColor: colors.goldLine },
+  buttonText: { fontWeight: '600', ...type.body },
+  notice: { flexDirection: 'row', gap: space.s, padding: space.s + space.xs, borderRadius: radius.m, borderWidth: 1, borderColor: colors.line, borderLeftWidth: 3, borderLeftColor: colors.goldLine, backgroundColor: colors.paper },
+  noticeText: { flex: 1, color: colors.soft, ...type.small },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.s + space.xs, padding: space.xl },
+  emptyTitle: { fontFamily: serif, color: colors.ink, textAlign: 'center', ...type.title },
+  card: { flexDirection: 'row', backgroundColor: colors.paper, borderRadius: radius.l, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', ...shadow.card },
   cardImage: { width: 104, minHeight: 112, backgroundColor: colors.parchmentDeep },
   cardPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  cardBody: { flex: 1, padding: 12, gap: 3 },
-  cardKind: { color: colors.goldText, fontSize: 11, letterSpacing: 1.4, fontWeight: '600' },
-  cardName: { fontFamily: serif, fontSize: 18, color: colors.ink },
-  cardFoot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  cardExtra: { color: colors.emeraldLight, fontWeight: '600', fontSize: 13 },
+  cardBody: { flex: 1, padding: space.s + space.xs, gap: space.xs },
+  cardKind: { color: colors.goldText, letterSpacing: 1.4, fontWeight: '600', ...type.caption },
+  cardName: { fontFamily: serif, color: colors.ink, ...type.heading },
+  cardFoot: { flexDirection: 'row', alignItems: 'center', gap: space.s, marginTop: space.xs },
+  cardExtra: { color: colors.emeraldLight, fontWeight: '600', ...type.caption },
 });

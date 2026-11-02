@@ -6,14 +6,15 @@ import { t } from '@/lib/i18n';
 import { colors, hit, radius, space, type } from '@/lib/theme';
 
 /** A filter chip; selected chips are filled and show a check, so state is not told by colour alone. Without onPress
- *  it is a read-only label, as low as a StatPill (no touch target needed). */
-export function Chip({ label, selected, icon, onPress, accessibilityLabel }: {
-  label: string; selected?: boolean; icon?: IconName; onPress?: () => void; accessibilityLabel?: string;
+ *  it is a read-only label, as low as a StatPill (no touch target needed). `radio` for one choice out of a few. */
+export function Chip({ label, selected, icon, onPress, accessibilityLabel, radio }: {
+  label: string; selected?: boolean; icon?: IconName; onPress?: () => void; accessibilityLabel?: string; radio?: boolean;
 }) {
   const fg = selected ? colors.goldSoft : colors.ink;
   const iconName = selected ? 'checkmark' : icon;
-  return <Pressable accessibilityRole={onPress ? 'button' : 'text'} accessibilityLabel={accessibilityLabel ?? label}
-    accessibilityState={{ selected: !!selected }} disabled={!onPress} onPress={onPress}
+  return <Pressable accessibilityRole={!onPress ? 'text' : radio ? 'radio' : 'button'} accessibilityLabel={accessibilityLabel ?? label}
+    accessibilityState={radio ? { checked: !!selected } : { selected: !!selected }} aria-checked={radio ? !!selected : undefined} aria-pressed={radio || !onPress ? undefined : !!selected}
+    disabled={!onPress} onPress={onPress}
     style={({ pressed }) => [styles.chip, !onPress && styles.chipStatic, selected && styles.chipOn, pressed && { opacity: 0.8 }]}>
     {iconName && <Ionicons name={iconName} size={16} color={fg} />}
     <Text style={[styles.chipText, { color: fg }]}>{label}</Text>
@@ -27,7 +28,7 @@ export function SegmentedControl<K extends string>({ options, value, onChange, a
   return <View accessibilityRole="tablist" accessibilityLabel={accessibilityLabel} style={styles.segments}>
     {options.map(o => {
       const on = o.key === value;
-      return <Pressable key={o.key} accessibilityRole="tab" accessibilityLabel={o.label} accessibilityState={{ selected: on }}
+      return <Pressable key={o.key} accessibilityRole="tab" accessibilityLabel={o.label} accessibilityState={{ selected: on }} aria-selected={on}
         onPress={() => !on && onChange(o.key)} style={[styles.segment, on && styles.segmentOn]}>
         <Text style={[styles.segmentText, on && styles.segmentTextOn]} numberOfLines={1}>{o.label}</Text>
       </Pressable>;
@@ -41,7 +42,8 @@ export function ProgressBar({ value, max, label, accessibilityLabel, tone = 'lig
 }) {
   const now = Math.max(0, Math.min(value, max));
   const pct = max > 0 ? (now / max) * 100 : 0;
-  return <View accessibilityRole="progressbar" accessibilityLabel={accessibilityLabel}
+  // without its own name a progress bar is named by its visible label
+  return <View accessibilityRole="progressbar" accessibilityLabel={accessibilityLabel ?? (label || `${now}/${max}`)}
     accessibilityValue={{ min: 0, max, now, text: label ?? `${now}/${max}` }} style={styles.progress}>
     <View style={[styles.track, tone === 'dark' && styles.trackDark]}>
       <View style={[styles.fill, tone === 'dark' && { backgroundColor: colors.gold }, { width: `${pct}%` }]} />

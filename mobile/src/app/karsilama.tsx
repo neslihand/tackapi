@@ -64,7 +64,7 @@ export default function Welcome() {
 
       {step === 2 && <View style={s.stack}>
         <Eyebrow light>{t('SENİN YOLUN', 'YOUR WAY')}</Eyebrow>
-        <Title light size={type.title.fontSize}>{t('Nasıl keşfetmek istersin?', 'How do you want to explore?')}</Title>
+        <Title light>{t('Nasıl keşfetmek istersin?', 'How do you want to explore?')}</Title>
         <Text style={s.note}>{t('Eserlerin hangi anlatımla açılacağını ve Bugün’ün sırasını belirler. Ayarı her eserde değiştirebilirsin.', 'Sets how works open and the order of Today. You can switch on every work.')}</Text>
         <View accessibilityRole="radiogroup" style={s.stack}>
           {WELCOME_CHOICES.map(c => {
@@ -85,7 +85,7 @@ export default function Welcome() {
 
       {step === 3 && <View style={s.stack}>
         <Eyebrow light>{t('BAŞLAYALIM', 'LET’S BEGIN')}</Eyebrow>
-        <Title light size={type.title.fontSize}>{t('İlk eşiğin hazır', 'Your first threshold is ready')}</Title>
+        <Title light>{t('İlk eşiğin hazır', 'Your first threshold is ready')}</Title>
         <Text style={s.note}>{t('Her gün bir eser seni bekler. Bugünkü:', 'One work waits for you every day. Today’s:')}</Text>
         {today
           ? <HeroCard image={mediaUrl(today.image?.src) ?? undefined} eyebrow={`✦ ${t('GÜNÜN EŞİĞİ', 'TODAY’S THRESHOLD')}`}
@@ -126,7 +126,7 @@ const s = StyleSheet.create({
   stack: { gap: space.s },
   option: { flexDirection: 'row', alignItems: 'center', gap: space.m, minHeight: hit, padding: space.m, borderRadius: radius.l,
     backgroundColor: colors.paper, borderWidth: 2, borderColor: colors.paper },
-  optionOn: { borderColor: colors.gold, backgroundColor: colors.goldSoft },
+  optionOn: { borderColor: colors.goldText, backgroundColor: colors.goldSoft },
   optionText: { flex: 1, gap: 2 },
   optionTitle: { color: colors.ink, fontWeight: '700', ...type.heading },
   optionBody: { color: colors.soft, ...type.caption },

@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card } from '@/components/Card';
 import { ProgressBar, StatPill } from '@/components/Controls';
 import { SectionHeader } from '@/components/Layout';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
-import { Button, Empty, Eyebrow, Title, WorkCard } from '@/components/UI';
+import { Button, Empty, Eyebrow, Loading, Title, WorkCard } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
 import { useJournal } from '@/lib/journal';
@@ -17,7 +18,7 @@ import { bestStreak, streakState } from '@/lib/streak';
 import { colors, hit, metal, radius, serif, space, type } from '@/lib/theme';
 
 export default function Passport() {
-  const { items } = useContent();
+  const { items, loading } = useContent();
   const { progress } = usePassport();
   const { settings } = useSettings();
   const account = useAccount();
@@ -36,7 +37,7 @@ export default function Passport() {
     : '';
 
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
-    <View style={s.cover}>
+    <Card tone="dark" style={s.cover}>
       <Eyebrow light>✦ {t('MİRAS PASAPORTUM', 'MY HERITAGE PASSPORT')}</Eyebrow>
       <Title light>{t('Açtığın kapılar', 'The doors you opened')}</Title>
       <View style={s.pills}>
@@ -46,16 +47,18 @@ export default function Passport() {
         <StatPill tone="dark" icon="map-outline" value={cities} label={t('şehir', 'cities')} />
       </View>
       <Text style={s.coverNote}>{t(`En uzun serin: ${best} gün.`, `Your longest streak: ${best} days.`)}{rest} {t('Altın mühürler eserin önünde basıldı.', 'Golden stamps were taken in front of the work.')}</Text>
-    </View>
+    </Card>
 
     <SectionHeader title={t('Sıradaki madalyonların', 'Your next medallions')} />
-    {nextUp(families, 3).map(f => <View key={f.id} style={s.next} accessible accessibilityLabel={`${fullName(f)}. ${nextText(f)}`}>
+    {nextUp(families, 3).map(f => <Card key={f.id} style={s.next}>
+      <View style={s.nextRow} accessible accessibilityLabel={`${fullName(f)}. ${nextText(f)}`}>
       <Disc tier={f.tier} />
       <View style={{ flex: 1, gap: space.xs }}>
         <Text style={[s.name, s.nextName]}>{fullName(f)}</Text>
         <ProgressBar value={f.value} max={f.next!.required} label={nextText(f)} />
       </View>
-    </View>)}
+      </View>
+    </Card>)}
 
     <SectionHeader title={t('Tüm madalyonlar', 'All medallions')} />
     <View style={s.grid}>
@@ -80,11 +83,12 @@ export default function Passport() {
     <SectionHeader title={t('Mühürler', 'Stamps')} />
     {found.length ? found.map(i => <WorkCard key={i.slug} item={i} stamped={progress.visits[i.slug] ? 'visit' : 'digital'}
       extra={new Date(progress.visits[i.slug]?.date ?? progress.discovered[i.slug]).toLocaleDateString()} />)
-      : <Empty title={t('Pasaportun seni bekliyor.', 'Your passport is waiting.')} body={t('Bir eserin hikâyesini oku ve “Pasaportuma mühürle”ye dokun.', 'Read a work’s story and tap “Stamp my passport”.')} />}
+      // the stamps are shown with their works: wait for them before saying the passport is empty
+      : loading && !items.length ? <Loading /> : <Empty title={t('Pasaportun seni bekliyor.', 'Your passport is waiting.')} body={t('Bir eserin hikâyesini oku ve “Pasaportuma mühürle”ye dokun.', 'Read a work’s story and tap “Stamp my passport”.')} />}
 
     <Button kind="plain" icon="images-outline" onPress={() => router.push('/hatira')}
       label={memories ? t(`Hatıra Defterim (${memories})`, `My Memory Book (${memories})`) : t('Hatıra Defterim', 'My Memory Book')} />
-    {!!favorites.length && <><Eyebrow>{t('FAVORİLER', 'FAVOURITES')}</Eyebrow>{favorites.map(i => <WorkCard key={i.slug} item={i} />)}</>}
+    {!!favorites.length && <><SectionHeader title={t('Favoriler', 'Favourites')} />{favorites.map(i => <WorkCard key={i.slug} item={i} />)}</>}
     {account.user ? <Text style={s.small}>{t('Pasaportun hesabınla eşitleniyor.', 'Your passport is synced with your account.')} {syncLabel(account.sync, account.lastSync)}</Text>
       : <Button kind="plain" icon="person-circle-outline" label={t('Giriş yap, pasaportun kaybolmasın', 'Sign in so your passport is never lost')} onPress={() => router.push('/giris')} />}
     <ShareSheet shared={shared} onClose={() => setShared(null)} />
@@ -100,10 +104,11 @@ function Disc({ tier }: { tier: MedalFamily['tier'] }) {
 }
 
 const s = StyleSheet.create({
-  cover: { padding: space.l, borderRadius: radius.l, backgroundColor: colors.emerald, borderWidth: 1, borderColor: colors.goldLine, gap: space.s },
+  cover: { padding: space.l, gap: space.s },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s, marginTop: space.s },
   coverNote: { color: colors.goldSoft, marginTop: space.xs, ...type.caption },
-  next: { flexDirection: 'row', alignItems: 'center', gap: space.m, padding: space.m, borderRadius: radius.m, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
+  next: { padding: space.m },
+  nextRow: { flexDirection: 'row', alignItems: 'center', gap: space.m },
   nextName: { textAlign: 'left' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s },
   medal: { width: '48.5%', alignItems: 'center', padding: space.m - space.xs, borderRadius: radius.m, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.goldLine, gap: space.xs },

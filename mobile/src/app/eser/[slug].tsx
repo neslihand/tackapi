@@ -8,7 +8,7 @@ import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip, SegmentedControl } from '@/components/Controls';
 import { AddMemory, MemoryCard } from '@/components/Journal';
-import { ACTION_BAR_HEIGHT, HorizontalRail, StickyActionBar, type BarAction } from '@/components/Layout';
+import { ACTION_BAR_HEIGHT, HorizontalRail, SectionHeader, StickyActionBar, type BarAction } from '@/components/Layout';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Empty, Eyebrow, Loading, Notice, Title, type IconName } from '@/components/UI';
 import { WorkTile } from '@/components/WorkTile';
@@ -41,6 +41,7 @@ export default function Work() {
   const [placeNote, setPlaceNote] = useState<string | null>(null);
   const [shared, setShared] = useState<Shared | null>(null);
   const [adding, setAdding] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const memories = useJournal().of(slug);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function Work() {
     loadMonument(slug).then(r => { if (live) { setDetail(r.data); setStale(r.stale); } },
       e => { if (live) setError(e instanceof ApiError && e.status === 404 ? t('Bu eser yayında değil.', 'This work is not published.') : String(e?.message ?? e)); });
     return () => { live = false; };
-  }, [slug, lang]);
+  }, [slug, lang, attempt]);
   useEffect(() => { rememberOpened(slug).catch(() => {}); }, [slug]); // Bugün's "Devam et"
   useEffect(() => () => stopSpeaking(), []);
 
@@ -75,7 +76,8 @@ export default function Work() {
   useEffect(() => { stopSpeaking(); setSpeaking(false); }, [telling]);
   const others = useMemo(() => item ? sameCity(items, item, passport.progress) : [], [items, item, passport.progress]);
 
-  if (error) return <Empty title={t('Eser açılamadı.', 'The work could not be opened.')} body={error} />;
+  if (error) return <Empty title={t('Eser açılamadı.', 'The work could not be opened.')} body={error}
+    action={<Button label={t('Yeniden dene', 'Try again')} icon="refresh" onPress={() => setAttempt(a => a + 1)} />} />;
   if (!detail || !texts) return <Loading />;
 
   const name = item?.name ?? slug;
@@ -134,7 +136,7 @@ export default function Work() {
           : <View style={[StyleSheet.absoluteFill, s.coverEmpty]}><Ionicons name="business-outline" size={48} color={colors.gold} /></View>}
         <View style={s.coverText}>
           {item && <Eyebrow light>{upper(item.kind_label)}{item.period ? ` · ${upper(item.period.name)}` : ''}</Eyebrow>}
-          <Title light size={type.title.fontSize}>{name}</Title>
+          <Title light>{name}</Title>
         </View>
       </View>
 
@@ -173,7 +175,7 @@ export default function Work() {
       </View>
 
       {detail.images.length > 1 && <View style={s.section}>
-        <Eyebrow>{t('FOTOĞRAFLAR', 'PHOTOS')}</Eyebrow>
+        <SectionHeader title={t('Fotoğraflar', 'Photos')} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.s }}>
           {detail.images.map((img, i) => <View key={img.src} style={s.photoBox}>
             <Image source={mediaUrl(img.thumb ?? img.src)} style={s.photo} contentFit="cover" accessibilityLabel={img.alt ?? `${name}, ${i + 1}`} />
@@ -183,7 +185,7 @@ export default function Work() {
       </View>}
 
       <View style={s.section}>
-        <Eyebrow>✦ {t('HATIRA DEFTERİM', 'MY MEMORY BOOK')}</Eyebrow>
+        <SectionHeader title={t('Hatıra Defterim', 'My Memory Book')} />
         {memories.length ? memories.map(m => <MemoryCard key={m.id} m={m} />)
           : <Text style={s.small}>{t('Bu esere kendi fotoğrafını ve notunu ekle; yalnızca bu telefonda kalır.', 'Add your own photo and note to this work; it stays on this phone only.')}</Text>}
         <Button kind="plain" icon="add-circle-outline" label={t('Hatıra ekle', 'Add a memory')} onPress={() => setAdding(true)} />
@@ -195,7 +197,7 @@ export default function Work() {
       </View>}
 
       <View style={s.section}>
-        <Eyebrow>{t('KAYNAK', 'SOURCE')}</Eyebrow>
+        <SectionHeader title={t('Kaynak', 'Source')} />
         <Text style={s.muted}>{item ? sourceTitle(item.source) : detail.source.book}</Text>
         {!!detail.source.credits?.authors?.length && <Text style={s.small}>{t('Yazarlar', 'Authors')}: {detail.source.credits.authors.join(', ')}</Text>}
         {!!detail.source.credits?.editor && <Text style={s.small}>{t('Editör', 'Editor')}: {detail.source.credits.editor}</Text>}
@@ -237,10 +239,10 @@ const s = StyleSheet.create({
   section: { paddingHorizontal: space.m, paddingTop: space.l, gap: space.s + 2 },
   rail: { paddingTop: space.l },
   status: { flexDirection: 'row' },
-  facts: { gap: 6 },
-  fact: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  facts: { gap: space.xs },
+  fact: { flexDirection: 'row', gap: space.s, alignItems: 'center' },
   factText: { color: colors.ink, flex: 1, ...type.body },
-  muted: { color: colors.soft, fontSize: 14, lineHeight: 20 },
+  muted: { color: colors.soft, ...type.small },
   small: { color: colors.soft, ...type.caption },
   reading: { gap: space.s + 2, maxWidth: 640 },
   paragraph: { fontFamily: serif, color: colors.ink, ...type.reading },

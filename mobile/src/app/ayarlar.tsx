@@ -5,7 +5,8 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { SegmentedControl } from '@/components/Controls';
+import { Card } from '@/components/Card';
+import { Chip, SegmentedControl } from '@/components/Controls';
 import { DemoPicker } from '@/components/DemoPicker';
 import { Button, Eyebrow, Notice } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
@@ -17,7 +18,7 @@ import { t, useLang, type Lang } from '@/lib/i18n';
 import { allowNotifications, notificationsSupported } from '@/lib/notify';
 import { bringRecallForward } from '@/lib/recall-state';
 import { useContent, usePassport, useSettings } from '@/lib/store';
-import { colors, hit, space } from '@/lib/theme';
+import { colors, hit, radius, space, type } from '@/lib/theme';
 import { clearOnboarded } from '@/lib/welcome';
 
 const HOURS = [8, 9, 12, 18, 21];
@@ -56,28 +57,27 @@ export default function Settings() {
 
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m }}>
     <Eyebrow>{t('HESAP', 'ACCOUNT')}</Eyebrow>
-    <Pressable onPress={() => router.push(account.user ? '/hesap' : '/giris')} accessibilityRole="button" style={[s.card, s.line]}>
+    <Card onPress={() => router.push(account.user ? '/hesap' : '/giris')} style={s.line}
+      accessibilityLabel={account.user ? `${t('Hesabım', 'My account')}: ${account.user.display_name || account.user.email}` : t('Giriş yap ya da hesap aç', 'Sign in or create an account')}>
       <Ionicons name={account.user ? 'person-circle' : 'person-circle-outline'} size={30} color={colors.goldText} />
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={s.lineText}>
         <Text style={s.title}>{account.user ? account.user.display_name || account.user.email : t('Giriş yap ya da hesap aç', 'Sign in or create an account')}</Text>
         <Text style={s.small}>{account.user ? syncLabel(account.sync, account.lastSync) : t('Pasaportun telefonla web sitesi arasında eşitlensin.', 'Keep your passport in step between the phone and the website.')}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.goldLine} />
-    </Pressable>
+    </Card>
 
     <Eyebrow>{t('DİL', 'LANGUAGE')}</Eyebrow>
-    <View style={s.row}>{([['tr', 'Türkçe'], ['en', 'English']] as [Lang, string][]).map(([id, label]) =>
-      <Pressable key={id} onPress={() => setLang(id)} accessibilityRole="radio" accessibilityState={{ checked: lang === id }} aria-checked={lang === id} hitSlop={4} style={[s.chip, lang === id && s.chipOn]}>
-        <Text style={[s.chipText, lang === id && { color: colors.goldSoft }]}>{label}</Text></Pressable>)}</View>
+    <View style={s.row} accessibilityRole="radiogroup" accessibilityLabel={t('Dil', 'Language')}>{([['tr', 'Türkçe'], ['en', 'English']] as [Lang, string][]).map(([id, label]) =>
+      <Chip key={id} radio label={label} selected={lang === id} onPress={() => setLang(id)} />)}</View>
 
     <Eyebrow>{t('BİLDİRİMLER', 'NOTIFICATIONS')}</Eyebrow>
     {!notificationsSupported && <Notice icon="phone-portrait-outline">{t('Tarayıcı sürümünde bildirim kurulmaz; ayarlar kaydedilir ve telefonda çalışır.', 'The browser version sets up no notifications; the settings are saved and work on the phone.')}</Notice>}
-    <View style={s.card}>
+    <Card style={s.stack}>
       <Line title={t('Günün Eşiği', 'Today’s Threshold')} body={t('Her gün bir eser ve kitabından kısa bir cümle.', 'One work a day with a short line from its book.')}
         value={settings.dailyWork} onChange={v => toggle('dailyWork', v)} />
-      {settings.dailyWork && <View style={[s.row, { paddingTop: 4 }]}>{HOURS.map(h => <Pressable key={h} onPress={() => change({ dailyHour: h })}
-        accessibilityRole="radio" accessibilityState={{ checked: settings.dailyHour === h }} aria-checked={settings.dailyHour === h} hitSlop={4} style={[s.chip, settings.dailyHour === h && s.chipOn]}>
-        <Text style={[s.chipText, settings.dailyHour === h && { color: colors.goldSoft }]}>{String(h).padStart(2, '0')}:00</Text></Pressable>)}</View>}
+      {settings.dailyWork && <View style={[s.row, { paddingTop: space.xs }]} accessibilityRole="radiogroup" accessibilityLabel={t('Bildirim saati', 'Notification time')}>{HOURS.map(h =>
+        <Chip key={h} radio label={`${String(h).padStart(2, '0')}:00`} selected={settings.dailyHour === h} onPress={() => change({ dailyHour: h })} />)}</View>}
       <View style={s.divider} />
       <Line title={t('Seri hatırlatması', 'Streak reminder')} body={settings.streakMode === 'weekly'
         ? t('Serin sürüyorsa ve bu hafta henüz bir eser açmadıysan Pazar akşamı 19:00’da tek bir not.', 'A single note at 19:00 on Sunday when your streak is alive and you have not opened a work this week.')
@@ -88,22 +88,22 @@ export default function Settings() {
       <SegmentedControl accessibilityLabel={t('Seri türü', 'Streak type')} value={settings.streakMode} onChange={streakMode => change({ streakMode })}
         options={[{ key: 'daily', label: t('Günlük', 'Daily') }, { key: 'weekly', label: t('Haftalık', 'Weekly') }]} />
       <Text style={s.small}>{settings.streakMode === 'weekly' ? t('Her hafta en az bir eser.', 'At least one work every week.') : t('Her gün bir eser; haftada bir gün izinli.', 'One work a day; one rest day a week.')}</Text>
-    </View>
+    </Card>
     <Notice icon="lock-closed-outline">{t('Bildirimler telefonunda kurulur; sunucuya bir şey gönderilmez. Konumun ve ayarların bu cihazda kalır; pasaportun yalnızca giriş yaptıysan hesabınla eşitlenir.', 'Notifications are set up on your phone; nothing is sent to the server. Your location and settings stay on this device; your passport is synced with your account only if you sign in.')}</Notice>
     <Eyebrow>{t('KARŞILAMA', 'WELCOME')}</Eyebrow>
-    <View style={s.card}>
+    <Card style={s.stack}>
       <Text style={s.small}>{t('İlk açılıştaki üç adımı yeniden gör; keşif biçimini baştan seçebilirsin.', 'See the three first-run steps again; you can choose how to explore anew.')}</Text>
       <Button kind="plain" icon="refresh-outline" label={t('Karşılamayı yeniden göster', 'Show the welcome again')}
         onPress={showWelcome} />
-    </View>
+    </Card>
     <Eyebrow>{t('SUNUCU', 'SERVER')}</Eyebrow>
-    <View style={s.card}>
+    <Card style={s.stack}>
       <Text style={s.small}>{t('Uygulamanın bağlandığı arka uç. Boş bırakırsan yerleşik adres kullanılır. Demoda bilgisayarın yerel ağ adresini yaz, ör. http://192.168.1.20:8000.', 'The backend the app talks to. Leave it empty for the built-in address. At a demo, type the laptop’s local address, e.g. http://192.168.1.20:8000.')}</Text>
       <TextInput value={server} onChangeText={setServer} placeholder={apiBase()} placeholderTextColor={colors.soft} autoCapitalize="none" autoCorrect={false}
         keyboardType="url" style={s.input} accessibilityLabel={t('Sunucu adresi', 'Server address')} />
       <Button kind="plain" icon="pulse-outline" label={t('Kaydet ve bağlantıyı dene', 'Save and test the connection')} onPress={tryServer} busy={check.busy} />
       {check.text && <Notice tone={check.ok ? 'info' : 'warn'} icon={check.ok ? 'checkmark-circle-outline' : 'alert-circle-outline'}>{check.text}</Notice>}
-    </View>
+    </Card>
     <Presentation />
   </ScrollView>;
 }
@@ -141,7 +141,7 @@ function Presentation() {
   return <>
     {unlocked && <>
       <Eyebrow>{t('SUNUM', 'PRESENTATION')}</Eyebrow>
-      <View style={s.card}>
+      <Card style={s.stack}>
         <Text style={s.title}>{t('Demo konumu', 'Demo location')}</Text>
         <Text style={s.small}>{placeName ? t(`Açık: telefon ${placeName} yanındaymış gibi davranır. Gerçek konum okunmaz.`, `On: the phone acts as if it stood by ${placeName}. The real location is not read.`)
           : t('Kapalı. Seçtiğin eserin yanındaymış gibi davranır; sahnede yerinde mühür göstermek için.', 'Off. The phone acts as if it stood by the work you choose, to show the on-the-spot stamp on stage.')}</Text>
@@ -165,7 +165,7 @@ function Presentation() {
         <View style={s.divider} />
         <Button kind="plain" icon="eye-off-outline" label={t('Sunum bölümünü gizle', 'Hide the presentation section')}
           onPress={() => { demo.hide(); setPicking(false); setDone({ text: t('Sunum bölümü gizlendi; demo konumu kapandı.', 'The presentation section is hidden; the demo location is off.') }); }} />
-      </View>
+      </Card>
     </>}
     {done && <Notice tone={done.warn ? 'warn' : 'info'} icon={done.warn ? 'alert-circle-outline' : 'checkmark-circle-outline'}>{done.text}</Notice>}
     <Pressable onPress={tap} accessibilityRole="button" accessibilityLabel={t(`Sürüm ${VERSION}`, `Version ${VERSION}`)} style={s.version}>
@@ -176,21 +176,19 @@ function Presentation() {
 
 function Line({ title, body, value, onChange }: { title: string; body: string; value: boolean; onChange: (v: boolean) => void }) {
   return <View style={s.line}>
-    <View style={{ flex: 1, gap: 2 }}><Text style={s.title}>{title}</Text><Text style={s.small}>{body}</Text></View>
-    <Switch value={value} onValueChange={onChange} accessibilityLabel={title} trackColor={{ true: colors.emeraldLight, false: colors.line }} thumbColor={value ? colors.gold : '#f4f3f0'} />
+    <View style={s.lineText}><Text style={s.title}>{title}</Text><Text style={s.small}>{body}</Text></View>
+    <Switch value={value} onValueChange={onChange} accessibilityLabel={title} trackColor={{ true: colors.emeraldLight, false: colors.line }} thumbColor={value ? colors.gold : colors.paper} />
   </View>;
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  chip: { minHeight: 40, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: colors.goldLine },
-  chipOn: { backgroundColor: colors.emerald },
-  chipText: { color: colors.ink, fontSize: 14 },
-  card: { padding: space.m, borderRadius: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, gap: space.s },
+  row: { flexDirection: 'row', gap: space.s, flexWrap: 'wrap' },
+  stack: { gap: space.s },
   line: { flexDirection: 'row', alignItems: 'center', gap: space.m },
-  title: { color: colors.ink, fontSize: 16, fontWeight: '600' },
-  small: { color: colors.soft, fontSize: 12, lineHeight: 17 },
-  input: { minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: colors.goldLine, paddingHorizontal: 14, color: colors.ink, fontSize: 15 },
+  lineText: { flex: 1, gap: space.xs / 2 },
+  title: { color: colors.ink, fontWeight: '600', ...type.body },
+  small: { color: colors.soft, ...type.caption },
+  input: { minHeight: hit, borderRadius: radius.m, borderWidth: 1, borderColor: colors.goldLine, paddingHorizontal: space.m, color: colors.ink, ...type.body },
   divider: { height: 1, backgroundColor: colors.line, marginVertical: space.s },
   version: { minHeight: hit, alignItems: 'center', justifyContent: 'center' },
 });

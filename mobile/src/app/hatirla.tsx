@@ -103,7 +103,7 @@ export default function Recall() {
 
     {term && <Card style={s.card}>
       <Eyebrow>{t('TERİM', 'TERM')}{term.category_label ? ` · ${term.category_label.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en')}` : ''}</Eyebrow>
-      <Title size={type.title.fontSize}>{capitalize(term.term)}</Title>
+      <Title>{capitalize(term.term)}</Title>
       {!!term.term_en && <Text style={s.en}>{term.term_en}</Text>}
       {!shown ? <Button kind="gold" icon="eye-outline" label={t('Cevabı göster', 'Show the answer')} onPress={() => setShown(true)} /> : <>
         <Text style={s.definition} accessibilityLiveRegion="polite">{term.definition}</Text>
@@ -150,7 +150,7 @@ function Summary({ results, bySlug, termName }: { results: Result[]; bySlug: (sl
     <Card style={s.card}>
       <Eyebrow>✦ {t('BUGÜNLÜK BİTTİ', 'DONE FOR TODAY')}</Eyebrow>
       <View style={s.score} accessible accessibilityLabel={t(`${results.length} kartın ${right.length} tanesini bildin`, `You got ${right.length} of ${results.length} cards right`)}>
-        <Title size={type.display.fontSize}>{right.length}/{results.length}</Title>
+        <Title size="display">{right.length}/{results.length}</Title>
         <Text style={s.scoreText}>{t('kartı bildin', results.length === 1 ? 'card right' : 'cards right')}</Text>
       </View>
       <Text style={s.body}>{remembered} {later}</Text>

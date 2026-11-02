@@ -40,7 +40,7 @@ export function TravelCard() {
   const first = city.nearest[0];
 
   return <View style={home.pad}>
-    <Card style={[home.gap, s.card]}>
+    <Card tone="dark" style={home.gap}>
       <View style={s.head}>
         <Eyebrow light>✦ {t('SEYAHAT', 'TRAVEL')}</Eyebrow>
         <Pressable onPress={close} accessibilityRole="button" accessibilityLabel={t('Seyahat kartını kapat', 'Close the travel card')} hitSlop={space.xs} style={s.close}>
@@ -84,7 +84,6 @@ function CityRoute({ route, stops }: { route: Season; stops: Item[] }) {
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: colors.emerald, borderColor: colors.goldLine },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   close: { width: hit, height: hit, alignItems: 'center', justifyContent: 'center', marginRight: -space.s, marginVertical: -space.s },
   title: { fontFamily: serif, color: colors.goldSoft, ...type.title },

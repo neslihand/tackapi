@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card } from '@/components/Card';
 import { HuntMarks, huntScore, HuntZoom, triesLeft } from '@/components/HuntZoom';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Empty, Eyebrow, Loading, Title } from '@/components/UI';
@@ -37,13 +38,13 @@ export default function DetailHunt() {
   return <ScrollView contentContainerStyle={s.page}>
     <View>
       <Eyebrow>✦ {t(`DETAY AVI #${number}`, `DETAIL HUNT #${number}`)}</Eyebrow>
-      <Title size={type.title.fontSize}>{!o.over ? t('Bu ayrıntı hangi esere ait?', 'Which work is this detail from?')
+      <Title>{!o.over ? t('Bu ayrıntı hangi esere ait?', 'Which work is this detail from?')
         : o.solved ? t('Buldun!', 'You found it!') : t('Bu sefer olmadı', 'Not this time')}</Title>
     </View>
 
-    {broken ? <View style={s.broken}><Empty title={t('Bugünün fotoğrafı açılamadı.', 'Today’s photo could not open.')}
+    {broken ? <Card padded={false}><Empty title={t('Bugünün fotoğrafı açılamadı.', 'Today’s photo could not open.')}
       body={t('Fotoğraf daha önce yüklenmediyse bağlantı gerekir. Bağlanınca yeniden dene.', 'If the photo was not loaded before, it needs a connection. Try again once you are online.')}
-      action={<Button icon="refresh" label={t('Yeniden dene', 'Try again')} onPress={retry} />} /></View>
+      action={<Button icon="refresh" label={t('Yeniden dene', 'Try again')} onPress={retry} />} /></Card>
       : <HuntZoom key={round} src={photo} focus={puzzle.focus} scale={scaleFor(puzzle)} onError={() => setBroken(true)} style={s.zoom}
         label={o.over ? t(`${answer.name} fotoğrafı`, `Photo of ${answer.name}`) : undefined} />}
 
@@ -52,17 +53,17 @@ export default function DetailHunt() {
       <Text style={s.triesText}>{o.over ? score : triesLeft(o.left)}</Text>
     </View>
 
-    {o.over && <View style={s.result}>
-      <Text style={s.answerKicker}>{t('CEVAP', 'THE ANSWER')}</Text>
+    {o.over && <Card style={s.result}>
+      <Eyebrow>{t('CEVAP', 'THE ANSWER')}</Eyebrow>
       <Text style={s.answer} accessibilityRole="header">{answer.name}</Text>
       <Text style={s.meta}>{[answer.kind_label, answer.city.name, answer.built.label].filter(Boolean).join(' · ')}</Text>
       <Text style={s.teaser}>{teaser(answer)}</Text>
       <View style={s.actions}>
         <Button kind="gold" icon="book-outline" label={t('Eseri aç', 'Open the work')} onPress={() => router.push(`/eser/${answer.slug}`)} />
-        <Button icon="share-social-outline" label={t('Paylaş', 'Share')}
+        <Button kind="plain" icon="share-social-outline" label={t('Paylaş', 'Share')}
           onPress={() => setShared({ kind: 'hunt', number, marks, solved: o.solved, photo, focus: puzzle.focus })} />
       </View>
-    </View>}
+    </Card>}
 
     {/* no guessing blind: without the photo the options wait */}
     {(!broken || o.over) && <View style={s.options}>
@@ -92,11 +93,9 @@ function Option({ item, wrong, right, locked, onPress }: { item: Item; wrong: bo
 const s = StyleSheet.create({
   page: { padding: space.m, gap: space.m, paddingBottom: space.xl },
   zoom: { borderRadius: radius.l, borderWidth: 1, borderColor: colors.goldLine },
-  broken: { borderRadius: radius.l, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper },
   tries: { flexDirection: 'row', alignItems: 'center', gap: space.s },
   triesText: { color: colors.soft, ...type.body },
-  result: { gap: space.s, padding: space.m, borderRadius: radius.l, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.gold },
-  answerKicker: { color: colors.goldText, ...type.caption, letterSpacing: 2, fontWeight: '600' },
+  result: { gap: space.s, borderColor: colors.gold },
   answer: { fontFamily: serif, color: colors.ink, ...type.title },
   meta: { color: colors.soft, ...type.caption },
   teaser: { color: colors.ink, ...type.body },

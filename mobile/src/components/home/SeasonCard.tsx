@@ -14,7 +14,7 @@ export function SeasonCard() {
   const quest = seasonQuest(useQuests());
   if (!quest) return null;
   return <View style={home.pad}>
-    <Card style={[home.gap, s.card]}>
+    <Card tone="dark" style={home.gap}>
       <Eyebrow light>✦ {t('KEŞİF SEZONU', 'DISCOVERY SEASON')}</Eyebrow>
       <Text accessibilityRole="header" style={s.title}>{quest.route.title}</Text>
       {!!quest.route.description && <Text style={s.body} numberOfLines={2}>{quest.route.description}</Text>}
@@ -26,7 +26,6 @@ export function SeasonCard() {
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: colors.emerald, borderColor: colors.goldLine },
   title: { fontFamily: serif, color: colors.goldSoft, ...type.heading },
   body: { color: colors.parchment, ...type.body },
 });

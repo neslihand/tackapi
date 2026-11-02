@@ -58,3 +58,52 @@ Düzeltmelerden sonraki taramada bu sorunların hiçbiri kalmadı.
 3. Ayarlar: dil ve saat seçenekleri; bildirim anahtarları.
 4. Sistem yazı boyutu en büyükteyken Keşfet, eser ve Pasaport ekranları taşıyor mu?
 5. Esere Sor: gelen cevap okunuyor mu?
+
+## Kasım sprinti (2 Kasım 2026)
+
+Yeni ve yenilenen ekranlar aynı yöntemle denetlendi.
+
+- **Otomatik tarama:** Expo web, 390 × 844. axe-core 4.10.3 CDN'den sayfaya eklendi. Kurallar: WCAG 2.0/2.1/2.2 A–AA ve best-practice; `region` kapalı.
+- **Taranan ekranlar (20 durum):** Bugün, Keşfet (liste, Yakınımda), Tara, Oyna, Pasaport (boş ve dolu), eser (demo şeridiyle), Esere Sor, Ayarlar (Sunum ve demo eser seçici açık), Detay Avı (başlangıç ve bitti), Hatırla (boş), rota, karşılamanın üç adımı (seçili seçenekle).
+- **Dokunma alanı:** Düğme, bağlantı, radio, tab, switch ve giriş öğelerinin boyutu sayfada ölçüldü.
+- **Karşıtlık:** Yeni renk çiftleri WCAG formülüyle hesaplandı.
+- **Kod incelemesi:** Etiketler ve roller, yalnızca renge dayanan bilgi.
+
+### Bulgular
+
+| Ekran | Bulgu | Önem | Durum |
+|---|---|---|---|
+| Pasaport | "Sıradaki madalyonların" ilerleme çubuklarının adı yoktu (axe `aria-progressbar-name`) | Ciddi | Düzeltildi: `ProgressBar` kendi adı verilmezse görünen etiketi ad olarak kullanıyor |
+| Eser, Keşfet, Ayarlar, Esere Sor | Anlatım seçici, Keşfet görünümü ve seri türü sekmeleriyle şehir/tür çiplerinin "seçili" durumu web'de okunmuyordu (`aria-selected` / `aria-pressed` yoktu). Telefonda `accessibilityState` çalışıyor. | Ciddi | Düzeltildi: `SegmentedControl`'e `aria-selected`, `Chip`'e `aria-pressed` eklendi |
+| Ayarlar, Esere Sor | Dil, bildirim saati ve cevap türü çipleri 40 px yükseklikteydi; seçili olan yalnızca dolgu rengiyle ayrılıyordu | Orta | Düzeltildi: ortak `Chip`'e `radio` kipi eklendi. 44 px yükseklik, seçilide onay işareti, `radio` rolü ve `aria-checked` |
+| Ayarlar | Hesap satırının ekran okuyucu etiketi yoktu | Orta | Düzeltildi: "Giriş yap ya da hesap aç" ya da "Hesabım: ad" |
+| Esere Sor | Önerilen soru düğmelerinin etiketi ve 44 px yüksekliği yoktu | Düşük | Düzeltildi |
+| Oyna | Rota adımı satırları yaklaşık 32 px yükseklikteydi | Orta | Düzeltildi: en az 44 px |
+| Rota | Sıradaki durak listede yalnızca altın kenarla belirtiliyordu (renk ve 2,1:1 karşıtlık) | Orta | Düzeltildi: "Sıradaki durak" yazısı ve etiketi, 2 px `goldLine` kenar (3,8:1) |
+| Rota, eser kartları | Yerinde mühür kurdelesi parşömen/kâğıt üstünde altın (`gold`, 2,2:1) | Orta | Düzeltildi: `goldText` (5,2:1 ve üstü) |
+| Karşılama | Seçili seçeneğin kenarı `goldSoft` üstünde `gold` (1,7:1) | Düşük | Düzeltildi: `goldText` (4,6:1). Onay işareti zaten vardı (6,1:1). |
+| Oyna, rota, Pasaport | Eserler yüklenirken "Henüz rota yok", "Rota bulunamadı", "Pasaportun seni bekliyor" diyordu; ekran okuyucu yanlış bilgi veriyordu | Orta | Düzeltildi: yükleniyor göstergesi (`Loading`, `progressbar` rolü) |
+| Eser | Hata ekranında yeniden deneme yolu yoktu | Düşük | Düzeltildi: "Yeniden dene" |
+
+### Karşıtlık (yeni çiftler)
+
+| Kullanım | Oran | Sonuç |
+|---|---|---|
+| Yanlış cevap: `danger` / `dangerSoft`, `ink` / `dangerSoft` | 6,4 / 12,0 | ✓ |
+| Detay Avı yanlış şık: `danger` / `parchmentDeep` | 6,2 | ✓ |
+| Doğru etiketi: `emeraldLight` / kâğıt | 8,0 | ✓ |
+| Sekme yazısı seçili değil: `tabInactive` / `emeraldDeep` | 6,6 | ✓ |
+| DEMO şeridi: `goldSoft` / `emeraldDeep` | 12,4 | ✓ |
+| Zümrüt kartta metin: `parchment` / `emerald` | 13,0 | ✓ |
+| Madalyon simgesi: `emeraldDeep` / bronz, gümüş, altın | 4,4 / 8,3 / 7,4 | ✓ (simge ≥ 3) |
+| Kilitli madalyon kesikli kenarı: `soft` / `parchmentDeep` | 6,0 | ✓ |
+| Karşılama seçili kenar: `goldText` / `goldSoft` | 4,6 | ✓ |
+
+### Kalan ve web'e özgü konular
+
+- **`image-alt` (yalnızca web, yanlış alarm):** Bugün, Keşfet, Oyna, Pasaport, eser, Detay Avı ve karşılamada görülüyor. Kaynağı Ekim denetimindeki aynı expo-image web sorunu: kütüphane asıl `<img>`'e `alt` vermiyor. Bu fotoğrafların hepsi etiketli bir kartın ya da düğmenin içindeki süs görselleri (`alt=""`). Detay Avı yakın çekimi ve eser kapağı ise kendi `accessibilityLabel`'ını taşıyor. Telefonda doğru okunuyor.
+- **`scrollable-region-focusable` (yalnızca web):** Eser sayfasındaki yatay fotoğraf şeridi. Ekim'de de kayıtlıydı; telefonda kaydırma hareketiyle çalışıyor.
+- **Bildirim anahtarları 40 × 20 px (yalnızca web):** React Native Web'in `Switch` çizimi. Telefonda platformun kendi anahtarı kullanılıyor; Android'de dokunma alanı 48 dp. Anahtarlar etiketli (`accessibilityLabel` = satır başlığı).
+- **Kart kenarları (`line` / kâğıt 1,9:1):** Kartın sınırı bilgi taşımıyor; kartın kendisi zemin farkı ve gölgeyle ayrılıyor. Dokunulabilir kartlar etiketli düğme. WCAG 1.4.11 kapsamında değil.
+
+Düzeltmelerden sonra yapılan yeniden taramada `aria-progressbar-name` ve seçili durum bulguları kalmadı. Yalnızca yukarıdaki web'e özgü üç bulgu duruyor.
