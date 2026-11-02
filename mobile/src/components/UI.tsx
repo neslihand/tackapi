@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Children, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { ArchImage } from '@/components/brand/ArchImage';
+import { DoorLoader } from '@/components/brand/DoorLoader';
 import { VerticalFill } from '@/components/brand/Gradient';
 import { mediaUrl, type Item } from '@/lib/api';
 import { currentLang, t } from '@/lib/i18n';
@@ -66,7 +67,10 @@ export function Notice({ children, icon = 'information-circle-outline', tone = '
 }
 
 export function Loading({ label }: { label?: string }) {
-  return <View style={styles.center} accessibilityRole="progressbar"><ActivityIndicator color={colors.goldText} /><Text style={styles.muted}>{label ?? t('Kapı aralanıyor…', 'The door is opening…')}</Text></View>;
+  const text = label ?? t('Kapı aralanıyor…', 'The door is opening…');
+  return <View style={styles.center} accessible accessibilityRole="progressbar" accessibilityLabel={text}>
+    <DoorLoader /><Text style={styles.loadingText}>{text}</Text>
+  </View>;
 }
 
 export function Empty({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
@@ -113,6 +117,7 @@ export const styles = StyleSheet.create({
   notice: { flexDirection: 'row', gap: space.s, padding: space.s + space.xs, borderRadius: radius.m, borderWidth: 1, borderColor: colors.line, borderLeftWidth: 3, borderLeftColor: colors.goldLine, backgroundColor: colors.paper },
   noticeText: { flex: 1, color: colors.soft, ...type.small },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.s + space.xs, padding: space.xl },
+  loadingText: { fontFamily: fonts.serifItalic, color: colors.goldText, textAlign: 'center', ...type.heading },
   emptyTitle: { fontFamily: serif, color: colors.ink, textAlign: 'center', ...type.title },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.m, paddingVertical: space.m, minHeight: hit },
   rowBody: { flex: 1, gap: 2 },

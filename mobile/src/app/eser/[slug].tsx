@@ -10,7 +10,7 @@ import { Chip, SegmentedControl } from '@/components/Controls';
 import { AddMemory, MemoryCard } from '@/components/Journal';
 import { ACTION_BAR_HEIGHT, HorizontalRail, SectionHeader, StickyActionBar, type BarAction } from '@/components/Layout';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
-import { ArchImage } from '@/components/brand/ArchImage';
+import { CoverImage } from '@/components/brand/CoverImage';
 import { NightGlow } from '@/components/brand/Gradient';
 import { Button, Empty, Eyebrow, Loading, Notice, Title, type IconName } from '@/components/UI';
 import { WorkTile } from '@/components/WorkTile';
@@ -138,7 +138,7 @@ export default function Work() {
       {/* the title sits under the picture, never over it, so it shows whole on every screen size */}
       <View style={s.cover}>
         <NightGlow color={colors.emeraldLight} />
-        <ArchImage uri={mediaUrl(cover?.src)} size="lg" light alt={cover ? cover.alt ?? name : undefined} kind={item?.kind} kind_label={item?.kind_label} />
+        <CoverImage uri={mediaUrl(cover?.src)} light alt={cover ? cover.alt ?? name : undefined} kind={item?.kind} kind_label={item?.kind_label} />
         <View style={s.coverText}>
           <Title light>{name}</Title>
           {!!card.length && <Eyebrow light>{card.join(' · ')}</Eyebrow>}

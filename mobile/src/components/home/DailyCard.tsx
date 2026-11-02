@@ -1,9 +1,9 @@
-// Bugün's "Günün Eşiği": today's work (the same one the notification names) as the night band's full-width hero under
-// an arch; opened, or heard in its short summary.
+// Bugün's "Günün Eşiği": today's work (the same one the notification names) as the night band's full-width hero on a
+// framed cover plate; opened, or heard in its short summary.
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArchImage } from '@/components/brand/ArchImage';
+import { CoverImage } from '@/components/brand/CoverImage';
 import { Button, Eyebrow, Title } from '@/components/UI';
 import { mediaUrl } from '@/lib/api';
 import { dailyPicks, listenSeconds, teaser } from '@/lib/daily';
@@ -38,7 +38,7 @@ export function DailyCard() {
   return <View style={[home.pad, s.wrap]}>
     <Pressable accessibilityRole="button" accessibilityLabel={`${t('Günün Eşiği', 'Today’s Threshold')}: ${today.name}. ${body}`} onPress={open}
       style={({ pressed }) => [s.text, pressed && { opacity: motion.pressOpacity }]}>
-      <ArchImage uri={mediaUrl(today.image?.src)} size="lg" light kind={today.kind} kind_label={today.kind_label} />
+      <CoverImage uri={mediaUrl(today.image?.src)} light kind={today.kind} kind_label={today.kind_label} style={s.cover} />
       <Eyebrow light>✦ {t('GÜNÜN EŞİĞİ', 'TODAY’S THRESHOLD')}</Eyebrow>
       <Title light>{today.name}</Title>
       {!!body && <Text style={s.body} numberOfLines={2}>{body}</Text>}
@@ -53,6 +53,8 @@ export function DailyCard() {
 const s = StyleSheet.create({
   wrap: { gap: space.m },
   text: { gap: space.s },
+  // the card's text runs the full width here, so the cover does too (its height stays capped)
+  cover: { maxWidth: '100%' },
   body: { color: colors.mist, ...type.body },
   actions: { gap: space.s },
 });
