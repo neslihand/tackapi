@@ -54,13 +54,25 @@ export class ApiError extends Error { status: number; constructor(message: strin
 let sessionKey: string | null = null;
 export const setSessionKey = (key: string | null) => { sessionKey = key; };
 
+// React Native's fetch has no timeout on Android: an unreachable server (another Wi-Fi, a dropped packet) would keep the
+// spinner forever instead of falling back to the device copy. Reads should be quick; chat, photo search and uploads may not.
+const READ_TIMEOUT_MS = 15_000;
+const WRITE_TIMEOUT_MS = 120_000;
+
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   const headers: Record<string, string> = { accept: 'application/json', ...(init?.headers as Record<string, string> | undefined) };
   if (typeof init?.body === 'string' && !headers['content-type']) headers['content-type'] = 'application/json';
   if (sessionKey) headers.authorization = `Bearer ${sessionKey}`;
-  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers }); }
-  catch { throw new ApiError(t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0); }
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), !init?.method || init.method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS);
+  try { response = await fetch(`${apiBase()}${path}`, { ...init, headers, signal: abort.signal }); }
+  catch {
+    throw new ApiError(abort.signal.aborted
+      ? t('Sunucu yanıt vermedi. Ayarlar’daki sunucu adresini ve aynı Wi-Fi’de olduğunu kontrol et.', 'The server did not answer. Check the server address in Settings and that you are on the same Wi-Fi.')
+      : t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0);
+  }
+  finally { clearTimeout(timer); }
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
     const detail = typeof body?.detail === 'string' ? body.detail
