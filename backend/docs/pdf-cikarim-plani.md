@@ -260,12 +260,27 @@ Kuyruk: Bursa 351, Konya 280, Hatay 77 kayıt (eser + külliye). Şüpheli satı
    henüz işaretlenmedi. **Bu kuyruk yüklemede kullanılmamalı.**
 
 **Sonraki oturumun ilk işi**
-1. `$env:DATABASE_URL` tanımlı bir pencerede `python -m pdfx.cityqueue` çalıştırılacak (yalnızca okur). Çıktıda
+1. *(2 Kasım akşam)* Veritabanıyla ilk çalıştırmada 26 pilotun 20'si kilitlendi. Eşleşmeyen 6 pilotun (5'i Hatay'da,
+   1'i Konya'da) adı içindekilerle aynıydı. Sorun, panelde düzeltilen pilotların sayfalarının etkin paragraflardan
+   yeniden hesaplanması ve içindekiler sayfasıyla kesişmemesiydi. Eşleştirme kuralı değişti: ad hem içindekilerde hem
+   veritabanında tekse sayfa şartı aranmıyor (`name(page≠)`). Overrides'ta `db_slug` ile eşleme elle zorlanabiliyor.
+   Rapor kilitlenen her pilotu bağlandığı kayıtla birlikte listeliyor ve aynı pilota birden çok kaydın bağlanmasını
+   işaretliyor.
+   `$env:DATABASE_URL` tanımlı bir pencerede `python -m pdfx.cityqueue` çalıştırılacak (yalnızca okur). Çıktıda
    `pilot_check: "db"` görünmeli. İçindekilerle eşleşmeyen pilot varsa overrides ile bağlanacak. 26 pilotun hepsi
    `pilot_locked` olmadan yükleme yapılmayacak.
-2. `toc_suspects.csv` dosyasındaki 21 satır geliştiriciyle birlikte gözden geçirilecek ve `toc_overrides.json`
-   doldurulacak. Örnekler: Konya I "ALTINŞEHİR" (BÜYÜK HARF, ilçe listesinde yok, EN adı yok) ve Konya II'nin kısa
-   adlı külliye üyeleri.
+2. ~~Şüpheli 21 satır~~ **Yapıldı (aynı gün):** `toc_overrides.json` beş kitapta dolduruldu, şüpheli satır kalmadı.
+   Kararlar şunlar:
+   - Konya II'nin kısa adlı 12 külliye üyesi gövdedeki ara başlıktan tam ad aldı ("Sultan II. Selim Külliyesi
+     Çeşmesi").
+   - Konya I'deki "ALTINŞEHİR" bir dizgi hatası; kayıt Akşehir ilçe başlığı yapıldı.
+   - "Konut" kitaptaki gibi kaldı.
+   - Hatay Kaynakça s. 492'ye alındı.
+   - Doğrulanan baskı hataları ve TR/EN tahminleri `ok` ile işaretlendi.
+
+   Overrides artık `ok` (incelendi) ve `_was` (eski ad uyuşmazsa düzeltme atlanır) alanlarını tanıyor. Başlık araması
+   3 satıra sarılmış adları da birleştiriyor; I. Murad Külliyesi s. 83 böyle bulundu. Eşleştirme, eski adların
+   başındaki ilçe adını yok sayıyor. Bu sayede Konya II'de eşleşen kayıt 72'den 75'e çıktı.
 3. Adım 3 (`pdfx/anchor.py`): başlık yalnızca `title_tr` içinde değil, `heading_tr` içinde de aranacak (Konya II
    külliye üyeleri, Bursa hazireleri). İçindekilerde olmayan ara başlıklar `untracked_heading` olarak raporlanacak.
 4. Karar 3 henüz uygulanmadı: Konya `en_quality='usable'` ve CLAUDE.md'deki "Konya İngilizcesi kullanılmaz" kuralı.

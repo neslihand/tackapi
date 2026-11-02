@@ -12,11 +12,14 @@ Düzey (level): district | section | complex | monument. Külliye altındaki ese
 alır; her kayda o anki `district` ve `section` adı da yazılır.
 
 Elle düzeltme: data/pdfx/<kitap>/toc_overrides.json
-  {"set":    {"<id>": {"name_tr": "...", "page": 123, "level": "monument", "parent": "<id>"|null, ...}},
+  {"set":    {"<id>": {"name_tr": "...", "page": 123, "level": "monument", "parent": "<id>"|null,
+                       "db_slug": "<veritabanı slug'ı>" (kuyrukta eşleşmeyi zorlar), ...}},
    "delete": ["<id>", ...],
-   "add":    [{"after": "<id>", "name_tr": "...", "name_en": "...", "page": 45, "level": "monument", ...}]}
-Kimlik (`id`) kitap içi sıra no'dur ('b1-0042'); overrides sırası bozulmasın diye çıkarım değişse de kayıtlar
-TR ad + sayfa ile eşleşir (`key`). Düzeltmeler her çalıştırmada yeniden uygulanır.
+   "add":    [{"after": "<id>", "name_tr": "...", "name_en": "...", "page": 45, "level": "monument", ...}],
+   "ok":     ["<id>", ...]}                       # incelendi ve doğru; şüpheli listesinden düşer
+Kimlik (`id`) kitap içi sıra no'dur ('b1-0042'). Ayrıştırma değişip sıra kayarsa düzeltme yanlış kayda gitmesin diye
+`set` kaydına eski TR ad yazılır (`"_was": "Hamam"`); ad uyuşmazsa düzeltme atlanır ve uyarı basılır. Düzeltmeler
+her çalıştırmada yeniden uygulanır. `_` ile başlayan alanlar not ya da denetimdir, kayda yazılmaz.
 
 Kullanım (pipeline klasöründen):
   python -m pdfx.toc [--book bursa-1]   # toc.json + konsol özeti
@@ -312,8 +315,10 @@ def heading_pages(book, pages, recs):
             if l['role'].startswith(('title_tr', 'heading_tr')) or (l['role'] == 'body' and is_upper(l['text'])
                                                                      and 'Bold' in l['font']):
                 heads.append((l['printed_page'], p['i'], l['y0'], norm_title(l['text'])))
-    # sarılmış başlık: aynı sayfada art arda iki satır birleşik de denenir
+    # sarılmış başlık: aynı sayfada art arda iki ya da üç satır birleşik de denenir
     joined = [(h[0], h[1], h[2], h[3] + ' ' + n[3]) for h, n in zip(heads, heads[1:]) if h[1] == n[1]]
+    joined += [(h[0], h[1], h[2], ' '.join((h[3], n[3], m[3]))) for h, n, m in zip(heads, heads[1:], heads[2:])
+               if h[1] == n[1] == m[1]]
     cands = heads + joined
     last = 0
     for r in recs:
@@ -337,11 +342,19 @@ def apply_overrides(book, recs):
     n = 0
     by_id = {r['id']: r for r in recs}
     for rid, fields in ov.get('set', {}).items():
+        was = fields.get('_was')
+        if rid in by_id and was is not None and norm_title(by_id[rid]['name_tr']) != norm_title(was):
+            print(f"  UYARI {book} {rid}: düzeltme atlandı, kayıt artık '{by_id[rid]['name_tr']}' (beklenen '{was}')")
+            continue
         if rid in by_id:
-            by_id[rid].update(fields)
+            by_id[rid].update({k: v for k, v in fields.items() if not k.startswith('_')})
             by_id[rid]['flags'] = [f for f in by_id[rid]['flags']] + ['override']
             if 'page' in fields:
                 by_id[rid]['page_src'] = 'override'
+            n += 1
+    for rid in ov.get('ok', []):          # incelendi, doğru: şüpheli listesinden düşer
+        if rid in by_id:
+            by_id[rid]['flags'].append('reviewed')
             n += 1
     dele = set(ov.get('delete', []))
     recs = [r for r in recs if r['id'] not in dele]
@@ -361,6 +374,8 @@ def suspects(recs):
     """Kontrol listesi: (kayıt, nedenler)."""
     out = []
     for r in recs:
+        if 'reviewed' in r['flags']:
+            continue
         why = []
         if r['level'] in ('monument', 'complex') and not r['page']:
             why.append('sayfasız')

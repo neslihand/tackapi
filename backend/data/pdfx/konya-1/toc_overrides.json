@@ -1,0 +1,17 @@
+{
+ "_not": "İçindekilerdeki 'ALTINŞEHİR' dizgi hatası: gövdede s. 323'ün ilçe başlığı AKŞEHİR (geliştirici kararı, 2 Kasım 2026).",
+ "set": {
+  "k1-0126": {"_was": "ALTINŞEHİR",
+   "level": "district",
+   "name_tr": "AKŞEHİR",
+   "district": "Akşehir"
+  },
+  "k1-0127": {"_was": "Altınkalem (Cevlek) Mescidi",
+   "district": "Akşehir"
+  }
+ },
+ "ok": [
+  "k1-0067",
+  "k1-0184"
+ ]
+}

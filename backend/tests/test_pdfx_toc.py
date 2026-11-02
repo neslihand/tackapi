@@ -144,17 +144,26 @@ class TreeTest(unittest.TestCase):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
         recs = [dict(id='b1-0001', name_tr='Paşa Camii', page=None, flags=[], page_src=None),
-                dict(id='b1-0002', name_tr='Silinecek', page=5, flags=[], page_src='toc')]
+                dict(id='b1-0002', name_tr='Silinecek', page=5, flags=[], page_src='toc'),
+                dict(id='b1-0003', name_tr='Kayan Kayıt', page=7, flags=[], page_src='toc'),
+                dict(id='b1-0004', name_tr='Doğru Kayıt', page=9, flags=['page_suspect:90'], page_src='heading')]
         with open(os.path.join(tmp, 'toc_overrides.json'), 'w', encoding='utf-8') as f:
-            json.dump({'set': {'b1-0001': {'page': 403}}, 'delete': ['b1-0002'],
+            json.dump({'set': {'b1-0001': {'_was': 'Paşa Camii', 'page': 403},
+                               'b1-0003': {'_was': 'Hamam', 'name_tr': 'Yanlış Yere Gidecek Ad'}},
+                       'delete': ['b1-0002'], 'ok': ['b1-0004'],
                        'add': [{'after': 'b1-0001', 'id': 'b1-x1', 'name_tr': 'Eklenen Hazire', 'page': 404}]}, f)
         orig = T.out_dir
         T.out_dir = lambda book: tmp
         self.addCleanup(setattr, T, 'out_dir', orig)
         out, n = T.apply_overrides('bursa-1', recs)
-        self.assertEqual(n, 3)
+        self.assertEqual(n, 4)
         self.assertEqual([(r['id'], r['page'], r['page_src']) for r in out],
-                         [('b1-0001', 403, 'override'), ('b1-x1', 404, 'override')])
+                         [('b1-0001', 403, 'override'), ('b1-x1', 404, 'override'), ('b1-0003', 7, 'toc'),
+                          ('b1-0004', 9, 'heading')])
+        self.assertEqual(out[2]['name_tr'], 'Kayan Kayıt')            # _was uyuşmadı: düzeltme atlandı
+        self.assertNotIn('_was', out[0])
+        out[3].update(level='monument', name_en='Right One', parent=None, book='bursa-1')
+        self.assertEqual(T.suspects([out[3]]), [])                     # incelendi: listeden düştü
 
     def test_suspects(self):
         recs = [dict(id='a', book='konya-2', level='monument', name_tr='Hamam', name_en='Bath', page=28, parent='c',
@@ -202,6 +211,24 @@ class QueueTest(unittest.TestCase):
         rows = [dict(slug='a', name_tr='Şeyh Hıdır Türbesi', toc_title=None, book='hatay-1', pilot=True, p0=406, p1=407),
                 dict(slug='b', name_tr='Şeyh Hıdır Türbesi', toc_title=None, book='hatay-1', pilot=False, p0=416, p1=417)]
         self.assertEqual(Q.match(rec, rows)[0]['slug'], 'b')
+
+    def test_pilot_with_edited_pages_is_still_locked(self):
+        """Panelde düzeltilen pilotun sayfaları içindekilerle kesişmeyebilir; ad iki tarafta da tekse yine kilitlenir."""
+        tocs = {'hatay-1': self.toc('hatay-1', ('monument', 'AHMEDİYE CAMİİ', 212), ('monument', 'ŞEYH HIZIR TÜRBESİ', 408),
+                                    ('monument', 'ŞEYH HIZIR TÜRBESİ', 430), ('monument', 'KANTARA CAMİİ', 264))}
+        rows = [dict(slug='ahmediye', name_tr='Ahmediye Camii', toc_title=None, book='hatay-1', pilot=True, p0=230, p1=231),
+                dict(slug='hizir', name_tr='Şeyh Hızır Türbesi', toc_title=None, book='hatay-1', pilot=True, p0=500, p1=501),
+                dict(slug='kantara', name_tr='Kantara Camii', toc_title=None, book='hatay-1', pilot=True, p0=1, p1=2)]
+        tocs['hatay-1'][3]['db_slug'] = 'kantara'                        # elle eşleme (toc_overrides.json)
+        q = Q.make_queue(tocs, rows)['hatay']
+        self.assertEqual([(i['status'], i['db_match']) for i in q], [
+            ('pilot_locked', 'name(page≠)'), ('waiting', None), ('waiting', None), ('pilot_locked', 'override')])
+
+    def test_district_prefix_is_ignored(self):
+        rec = dict(book='konya-2', name_tr='Eşrefoğlu Bedesteni', page=30)
+        rows = [dict(slug='k', name_tr='Beyşehir Eşrefoğlu Bedesteni', toc_title=None, book='konya-2', pilot=True,
+                     p0=28, p1=30)]
+        self.assertEqual(Q.match(rec, rows), (rows[0], 'name+page'))
 
     def test_rerun_keeps_progress_but_never_unlocks_pilot(self):
         tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Muradiye Camii', 115), ('monument', 'Acemler Camii', 236))}

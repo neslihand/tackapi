@@ -16,7 +16,7 @@ Kullanım (pipeline klasöründen):
 """
 import os, sys, json, argparse, collections, difflib, datetime
 from . import OUT, ROOT
-from books import BOOKS
+from books import BOOKS, DISTRICTS
 from segment import norm_title
 
 CITY_ORDER = ['bursa', 'konya', 'hatay']
@@ -54,11 +54,25 @@ def page_overlap(rec, row, tol=1):
     return row['p0'] - tol <= rec['page'] <= p1 + tol
 
 
-def match(rec, rows):
-    """TOC kaydına karşılık gelen veritabanı eseri (ya da None) ve eşleşme türü."""
-    key = norm_title(rec['name_tr'])
+def bare(name, book):
+    """Karşılaştırma için ad: baştaki ilçe adı atılır ('Beyşehir Eşrefoğlu Bedesteni' → 'esrefoglu bedesteni')."""
+    s = norm_title(name)
+    for d in sorted(DISTRICTS[BOOKS[book]['city']], key=len, reverse=True):
+        d = norm_title(d) + ' '
+        if s.startswith(d):
+            return s[len(d):]
+    return s
+
+
+def match(rec, rows, toc_unique=False):
+    """TOC kaydına karşılık gelen veritabanı eseri (ya da None) ve eşleşme türü.
+
+    toc_unique: bu ad kitabın içindekilerinde bir kez geçiyor. O zaman veritabanında da tek olan ad, sayfa aralığı
+    tutmasa da eşleşir ('name(page≠)'): panelde düzeltilen eserlerin (pilotlar) sayfaları etkin paragraflardan yeniden
+    hesaplandığı için içindekiler sayfasıyla kesişmeyebilir."""
+    key = bare(rec['name_tr'], rec['book'])
     cands = [r for r in rows if r['book'] == rec['book']]
-    exact = [r for r in cands if key in (norm_title(r.get('toc_title') or ''), norm_title(r['name_tr']))]
+    exact = [r for r in cands if key in (bare(r.get('toc_title') or '', r['book']), bare(r['name_tr'], r['book']))]
     if exact:
         paged = [r for r in exact if page_overlap(rec, r)]
         if len(paged) == 1:
@@ -67,11 +81,13 @@ def match(rec, rows):
             return exact[0], 'name'
         if paged:
             return paged[0], 'name+page?'
+        if len(exact) == 1 and toc_unique:
+            return exact[0], 'name(page≠)'
     best, score = None, 0
     for r in cands:
         if not page_overlap(rec, r):
             continue
-        s = max(difflib.SequenceMatcher(None, key, norm_title(t)).ratio() for t in (r.get('toc_title') or '', r['name_tr']))
+        s = max(difflib.SequenceMatcher(None, key, bare(t, r['book'])).ratio() for t in (r.get('toc_title') or '', r['name_tr']))
         if s > score:
             best, score = r, s
     if best and score >= 0.85:
@@ -87,6 +103,7 @@ def make_queue(tocs, rows, old=None):
             old_items[(it['book'], it['key'])] = it
     cities = collections.OrderedDict((c, []) for c in CITY_ORDER)
     for book in sorted(tocs, key=lambda b: (CITY_ORDER.index(BOOKS[b]['city']), BOOKS[b]['volume'])):
+        names = collections.Counter(bare(r['name_tr'], book) for r in tocs[book] if r['level'] in WORK_LEVELS)
         for r in tocs[book]:
             if r['level'] not in WORK_LEVELS:
                 continue
@@ -94,7 +111,10 @@ def make_queue(tocs, rows, old=None):
                       name_tr=r['name_tr'], name_en=r['name_en'], page=r['page'], parent=r['parent'],
                       district=r['district'], section=r['section'], status='waiting', db_slug=None, db_match=None)
             if rows is not None:
-                m, kind = match(r, rows)
+                if r.get('db_slug'):           # toc_overrides.json → set: {"db_slug": "..."} (elle eşleme)
+                    m, kind = next((x for x in rows if x['slug'] == r['db_slug']), None), 'override'
+                else:
+                    m, kind = match(r, rows, toc_unique=names[bare(r['name_tr'], book)] == 1)
                 if m:
                     it['db_slug'], it['db_match'] = m['slug'], kind
                     if m['pilot']:
@@ -133,6 +153,15 @@ def report(data, rows):
         locked = {i['db_slug'] for items in data['cities'].values() for i in items if i['status'] == 'pilot_locked'}
         miss = [r['slug'] for r in pilots if r['slug'] not in locked]
         print(f'pilot eser: {len(pilots)}, kuyrukta kilitlenen: {len(locked)}')
+        by_slug = collections.defaultdict(list)
+        for items in data['cities'].values():
+            for i in items:
+                if i['status'] == 'pilot_locked':
+                    by_slug[i['db_slug']].append(i)
+        for slug, its in sorted(by_slug.items()):
+            for i in its:
+                warn = '  ! birden çok kayıt aynı pilota bağlandı' if len(its) > 1 else ''
+                print(f"  kilit  {slug:<55} ← {i['id']} s.{i['page'] or '-':<4} {i['db_match']:<12} {i['name_tr'][:40]}{warn}")
         for s in miss:
             print(f'  ! içindekilerle eşleşmeyen pilot: {s} (overrides ile eşlenmeli; yükleyici yine de dokunmaz)')
 
