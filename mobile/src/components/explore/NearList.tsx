@@ -2,6 +2,7 @@
 // the visitor presses the button, and stays on the device.
 import { useMemo, type ReactElement } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Hairline } from '@/components/brand/Hairline';
 import { Button, Empty, Eyebrow, Notice, Title, WorkCard } from '@/components/UI';
 import type { Item } from '@/lib/api';
 import { byDistance } from '@/lib/explore';
@@ -32,7 +33,7 @@ export function NearList({ items, here, locating, error, onLocate, header }: {
   </ScrollView>;
 
   return <FlatList data={near} keyExtractor={n => n.item.slug} contentContainerStyle={{ paddingBottom: space.xl }}
-    ItemSeparatorComponent={() => <View style={{ height: space.s + 4 }} />}
+    ItemSeparatorComponent={() => <View style={{ paddingHorizontal: space.m }}><Hairline /></View>}
     ListHeaderComponent={<View style={{ gap: space.s, marginBottom: space.m }}>
       {header}
       <View style={{ paddingHorizontal: space.m, gap: space.s }}>

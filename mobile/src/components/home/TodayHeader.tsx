@@ -1,13 +1,15 @@
-// Bugün's top strip: the greeting, the streak and, in travel mode, the "Bursa'dasın" chip.
+// Bugün's top strip on night green: the greeting (its last word in gold italic), the streak and, in travel mode, the
+// "Bursa'dasın" chip.
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Chip, StatPill } from '@/components/Controls';
+import { Title } from '@/components/UI';
 import { greeting } from '@/lib/daily';
 import { useHereIfAllowed } from '@/lib/geo';
 import { t } from '@/lib/i18n';
 import { useContent, usePassport, useSettings } from '@/lib/store';
 import { streakState } from '@/lib/streak';
-import { colors, serif, space, type } from '@/lib/theme';
+import { colors, space, type } from '@/lib/theme';
 import { cityHere, trSuffix } from '@/lib/travel';
 import { home } from './styles';
 
@@ -22,11 +24,11 @@ export function TodayHeader() {
   const city = useMemo(() => here ? cityHere(items, here)?.city : undefined, [items, here]);
   return <View style={[home.pad, s.wrap]}>
     <View style={s.top}>
-      <Text accessibilityRole="header" style={s.hello}>{greeting(now)}</Text>
-      <StatPill icon={run.periodDone ? 'flame' : 'flame-outline'} value={run.count} label={weekly ? t('hafta seri', 'week streak') : t('gün seri', 'day streak')} />
+      <View style={s.hello}><Title light size="display" accent={1}>{greeting(now)}</Title></View>
+      <StatPill tone="dark" icon={run.periodDone ? 'flame' : 'flame-outline'} value={run.count} label={weekly ? t('hafta seri', 'week streak') : t('gün seri', 'day streak')} />
     </View>
-    {city && <View style={s.chips}><Chip icon="location-outline" label={t(trSuffix(city.name, 'youAreIn'), `In ${city.name}`)} /></View>}
-    <Text style={home.body}>{weekly
+    {city && <View style={s.chips}><Chip light icon="location-outline" label={t(trSuffix(city.name, 'youAreIn'), `In ${city.name}`)} /></View>}
+    <Text style={s.body}>{weekly
       ? (run.periodDone ? t('Bu haftanın kapısını açtın. Gelecek hafta görüşürüz.', 'You opened this week’s door. See you next week.')
         : run.count ? t('Bu hafta bir hikâye mühürle, serin sürsün.', 'Stamp one story this week to keep your streak.')
         : t('Her hafta bir hikâye mühürle, serin büyüsün.', 'Stamp one story a week and watch your streak grow.'))
@@ -37,8 +39,9 @@ export function TodayHeader() {
 }
 
 const s = StyleSheet.create({
-  wrap: { gap: space.xs },
+  wrap: { gap: space.s },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.s },
+  hello: { flex: 1 },
   chips: { flexDirection: 'row' },
-  hello: { flex: 1, fontFamily: serif, color: colors.ink, ...type.title },
+  body: { color: colors.mist, ...type.body },
 });

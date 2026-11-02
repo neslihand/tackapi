@@ -82,7 +82,7 @@ function DemoStrip({ children }: { children: ReactNode }) {
 
 function Screens() {
   useLang(); // the titles below are re-read when the language changes
-  return <Stack screenOptions={{ headerStyle: { backgroundColor: colors.emerald }, headerTintColor: colors.goldSoft,
+  return <Stack screenOptions={{ headerStyle: { backgroundColor: colors.emeraldDeep }, headerShadowVisible: false, headerTintColor: colors.goldSoft,
     headerTitleStyle: { fontFamily: serif }, contentStyle: { backgroundColor: colors.parchment } }}>
     <Stack.Screen name="(tabs)" options={{ headerShown: false, title: t('Geri', 'Back') }} />
     <Stack.Screen name="eser/[slug]" options={{ title: '' }} />

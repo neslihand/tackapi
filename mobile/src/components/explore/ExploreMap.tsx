@@ -12,7 +12,7 @@ import type { Here } from '@/lib/geo';
 import { t } from '@/lib/i18n';
 import { distanceM, formatDistance } from '@/lib/passport';
 import { usePassport } from '@/lib/store';
-import { colors, hit, overlay, radius, space, type } from '@/lib/theme';
+import { colors, hit, overlay, radius, shadow, space, type } from '@/lib/theme';
 
 export function ExploreMap({ items, here, locating, error, onLocate }: {
   items: Item[]; here: Here | null; locating: boolean; error: string | null; onLocate: () => void;
@@ -37,7 +37,7 @@ export function ExploreMap({ items, here, locating, error, onLocate }: {
       <Ionicons name={locating ? 'hourglass-outline' : 'locate'} size={22} color={colors.goldSoft} /></Pressable>
     <View style={s.bottom} pointerEvents="box-none">
       {error && <Notice tone="warn" icon="alert-circle-outline">{error}</Notice>}
-      {chosen ? <View style={{ gap: space.s }}>
+      {chosen ? <View style={s.sheet}>
         <WorkCard item={chosen} extra={away(chosen)} stamped={stamp(chosen.slug)} />
         <Button icon="arrow-forward" label={t('Hikâyesini aç', 'Open its story')} onPress={() => router.push(`/eser/${chosen.slug}`)} />
       </View> : <Text style={s.hint}>{t(`${pins.length} eser haritada${withoutPlace ? ` · ${withoutPlace} eserin konumu henüz yok` : ''}. Bir işarete dokun.`, `${pins.length} works on the map${withoutPlace ? ` · ${withoutPlace} have no location yet` : ''}. Tap a marker.`)}</Text>}
@@ -55,5 +55,7 @@ const s = StyleSheet.create({
   dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: colors.paper },
   locate: { position: 'absolute', right: 12, top: 52, width: hit, height: hit, borderRadius: hit / 2, backgroundColor: colors.emerald, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.goldLine },
   bottom: { position: 'absolute', left: 12, right: 12, bottom: 12, gap: space.s },
+  // the chosen work's row and its action on an ivory plate over the map
+  sheet: { gap: space.s, paddingHorizontal: space.m, paddingBottom: space.m, borderRadius: radius.m, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, ...shadow.card },
   hint: { alignSelf: 'center', color: colors.ink, ...type.caption, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: overlay.paper, overflow: 'hidden' },
 });

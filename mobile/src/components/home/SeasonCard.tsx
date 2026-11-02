@@ -20,7 +20,7 @@ export function SeasonCard() {
       {!!quest.route.description && <Text style={s.body} numberOfLines={2}>{quest.route.description}</Text>}
       <ProgressBar tone="dark" value={quest.done} max={quest.steps.length} label={t(`${quest.done}/${quest.steps.length} adım`, `${quest.done}/${quest.steps.length} steps`)}
         accessibilityLabel={t(`${quest.steps.length} adımın ${quest.done} tanesi tamam`, `${quest.done} of ${quest.steps.length} steps done`)} />
-      <Button kind="gold" icon="walk-outline" label={t('Rotayı yürü', 'Walk the route')} onPress={() => router.push(`/rota/${quest.route.id}`)} />
+      <Button kind="dark" light icon="walk-outline" label={t('Rotayı yürü', 'Walk the route')} onPress={() => router.push(`/rota/${quest.route.id}`)} />
     </Card>
   </View>;
 }

@@ -69,6 +69,21 @@ Bileşenler **yalnızca bunları** kullanır. Her yüzeyin kendi metin ailesi va
 | `gold.on` | inkOnGold | altın üstü metin/ikon | ≥10:1 |
 | `danger`, `dangerSoft` | mevcut | hata | mevcut |
 
+**Faz 2 kodda (`theme.ts` `colors`) eklenen saydam tonlar** — eski adlar korunduğu için anlamsal adlar yerine:
+
+| Kod adı | Değer | Karşılığı |
+|---|---|---|
+| `nightLine` | goldSoft @ %30 | `night.line` |
+| `ivoryLine` | goldLine @ %45 | `ivory.line` |
+| `goldFrame` | goldSoft @ %35 | altın düğmenin 4px dışındaki çerçeve |
+| `nightStroke` | goldSoft @ %45 | gecede secondary düğme / çip çerçevesi |
+| `onGoldRule` | onGold @ %14 | altın düğmede ikon bölmesi ayırıcısı |
+| `archEdge` | goldSoft @ %40 | kemer konturu |
+
+Ayrıca: `type.eyebrow`, `type.button`, `type.brand` (logo, 22/26, aralık 2), `type.dropCap` (56/56); serif stillerde
+`fontVariant: ['lining-nums']`; `measure.reading 640`; `arch` (sm/md/lg ölçüleri); `control` (56/48 yükseklik, sekme çubuğu 64, 4px
+çerçeve aralığı, 40'lık ghost dairesi); `stroke.motif 1.3`; `space.gutter 20`.
+
 **Kural:** `gold500 (#C7A96B)` fildişi üstünde metin rengi **olamaz** (2.2:1). Fildişide küçük altın metin her zaman
 `gold800`. `gold700` fildişide yalnızca ikon/çerçeve (≥3:1) içindir, metin değil.
 
@@ -203,7 +218,7 @@ Web `.en-key` / `.en-link` karşılığı. Props: `label`, `icon?`, `onPress`, `
 ### ArchImage
 Kemer maskeli görsel. Props: `uri?`, `size: 'sm' | 'md' | 'lg' | number`, `kind?` (yedek çizim için), `alt?`,
 `framed?: boolean` (varsayılan true).
-- Boyutlar: `sm` 56×72, `md` 120×156, `lg` genişliğin tamamı × 1.25 oran (en çok 360 yüksek).
+- Boyutlar: `sm` 56×72, `md` 120×156, `lg` genişliğin tamamı × 1.25 oran (en çok 270 yüksek — Faz 2: hero 390×844'te ekranın ~%60'ını aşmasın diye 360'tan indirildi).
 - Maske: `borderTopLeftRadius = borderTopRightRadius = genişlik/2`, alt köşeler `radius.s`, `overflow: hidden`
   (web `border-radius: 999px 999px 3px 3px`).
 - Kontur: dışta 1px `gold200 @ %40`; `lg`'de ayrıca 8px içeride ikinci ince kemer (web `.ex-card-media::after`) — SVG.

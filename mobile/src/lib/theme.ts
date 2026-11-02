@@ -21,6 +21,12 @@ export const colors = {
   dangerSoft: '#F6E9E6',   // behind a wrong answer; danger and ink text stay above 4.5:1
   tabInactive: '#8E978F',  // tab labels on emeraldDeep (6.6:1)
   onGold: '#15130D',       // text and icons on the gold button
+  nightLine: '#E6D5AE4d',  // goldSoft at 30%: hairlines on night (decorative)
+  ivoryLine: '#97774973',  // goldLine at 45%: hairlines on ivory (decorative)
+  goldFrame: '#E6D5AE59',  // goldSoft at 35%: the thin frame 4px outside the gold button
+  nightStroke: '#E6D5AE73',// goldSoft at 45%: the border of a secondary button on night
+  onGoldRule: '#15130D24', // onGold at 14%: the rule between the gold button's icon and its label
+  archEdge: '#E6D5AE66',   // goldSoft at 40%: the outline of an arched picture
 };
 
 // The gold plate of the primary button and the night plate of the dark one (top → bottom).
@@ -43,7 +49,7 @@ export const fonts = {
 
 export const serif = fonts.serif;
 
-export const space = { xs: 4, s: 8, m: 16, l: 24, xl: 32 };
+export const space = { xs: 4, s: 8, m: 16, l: 24, xl: 32, gutter: 20 };
 
 // Translucent night laid over photos so gold and ivory text stay readable.
 export const overlay = {
@@ -53,16 +59,37 @@ export const overlay = {
   backdrop: '#030A0899',    // behind sheets and dialogs
 };
 
+// Cormorant's default figures are old-style (they dip below the line); dates and counts read better lining.
+const lining = ['lining-nums' as const];
+
 // Serif sizes run a step larger than before: Cormorant sets smaller than Georgia at the same size.
 export const type = {
-  display: { fontSize: 36, lineHeight: 40 },
-  title: { fontSize: 28, lineHeight: 32 },
-  heading: { fontSize: 21, lineHeight: 26 },
+  display: { fontSize: 36, lineHeight: 40, fontVariant: lining },
+  title: { fontSize: 28, lineHeight: 32, fontVariant: lining },
+  heading: { fontSize: 21, lineHeight: 26, fontVariant: lining },
   body: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 22 },
   small: { fontFamily: fonts.sans, fontSize: 14, lineHeight: 20 },      // secondary lines and notices
-  reading: { fontSize: 19, lineHeight: 30 },   // long serif text on the work screen
+  reading: { fontSize: 19, lineHeight: 30, fontVariant: lining },   // long serif text on the work screen
   caption: { fontFamily: fonts.sans, fontSize: 12, lineHeight: 16 },
+  // spaced capitals; the text is upper-cased with toLocaleUpperCase, never textTransform (Turkish i/İ)
+  eyebrow: { fontFamily: fonts.sansSemi, fontSize: 11, lineHeight: 16, letterSpacing: 2.2 },
+  button: { fontFamily: fonts.sansSemi, fontSize: 12, lineHeight: 16, letterSpacing: 2 },
+  // the large gold italic first letter of a reading (set on its own line part, not measured around the text)
+  brand: { fontFamily: fonts.serif, fontSize: 22, lineHeight: 26, letterSpacing: 2 },   // the logo word, .09em
+  dropCap: { fontFamily: fonts.serifItalic, fontSize: 56, lineHeight: 56, fontVariant: lining },
 };
+
+// The reading column never runs wider than this (about 60–70 characters at the reading size).
+export const measure = { reading: 640 };
+
+// Arched pictures: small (a list row) and medium; large takes the full width at this height ratio, up to archMaxHeight.
+export const arch = { sm: { width: 56, height: 72 }, md: { width: 120, height: 156 }, lgRatio: 1.25, lgMax: 270 };
+
+// The gold button is 56 high, a secondary one 48; the gold button's icon sits in a square bay of the same height.
+export const control = { primary: 56, secondary: 48, frameGap: 4, ghostCircle: 40, tabBar: 64 };
+
+// SVG line drawings use the web's stroke.
+export const stroke = { motif: 1.3 };
 
 // The web keeps its edges sharp: hair for the gold button, arch for the top of an arched picture (half its width).
 export const radius = { hair: 2, s: 6, m: 12, l: 16, pill: 999 };

@@ -28,7 +28,7 @@ export function HeroCard({ image, eyebrow, title, body, actions = [], onPress, a
         : <View style={styles.text}>{text}</View>}
       {actions.length > 0 && <View style={styles.actions}>
         {actions.map((a, i) => <Button key={a.label} label={a.label} icon={a.icon} onPress={a.onPress}
-          kind={a.kind ?? (i === 0 ? 'gold' : 'dark')} style={styles.action} />)}
+          kind={a.kind ?? (i === 0 ? 'gold' : 'dark')} light style={styles.action} />)}
       </View>}
     </View>
   </View>;

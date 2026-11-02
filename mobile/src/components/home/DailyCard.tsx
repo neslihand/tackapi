@@ -1,13 +1,16 @@
-// Bugün's "Günün Eşiği": today's work (the same one the notification names), heard in its short summary or opened.
+// Bugün's "Günün Eşiği": today's work (the same one the notification names) as the night band's full-width hero under
+// an arch; opened, or heard in its short summary.
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { HeroCard, type HeroAction } from '@/components/HeroCard';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ArchImage } from '@/components/brand/ArchImage';
+import { Button, Eyebrow, Title } from '@/components/UI';
 import { mediaUrl } from '@/lib/api';
 import { dailyPicks, listenSeconds, teaser } from '@/lib/daily';
 import { t } from '@/lib/i18n';
 import { speak, stopSpeaking } from '@/lib/speech';
 import { useContent, usePassport } from '@/lib/store';
+import { colors, motion, space, type } from '@/lib/theme';
 import { home } from './styles';
 
 export function DailyCard() {
@@ -24,20 +27,32 @@ export function DailyCard() {
   const summary = today.summary?.trim();
   const spoken = `${today.name}. ${summary}`;
   const secs = summary ? listenSeconds(spoken) : 0;
-  const listen: HeroAction | null = summary ? {
-    label: speaking ? t('Durdur', 'Stop') : secs < 60 ? t(`${secs} sn dinle`, `Listen ${secs} s`) : t(`${secs / 60} dk dinle`, `Listen ${secs / 60} min`),
-    icon: speaking ? 'stop-circle-outline' : 'volume-high-outline', kind: 'gold',
-    onPress: () => {
-      if (speaking) { stopSpeaking(); setSpeaking(false); return; }
-      setSpeaking(true);
-      speak(spoken, () => setSpeaking(false));
-    },
-  } : null;
-  const read: HeroAction = { label: t('Hikâyeyi aç', 'Open the story'), icon: 'book-outline', kind: listen ? 'dark' : 'gold', onPress: open };
+  const listenLabel = speaking ? t('Durdur', 'Stop') : secs < 60 ? t(`${secs} sn dinle`, `Listen ${secs} s`) : t(`${secs / 60} dk dinle`, `Listen ${secs / 60} min`);
+  const listen = () => {
+    if (speaking) { stopSpeaking(); setSpeaking(false); return; }
+    setSpeaking(true);
+    speak(spoken, () => setSpeaking(false));
+  };
+  const body = teaser(today);
 
-  return <View style={home.pad}>
-    <HeroCard image={mediaUrl(today.image?.src) ?? undefined} eyebrow={`✦ ${t('GÜNÜN EŞİĞİ', 'TODAY’S THRESHOLD')}`}
-      title={today.name} body={teaser(today)} onPress={open} actions={listen ? [listen, read] : [read]}
-      accessibilityLabel={`${t('Günün Eşiği', 'Today’s Threshold')}: ${today.name}. ${teaser(today)}`} />
+  return <View style={[home.pad, s.wrap]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${t('Günün Eşiği', 'Today’s Threshold')}: ${today.name}. ${body}`} onPress={open}
+      style={({ pressed }) => [s.text, pressed && { opacity: motion.pressOpacity }]}>
+      <ArchImage uri={mediaUrl(today.image?.src)} size="lg" light kind={today.kind} kind_label={today.kind_label} />
+      <Eyebrow light>✦ {t('GÜNÜN EŞİĞİ', 'TODAY’S THRESHOLD')}</Eyebrow>
+      <Title light>{today.name}</Title>
+      {!!body && <Text style={s.body} numberOfLines={2}>{body}</Text>}
+    </Pressable>
+    <View style={s.actions}>
+      <Button kind="gold" icon="book-outline" label={t('Hikâyeyi aç', 'Open the story')} onPress={open} />
+      {summary && <Button kind="ghost" light label={listenLabel} icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'} onPress={listen} />}
+    </View>
   </View>;
 }
+
+const s = StyleSheet.create({
+  wrap: { gap: space.m },
+  text: { gap: space.s },
+  body: { color: colors.mist, ...type.body },
+  actions: { gap: space.s },
+});

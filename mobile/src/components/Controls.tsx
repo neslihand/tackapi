@@ -1,21 +1,25 @@
 // Small controls: chips, segmented control, progress bar, answer option and stat pill.
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { VerticalFill } from '@/components/brand/Gradient';
 import type { IconName } from '@/components/UI';
 import { t } from '@/lib/i18n';
-import { colors, hit, radius, space, type } from '@/lib/theme';
+import { colors, fonts, gradients, hit, motion, radius, space, type } from '@/lib/theme';
 
 /** A filter chip; selected chips are filled and show a check, so state is not told by colour alone. Without onPress
  *  it is a read-only label, as low as a StatPill (no touch target needed). `radio` for one choice out of a few. */
-export function Chip({ label, selected, icon, onPress, accessibilityLabel, radio }: {
+export function Chip({ label, selected, icon, onPress, accessibilityLabel, radio, light }: {
   label: string; selected?: boolean; icon?: IconName; onPress?: () => void; accessibilityLabel?: string; radio?: boolean;
+  /** on a night surface */
+  light?: boolean;
 }) {
-  const fg = selected ? colors.goldSoft : colors.ink;
+  const fg = selected ? colors.onGold : light ? colors.goldSoft : colors.ink;
   const iconName = selected ? 'checkmark' : icon;
   return <Pressable accessibilityRole={!onPress ? 'text' : radio ? 'radio' : 'button'} accessibilityLabel={accessibilityLabel ?? label}
     accessibilityState={radio ? { checked: !!selected } : { selected: !!selected }} aria-checked={radio ? !!selected : undefined} aria-pressed={radio || !onPress ? undefined : !!selected}
     disabled={!onPress} onPress={onPress}
-    style={({ pressed }) => [styles.chip, !onPress && styles.chipStatic, selected && styles.chipOn, pressed && { opacity: 0.8 }]}>
+    style={({ pressed }) => [styles.chip, light && styles.chipLight, !onPress && styles.chipStatic, selected && styles.chipOn, pressed && { opacity: motion.pressOpacity }]}>
+    {selected && <View style={styles.chipPlate}><VerticalFill colors={gradients.gold} /></View>}
     {iconName && <Ionicons name={iconName} size={16} color={fg} />}
     <Text style={[styles.chipText, { color: fg }]}>{label}</Text>
   </Pressable>;
@@ -79,15 +83,17 @@ export function StatPill({ icon, value, label, tone = 'light' }: { icon: IconNam
 }
 
 const styles = StyleSheet.create({
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: hit, paddingHorizontal: space.m, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: hit, paddingHorizontal: space.m, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: 'transparent', overflow: 'hidden' },
+  chipLight: { borderColor: colors.nightStroke },
   chipStatic: { minHeight: 32, alignSelf: 'flex-start' },
-  chipOn: { backgroundColor: colors.emerald, borderColor: colors.emerald },
-  chipText: { fontWeight: '500', ...type.body },
-  segments: { flexDirection: 'row', padding: space.xs, gap: space.xs, borderRadius: radius.m, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.parchmentDeep },
-  segment: { flex: 1, minHeight: hit, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xs, borderRadius: radius.s },
-  segmentOn: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.goldLine },
-  segmentText: { color: colors.soft, fontWeight: '500', ...type.body },
-  segmentTextOn: { color: colors.ink, fontWeight: '700' },
+  chipOn: { borderColor: colors.goldLine },
+  chipPlate: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  chipText: { ...type.body, fontFamily: fonts.sansMedium },
+  segments: { flexDirection: 'row', padding: space.xs, gap: space.xs, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: 'transparent' },
+  segment: { flex: 1, minHeight: hit, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.xs, borderRadius: radius.pill },
+  segmentOn: { backgroundColor: colors.emerald },
+  segmentText: { color: colors.soft, ...type.body, fontFamily: fonts.sansMedium },
+  segmentTextOn: { color: colors.goldSoft, fontFamily: fonts.sansSemi },
   progress: { flexDirection: 'row', alignItems: 'center', gap: space.s },
   track: { flex: 1, height: 8, borderRadius: radius.pill, backgroundColor: colors.parchmentDeep, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   trackDark: { backgroundColor: colors.emeraldDeep, borderColor: colors.goldLine },

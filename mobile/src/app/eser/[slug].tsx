@@ -10,6 +10,8 @@ import { Chip, SegmentedControl } from '@/components/Controls';
 import { AddMemory, MemoryCard } from '@/components/Journal';
 import { ACTION_BAR_HEIGHT, HorizontalRail, SectionHeader, StickyActionBar, type BarAction } from '@/components/Layout';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
+import { ArchImage } from '@/components/brand/ArchImage';
+import { NightGlow } from '@/components/brand/Gradient';
 import { Button, Empty, Eyebrow, Loading, Notice, Title, type IconName } from '@/components/UI';
 import { WorkTile } from '@/components/WorkTile';
 import { ApiError, loadMonument, makers, mediaUrl, sourceTitle, type Detail } from '@/lib/api';
@@ -21,7 +23,7 @@ import { distanceM, formatDistance, stampRadius } from '@/lib/passport';
 import { rememberOpened } from '@/lib/recent';
 import { speak, stopSpeaking } from '@/lib/speech';
 import { useContent, usePassport, useSettings } from '@/lib/store';
-import { colors, hit, overlay, radius, serif, space, type } from '@/lib/theme';
+import { colors, fonts, hit, measure, radius, serif, space, type } from '@/lib/theme';
 import { availableTellings, pickTelling, sameCity, tellingTexts, type Telling } from '@/lib/work';
 
 export default function Work() {
@@ -87,6 +89,8 @@ export default function Work() {
   const where = item ? [item.neighborhood, item.district, item.city.name].filter(Boolean).join(', ') : '';
   const by = item && makers(item);
   const upper = (s: string) => s.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en');
+  // the short card right under the title: city · type · date · era
+  const card = item ? [item.city.name, item.kind_label, item.built.label, item.period?.name].filter((v): v is string => Boolean(v)) : [];
   const labels: Record<Telling, string> = { summary: t('Özet', 'Summary'), story: t('Hikâye', 'Story'), child: t('Çocuk', 'Kids'), text: t('Kitap', 'Book') };
 
   function listen() {
@@ -118,9 +122,9 @@ export default function Work() {
   const onSpotLabel = t('Yerinde mühürle', 'Stamp on site');
   const stamp: BarAction = visited ? { label: t('Yerinde mühürlü', 'Stamped on site'), icon: 'ribbon', onPress: () => {}, disabled: true }
     : location && near ? { label: onSpotLabel, icon: 'ribbon', kind: 'gold', onPress: stampHere, busy: checking }
-    : !discovered ? { label: t('Mühürle', 'Stamp'), icon: 'bookmark-outline', kind: 'dark', onPress: () => passport.discover(slug),
+    : !discovered ? { label: t('Mühürle', 'Stamp'), icon: 'bookmark-outline', kind: 'gold', onPress: () => passport.discover(slug),
       accessibilityLabel: t('Pasaportuma mühürle', 'Stamp my passport') }
-    : location ? { label: onSpotLabel, icon: 'ribbon-outline', onPress: stampHere, busy: checking }
+    : location ? { label: onSpotLabel, icon: 'ribbon-outline', kind: 'gold', onPress: stampHere, busy: checking }
     : { label: t('Mühürlü', 'Stamped'), icon: 'checkmark-circle', onPress: () => {}, disabled: true,
       accessibilityLabel: t('Pasaportunda mühürlü', 'Stamped in your passport') };
   stamp.pop = stampKind;
@@ -131,12 +135,13 @@ export default function Work() {
   return <View style={s.screen}>
     <Stack.Screen options={{ title: name }} />
     <ScrollView contentContainerStyle={{ paddingBottom: ACTION_BAR_HEIGHT + insets.bottom + space.l }}>
+      {/* the title sits under the picture, never over it, so it shows whole on every screen size */}
       <View style={s.cover}>
-        {cover ? <Image source={mediaUrl(cover.src)} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} accessibilityLabel={cover.alt ?? name} />
-          : <View style={[StyleSheet.absoluteFill, s.coverEmpty]}><Ionicons name="business-outline" size={48} color={colors.gold} /></View>}
+        <NightGlow color={colors.emeraldLight} />
+        <ArchImage uri={mediaUrl(cover?.src)} size="lg" light alt={cover ? cover.alt ?? name : undefined} kind={item?.kind} kind_label={item?.kind_label} />
         <View style={s.coverText}>
-          {item && <Eyebrow light>{upper(item.kind_label)}{item.period ? ` · ${upper(item.period.name)}` : ''}</Eyebrow>}
           <Title light>{name}</Title>
+          {!!card.length && <Eyebrow light>{card.join(' · ')}</Eyebrow>}
         </View>
       </View>
 
@@ -160,7 +165,7 @@ export default function Work() {
           {available.length === 1 && <Eyebrow>{upper(labels[telling])}</Eyebrow>}
           {telling === 'text' && detail.text_note && <Text style={s.small}>{detail.text_note}</Text>}
           {(telling === 'story' || telling === 'child') && <Text style={s.small}>{t('Bu anlatım kitaptaki bilgilere dayanarak yapay zekâyla hazırlandı; hikâyedeki atmosfer yaratıcı anlatımdır.', 'This telling was prepared with AI from the book’s information; the atmosphere of the story is creative narration.')}</Text>}
-          {text.split(/\n{2,}|\n/).filter(p => p.trim()).map((p, i) => <Text key={i} style={s.paragraph}>{p.trim()}</Text>)}
+          {text.split(/\n{2,}|\n/).filter(p => p.trim()).map((p, i) => <Paragraph key={i} text={p.trim()} first={i === 0} />)}
         </View> : <Notice>{t('Bu eser için henüz metin yok; esere soru sorabilirsin.', 'There is no text for this work yet; you can ask the work a question.')}</Notice>}
       </View>
 
@@ -219,6 +224,13 @@ export default function Work() {
   </View>;
 }
 
+/** A paragraph of the reading; the first opens with a large gold italic letter (inline, not measured around the text). */
+function Paragraph({ text, first }: { text: string; first: boolean }) {
+  if (!first) return <Text style={s.paragraph}>{text}</Text>;
+  const [initial, ...rest] = Array.from(text);
+  return <Text style={s.paragraph}><Text style={s.initial}>{initial}</Text>{rest.join('')}</Text>;
+}
+
 function Fact({ icon, text }: { icon: 'location-outline' | 'calendar-outline' | 'construct-outline'; text: string }) {
   return <View style={s.fact}><Ionicons name={icon} size={16} color={colors.goldText} /><Text style={s.factText}>{text}</Text></View>;
 }
@@ -233,9 +245,8 @@ function IconAction({ icon, label, a11y, onPress, disabled, selected }: { icon: 
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.parchment },
-  cover: { height: 280, justifyContent: 'flex-end', backgroundColor: colors.emerald },
-  coverEmpty: { alignItems: 'center', justifyContent: 'center', paddingBottom: space.xl * 2 },
-  coverText: { paddingHorizontal: space.m, paddingTop: space.l, paddingBottom: space.m, backgroundColor: overlay.shade },
+  cover: { gap: space.m, paddingHorizontal: space.gutter, paddingTop: space.m, paddingBottom: space.l, backgroundColor: colors.emerald },
+  coverText: { gap: space.s, width: '100%', maxWidth: measure.reading, alignSelf: 'center' },
   section: { paddingHorizontal: space.m, paddingTop: space.l, gap: space.s + 2 },
   rail: { paddingTop: space.l },
   status: { flexDirection: 'row' },
@@ -244,8 +255,9 @@ const s = StyleSheet.create({
   factText: { color: colors.ink, flex: 1, ...type.body },
   muted: { color: colors.soft, ...type.small },
   small: { color: colors.soft, ...type.caption },
-  reading: { gap: space.s + 2, maxWidth: 640 },
+  reading: { gap: space.s + 2, width: '100%', maxWidth: measure.reading, alignSelf: 'center' },
   paragraph: { fontFamily: serif, color: colors.ink, ...type.reading },
+  initial: { ...type.dropCap, color: colors.goldText, fontFamily: fonts.serifItalic },
   icons: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: space.m, marginTop: space.l, paddingVertical: space.s, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line },
   iconAction: { minWidth: hit + space.l, minHeight: hit, alignItems: 'center', gap: space.xs },
   iconCircle: { width: hit, height: hit, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper },

@@ -76,8 +76,8 @@ function CityRoute({ route, stops }: { route: Season; stops: Item[] }) {
       <Text style={s.small}>{t('Çevrimdışı hazır: duraklarda internet olmasa da açılır.', 'Ready offline: the stops open even without internet.')}</Text>
     </View>}
     <View style={s.actions}>
-      <Button kind="gold" icon="walk-outline" label={t('Rotayı yürü', 'Walk the route')} onPress={() => router.push(`/rota/${route.id}`)} style={s.action} />
-      {!ready && <Button kind="dark" icon="cloud-download-outline" busy={busy} style={s.action}
+      <Button kind="dark" light icon="walk-outline" label={t('Rotayı yürü', 'Walk the route')} onPress={() => router.push(`/rota/${route.id}`)} style={s.action} />
+      {!ready && <Button kind="dark" light icon="cloud-download-outline" busy={busy} style={s.action}
         label={busy ? t('İndiriliyor…', 'Saving…') : pack ? t('Paketi güncelle', 'Update the pack') : t('Çevrimdışı indir', 'Save offline')} onPress={download} />}
     </View>
   </View>;

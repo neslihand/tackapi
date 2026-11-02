@@ -1,5 +1,6 @@
 // Keşfet's search box and the city and type chips, shared by the list, the map and "Yakınımda".
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { FadeRight } from '@/components/brand/Gradient';
 import { Chip } from '@/components/Controls';
 import type { Filter } from '@/lib/explore';
 import { t } from '@/lib/i18n';
@@ -19,15 +20,19 @@ export function ExploreFilters({ filter, onChange, cities, kinds, search = true 
 
 function ChipRow({ options, value, all, onChange }: { options: [string, string][]; value: string | null; all: string; onChange: (v: string | null) => void }) {
   if (options.length < 2) return null;
-  return <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
-    {[[null, all] as [string | null, string], ...options].map(([id, label]) =>
-      <Chip key={id ?? 'all'} label={label} selected={value === id} onPress={() => onChange(id)} />)}
-  </ScrollView>;
+  return <View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
+      {[[null, all] as [string | null, string], ...options].map(([id, label]) =>
+        <Chip key={id ?? 'all'} label={label} selected={value === id} onPress={() => onChange(id)} />)}
+    </ScrollView>
+    {/* the row fades out at the right edge: there is more to scroll */}
+    <FadeRight color={colors.parchment} width={space.xl} />
+  </View>;
 }
 
 const s = StyleSheet.create({
   wrap: { gap: space.s },
   pad: { paddingHorizontal: space.m },
-  search: { minHeight: hit + 4, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper, paddingHorizontal: space.m + 2, color: colors.ink, ...type.body },
-  chips: { gap: space.s, paddingHorizontal: space.m },
+  search: { minHeight: hit + space.xs, borderRadius: radius.hair, borderWidth: 1, borderColor: colors.goldLine, backgroundColor: colors.paper, paddingHorizontal: space.m, color: colors.ink, ...type.body },
+  chips: { gap: space.s, paddingLeft: space.m, paddingRight: space.xl },
 });

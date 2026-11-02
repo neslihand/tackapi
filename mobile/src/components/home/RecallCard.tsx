@@ -3,7 +3,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { Card } from '@/components/Card';
+import { Hairline } from '@/components/brand/Hairline';
 import { Button, Eyebrow } from '@/components/UI';
 import { t } from '@/lib/i18n';
 import { useRecall } from '@/lib/recall-state';
@@ -15,8 +15,9 @@ export function RecallCard() {
   if (!ready || !session.length) return null;
   const n = session.length;
 
-  return <View style={home.pad}>
-    <Card style={home.gap}>
+  return <View style={[home.pad, home.gap]}>
+    <Hairline diamond />
+    <View style={home.gap}>
       <View style={s.row}>
         <View style={s.icon}><Ionicons name="albums-outline" size={22} color={colors.goldText} /></View>
         <View style={s.text}>
@@ -25,14 +26,14 @@ export function RecallCard() {
           <Text style={home.small}>{t('Keşfettiğin eserleri ve açtığın terimleri hatırla; her kart kendi zamanında döner.', 'Recall the works you discovered and the terms you opened; each card comes back in its own time.')}</Text>
         </View>
       </View>
-      <Button kind="gold" icon="refresh" label={t('Tekrar et', 'Review')} onPress={() => router.push('/hatirla')} />
-    </Card>
+      <Button kind="plain" icon="refresh" label={t('Tekrar et', 'Review')} onPress={() => router.push('/hatirla')} />
+    </View>
   </View>;
 }
 
 const s = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.m, alignItems: 'center' },
-  icon: { width: hit, height: hit, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.parchmentDeep, borderWidth: 1, borderColor: colors.goldLine },
+  icon: { width: hit, height: hit, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.goldLine },
   text: { flex: 1, gap: space.xs },
   title: { fontFamily: serif, color: colors.ink, ...type.heading },
 });

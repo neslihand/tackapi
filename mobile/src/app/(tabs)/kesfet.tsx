@@ -6,6 +6,7 @@ import { SegmentedControl } from '@/components/Controls';
 import { ExploreMap } from '@/components/explore/ExploreMap';
 import { ExploreFilters } from '@/components/explore/Filters';
 import { NearList } from '@/components/explore/NearList';
+import { Hairline } from '@/components/brand/Hairline';
 import { Button, Empty, Loading, Notice, WorkCard } from '@/components/UI';
 import type { Item } from '@/lib/api';
 import { cityOptions, filterWorks, kindOptions, searchIndex, type Filter } from '@/lib/explore';
@@ -46,7 +47,10 @@ export default function Explore() {
   const filters = <View style={s.filters}>
     {stale && <View style={s.pad}><Notice icon="cloud-offline-outline">{t('Çevrimdışısın: cihazdaki son hâli gösteriliyor.', 'You are offline: the copy on this device is shown.')}</Notice></View>}
     <ExploreFilters filter={filter} onChange={setFilter} cities={cities} kinds={kinds} />
-    <Text style={[s.count, s.pad]}>{t(`${shown.length} eser`, `${shown.length} works`)}</Text>
+    <View style={[s.pad, s.countRow]}>
+      <Text style={s.count} accessibilityLiveRegion="polite">{t(`${shown.length} eser`, `${shown.length} works`)}</Text>
+      <View style={s.rule}><Hairline /></View>
+    </View>
   </View>;
 
   return <View style={{ flex: 1 }}>
@@ -68,13 +72,17 @@ export default function Explore() {
   </View>;
 }
 
-const Gap = () => <View style={{ height: space.s + 4 }} />;
+// rows are parted by a fine gold rule, not by cards
+const Gap = () => <View style={s.pad}><Hairline /></View>;
 
 const s = StyleSheet.create({
-  bar: { paddingHorizontal: space.m, paddingVertical: space.s, backgroundColor: colors.parchment, borderBottomWidth: 1, borderBottomColor: colors.line },
-  filters: { gap: space.s, paddingTop: space.m, paddingBottom: space.s },
-  mapFilters: { borderBottomWidth: 1, borderBottomColor: colors.line },
+  bar: { paddingHorizontal: space.m, paddingVertical: space.s, backgroundColor: colors.parchment, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.ivoryLine },
+  filters: { gap: space.m, paddingTop: space.m },
+  mapFilters: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.ivoryLine },
   pad: { paddingHorizontal: space.m },
   row: { paddingHorizontal: space.m },
-  count: { ...type.body, fontFamily: serif, color: colors.goldText },
+  countRow: { flexDirection: 'row', alignItems: 'center', gap: space.m },
+  rule: { flex: 1 },
+  // clear but quiet: the serif number in ink, a rule running out to the edge
+  count: { fontFamily: serif, color: colors.ink, ...type.heading },
 });

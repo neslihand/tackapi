@@ -98,7 +98,7 @@ export default function Welcome() {
     </ScrollView>
 
     <View style={s.actions}>
-      {step > 1 && <Button kind="dark" icon="arrow-back" label={t('Geri', 'Back')} onPress={() => setStep(step - 1)} style={s.back} />}
+      {step > 1 && <Button kind="dark" light icon="arrow-back" label={t('Geri', 'Back')} onPress={() => setStep(step - 1)} style={s.back} />}
       {step === 1 && <Button kind="gold" icon="arrow-forward" label={t('Başla', 'Start')} onPress={() => setStep(2)} style={s.main} />}
       {step === 2 && <Button kind="gold" icon="arrow-forward" label={t('Devam', 'Continue')} disabled={!choice} onPress={() => setStep(3)} style={s.main} />}
       {step === 3 && (today

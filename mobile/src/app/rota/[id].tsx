@@ -73,7 +73,7 @@ export default function Walk() {
       {next.location!.approximate && <Text style={s.nextText}>{t('Yaklaşık konum: mühür alanı biraz daha geniş.', 'Approximate location: the stamp area is a little wider.')}</Text>}
       <View style={s.actions}>
         <Button style={s.action} kind="gold" icon={walking ? 'pause' : 'walk'} label={walking ? t('Duraklat', 'Pause') : t('Yürüyüşü başlat', 'Start walking')} onPress={toggle} />
-        <Button style={s.action} kind="plain" icon="map-outline" label={t('Yol tarifi', 'Directions')} onPress={() => openDirections(next.location!.lat, next.location!.lon, next.name)} />
+        <Button style={s.action} kind="plain" light icon="map-outline" label={t('Yol tarifi', 'Directions')} onPress={() => openDirections(next.location!.lat, next.location!.lon, next.name)} />
       </View>
     </Card> : <Notice icon="ribbon-outline">{placed.length ? t('Konumu bilinen bütün durakları yerinde mühürledin. Tebrikler, yolcu!', 'You stamped every stop with a known location on the spot. Well done, traveller!') : t('Bu rotanın duraklarının konumu henüz yok.', 'The stops of this route have no location yet.')}</Notice>}
 

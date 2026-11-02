@@ -3,7 +3,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Card } from '@/components/Card';
+import { Hairline } from '@/components/brand/Hairline';
 import { HuntMarks, huntScore, HuntZoom, triesLeft } from '@/components/HuntZoom';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { Button, Eyebrow } from '@/components/UI';
@@ -25,8 +25,9 @@ export function HuntCard() {
   const open = () => router.push('/detay-avi');
   const score = huntScore(o.solved, puzzle.guesses.length, 'you');
 
-  return <View style={home.pad}>
-    <Card style={home.gap}>
+  return <View style={[home.pad, home.gap]}>
+    <Hairline diamond />
+    <View style={home.gap}>
       <View style={s.row}>
         {/* before the end only a blurred close-up: the photo would give the answer away */}
         <HuntZoom src={photo} focus={puzzle.focus} size={hit * 2} scale={o.over ? 1 : HUNT_SCALES[0]} blur={o.over ? undefined : 6}
@@ -44,11 +45,11 @@ export function HuntCard() {
         </View>
       </View>
       {o.over ? <View style={s.actions}>
-        <Button kind="gold" icon="share-social-outline" label={t('Paylaş', 'Share')} style={s.action}
+        <Button kind="plain" icon="share-social-outline" label={t('Paylaş', 'Share')} style={s.action}
           onPress={() => setShared({ kind: 'hunt', number, marks, solved: o.solved, photo, focus: puzzle.focus })} />
         <Button kind="plain" icon="eye-outline" label={t('Sonucu gör', 'See the result')} style={s.action} onPress={open} />
-      </View> : <Button kind="gold" icon="search" label={puzzle.guesses.length ? t('Devam et', 'Continue') : t('Tahmin et', 'Make a guess')} onPress={open} />}
-    </Card>
+      </View> : <Button kind="plain" icon="search" label={puzzle.guesses.length ? t('Devam et', 'Continue') : t('Tahmin et', 'Make a guess')} onPress={open} />}
+    </View>
     <ShareSheet shared={shared} onClose={() => setShared(null)} />
   </View>;
 }
