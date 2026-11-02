@@ -1,5 +1,5 @@
 {
- "_not": "Selami Dergâhı Camii: içindekilerde 260 yazıyor, gövde başlığı s. 512 (2 Kasım 2026). Hz. Üftâde Tekkesi pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş).",
+ "_not": "Selami Dergâhı Camii: içindekilerde 260 yazıyor, gövde başlığı s. 512 (2 Kasım 2026). Hz. Üftâde Tekkesi pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş). Eşleme kararları (3 Kasım 2026, geliştirici onayı): metin denetimi + \"slug adı doğru olsun\" kuralı.",
  "ok": [
   "b2-0109"
  ],
@@ -7,6 +7,32 @@
   "b2-0046": {
    "_was": "Hz. Üftâde Tekkesi",
    "db_slug": "bursa-osmangazi-hz-uftade-sufi-lodge"
+  },
+  "b2-0092": {
+   "_was": "Açık (Umur Bey) Namazgâh",
+   "db_slug": "bursa-yildirim-umur-bey-open-air-prayer-area"
+  },
+  "b2-0032": {
+   "_was": "Eyne Bey (İnebey) Hamamı",
+   "db_new": true
   }
+ },
+ "hazire": {
+  "b2-0044-hz1": {
+   "_was": "Nûmâniye Dergâhı Haziresi",
+   "db_slug": "bursa-osmangazi-dergahin-hazire-alani"
+  },
+  "b2-0105-hz1": {
+   "_was": "Musa Baba Hazire Alanı",
+   "db_slug": "bursa-yildirim-musa-baba-camii-haziresi"
+  },
+  "b2-0110-hz1": {
+   "_was": "Selimzade Camii Haziresi",
+   "db_slug": "bursa-yildirim-selimzade-camii-haziresi"
+  }
+ },
+ "retire": {
+  "bursa-osmangazi-eyne-bey-inebey-medresesi": "metni Eyne Bey (İnebey) Hamamı (b2-0032)",
+  "bursa-yildirim-jumada-al-thani-865-hijri-march-1461-gregorian": "metni Umur Bey Çeşmesi (b2-0077)"
  }
 }

@@ -13,13 +13,17 @@ Durum:
            izlenmeyen ara başlık), fotoğraf işaretleri (aralik_disi, fotograf_sayfasi, acilis; yalnızca eski sayfa
            aralığı bağlamasıyla anlaşmayan ya da karşılaştırılamayan fotoğraflarda), conflict (kuyrukta aynı
            veritabanı eserine başka kayıt da bağlanıyordu), match_suspect (kuyruktaki eski kayıt metinle
-           doğrulanmıyor, metni başka bir eski kayıtta), absorbs_old (eşleşenden başka eski kayıtların metni de bu
-           eserin içinde: yüklenince sitede aynı metin iki kez görünür), absorbs_pilot (bir pilotun eski metni bu
+           doğrulanmıyor, metni boştaki başka bir eski kayıtta), absorbs_old (boştaki bir eski kaydın metni de bu
+           eserin içinde: o kayıt için karar verilmezse yüklenince sitede aynı metin iki kez görünür; kuyrukta ya da
+           hazire eşlemesinde başka esere verilmiş ve emekliye ayrılmış kayıtlar boşta sayılmaz), absorbs_pilot (bir pilotun eski metni bu
            eserin içinde)
   tamam
 Bilgi sütunları (durumu etkilemez): name_cased (ad büyük harften dönüştürüldü), complex_no_intro (Bursa'da külliye
 başlığının hemen altında ilk üyenin başlığı gelir), pilot_locked (yükleyici dokunmaz; üst eseri pilot olan hazire de
 kilitlidir, pilota alt eser eklenmez). Hazirelerin kuyruk sütunu `yeni` ya da `pilot_locked`'tır.
+
+Geliştirici kararları toc_overrides.json'dan okunur: `hazire` (hazire alt eseri → eski kayıt), `retire` (metni başka
+eserde kalan eski kayıt; yükleyici `merged` yapar), set → `db_new` (yeni eser, öneri yapılmaz).
 
 Metin denetimi (`eski_parcalar`): sayfaları ±3 örtüşen eski kayıtlardan (monuments_all.json) 5'li sözcük
 dizilerinin en az %80'i yeni eserin Türkçe metninde geçenler. Eski çıkarım ara başlıklardan kayıt kurduğu için
@@ -107,7 +111,20 @@ def old_parts(w, book_olds, new_sh):
     return sorted(out, key=lambda x: -x[1])
 
 
-def book_rows(book, queue, olds, olds_by_book=None, taken=frozenset(), pilots=frozenset()):
+def decisions(books):
+    """toc_overrides.json kararları: ({(kitap, hazire id): db_slug}, {emekli eski slug}, {(kitap, id) yeni eser})."""
+    hz, retired, new = {}, set(), set()
+    for b in books:
+        ov = load(b, 'toc_overrides.json', {}) or {}
+        for hid, e in (ov.get('hazire') or {}).items():
+            if e.get('db_slug'):
+                hz[(b, hid)] = e['db_slug']
+        retired |= set(ov.get('retire') or {})
+        new |= {(b, rid) for rid, e in (ov.get('set') or {}).items() if e.get('db_new')}
+    return hz, retired, new
+
+
+def book_rows(book, queue, olds, olds_by_book=None, taken=frozenset(), pilots=frozenset(), decided=({}, set(), set())):
     toc = load(book, 'toc.json', [])
     anchors = {a['id']: a for a in load(book, 'anchors.json', {'records': []})['records']}
     untracked = load(book, 'anchors.json', {'untracked': []})['untracked']
@@ -151,7 +168,11 @@ def book_rows(book, queue, olds, olds_by_book=None, taken=frozenset(), pilots=fr
         if pilot:
             flags.append('pilot_locked')
         cov, src = None, None
-        slug = q.get('db_slug') if q and w.get('kind') != 'hazire' else None
+        hz_map, retired, new_ids = decided
+        if w.get('kind') == 'hazire':
+            slug = None if pilot else hz_map.get((book, w['id']))
+        else:
+            slug = q.get('db_slug') if q else None
         new_words = norm(' '.join(p['text'] for p in w['paras_tr'] if p['kind'] != 'heading'))
         if slug and slug in olds:
             src, paras = olds[slug]
@@ -161,17 +182,17 @@ def book_rows(book, queue, olds, olds_by_book=None, taken=frozenset(), pilots=fr
         from .gold import shingles
         parts = old_parts(w, (olds_by_book or {}).get(book, []), shingles(new_words)) if not pilot else []
         part_slugs = [x[0] for x in parts]
-        if slug and parts and slug not in part_slugs:
+        # boştaki parça: kuyrukta ya da hazire eşlemesinde başka esere verilmemiş, emekliye ayrılmamış eski kayıt
+        free = [x for x in part_slugs if x != slug and x not in taken and x not in retired and x not in pilots]
+        if slug and free and slug not in part_slugs:
             flags.append('match_suspect')
-        if [x for x in part_slugs if x != slug and x not in pilots]:
+        if free:
             flags.append('absorbs_old')
         if [x for x in part_slugs if x != slug and x in pilots]:
             flags.append('absorbs_pilot')
         suggest = ''
-        if not slug or 'match_suspect' in flags:
-            free = [x for x in part_slugs if x not in taken and x not in pilots]
-            if len(free) == 1:
-                suggest = free[0]
+        if (not slug or 'match_suspect' in flags) and (book, w['id']) not in new_ids and len(free) == 1:
+            suggest = free[0]
         status = 'engel' if any(f in BLOCKING for f in flags) else \
             'kontrol' if any(f in REVIEW for f in flags) else 'tamam'
         rows.append(dict(
@@ -182,7 +203,8 @@ def book_rows(book, queue, olds, olds_by_book=None, taken=frozenset(), pilots=fr
             chars_tr=sum(len(p['text']) for p in w['paras_tr']), chars_en=sum(len(p['text']) for p in w['paras_en']),
             photos=len(by_work.get(w['id'], [])),
             queue=('pilot_locked' if pilot else 'yeni') if w.get('kind') == 'hazire' else (q or {}).get('status', ''),
-            db_slug=slug or '', match=(q or {}).get('db_match') or '', vs_db=f'{cov:.3f}' if cov is not None else '',
+            db_slug=slug or '', match=('override' if slug else '') if w.get('kind') == 'hazire'
+            else (q or {}).get('db_match') or '', vs_db=f'{cov:.3f}' if cov is not None else '',
             vs_src=src or '', status=status, flags=', '.join(flags),
             old_parts=', '.join(f'{a}({b:.2f})' for a, b in parts), suggest_db_slug=suggest,
             untracked='; '.join(un_by.get(w['id'], []))))
@@ -226,11 +248,12 @@ def run(books, mark=False, verbose=True):
     qpath = os.path.join(OUT, 'queue.json')
     q = load_root(qpath, default=None)
     queue, olds, by_book = queue_index(q), old_texts(), old_records()
-    taken = {i['db_slug'] for i in queue.values() if i.get('db_slug')}
+    decided = decisions(list(BOOKS))
+    taken = {i['db_slug'] for i in queue.values() if i.get('db_slug')} | set(decided[0].values())
     pilots = {i['db_slug'] for i in queue.values() if i.get('status') == 'pilot_locked' and i.get('db_slug')}
     all_rows, stats = [], {}
     for b in books:
-        rows, st = book_rows(b, queue, olds, by_book, taken, pilots)
+        rows, st = book_rows(b, queue, olds, by_book, taken, pilots, decided)
         write_csv(os.path.join(out_dir(b), 'report.csv'), rows)
         all_rows += rows
         stats[b] = st

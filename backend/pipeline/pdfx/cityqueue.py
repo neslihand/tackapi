@@ -130,6 +130,9 @@ def make_queue(tocs, rows, old=None):
                         it['db_override_missing'] = r['db_slug']
                 else:
                     m, kind = match(r, rows, toc_unique=names[bare(r['name_tr'], book)] == 1)
+                    if r.get('db_new') and m and not m['pilot']:   # toc_overrides.json → set: {"db_new": true}
+                        m, kind = None, None                         # yeni eser; pilot kilidi yine de kalkmaz
+                        it['db_match'] = 'override_new'
                 if m:
                     it['db_slug'], it['db_match'] = m['slug'], kind
                     if m['pilot']:

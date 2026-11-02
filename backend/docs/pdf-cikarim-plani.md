@@ -612,3 +612,55 @@ geri alma, TOC sayısı engeli). Bütün takım: 271 test, 145'i veritabanı olm
    (hazireler).
 2. Adım 7 (`pdfx/load.py`) için karar: `absorbs_old` kayıtlarındaki eski kayıtlar ne olacak? Öneri: pilot değilse
    `merged` taslağa alınsın (silinmez; `fix_titles.py`'deki birleştirmeyle aynı).
+
+### 7. oturum (3 Kasım 2026): eşleme kararları (geliştiriciyle birlikte)
+Veritabanına bir şey yazılmadı. Kararlar `toc_overrides.json` dosyalarında (git'te izleniyor).
+
+**Bulgu:** "Şüpheli" eşleşmelerin hiçbirinde yeni çıkarım hatalı değil; eski kayıtların ad ve metni kaymış.
+- Konya II hamamlarında kayma bir sıra: eski "Akşehir Mahkeme Yeni Hamamı" kaydında Şifa Hamamı'nın metni, eski
+  `konya-eregli-sifa-hamami` kaydında Rüstem Paşa (Şifa) Hamamı (%41) ile Seyyit Harun Veli Hamamı'nın (%59) metni,
+  eski "Seyyit Harun Veli Hamamı" kaydında Hoca Fakih Çeşmesi'nin metni var.
+- Bursa II'de eski Mücelliddin Ömer Ağa Camii kaydında bir sonraki eserin (Namazgâh Camii) metni var.
+- İçindekilerdeki "Hoca Fatih Çeşmesi" bir baskı hatası; gövdedeki başlık "Hoca Fakih Çeşmesi".
+
+**Kural (geliştirici onayı):** Yükleyici eşleşen kaydın kimliğini ve slug'ını koruyup metnini yeniler, künyesini de
+yeniden çıkarır. Bu yüzden **slug'ın adı doğru olan kayıt** seçilir; metni taşıyan eski kayıt başka bir esere
+verilmemişse emekliye ayrılır (`merged`, silinmez).
+- `set` → `db_slug` (21): aynı eserin farklı yazılmış slug'ı (Özlüce Kilisesi Camii ← `ozluce-kilisesi`, Hatay'ın 7
+  eseri, Karapınar hamam ve çeşmesi, Ateşbaz Veli…). Düzeltilenler:
+  - Aksu Köyü Camii ← `bursa-kestel-aksu-koyu-camii` (kuyrukta hazire kaydına bağlıydı)
+  - Lala Mustafa Paşa Külliyesi İmareti ← `…-imareti` (kuyrukta külliye kaydına bağlıydı)
+  - Lala Mustafa Paşa Külliyesi ← `konya-ilgin-lala-mustafa-pasa-kulliyesi` (kuyrukta 'karapinar-…-complex-inn'
+    kaydına bağlıydı)
+  - Molla Fenâri Camii ← `molla-fenari-camii-ve-haziresi` (eşleşmesizdi; kayıttaki eski metin Molla Gürani'nin)
+  - Rüstem Paşa (Şifa) Hamamı ← `konya-eregli-sifa-hamami` (ad ve ilçe tutuyor)
+- `set` → `db_new` (7, yeni eser; `cityqueue` otomatik eşleşme yapmaz, pilot kilidi yine kalkmaz): Başçı İbrahim Bey
+  Camii, Fidan (Mahmudpaşa) Hanı Mescidi, Molla Gürani Mescidi, Eyne Bey (İnebey) Hamamı, Eşrefzâde Camii, Lala
+  Mustafa Paşa Arastası, Şifa Hamamı (Akşehir).
+- `hazire` (22): hazire alt eseri → eski hazire kaydı (Akbıyık Haziresi ← `bursa-osmangazi-akbiyik-haziresi`; Başçı
+  İbrahim Bey Haziresi ← `…-haziresi`; Aksu Camii Haziresi ← `…-aksu-camii-haziresi`; Musa Baba Hazire Alanı ←
+  `…-musa-baba-camii-haziresi`).
+- `retire` (9): Fidan (Mahmudpaşa) Hanı, Başçı İbrahim Bey Mezarı ve Grave, Eyne Bey (İnebey) Medresesi,
+  'jumada-al-thani-865…', iki 'bibliyography-ayasofya…' kaydı, Lala Mustafa Paşa 'imarat' ve
+  'ilgin-ilgin-…-kulliyesi'.
+- Kuyruktaki ad doğru olduğu için korunanlar: Umur Bey Çeşmesi, Mücelliddin Ömer Ağa Camii, İshak Paşa Camii, Mahkeme
+  (Yeni) Hamamı, Seyyit Harun Veli Hamamı, Hoca Fakih Çeşmesi.
+
+**Kod:**
+- `cityqueue`: `db_new` desteği.
+- `report`:
+  - `hazire` ve `retire` kararlarını okur.
+  - `match_suspect` ve `absorbs_old` artık yalnızca **boştaki** eski kayıtlar için çıkar, yani kuyrukta ya da hazire
+    eşlemesinde başka esere verilmemiş ve emekliye ayrılmamış kayıtlar. Örneğin İshak Paşa Camii'nin metnini taşıyan
+    eski külliye kaydı İshak Paşa Külliyesi'ne verildiği için şüpheli sayılmaz.
+  - Yeni eser kararı verilenlere öneri yapılmaz.
+- Testler: 273 test, hepsi geçti.
+
+**Bellekteki deneme** (eski çıkarım veritabanı yerine): kontrol 224'ten 204'e indi, `absorbs_old` 82'den 41'e.
+Başta 46 öneri vardı; kararlar uygulanınca başka 20 öneri çıktı, ama çoğu denemenin yanılsaması (eski dosyada
+adlar, veritabanında 24 ve 29 Ekim'de onarılmış adlardan eski). Gerçek liste için:
+
+**Sonraki adım (geliştirici, `DATABASE_URL` tanımlı pencerede, pipeline klasöründen)**
+1. `python -m pdfx.cityqueue`: kuyruk yeni kararlarla yeniden kurulur. Hedef yine 26/26 pilot kilidi, `!` yok.
+2. `python -m pdfx.report`: kalan `oneri_db_slug` ve `match_suspect` listesi birlikte gözden geçirilecek (ör. Şeyh
+   Hızır Makamı h1-0055, eski 'dikmece-seyh-hizir-makami' kaydına).

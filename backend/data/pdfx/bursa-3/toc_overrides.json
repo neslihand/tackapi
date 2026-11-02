@@ -1,9 +1,43 @@
 {
- "_not": "Şeyh Müftü Camii pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş).",
+ "_not": "Şeyh Müftü Camii pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş). Eşleme kararları (3 Kasım 2026, geliştirici onayı): metin denetimi + \"slug adı doğru olsun\" kuralı.",
  "set": {
   "b3-0101": {
    "_was": "Şeyh Müftü Camii",
    "db_slug": "bursa-mustafakemalpasa-seyh-mufti-mosque"
+  },
+  "b3-0110": {
+   "_was": "Özlüce Kilisesi Camii",
+   "db_slug": "bursa-nilufer-ozluce-kilisesi"
+  },
+  "b3-0114": {
+   "_was": "Gölyazı Sur Duvarları",
+   "db_slug": "bursa-nilufer-golyazi-town-walls"
+  },
+  "b3-0135": {
+   "_was": "Postinpûş Camii (Seyyid Mehmet Dede Zaviyesi)",
+   "db_slug": "bursa-yenisehir-postinpus-camii"
+  },
+  "b3-0072": {
+   "_was": "Aksu Köyü Camii ve Haziresi",
+   "db_slug": "bursa-kestel-aksu-koyu-camii"
+  },
+  "b3-0004": {
+   "_was": "Eşrefzâde Camii, Minaresi ve Haziresi",
+   "db_new": true
   }
+ },
+ "hazire": {
+  "b3-0072-hz1": {
+   "_was": "Aksu Camii Haziresi",
+   "db_slug": "bursa-kestel-aksu-camii-haziresi"
+  },
+  "b3-0074-hz1": {
+   "_was": "Vanî Mehmet Efendi Camii Haziresi",
+   "db_slug": "bursa-kestel-vani-mehmet-efendi-camii-haziresi"
+  }
+ },
+ "retire": {
+  "bursa-iznik-bibliyography-ayasofya-orhan-camii-haziresi": "metni Eşrefzâde Camii (b3-0004)",
+  "bursa-iznik-bibliyography-ayasofya-orhan-camii-haziresi-2": "metni Eşrefzâde Camii Haziresi (b3-0004-hz1)"
  }
 }

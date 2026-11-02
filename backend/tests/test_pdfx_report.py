@@ -94,6 +94,22 @@ class ReportTest(unittest.TestCase):
             q = R.queue_index(json.load(f))
         self.assertEqual(q[('bursa-1', 'b')]['status'], 'waiting')
 
+    def test_decisions_from_overrides(self):
+        """hazire eşlemesi ve emekli kayıt: öneri ve absorbs_old kalkar."""
+        ov = dict(set=dict(a=dict(_was='a', db_slug='old-camii')), hazire={'a-hz1': dict(_was='a-hz1', db_slug='old-hazire')},
+                  retire={'old-x': 'metni a'})
+        with open(os.path.join(self.tmp, 'bursa-1', 'toc_overrides.json'), 'w', encoding='utf-8') as f:
+            json.dump(ov, f)
+        self.queue['cities']['bursa'][0]['db_slug'] = 'old-camii'      # cityqueue override'ı uygulamış gibi
+        with open(os.path.join(self.tmp, 'queue.json'), 'w', encoding='utf-8') as f:
+            json.dump(self.queue, f)
+        rows = self.rows()
+        self.assertNotIn('match_suspect', rows['a']['flags'])
+        self.assertEqual((rows['a-hz1']['db_slug'], rows['a-hz1']['match'], rows['a-hz1']['suggest_db_slug']),
+                         ('old-hazire', 'override', ''))
+        self.assertEqual(rows['a-hz1']['vs_db'], '1.000')
+        self.assertEqual(R.decisions(['bursa-1'])[1], {'old-x'})
+
     def test_toc_count_mismatch_blocks(self):
         with open(os.path.join(self.tmp, 'bursa-1', 'toc.json'), 'w', encoding='utf-8') as f:
             json.dump([dict(id='a', level='monument')], f)

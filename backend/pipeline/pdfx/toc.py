@@ -13,7 +13,10 @@ alır; her kayda o anki `district` ve `section` adı da yazılır.
 
 Elle düzeltme: data/pdfx/<kitap>/toc_overrides.json
   {"set":    {"<id>": {"name_tr": "...", "page": 123, "level": "monument", "parent": "<id>"|null,
-                       "db_slug": "<veritabanı slug'ı>" (kuyrukta eşleşmeyi zorlar), ...}},
+                       "db_slug": "<veritabanı slug'ı>" (kuyrukta eşleşmeyi zorlar),
+                       "db_new": true (otomatik eşleşme yapılmaz, yeni eser; pilot kilidi yine kalkmaz), ...}},
+   "hazire": {"<üst>-hz1": {"_was": "...", "db_slug": "..."}}   # hazire alt eseri → eski kayıt (report, load)
+   "retire": {"<eski slug>": "neden"}                             # metni başka eserde kalan eski kayıt → merged
    "delete": ["<id>", ...],
    "add":    [{"after": "<id>", "name_tr": "...", "name_en": "...", "page": 45, "level": "monument", ...}],
    "ok":     ["<id>", ...]}                       # incelendi ve doğru; şüpheli listesinden düşer

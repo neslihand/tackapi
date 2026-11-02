@@ -257,6 +257,16 @@ class QueueTest(unittest.TestCase):
         self.assertEqual([(i['db_slug'], i['status']) for i in q], [(None, 'waiting'), ('koza', 'pilot_locked')])
         self.assertEqual(q[0]['db_conflict']['winner'], 'x1')
 
+    def test_db_new_override_skips_match_but_never_a_pilot(self):
+        tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Koza Hanı', 15), ('monument', 'Cem Sultan Türbesi', 145))}
+        for r in tocs['bursa-1']:
+            r['db_new'] = True                                           # toc_overrides.json → set: {"db_new": true}
+        rows = [dict(slug='koza', name_tr='Koza Hanı', toc_title=None, book='bursa-1', pilot=False, p0=15, p1=20),
+                dict(slug='cem', name_tr='Cem Sultan Türbesi', toc_title=None, book='bursa-1', pilot=True, p0=145, p1=149)]
+        q = Q.make_queue(tocs, rows)['bursa']
+        self.assertEqual([(i['db_slug'], i['db_match'], i['status']) for i in q],
+                         [(None, 'override_new', 'waiting'), ('cem', 'name+page', 'pilot_locked')])
+
     def test_rerun_keeps_progress_but_never_unlocks_pilot(self):
         tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Muradiye Camii', 115), ('monument', 'Acemler Camii', 236))}
         old = {'cities': {'bursa': [dict(book='bursa-1', key='Muradiye Camii|115', status='loaded'),

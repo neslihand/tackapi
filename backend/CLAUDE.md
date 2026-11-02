@@ -157,8 +157,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   Şems-i Tebrizi Camii'nin 11 fotoğrafı bağlanmıştı; panelde kontrol edilmeli.
   Adım 6 (3 Kasım 2026): `pdfx.report` → `data/pdfx/report.csv` (737 eser; engel 0, kontrol 224). Metin denetimi eski
   kayıtların ad/metin uyuşmazlığını bulur (`match_suspect` 7, `absorbs_old` 82) ve 46 eser için `oneri_db_slug` önerir;
-  öneriler otomatik uygulanmaz, geliştirici onaylar.
-- **Testler:** `python -m unittest discover -s tests` (271 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+  öneriler otomatik uygulanmaz, geliştirici onaylar. Onaylanan eşleme kararları (3 Kasım 2026; kural: slug'ın adı
+  doğru olan kayıt seçilir) `toc_overrides.json` içinde: `set` → `db_slug`/`db_new`, `hazire`, `retire` (eski kayıt
+  `merged` olacak, silinmez).
+- **Testler:** `python -m unittest discover -s tests` (273 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
