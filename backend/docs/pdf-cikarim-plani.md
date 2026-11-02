@@ -508,3 +508,58 @@ gerçek ünlem: Bursa I'de 11 ('insanlar!', 'Haqq!'), Bursa II'de 13.
    Pilot olduğu için yeni metin zaten yüklenmeyecek.
 2. Adım 5 (`pdfx/images.py`): fotoğrafları çapaya göre bağlamak.
 3. Adım 6–7: `report.py` ve turlarla yükleme (`load.py --rehearse` önce).
+
+### 5. oturum (3 Kasım 2026): Adım 5, fotoğrafları çapaya bağlama
+Veritabanına ve `media/` klasörüne hiçbir şey yazılmadı; `images.py` değişmedi (yalnızca içe aktarılıyor).
+
+**`pdfx/photos.py`** → `data/pdfx/<kitap>/photos.json` ve `data/pdfx/photos_report.csv`. Plandaki ad
+`pdfx/images.py` idi; üst klasördeki `images.py` ile karışmasın diye `photos.py` oldu. Altı kitap yaklaşık 3,5
+dakikada işleniyor.
+- Eleme ve dosya adı `images.py` ile aynı. Sonuç da aynı çıktı: **3.413 fotoğraf, hepsinin WebP'si `media/`
+  altında zaten var** (sha1 ile tanınıyor, `is_new` 0). `--write` yalnızca eksik WebP'leri üretir.
+- Bağlama kuralları:
+  - **başlık üstü** (`baslik_ustu`, 87 fotoğraf): aynı yarım sayfada fotoğrafın altında eser başlığı var ve arada
+    metin yoksa fotoğraf o eserindir. Kitapta fotoğraf başlığın üstünde durur; Bursa hazirelerinde fotoğraf, ardından
+    'X CAMİİ HAZİRESİ', ardından metin gelir.
+  - **açılış** (`acilis`, 15): metinsiz yarım sayfadaki fotoğraf, aynı açılımda daha sonra başlayan eseri açar.
+  - **konum** (3.257): fotoğrafın ortası hangi iki çapa arasındaysa o eser.
+  - **bölüm** (49) ve **giriş** (5).
+- Kontrol işaretleri (366 fotoğraf):
+  - `fotograf_sayfasi` (219): metinsiz sayfa ve sonraki eser hemen sonraki sayfada başlıyor. Fotoğraf önceki eserde
+    kalıyor, gözle bakılmalı.
+  - `aralik_disi` (33): eserin başlık ve metin sayfalarından 2 sayfadan uzak. Hatay'da büyük fotoğraf dikey başlık
+    sayfasında, metin 2–3 sayfa sonra başlıyor; aralık bu yüzden başlık sayfasından sayılır.
+  - `acilis` (15) ve `baglanmamis` (5).
+- Hazire alt eserlerine 82 fotoğraf bağlandı (Bursa I'de 65). 304 fotoğraf pilot eserlere ait, `pilot_locked` ile
+  işaretli; yükleyici bunlara dokunmaz.
+
+**Eski bağlamayla karşılaştırma** (`data/images.jsonl`, kuyruktaki db_slug üzerinden):
+
+| Kitap | Aynı | Farklı | Yeni eser/hazire | Yalnız yeni bağlı | Yalnız eski bağlı |
+|---|---|---|---|---|---|
+| Bursa I | 504 | 93 | 103 | 0 | 2 |
+| Bursa II | 556 | 63 | 54 | 0 | 4 |
+| Bursa III | 368 | 51 | 27 | 19 | 6 |
+| Konya I | 654 | 80 | 20 | 3 | 0 |
+| Konya II | 304 | 24 | 45 | 0 | 3 |
+| Hatay | 346 | 2 | 17 | 14 | 1 |
+
+Farklı 313 fotoğrafın baktıklarımın hepsinde yeni bağlama doğru, eski bağlama eski kayıt hatalarına bağlıydı:
+- Bursa I: 60 fotoğraf eskiden kopya kayıt `bursa-osmangazi-ulucami-2`'ye bağlıydı.
+- Bursa II: tarihten kurulmuş bozuk kayıtlar ('muharrem-ayi-basinda-haziran-1406').
+- Konya I: Mevlâna Külliyesi'nin ayrı kayıtlara bölünmüş bölümleri (karar gereği artık külliyenin).
+- **Pilot Hatuniye (Güdük Minare) Mescidi'ne eskiden 11 fotoğraf bağlanmıştı; bunlar Şems-i Tebrizi Camii'nin**
+  (başlık s. 223, fotoğraflar s. 224–232). Pilot verisine dokunulmaz, ama geliştirici bu fotoğrafların panelde
+  Hatuniye'de yayında olup olmadığına bakmalı.
+
+**Testler:** `tests/test_pdfx_photos.py` (9 test: konum, başlık üstü, arada metin varsa önceki eser, açılış,
+fotoğraf sayfası işareti, bölüm/giriş, karşılaştırma türleri, gerçek veri). Bütün takım: 266 test, 145'i
+veritabanı olmadığı için atlandı, hepsi geçti.
+
+**Sonraki oturumun ilk işi**
+1. Geliştirici pilot Hatuniye Mescidi'nin panelde gösterilen fotoğraflarına baksın (yukarıdaki 11 fotoğraf).
+2. `photos_report.csv` içindeki `fotograf_sayfasi` örnekleri gözle kontrol edilecek; kural gerekiyorsa
+   düzeltilecek.
+3. Adım 6 (`pdfx/report.py`): kitap başına doğrulama raporu (TOC sayısı, çapa, boş metin, EN oranı, paragraf farkı,
+   izlenmeyen başlık, eski kayıtla benzerlik) ve tek bir kontrol listesi.
+4. Adım 7 (`pdfx/load.py`): `--rehearse` (ROLLBACK) ile prova, sonra turlarla yükleme. Pilot kilidi iki katlı.

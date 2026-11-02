@@ -141,7 +141,8 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
   Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
 - **PDF'ten doğrudan çıkarım (2 Kasım 2026, devam ediyor):** plan ve ilerleme `docs/pdf-cikarim-plani.md`. Kod
-  `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue | pdfx.anchor | pdfx.text | pdfx.gold`,
+  `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue | pdfx.anchor | pdfx.text | pdfx.gold |
+  pdfx.photos`,
   pipeline klasöründen). Çıktılar `data/pdfx/` altında ve git dışında; yalnızca `toc_overrides.json` izlenir. Kitap
   kuralları `books.py` → `pdfx`. Adım 1–4 bitti: sayfa düzeni, içindekiler, şehir kuyruğu (26/26 pilot kilitli,
   veritabanıyla doğrulandı), çapalar (`anchors.json`; TR ve ayrı EN başlangıcı) ve TR/EN paragraflar (`works.json`).
@@ -151,7 +152,10 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   dikey yazılıdır (`layout` → `vertical`). Konya'da bazı paragraflar ters kalınlıkta dizilmiş; dili metinden
   düzeltilir (`check_weight_lang`). Pilot altın küme (`pdfx.gold`; 2 Kasım 2026): 26 pilotun hepsinde Türkçe
   kapsama ≥ 0,90 (ortanca 0,982); düşük farkların kaynağı altın metindeki eski `.txt` izleri, çıkarım hatası bulunmadı.
-- **Testler:** `python -m unittest discover -s tests` (257 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+  Adım 5 (3 Kasım 2026): `pdfx.photos` 3.413 fotoğrafı çapaya göre bağlar (`photos.json`; WebP'ler mevcut, yeni dosya
+  yok); eski bağlamayla 2.732 aynı, 313 farklı (farklarda eski kayıt hataları). Pilot Hatuniye Mescidi'ne eskiden
+  Şems-i Tebrizi Camii'nin 11 fotoğrafı bağlanmıştı; panelde kontrol edilmeli.
+- **Testler:** `python -m unittest discover -s tests` (266 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
