@@ -289,6 +289,11 @@ def main():
             if '429' in str(e) or 'RESOURCE_EXHAUSTED' in str(e):
                 print(f'Kota doldu ({i} eser işlendi, {len(slugs) - i} kaldı). Daha sonra aynı komutla kaldığı yerden devam edebilirsin.')
                 return
+            if '503' in str(e) or 'UNAVAILABLE' in str(e) or 'high demand' in str(e):
+                # model geçici olarak yoğun: denemeler zaten tükendi, sıradaki eserler de aynı hatayı alır
+                print(f'Gemini modeli ({G.GEN_MODEL}) şu an yoğun ({i} eser işlendi, {len(slugs) - i} kaldı). '
+                      f'Biraz sonra aynı komutla kaldığı yerden devam edebilirsin.')
+                return
             print(f'  ! {slug}: {str(e)[:200]}')
             continue
         except (KeyError, ValueError) as e:
