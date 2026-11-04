@@ -19,10 +19,30 @@
    "_was": "Şeyh Ulema Yusuf Ağa Camii",
    "name_tr": "Aziziye Camii",
    "name_en": "Aziziye Mosque"
+  },
+  "k1-0030": {
+   "_was": "Tellioğlu (Sungurbey) Camii",
+   "db_slug": "konya-meram-tellioglu-sungurbey-camii-mescit-meram-sungur-mahallesi-telli",
+   "rename": true
   }
  },
  "ok": [
   "k1-0067",
   "k1-0184"
- ]
+ ],
+ "retire": {
+  "konya-karatay-mutfak-matbah-i-serif-daruzziyafe": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-meydan-i-serif-odasi-kutuphane": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-sadirvan": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-hz-mevlana-turbesi-kubbe-i-hadra-muze": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-mevlana-mescit": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-celebi-evi-misafirhane": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-ahmet-eflaki-dede-turbesi": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-dervis-hucreleri-odalari": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-hasan-pasa-turbesi": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-hurrem-pasa-turbesi": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-mehmet-bey-turbesi": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-murat-pasa-kizi-fatma-hatun-turbesi": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)",
+  "konya-karatay-sinan-pasa-turbesi": "Mevlâna Külliyesi bölümü; metni külliyede ara başlık (k1-0002)"
+ }
 }

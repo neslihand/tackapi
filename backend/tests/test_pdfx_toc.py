@@ -243,11 +243,31 @@ class QueueTest(unittest.TestCase):
 
     def test_merged_draft_is_not_a_candidate(self):
         rec = dict(book='konya-1', name_tr='Sultan Selim (Selimiye) Camii', page=174)
+        # birleştirilmiş taslak: review_status 'draft' + qa_flags 'merged' (fix_titles.py, pdfx.load emeklileri)
         rows = [dict(slug='s-2', name_tr='Sultan Selim (Selimiye) Camii', toc_title=None, book='konya-1', pilot=False,
-                     review_status='merged', p0=176, p1=184),
+                     review_status='draft', merged=True, p0=176, p1=184),
                 dict(slug='s', name_tr='Sultan Selim (Selimiye) Camii', toc_title=None, book='konya-1', pilot=True,
-                     review_status='published', p0=190, p1=191)]
+                     review_status='published', merged=False, p0=190, p1=191)]
         self.assertEqual(Q.match(rec, rows, toc_unique=True), (rows[1], 'name(page≠)'))
+
+    def test_synthetic_parent_only_by_override(self):
+        tocs = {'bursa-1': self.toc('bursa-1', ('complex', 'Hamza Bey Külliyesi', 177), ('complex', 'Orhan Bey Külliyesi', 191))}
+        tocs['bursa-1'][1]['db_slug'] = 'orhan'
+        rows = [dict(slug='hamza', name_tr='Hamza Bey Külliyesi', toc_title=None, book='bursa-1', pilot=False,
+                     is_synthetic=True, p0=None, p1=None),
+                dict(slug='orhan', name_tr='Orhan Bey Külliyesi', toc_title=None, book='bursa-1', pilot=False,
+                     is_synthetic=True, p0=None, p1=None)]
+        q = Q.make_queue(tocs, rows)['bursa']
+        self.assertEqual([(i['db_slug'], i['db_match']) for i in q], [(None, None), ('orhan', 'override')])
+
+    def test_rebuild_keeps_what_the_loader_wrote(self):
+        tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Koza Hanı', 15))}
+        tocs['bursa-1'][0]['db_new'] = True
+        old = dict(cities=dict(bursa=[dict(book='bursa-1', key=tocs['bursa-1'][0]['key'], status='loaded', round=2,
+                                           loaded_slug='bursa-koza-hani', hazires={'x1-hz1': 'bursa-koza-hani-haziresi'})]))
+        it = Q.make_queue(tocs, [], old)['bursa'][0]
+        self.assertEqual((it['status'], it['round'], it['loaded_slug'], it['hazires']),
+                         ('loaded', 2, 'bursa-koza-hani', {'x1-hz1': 'bursa-koza-hani-haziresi'}))
 
     def test_one_db_row_binds_one_record(self):
         tocs = {'bursa-1': self.toc('bursa-1', ('monument', 'Koza Hanı', 15), ('monument', 'Koza Han', 16))}

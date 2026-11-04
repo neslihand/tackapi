@@ -664,3 +664,97 @@ adlar, veritabanında 24 ve 29 Ekim'de onarılmış adlardan eski). Gerçek list
 1. `python -m pdfx.cityqueue`: kuyruk yeni kararlarla yeniden kurulur. Hedef yine 26/26 pilot kilidi, `!` yok.
 2. `python -m pdfx.report`: kalan `oneri_db_slug` ve `match_suspect` listesi birlikte gözden geçirilecek (ör. Şeyh
    Hızır Makamı h1-0055, eski 'dikmece-seyh-hizir-makami' kaydına).
+
+### 8. oturum (3 Kasım 2026): kalan eşleme kararları ve Adım 7 (yükleyici)
+Veritabanına bir şey yazılmadı; yükleyici scratch test kümesinde (`initdb`, port 55432) denendi.
+
+**Başlangıç durumu** (geliştiricinin çalıştırması): cityqueue 26/26 pilot kilitli, `!` yok. report'ta `oneri_db_slug`
+ve `match_suspect` kalmamıştı; 21 `absorbs_old` ve 37 eşleşmesiz eser vardı.
+
+**Kararlar (geliştirici onayı, kural: slug'ın adı doğru olan eski kayıt seçilir)**
+- *Emekli (A grubu, 18 kayıt):* metni zaten adı doğru kayda giden kırıntılar. Örnekler: '…ertugrul-bey-kabri',
+  '…uc-kuzular-kabri', '…hoca-taskin-kabri', 'muharrem-ayi-basinda-haziran-1406' (Yıldırım Bayezid Türbesi),
+  '…ali-pasa-camii-haziresi-2' (Altıparmak'ın adresi), 'hatay-samandag-old-houses-and', Karapınar'daki
+  'sultan-ii-selim-camii' ve '-2' (arasta ve han metni), Ilgın'daki 'kulliyesi-2/-3', 'pasa-bazaar' ve
+  'karapinar-…-complex-inn', 'arif-i-billah-emir-sultan…' (Umur Bey Camii), 'ibn-i-bezzaz-camii-haziresi' (İshak Şah Camii).
+- *Eşleşmesiz esere adı doğru kayıt (B grubu):* Tellioğlu (Sungurbey) Camii ← 'tellioglu-sungurbey-camii-…' (içinde
+  Sahip Ata'nın adresi vardı); Belediye Binası ← 'town-hall' (içinde Vergi Dairesi'nin adresi vardı); Acem Reis (Arap
+  Dede) Camii ve Haziresi ← '…-camii-ve-haziresi', haziresi ← '…-camii-haziresi'; Nakkaş Ali hazire ←
+  '…-hazire-alani'; Lala Mustafa Paşa Külliyesi Medresesi ← 'konya-ilgin-madrasa-primary-school' (Tabhane yeni
+  eser); Emir Sultan Hamamı ← '-2'siz kayıt ('-2' emekli).
+- *Bursa külliyeleri (C):* 8 külliye (I. Murad, II. Murad, Hamza Bey, Orhan Bey, Timurtaş Paşa, Umur Bey, Yeşil Çelebi,
+  Yıldırım Bayezid) veritabanındaki türetilmiş üst kayıtlara (`is_synthetic`) `db_slug` ile bağlandı. cityqueue
+  sentetik kaydı otomatik eşleştirmede aday saymaz, yalnızca overrides ile kabul eder. Bağlanmasalardı her külliye
+  ikinci kez eklenirdi.
+- *Mevlâna Külliyesi (D):* 13 eski bölüm kaydı emekliye ayrılır; bölümler külliye metninde ara başlık olarak kalır.
+- Toplam: 40 emekli, 24 hazire eşlemesi. toc yeniden üretildi (şüpheli satır 0, `_was` uyarısı yok).
+
+**Bulunan hata (düzeltildi):** `fix_titles.py` birleştirdiği kaydı `review_status='draft'` + qa_flags `'merged'` ile
+işaretliyor; `review_status='merged'` diye bir değer yok (CHECK izin vermez). cityqueue'nun "birleştirilmiş taslak aday
+olmaz" denetimi `review_status`'a baktığı için hiç çalışmıyormuş. Artık `'merged' = ANY(qa_flags)` okunuyor; overrides
+birleştirilmiş bir kayda işaret ederse `·` uyarısı basılır (yükleyici birleştirmeyi geri alır, `pdfx_unmerged`).
+Bu düzeltme bazı eşleşmeleri değiştirebilir (birleştirilmiş `-2` kayıtları artık aday değil).
+
+**Adım 7: `pdfx/load.py`**
+- `--report` (yalnızca okur), `--rehearse` (tur + ROLLBACK; `data/pdfx/rounds/<n>-prova.csv`), `--apply`.
+  `--per-city 10`, `--city`. Bir tur her şehirden sıradaki 10 `waiting`/`retry` kaydı alır (Bursa → Konya → Hatay).
+  report.csv'de `engel` olan, works/report satırı olmayan kayıtlar atlanır.
+- Eşleşen eser: kimlik ve slug korunur. Ad (içindekiler/gövde), TR/EN metin (`source_section`, `page_map` paragraf
+  sayfalarıyla), sayfalar, `toc_title`, üst eser ve fotoğraflar yenilenir. `en_usable` İngilizce metin varsa true
+  (karar 3: Konya dahil). `review_status` değişmez. Eski hâl (eser, kitap bölümü, fotoğraflar, parçalar, para_fix,
+  gelen taşımalar) `data/backup/pdfx/<slug>.json`'a yazılır; ilk yedek hiç ezilmez (sonrakiler `<slug>.r<n>.json`).
+  para_fix satırları yedekte arşivlenip silinir.
+- Yeni eser ve eşlemesiz hazire: `draft`, `source_note='pdfx'`, `created_by='pdfx'`, slug `şehir-ilçe-ad` (çakışırsa
+  `-2`). Tür addan (`finalize.kind_of`), hazire `graveyard`, külliye `complex`. Hazire ve külliye üyesi `parent_id` alır
+  (üst eser bu turda ya da önceki turda yüklendiyse ya da kuyrukta eşleşmesi varsa).
+- Emekli: gerekçesindeki eser (`(b1-0054)`) bu turda yüklenirse `merged` olur ve parçaları sohbet dizininden çıkar.
+- Fotoğraflar sha1 ile bağlanır; `edited` ve pilottaki fotoğraflara dokunulmaz. Veritabanında olmayan fotoğraf taslak
+  olarak eklenir. Eserde kalan ama photos.json'a göre başka esere ait kitap fotoğrafı bağlantısız kalır (sahibi
+  yüklenince bağlanır). Kapağı kalmayan esere ilk yayımlanmış fotoğraf kapak olur.
+- Parçalar: Türkçe `textfix_db.rechunk(embed=False)` (kanıt bağları korunur, kaynakça sayfası `sync_pages`), İngilizce
+  yükleyicide yeniden kurulur. Embedding'ler boş kalır.
+- Her esere qa_flags `pdfx_review` + `pdfx_round:<n>` (eski tur bayrağı silinir), extraction'a `pdfx_round`/`pdfx_id`.
+  Kuyrukta `loaded`, `round`, `loaded_slug`, `hazires`; cityqueue yeniden kurulurken bunları korur (yoksa `db_new`
+  olarak yüklenen eser sonraki turda ikinci kez eklenirdi).
+- Tur özeti `data/pdfx/rounds/<n>.csv`: işlem, slug, eski ad, paragraf/fotoğraf sayıları, arşivlenen para_fix, rapor
+  bayrakları, uyarılar (`gelen_tasima`, `giden_tasima`, `ust_eser_yok`, `anlatim_eski_metinden`) ve panel bağlantısı.
+- **Pilot kilidi üç katlı:** (1) plan: pilot, pilot hazire ve **pilota panelde paragraf taşımış eser** atlanır (o eserin
+  metni değişirse pilotun etkin metni de değişirdi); (2) her yazma SQL'inde `NOT pilot`, satır dönmezse `PilotLocked`
+  ve tur geri alınır; (3) tur öncesi ve sonrası pilot parmak izi (satırlar, kitap bölümü, etkin metin, fotoğraflar,
+  parçalar, para_fix, alt eserler) karşılaştırılır.
+- Gerçek dosyalarla veritabanısız plan denemesi: 1. tur 30 eser (Bursa'da I. ve II. Murad külliyeleri, Konya'da
+  Mevlâna Külliyesi ve 13 emekli, Hatay'da 10 eser).
+
+**Testler:** `tests/test_pdfx_load.py` (8 test: emekli gerekçesi, tur seçimi ve engel; prova hiçbir şey bırakmaz;
+tam tur: metin, yedek, para_fix arşivi, hazire, yeni eser, emekli, fotoğraflar, kapak, TR/EN parçalar, kuyruk;
+yeniden yükleme aynı kaydı kullanır; pilot eski kuyrukta da değişmez; SQL koşulu pilota yazmaz; pilota paragraf
+taşıyan eser atlanır). `test_pdfx_toc.py`'ye 2 test (sentetik üst kayıt yalnızca overrides ile, yükleyici alanlarının
+korunması). Bütün takım scratch kümesinde: 283 test. `test_articles` içindeki bir test bu kümede kalıyor, çünkü küme
+`--locale=C` ile kuruldu ve bu yerelde `lower('Ş')` çalışmıyor; kodla ilgisi yok. `test_visual_search` konsol
+kodlaması UTF-8 değilse kalıyor.
+
+**Sonraki adım (geliştirici, `DATABASE_URL` tanımlı pencerede, pipeline klasöründen)**
+1. `python -m pdfx.cityqueue`: hedef 26/26 kilit, `!` yok; külliyeler `override` ile türetilmiş kayıtlara bağlı olmalı.
+2. `python -m pdfx.report`: `absorbs_old` yalnızca bilinçli bırakılanlarda kalmalı.
+3. Yedek: `data\backup` klasöründe `pg_dump -Fc -f yedek_pdfx.dump $env:DATABASE_URL`.
+4. `python -m pdfx.load --report`, ardından `python -m pdfx.load --rehearse` ("PROVA BAŞARILI"), sonra `--apply`.
+5. Tur sonrası `python embed_gemini.py` ve `python reextract.py --only <slug…>` (yükleyici komutu yazar); panelde
+   `pdfx_review` kontrolü (Adım 8: panelde "PDF'ten gelenler" süzgeci henüz yok).
+
+### 9. oturum (4 Kasım 2026): 1. tur provası ve ad kuralı
+Geliştirici gerçek veritabanında `pdfx.load --report` ve `--rehearse` çalıştırdı: **PROVA BAŞARILI**; 30 eşleşen,
+13 emekli (Mevlâna bölümleri), yeni eser 0, TR parça 96, EN parça 118, pilot parmak izi aynı (699 satır).
+`rounds/1-prova.csv` bulguları:
+- Ad değişikliklerinin bir kısmı bozulmaydı: 'Cıkcık (Girçık-Bekârlar)' → 'Girçık- Bekârlar' (içindekilerde satır
+  sonu tiresi), 'Mevlâna Külliyesi' → 'Karatay Mevlâna Külliyesi' (ilçe öneki), Hatay'da 'Camii' → 'Cami',
+  'Mescidi' → 'Mescit' (onarılmış ad). İyileşenler de vardı ('Murad I …' → 'I. Murad …').
+  **Karar (geliştirici):** eşleşen eserde veritabanındaki ad korunur. PDF adı yeni eserde, overrides → set →
+  `"rename": true` olan kayıtta (Belediye Binası ← 'town-hall', Tellioğlu, Lala M. P. Medresesi) ya da elle bağlanmış
+  kayıtta (db_slug, hazire eşlemesi) ad benzerliği < 0,6 ise yazılır (`load.rename_needed`). Önerilen ad tur
+  CSV'sinde `name_suggest`; iyileşen adlar panelden alınır. `--report` "ad korunur (PDF önerisi: …)" yazar.
+- Pilotlardan külliyelere panelde taşınmış paragraflar var (`gelen_tasima`): I. Murad Külliyesi ← pilot Ulucami,
+  II. Murad Külliyesi ← pilot I. Murad Hudâvendigâr Türbesi (yanlış külliye olabilir; panelde bakılmalı). Yükleyici
+  bunlara dokunmaz.
+- Muradiye Camii'nin kayıtlı anlatımı eski metinden (`anlatim_eski_metinden`); yeniden üretilmeli.
+
+Testler: 284 (yerel `--locale=C` kümesinde `test_articles`'taki bir test dışında hepsi geçti).

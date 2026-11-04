@@ -33,6 +33,30 @@
   "b1-0101": {
    "_was": "Molla Gürani (Yeşil-Güranlı) Mescidi",
    "db_new": true
+  },
+  "b1-0045": {
+   "_was": "Acem Reis (Arap Dede) Camii ve Haziresi",
+   "db_slug": "bursa-osmangazi-acem-reis-arap-dede-camii-ve-haziresi"
+  },
+  "b1-0005": {
+   "_was": "I. MURAD HUDÂVENDİGÂR KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-murad-i-hudavendigar-kulliyesi"
+  },
+  "b1-0011": {
+   "_was": "II. MURAD KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-murad-ii-kulliyesi"
+  },
+  "b1-0030": {
+   "_was": "HAMZA BEY KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-hamza-bey-kulliyesi"
+  },
+  "b1-0035": {
+   "_was": "ORHAN BEY KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-orhan-bey-kulliyesi"
+  },
+  "b1-0039": {
+   "_was": "TİMURTAŞ PAŞA KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-timurtas-pasa-kulliyesi"
   }
  },
  "hazire": {
@@ -103,11 +127,24 @@
   "b1-0135-hz1": {
    "_was": "İbn-i Yiğit Haziresi",
    "db_slug": "bursa-osmangazi-ibn-i-yigit-haziresi"
+  },
+  "b1-0045-hz1": {
+   "_was": "Acem Reis (Arap Dede) Camii Haziresi",
+   "db_slug": "bursa-osmangazi-acem-reis-arap-dede-camii-haziresi"
+  },
+  "b1-0102-hz1": {
+   "_was": "Nakkaş Ali Mescidi Hazire Alanı",
+   "db_slug": "bursa-osmangazi-nakkas-ali-mescidi-hazire-alani"
   }
  },
  "retire": {
   "bursa-osmangazi-fidan-mahmudpasa-hani": "metni Fidan (Mahmudpaşa) Hanı Mescidi (b1-0071)",
   "bursa-osmangazi-basci-ibrahim-bey-mezari": "metni Başçı İbrahim Bey Camii (b1-0059)",
-  "bursa-osmangazi-basci-ibrahim-bey-grave": "metni Başçı İbrahim Bey Camii (b1-0059)"
+  "bursa-osmangazi-basci-ibrahim-bey-grave": "metni Başçı İbrahim Bey Camii (b1-0059)",
+  "bursa-osmangazi-ali-pasa-camii-haziresi-2": "metni Altıparmak Camii ve Haziresi (b1-0054)",
+  "bursa-osmangazi-daya-hatun-taya-kadin-camii-haziresi-2": "metni Duhteri Şeref (Fışkırık) Camii (b1-0067)",
+  "bursa-osmangazi-ertugrul-bey-kabri": "metni Ertuğrul Bey Camii ve Kabri (b1-0070)",
+  "bursa-osmangazi-uc-kuzular-kabri": "metni Üç Kuzular (Kozlar) Camii ve Kabri (b1-0122)",
+  "bursa-osmangazi-nakkas-ali-mescidi-ve-haziresi-2": "metni Nakkaş Ali Mescidi Hazire Alanı (b1-0102-hz1)"
  }
 }

@@ -58,12 +58,15 @@
   "k2-0022": {
    "_was": "Tabhane",
    "name_tr": "Lala Mustafa Paşa Külliyesi Tabhanesi",
-   "name_en": "Lala Mustafa Paşa Complex Tabhane"
+   "name_en": "Lala Mustafa Paşa Complex Tabhane",
+   "db_new": true
   },
   "k2-0023": {
    "_was": "Medrese (Sıbyan Mektebi)",
    "name_tr": "Lala Mustafa Paşa Külliyesi Medresesi (Sıbyan Mektebi)",
-   "name_en": "Lala Mustafa Paşa Complex Madrasa (Primary School)"
+   "name_en": "Lala Mustafa Paşa Complex Madrasa (Primary School)",
+   "db_slug": "konya-ilgin-madrasa-primary-school",
+   "rename": true
   },
   "k2-0041": {
    "_was": "Ateşbaz Veli Kümbeti ve Zaviyesi",
@@ -89,6 +92,13 @@
  ],
  "retire": {
   "konya-ilgin-ilgin-lala-mustafa-pasa-imarat": "metni Lala Mustafa Paşa Külliyesi Arastası (k2-0021)",
-  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi": "metni Lala Mustafa Paşa Külliyesi Arastası (k2-0021)"
+  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi": "metni Lala Mustafa Paşa Külliyesi Arastası (k2-0021)",
+  "konya-karapinar-sultan-ii-selim-camii": "metni Sultan II. Selim Külliyesi Arastası (k2-0014)",
+  "konya-karapinar-sultan-ii-selim-camii-2": "metni Sultan II. Selim Külliyesi Hanı (k2-0015)",
+  "konya-ilgin-karapinar-sultan-selim-ii-complex-inn": "metni Lala Mustafa Paşa Külliyesi (k2-0017)",
+  "konya-meram-vakif-is-hani-vakiflar-bolge-mudurlugu": "metni Vakıf İş Hanı (k2-0113)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi-2": "metni Lala Mustafa Paşa Külliyesi Medresesi (k2-0023)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi-3": "metni Lala Mustafa Paşa Külliyesi Tabhanesi (k2-0022)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-bazaar": "metni Lala Mustafa Paşa Külliyesi Medresesi (k2-0023)"
  }
 }

@@ -2,8 +2,9 @@
 
 Modüller `pipeline` klasöründen çalıştırılır: `python -m pdfx.layout`, `python -m pdfx.toc`,
 `python -m pdfx.cityqueue`, `python -m pdfx.anchor`, `python -m pdfx.text`, `python -m pdfx.gold`,
-`python -m pdfx.photos`, `python -m pdfx.report`.
-Çıktılar `data/pdfx/<kitap>/` altına yazılır; veritabanına bu paketteki hiçbir modül yazmaz.
+`python -m pdfx.photos`, `python -m pdfx.report`, `python -m pdfx.load`.
+Çıktılar `data/pdfx/<kitap>/` altına yazılır. Veritabanına yalnızca `pdfx.load --apply` yazar (turlarla; pilotlara
+dokunmaz); diğer modüller veritabanını en çok okur.
 """
 import os, sys
 

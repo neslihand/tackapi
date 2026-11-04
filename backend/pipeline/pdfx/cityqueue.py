@@ -22,12 +22,13 @@ from segment import norm_title
 CITY_ORDER = ['bursa', 'konya', 'hatay']
 WORK_LEVELS = ('monument', 'complex')
 KEEP = {'loaded', 'approved', 'failed', 'retry'}
+LOAD_KEYS = ('loaded_slug', 'round', 'loaded_at', 'hazires')
 
 DB_SQL = """
-SELECT m.slug, m.name_tr, m.toc_title, b.slug AS book, m.pilot, m.review_status,
+SELECT m.slug, m.name_tr, m.toc_title, b.slug AS book, m.pilot, m.review_status, m.is_synthetic,
+       'merged' = ANY(m.qa_flags) AS merged,
        lower(m.pages) AS p0, upper(m.pages) - 1 AS p1
 FROM monument m JOIN source_book b ON b.id = m.book_id
-WHERE NOT m.is_synthetic
 """
 
 
@@ -71,11 +72,12 @@ def match(rec, rows, toc_unique=False):
     tutmasa da eşleşir ('name(page≠)'): panelde düzeltilen eserlerin (pilotlar) sayfaları etkin paragraflardan yeniden
     hesaplandığı için içindekiler sayfasıyla kesişmeyebilir.
 
-    Birleştirilmiş taslaklar (`merged`) aday olmaz; belirsiz durumda pilot öne alınır (kilit kaçmasın). Sıra: `name_tr`
+    Birleştirilmiş taslaklar (qa_flags 'merged'; review_status değil) ve türetilmiş üst kayıtlar (`is_synthetic`; Bursa külliyeleri, yalnızca
+    overrides → db_slug ile bağlanır) aday olmaz; belirsiz durumda pilot öne alınır (kilit kaçmasın). Sıra: `name_tr`
     birebir → `name_tr` bulanık (sayfa kesişimiyle) → `toc_title` birebir. `toc_title` en sona kalır: eski çıkarımda bazen
     bir önceki kaydın adıdır (I. Murad Hudâvendigâr Türbesi'nde 'İmareti')."""
     key = bare(rec['name_tr'], rec['book'])
-    cands = [r for r in rows if r['book'] == rec['book'] and r.get('review_status') != 'merged']
+    cands = [r for r in rows if r['book'] == rec['book'] and not r.get('merged') and not r.get('is_synthetic')]
     cands.sort(key=lambda r: not r['pilot'])
     hit = by_name(rec, [r for r in cands if key == bare(r['name_tr'], r['book'])], toc_unique)
     if hit[0]:
@@ -123,11 +125,15 @@ def make_queue(tocs, rows, old=None):
             it = dict(id=r['id'], book=book, city=BOOKS[book]['city'], key=r['key'], level=r['level'],
                       name_tr=r['name_tr'], name_en=r['name_en'], page=r['page'], parent=r['parent'],
                       district=r['district'], section=r['section'], status='waiting', db_slug=None, db_match=None)
+            if r.get('rename'):                # toc_overrides.json → set: {"rename": true} (yükleyici PDF adını yazar)
+                it['rename'] = True
             if rows is not None:
                 if r.get('db_slug'):           # toc_overrides.json → set: {"db_slug": "..."} (elle eşleme)
                     m, kind = next((x for x in rows if x['slug'] == r['db_slug']), None), 'override'
                     if not m:
                         it['db_override_missing'] = r['db_slug']
+                    elif m.get('merged'):      # yükleyici birleştirmeyi geri alır (qa_flags pdfx_unmerged)
+                        it['db_override_merged'] = r['db_slug']
                 else:
                     m, kind = match(r, rows, toc_unique=names[bare(r['name_tr'], book)] == 1)
                     if r.get('db_new') and m and not m['pilot']:   # toc_overrides.json → set: {"db_new": true}
@@ -144,6 +150,8 @@ def make_queue(tocs, rows, old=None):
             prev = old_items.get((it['book'], it['key']))
             if prev and prev.get('status') in KEEP and it['status'] != 'pilot_locked':
                 it['status'] = prev['status']
+            if prev:      # pdfx.load'un yazdıkları: yüklenen eserin slug'ı (yeni eserde eşleşme yoktur), tur, hazireler
+                it.update({k: prev[k] for k in LOAD_KEYS if k in prev})
     return cities
 
 
@@ -217,6 +225,9 @@ def report(data, rows):
             for i in items:
                 if i.get('db_override_missing'):
                     print(f"  ! overrides db_slug veritabanında yok: {i['id']} → {i['db_override_missing']}")
+                if i.get('db_override_merged'):
+                    print(f"  · overrides db_slug birleştirilmiş (merged) bir kayıt: {i['id']} → {i['db_override_merged']}"
+                          f" (yükleyici birleştirmeyi geri alır)")
                 if i.get('db_conflict'):
                     c = i['db_conflict']
                     mark = '!' if c['slug'] in pilot_slugs else '·'
