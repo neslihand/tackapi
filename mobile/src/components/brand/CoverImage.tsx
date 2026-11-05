@@ -2,7 +2,7 @@
 // fade at the foot. Held to the reading width, so it keeps its proportion on a tablet. The type's line drawing stands
 // in when there is no photo or it fails to load.
 import { Image } from 'expo-image';
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { colors, cover, measure, radius } from '@/lib/theme';
@@ -13,7 +13,9 @@ export function CoverImage({ uri, kind, kind_label, alt, light, style }: {
   uri?: string | null; kind?: string | null; kind_label?: string | null; alt?: string; light?: boolean; style?: StyleProp<ViewStyle>;
 }) {
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
-  useEffect(() => setState('loading'), [uri]);
+  // a new picture starts loading again
+  const [shownUri, setShownUri] = useState(uri);
+  if (uri !== shownUri) { setShownUri(uri); setState('loading'); }
   const [width, setWidth] = useState(0);
   const height = width ? Math.min(Math.round(width * cover.ratio), cover.max) : cover.max * 0.6;
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));

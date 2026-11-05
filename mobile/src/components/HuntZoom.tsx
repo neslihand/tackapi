@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { focusWindow, HUNT_TRIES, type Focus } from '@/lib/hunt';
+import { focusWindow, HUNT_TRIES, type Focus } from '@/lib/autoHunt';
 import { t } from '@/lib/i18n';
 import { colors, radius, space } from '@/lib/theme';
 

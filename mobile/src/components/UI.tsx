@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Children, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -93,6 +92,23 @@ export function WorkCard({ item, extra, stamped }: { item: Item; extra?: string;
       {extra && <Text style={styles.cardExtra}>{extra}</Text>}
     </View>
     {stamped && <Ionicons name={stamped === 'visit' ? 'ribbon' : 'checkmark-circle'} size={18} color={colors.goldText} />}
+  </Pressable>;
+}
+
+export function SectionHeading({ index, title, subtitle, light = false }: { index?: string; title: string; subtitle?: string; light?: boolean }) {
+  return <View style={{ gap: space.s, marginBottom: space.m }}>
+    {index && <Eyebrow light={light}>N° {index}  ───</Eyebrow>}
+    <Title light={light}>{title}</Title>
+    {subtitle && <Text style={{ color: light ? colors.mist : colors.soft, fontSize: 14, lineHeight: 22 }}>{subtitle}</Text>}
+  </View>;
+}
+
+export function Choice({ label, selected, onPress, light = false }: { label: string; selected: boolean; onPress: () => void; light?: boolean }) {
+  return <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected }}
+    style={({ pressed }) => [{ minHeight: 48, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999,
+      borderWidth: 1, borderColor: light ? colors.nightLine : colors.goldLine,
+      backgroundColor: selected ? (light ? colors.goldSoft : colors.emerald) : 'transparent' }, pressed && { opacity: .7 }]}>
+    <Text style={{ fontSize: 13, color: selected ? (light ? colors.ink : colors.ivory) : light ? colors.ivory : colors.ink }}>{label}</Text>
   </Pressable>;
 }
 

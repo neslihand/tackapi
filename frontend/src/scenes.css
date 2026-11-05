@@ -4,10 +4,9 @@
 .manifesto { display: block; padding: clamp(18px, 2.6vw, 34px) 0; overflow: clip; font-size: inherit; letter-spacing: normal; }
 .marquee-track { display: flex; width: max-content; white-space: nowrap; will-change: transform; }
 .marquee-track > span { display: flex; align-items: center; }
-.marquee-row b { font-family: var(--serif); font-weight: 400; font-size: clamp(28px, 3.8vw, 60px); line-height: 1.12; color: #ece6d9; }
+.marquee-row :is(b, em) { font-family: var(--serif); font-weight: 300; font-size: clamp(34px, 4.4vw, 72px); line-height: 1.1; letter-spacing: -.02em; color: #ece6d9; }
+.marquee-row em { font-style: italic; font-weight: 400; color: #c3a869; }
 .marquee-row i { margin: 0 .55em; font-style: normal; font-size: clamp(13px, 1.3vw, 21px); color: #c3a869; }
-.marquee-row.back b { font-style: italic; color: #c3a869; }
-.marquee-row.back .marquee-track { transform: translateX(-12%); }
 
 /* Monoform: numbered season cards that pin and pile up; the last one is the map. */
 .season-stack { display: grid; gap: 12vh; margin: 0; padding: 0 0 4vh; list-style: none; }
@@ -18,7 +17,6 @@
 .season-link { display: grid; grid-template-columns: 1fr 1.15fr; grid-template-rows: auto 1fr; height: 100%; padding: clamp(24px, 3.4vw, 44px); color: #232c29; }
 .season-top { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 20px; padding-bottom: 14px; border-bottom: 1px solid #7e7d7a66; }
 .season-top small { font-size: 10.5px; font-weight: 600; letter-spacing: .16em; color: #6a4f2c; }
-.season-number { align-self: end; font-family: var(--serif); font-size: clamp(96px, 13vw, 210px); line-height: .8; color: #232c29; }
 .season-body { align-self: end; display: flex; flex-direction: column; gap: 12px; padding-bottom: 6px; }
 .season-body h3 { margin: 0; font-size: clamp(28px, 2.6vw, 40px); line-height: 1.12; }
 .season-text { max-width: 520px; font-size: 14px; line-height: 1.75; color: #4b5448; }
@@ -27,12 +25,10 @@
 .season-go { position: absolute; top: clamp(58px, 6vw, 84px); right: clamp(24px, 3.4vw, 44px); display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #7e7d7a99; border-radius: 50%; transition: transform .3s; }
 .season-link:hover .season-go { transform: translate(3px, -3px); }
 .season-dim { position: absolute; inset: 0; background: #0a1f18; opacity: 0; pointer-events: none; }
-.season-map .map-teaser { position: absolute; inset: 0; min-height: 0; border-radius: 0; box-shadow: none; }
 @media (max-width: 800px) {
   .season-stack { gap: 8vh; }
   .season-card { --top: calc(84px + var(--i) * 14px); height: auto; min-height: 420px; }
   .season-link { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; gap: 18px; }
-  .season-number { order: 3; font-size: 84px; }
   .season-go { display: none; }
 }
 
@@ -97,12 +93,12 @@
    them stays dark, and the three no longer run together. */
 .manifesto { color: #1d2a25; background: linear-gradient(180deg, #ece5d7, #e6dece); border-block: 1px solid #8e7a5a33; }
 .marquee-row b { color: #1d2a25; }
-.marquee-row.back b { color: #85653a; }
+.marquee-row em { color: #85653a; }
+.manifesto { padding-bottom: calc(clamp(18px, 2.6vw, 34px) + 28px); }
 .marquee-row i { color: #a8895a; }
 .final-gate { color: #192f28; background: radial-gradient(ellipse at 28% 62%, #fcf9f2, #f3ede1 62%); border-bottom: 0; }
 .final-gate-copy h2 em { color: #85653a; }
 .final-gate-copy > p:not(.eyebrow) { color: #4b5448; }
-.final-gate-arch path { stroke: #a8895a; }
 .final-gate .hero-secondary { border-bottom-color: #192f2859; }
 
 /* Light between dark scenes, in the parchment of the closing threshold. */

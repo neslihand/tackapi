@@ -4,10 +4,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRef, useState, type ComponentRef } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/Typography';
 import { HuntMarks, huntScore, HuntZoom } from './HuntZoom';
 import { Button, Notice } from './UI';
-import type { Focus } from '@/lib/hunt';
+import { track } from '@/lib/analytics';
+import type { Focus } from '@/lib/autoHunt';
 import { t } from '@/lib/i18n';
 import { CARD_HEIGHT, CARD_WIDTH, shareCard, shareVerb } from '@/lib/share';
 import { colors, metal as METAL, overlay, serif, space } from '@/lib/theme';
@@ -28,7 +30,7 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
   async function share() {
     if (!shared) return;
     setBusy(true); setError(null);
-    try { await shareCard(card, shared.kind === 'hunt' ? huntTitle(shared.number) : shared.name); }
+    try { await shareCard(card, shared.kind === 'hunt' ? huntTitle(shared.number) : shared.name); track('share_initiated', undefined, { content_type: shared.kind }); }
     catch (e) { setError(String((e as Error)?.message ?? e)); }
     finally { setBusy(false); }
   }

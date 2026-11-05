@@ -438,6 +438,13 @@ def verify(answer, context, historical_only=False):
 
 
 NO_INFO = {'tr': 'Kaynaklarımızda bu konuda bilgi yok.', 'en': 'Our sources do not contain information on this.'}
+# Sitenin ölçümüyle aynı kalıplar (frontend/src/components/ArtifactChat.tsx: chat_answer), İngilizcesiyle birlikte
+NO_INFO_RE = re.compile(r'bilgi\s+yok|bilgi\s+bulunmuyor|yer\s+almıyor|do(?:es)?\s+not\s+contain|no\s+information', re.I)
+
+
+def says_no_info(text):
+    """Cevap kaynakta bilgi olmadığını söylüyor mu? Uygulama bu durumda soruyu takip etmeyi önerir."""
+    return bool(NO_INFO_RE.search(text or ''))
 
 
 def drop_years(text, years, lang='tr'):

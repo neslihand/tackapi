@@ -33,6 +33,7 @@ export function ImageQueue({ params }: { params: URLSearchParams }) {
   }, [tab, book, page]);
   const items = list.data?.items ?? [];
   function choose(next: string) { setTab(next); setPage(1); setSelected([]); }
+  const current = books.data?.find(b => b.slug === book);
 
   async function run(label: string, action: () => Promise<unknown>) {
     setBusy(true);
@@ -56,6 +57,9 @@ export function ImageQueue({ params }: { params: URLSearchParams }) {
         <input type="checkbox" checked={selected.length === items.length} onChange={e => setSelected(e.target.checked ? items.map(i => i.id) : [])} />
         <span>Bu sayfadakilerin tümünü seç</span></label>}
     </div>
+    {current && <p className="admin-help" role="status">Çevrimdışı paket ve paylaşım kartı izni: bu kitabın {current.images} fotoğrafından <strong>{current.images_reuse}</strong> tanesinde var. Telif kararıdır; kurumdan teyit almadan vermeyin.{' '}
+      {current.images_reuse < current.images && <button className="text-link" disabled={busy} onClick={() => { if (confirm(`“${current.title}” kitabının bütün fotoğraflarının telefonda saklanmasına ve paylaşım kartına basılmasına izin verilsin mi?`)) run('Kitabın fotoğraflarına izin verildi', () => api.setBookReuse(current.slug, true)); }}>Bütün kitaba izin ver</button>}{' '}
+      {current.images_reuse > 0 && <button className="text-link danger" disabled={busy} onClick={() => run('Kitabın fotoğraflarından izin kaldırıldı', () => api.setBookReuse(current.slug, false))}>İzni kaldır</button>}</p>}
     {selected.length > 0 && <div className="bulk-bar" role="region" aria-label="Toplu işlem">
       <strong>{selected.length} fotoğraf seçili</strong>
       <button className="button gold small" disabled={busy} onClick={() => bulk('published', 'yayına alındı')}><Check size={15} /> Onayla</button>

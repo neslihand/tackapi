@@ -136,6 +136,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "Konum doğru, onayla"); elle girilen konum `manual` ve doğrulanmış olur, betik ona dokunmaz. Harita Leaflet 1.9.4 (ön
   yüzle aynı sürüm) + OSM karoları: `admin/src/public/MonumentMap.tsx`, `admin/src/components/LocationPicker.tsx`.
   README §7.10.
+- **Mobil kişiselleştirme (1 Kasım 2026):** öneri ve sıralama telefonda hesaplanır (`mobile/src/lib/personal.ts`). Arka uçta yalnızca `list_item.has_story/has_child`, `insights.recommend` içinde hesabın şehri ve hikâye/çocuk ilgileri, `preferences_changed` olayı, `personalization` düğmesi. Yaş kullanılmaz.
+- **Mobil master plan, ikinci tur (1 Kasım 2026):** göçler 019-023 gerçek veritabanında uygulandı (yalnızca yeni tablo ve sütun). `routes.walk_issues` (süreli rota yayın kuralı), `details.py` (üç detay), `weekly.py` (Haftanın Keşfi, `#/haftanin-kesfi`), `questions.py` (Cevabı Bekleyen Sorular, `#/bekleyen-sorular`; sohbet kaynağı değil), `image.reuse_allowed` (çevrimdışı ve paylaşım kartı izni, varsayılan kapalı; panelde kitap kitap), `site_setting.app_flags` (telefon modül düğmeleri), `rag.says_no_info`. **`calistir.sh` içinde `GEMINI_API_KEY` boş: Esere Sor bu makinede cevap vermiyor.**
+- **Mobil master plan işleri (1 Kasım 2026):** `share.py` (`/eser/<slug>` paylaşım sayfası: uygulamasız açılır, betik/çerez/fotoğraf yok), `GET /api/routes/{id}/manifest` (paket boyutu ve sürümü), `hunt.py` + göç `018_daily_hunt.sql` (Detay Avı; gerçek veritabanında 1 Kasım 2026'da uygulandı, görev yok; panelde `#/detay-avi`), `site_setting.medal_tiers` (kademeli madalyon eşikleri, panelden), `insights.cohorts`/`pilot_kpis`. Durum ve kararlar: `../audit/current-state.md`.
 - **Kitap künyeleri (1 Kasım 2026):** Bursa II–III ve Konya I'in metin yazarları, editörü ve çevirmeni kitapların ilk
   sayfasından `books.py`'ye eklendi; altı kitabın künyesi tam. Mevcut veritabanına `book_credits.py --report/--apply`
   yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
@@ -171,7 +174,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   Eşleşen eserde **veritabanındaki ad korunur** (geliştirici kararı, 4 Kasım 2026); PDF adı yalnızca yeni eserde,
   overrides `"rename": true` ya da elle bağlanmış kayıtta ad benzerliği < 0,6 ise yazılır; öneri tur CSV'sinde
   `name_suggest`. 1. tur gerçek veritabanında provadan geçti (4 Kasım: 30 eşleşen, 13 emekli, pilot izi aynı).
-- **Testler:** `python -m unittest discover -s tests` (284 test; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **Testler:** `python -m unittest discover -s tests` (357 test, `TZ=UTC` ile; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.
@@ -210,7 +213,7 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **Yazar paneli (5 Kasım 2026):** envanter kitabı yazarları (bilim kurulu) için araştırma notlarından "eser hakkında"
   metnine. **Ayrı uygulama `../yazar-paneli`** (5177; derlenince uvicorn `/yazar/` altında sunar); yazarlar yönetim
   panelini görmez (geliştirici kararı: ilk sürüm admin paneline gömülmüştü, yanlıştı). Arka uç `author.py`, göç
-  `018_author.sql` (gerçek veritabanında henüz uygulanmadı). İki uç grubu: `/api/author/*` (yazar hesabı: e-posta +
+  `024_author.sql` (gerçek veritabanında henüz uygulanmadı). İki uç grubu: `/api/author/*` (yazar hesabı: e-posta +
   scrypt şifre, `author_session`'da sha256 özetli Bearer oturum, 12 saat; yalnızca kendi dosyaları, başkasınınki 404) ve
   `/api/admin/author/*` (editör: hesap aç/kapat/şifre sıfırla, metinleri oku, onayla ya da düzeltme iste; yazarın metnini
   değiştirmez). Yönetici anahtarı yazar uçlarında, yazar oturumu yönetim uçlarında geçmez (testli). Admin panelinde

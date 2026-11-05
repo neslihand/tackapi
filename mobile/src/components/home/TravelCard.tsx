@@ -56,9 +56,9 @@ export function TravelCard() {
 
 /** The city's nearest route: walk it, or save it for the trip with the existing offline pack. */
 function CityRoute({ route, stops }: { route: Season; stops: Item[] }) {
-  const { pack, complete, progress, error, download } = useRoutePack(route.id, stops);
+  const { pack, status, progress, error, download } = useRoutePack(route.id, route.title, stops);
   const busy = progress !== null;
-  const ready = Boolean(pack && complete);
+  const ready = status === 'ready';
   return <View style={[home.gap, s.route]}>
     <View style={s.routeLine}>
       <Ionicons name="walk-outline" size={22} color={colors.gold} />

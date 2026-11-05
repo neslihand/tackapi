@@ -1,6 +1,6 @@
 // The loading mark: a small closed double door under a pointed arch, on a gold threshold. Its leaves swing ajar and
 // shut again, letting the light behind through; still (closed, a line of light in the gap) under reduced motion.
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useReducedMotion } from '@/lib/motion';
@@ -24,7 +24,7 @@ function Leaf() {
 
 export function DoorLoader() {
   const reduced = useReducedMotion();
-  const open = useRef(new Animated.Value(0)).current;
+  const [open] = useState(() => new Animated.Value(0));
   const id = `d${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   useEffect(() => {

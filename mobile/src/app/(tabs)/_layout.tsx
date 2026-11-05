@@ -7,10 +7,12 @@ import { t, useLang } from '@/lib/i18n';
 import { colors, control, fonts, hit, radius, serif, space, type } from '@/lib/theme';
 
 // the active tab is gold with a small dot under its icon, so it is not told by colour alone
-const icon = (name: IconName) => ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => <View style={s.icon}>
-  <Ionicons name={name} size={size} color={typeof color === 'string' ? color : undefined} />
-  <View style={[s.dot, focused && s.dotOn]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-</View>;
+const icon = (name: IconName) => function TabIcon({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) {
+  return <View style={s.icon}>
+    <Ionicons name={name} size={size} color={typeof color === 'string' ? color : undefined} />
+    <View style={[s.dot, focused && s.dotOn]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+  </View>;
+};
 
 const settingsButton = () => <Link href="/ayarlar" asChild><Pressable accessibilityRole="button" accessibilityLabel={t('Ayarlar', 'Settings')}
   style={{ marginRight: space.s, minWidth: hit, minHeight: hit, alignItems: 'center', justifyContent: 'center' }}>

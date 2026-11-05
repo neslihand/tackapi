@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { Article, ArticleFields, ArticleRow, ArticleSource, ArticleSourceDetail, ArticleStatus, ArticleKind, ArticleOrigin, Term, TermFields, AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { QuestionRow, QuestionStatus, WeeklyFields, WeeklyItem, WorkDetail, WorkDetailKind, Hunt, HuntFields, Article, ArticleFields, ArticleRow, ArticleSource, ArticleSourceDetail, ArticleStatus, ArticleKind, ArticleOrigin, Term, TermFields, AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -82,7 +82,7 @@ export const api = {
   images: (f: { status?: ImageStatus | ''; unassigned?: boolean | null; book?: string; monument?: string; page?: number; page_size?: number }) =>
     request<Page<AdminImage>>(`/api/admin/images${qs(f)}`),
   updateImage: (id: number, body: { monument?: string | null; review_status?: ImageStatus; alt_tr?: string; alt_en?: string | null;
-    caption_tr?: string | null; sort?: number; is_cover?: boolean }) =>
+    caption_tr?: string | null; sort?: number; is_cover?: boolean; reuse_allowed?: boolean }) =>
     request<AdminImage>(`/api/admin/images/${id}`, json('PATCH', body)),
   bulkImages: (ids: number[], review_status: ImageStatus) =>
     request<{ updated: number }>('/api/admin/images/bulk', json('POST', { ids, review_status })),
@@ -98,6 +98,7 @@ export const api = {
     request<City>('/api/admin/cities', json('POST', body)),
   periods: () => request<Period[]>('/api/admin/periods'),
   books: () => request<Book[]>('/api/admin/books'),
+  setBookReuse: (slug: string, allowed: boolean) => request<{ updated: number }>(`/api/admin/books/${encodeURIComponent(slug)}/reuse`, json('PUT', { allowed })),
   segmentation: (f: { decision?: string; source?: string; book?: string; page?: number; page_size?: number }) =>
     request<Page<SegItem> & { counts: { decision: ParaDecision; n: number }[] }>(`/api/admin/segmentation${qs(f)}`),
   decideFix: (id: number, body: { decision: ParaDecision; target?: string | null }) =>
@@ -151,7 +152,7 @@ export const api = {
   routes: () => request<{ enabled: boolean; routes: AdminRoute[]; auto: AutoRoute[] }>('/api/admin/routes'),
   createRoute: (body: { title: string; kicker?: string | null; description?: string | null; published?: boolean }) =>
     request<AdminRoute>('/api/admin/routes', json('POST', body)),
-  updateRoute: (id: number, body: { title?: string; kicker?: string | null; description?: string | null; sort?: number; published?: boolean }) =>
+  updateRoute: (id: number, body: { title?: string; kicker?: string | null; description?: string | null; sort?: number; published?: boolean; minutes?: number | null; access_note?: string | null }) =>
     request<AdminRoute>(`/api/admin/routes/${id}`, json('PATCH', body)),
   setRouteStops: (id: number, slugs: string[]) => request<{ id: number; stops: string[] }>(`/api/admin/routes/${id}/stops`, json('PUT', { slugs })),
   deleteRoute: (id: number) => request<void>(`/api/admin/routes/${id}`, { method: 'DELETE' }),
@@ -159,6 +160,22 @@ export const api = {
   createQuiz: (body: Required<Omit<QuizFields, 'published'>> & { published?: boolean }) => request<QuizQuestion>('/api/admin/quiz', json('POST', body)),
   updateQuiz: (id: number, body: QuizFields) => request<QuizQuestion>(`/api/admin/quiz/${id}`, json('PATCH', body)),
   deleteQuiz: (id: number) => request<void>(`/api/admin/quiz/${id}`, { method: 'DELETE' }),
+  hunts: () => request<{ enabled: boolean; hunts: Hunt[] }>('/api/admin/hunts'),
+  createHunt: (body: HuntFields) => request<Hunt>('/api/admin/hunts', json('POST', body)),
+  updateHunt: (id: number, body: HuntFields) => request<Hunt>(`/api/admin/hunts/${id}`, json('PATCH', body)),
+  deleteHunt: (id: number) => request<void>(`/api/admin/hunts/${id}`, { method: 'DELETE' }),
+  workDetails: (slug: string) => request<{ enabled: boolean; details: WorkDetail[] }>(`/api/admin/monuments/${encodeURIComponent(slug)}/details`),
+  saveWorkDetail: (slug: string, kind: WorkDetailKind, body: { body_tr: string; body_en: string | null; source: string; published: boolean }) =>
+    request<{ kind: WorkDetailKind }>(`/api/admin/monuments/${encodeURIComponent(slug)}/details/${kind}`, json('PUT', body)),
+  deleteWorkDetail: (slug: string, kind: WorkDetailKind) => request<void>(`/api/admin/monuments/${encodeURIComponent(slug)}/details/${kind}`, { method: 'DELETE' }),
+  weekly: () => request<{ enabled: boolean; items: WeeklyItem[]; routes: { id: string; title: string }[] }>('/api/admin/weekly'),
+  createWeekly: (body: WeeklyFields) => request<WeeklyItem>('/api/admin/weekly', json('POST', body)),
+  updateWeekly: (id: number, body: WeeklyFields) => request<WeeklyItem>(`/api/admin/weekly/${id}`, json('PATCH', body)),
+  deleteWeekly: (id: number) => request<void>(`/api/admin/weekly/${id}`, { method: 'DELETE' }),
+  questions: (status: 'open' | QuestionStatus, page = 1) =>
+    request<{ enabled: boolean; items: QuestionRow[]; total: number; counts: { status: QuestionStatus; n: number }[]; median_hours: number | null; oldest_open_hours: number | null }>(`/api/admin/questions${qs({ status, page })}`),
+  reviewQuestion: (id: number, body: { status: QuestionStatus; answer: string | null; answer_source: string | null; note: string | null }) =>
+    request<{ id: number; followers: number }>(`/api/admin/questions/${id}`, json('PATCH', body)),
   contributions: (status: ContributionStatus | null, page = 1) =>
     request<{ enabled: boolean; total: number; items: Contribution[]; counts: { status: ContributionStatus; n: number }[] }>(
       `/api/admin/contributions${qs({ status: status ?? '', page })}`),

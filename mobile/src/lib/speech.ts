@@ -17,14 +17,22 @@ export function chunks(text: string, max = 3000) {
   return out;
 }
 
-export function speak(text: string, onDone: () => void) {
+/** onProgress: the share of the text the voice has really finished, after each part. */
+export function speak(text: string, onDone: () => void, onProgress?: (ratio: number) => void) {
   const mine = ++session;
   Speech.stop();
   const parts = chunks(text);
   const language = currentLang() === 'en' ? 'en-US' : 'tr-TR';
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  let spoken = 0;
   parts.forEach((part, i) => Speech.speak(part, {
     language, rate: 0.95,
-    onDone: i === parts.length - 1 ? () => { if (mine === session) onDone(); } : undefined,
+    onDone: () => {
+      if (mine !== session) return;
+      spoken += part.length;
+      onProgress?.(spoken / total);
+      if (i === parts.length - 1) onDone();
+    },
     onStopped: i === parts.length - 1 ? () => { if (mine === session) onDone(); } : undefined,
     onError: () => { if (mine === session) onDone(); },
   }));

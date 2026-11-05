@@ -18,28 +18,51 @@ export function apiBase(): string {
   return `http://${host || '127.0.0.1'}:8000`;
 }
 export const mediaUrl = (src: string | null | undefined) => (!src ? null : /^https?:/.test(src) ? src : `${apiBase()}${src}`);
+/** The page a shared link opens: served by the backend, works without the app (backend/pipeline/share.py). */
+export const workLink = (slug: string) => `${apiBase()}/eser/${encodeURIComponent(slug)}${currentLang() === 'en' ? '?lang=en' : ''}`;
 
 export type Location = { lat: number; lon: number; approximate: boolean; radius_m: number | null };
-export type Image = { src: string; thumb: string; alt: string | null; width: number | null; height: number | null };
+// reusable: the rights to keep it for offline use and print it on a share card were confirmed in the panel
+export type Image = { src: string; thumb: string; alt: string | null; width: number | null; height: number | null; reusable?: boolean;
+  caption?: string | null; source?: { book: string; page: number | null } | null };
 export type Item = {
   slug: string; name: string; alt_names: string[]; kind: string; kind_label: string; city: { slug: string; name: string };
   district: string | null; neighborhood: string | null; period: { slug: string; name: string } | null;
-  built: { from: number | null; to: number | null; label: string | null };
+  built: { from: number | null; to: number | null; label: string | null; basis_label?: string | null };
   summary: string | null; image: Image | null; source: { book: string | null; pages: [number, number] | null };
-  location?: Location | null; architect?: string | null; builder?: string | null;
+  location?: Location | null; architect?: string | null; builder?: string | null; patron?: string | null;
+  parent?: { slug: string; name: string } | null; status?: string | null;
+  has_artworks?: boolean; has_story?: boolean; has_child?: boolean;
 };
+export type MonumentCard = {
+  name_tr: string; name_en?: string | null; kind: string; city: string; district: string | null; neighborhood: string | null;
+  current_state: string | null; parent: string | null; parent_slug: string | null;
+  events: { kind: string; years: string | null; date_text: string | null; date_text_hijri: string | null; description_tr: string; person: string | null; page_start: number | null }[];
+  persons: { name: string; role: string; detail: string | null; page_start: number | null }[];
+  artworks: { kind: string; element: string | null; technique: string | null; script: string | null; artist: string | null; date_text: string | null; text_translation_tr: string | null; page_start: number | null; images: Image[] }[];
+  children: { name_tr: string; kind: string }[];
+};
+export type WorkDetail = { kind: 'why' | 'look' | 'today'; body: string; source: string };
 export type Narration = { answer: string; sources: { book: string; pages: string; heading: string | null }[] } | null;
 export type Detail = {
+  card?: MonumentCard; alt_names?: string[] | null; status?: string | null;
   text: string | null; text_note: string | null;
   narrations: { story: Narration; child: Narration };
+  details?: WorkDetail[];
   images: (Image & { caption: string | null; source: { book: string; page: number | null } | null })[];
   location: Location | null;
   source: { book: string | null; pages: [number | null, number | null]; credits: { authors?: string[] | null; editor?: string | null; translator?: string | null } | null };
 };
-export type Season = { id: string; kicker: string; title: string; description: string; artifactIds: string[] };
+// auto: built from the collection by the server (a city's works); not written or checked by an editor
+// minutes, access_note: only on a route an editor checked; without them it is a themed list
+export type Season = { id: string; kicker: string; title: string; description: string; artifactIds: string[]; auto?: boolean; minutes?: number | null; access_note?: string | null };
 // written in the panel (GET /api/quiz); answer is the index of the right option
 export type QuizQuestion = { id: string; question: string; options: string[]; answer: number; explanation: string; artifactId: string };
-export type Feed = { items: Item[]; seasons: Season[]; quiz: QuizQuestion[]; stale: boolean };
+export type MedalTiers = { read: number[]; onsite: number[]; recall: number[]; city_read: number[]; master_onsite: number };
+// medal_tiers: from the panel, never in the app; without them (first opening offline) the tiers are simply not shown
+export type SiteSettings = { default_mode: 'short' | 'story' | 'child'; featured_route: string | null; medal_tiers?: MedalTiers | null; app_flags?: Record<string, boolean> };
+export const defaultSiteSettings: SiteSettings = { default_mode: 'short', featured_route: null, medal_tiers: null };
+export type Feed = { items: Item[]; seasons: Season[]; quiz: QuizQuestion[]; stale: boolean; site: SiteSettings };
 
 export const makers = (item: Pick<Item, 'architect' | 'builder'>) => item.architect?.trim() || item.builder?.trim() || null;
 export function sourceTitle(source: Item['source']): string {
@@ -53,6 +76,10 @@ export class ApiError extends Error { status: number; constructor(message: strin
 // The account's session key (account.tsx sets it); sent as a Bearer header, the phone has no cookie session.
 let sessionKey: string | null = null;
 export const setSessionKey = (key: string | null) => { sessionKey = key; };
+
+// analytics.ts listens here for failed requests (status 0: no answer)
+let reporter: ((path: string, status: number) => void) | null = null;
+export const setApiReporter = (fn: typeof reporter) => { reporter = fn; };
 
 // React Native's fetch has no timeout on Android: an unreachable server (another Wi-Fi, a dropped packet) would keep the
 // spinner forever instead of falling back to the device copy. Reads should be quick; chat, photo search and uploads may not.
@@ -68,12 +95,14 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const timer = setTimeout(() => abort.abort(), !init?.method || init.method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS);
   try { response = await fetch(`${apiBase()}${path}`, { ...init, headers, signal: abort.signal }); }
   catch {
+    reporter?.(path, 0);
     throw new ApiError(abort.signal.aborted
       ? t('Sunucu yanıt vermedi. Ayarlar’daki sunucu adresini ve aynı Wi-Fi’de olduğunu kontrol et.', 'The server did not answer. Check the server address in Settings and that you are on the same Wi-Fi.')
       : t('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.', 'Could not reach the server. Check your connection.'), 0);
   }
   finally { clearTimeout(timer); }
   if (!response.ok) {
+    reporter?.(path, response.status);
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
     const detail = typeof body?.detail === 'string' ? body.detail
       : Array.isArray(body?.detail) ? t('Lütfen alanları kontrol et.', 'Please check the fields.') : t(`Sunucu ${response.status} döndü.`, `The server returned ${response.status}.`);
@@ -122,14 +151,18 @@ async function loadAllWorks(lang: string): Promise<{ data: Item[]; stale: boolea
 export async function loadFeed(): Promise<Feed> {
   const lang = currentLang();
   // routes and written questions are optional: without them the collection still opens
-  const [list, routes, quiz] = await Promise.all([
+  const [list, routes, quiz, site] = await Promise.all([
     loadAllWorks(lang),
     // routes stay on the pilot works: unfiltered, a city route lists every work in the city (372 stops in Bursa), and
     // only the pilot works have a location to walk to
     cachedGet<Season[]>('/api/routes?pilot=true').catch(() => ({ data: [] as Season[], stale: true })),
     cachedGet<QuizQuestion[]>('/api/quiz').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
+    cachedGet<SiteSettings>('/api/site-settings').catch(() => ({ data: defaultSiteSettings, stale: true })),
   ]);
-  return { items: list.data, seasons: routes.data, quiz: quiz.data, stale: list.stale };
+  const settings = site.data && ['short', 'story', 'child'].includes(site.data.default_mode) ? site.data : defaultSiteSettings;
+  const featured = routes.data.find(r => r.id === settings.featured_route);
+  return { items: list.data, seasons: featured ? [featured, ...routes.data.filter(r => r !== featured)] : routes.data,
+    quiz: quiz.data, stale: list.stale, site: settings };
 }
 
 export const loadMonument = (slug: string) => cachedGet<Detail>(`/api/monuments/${encodeURIComponent(slug)}?lang=${currentLang()}`);
@@ -143,14 +176,14 @@ export const stripCitations = (text: string) =>
   text.replace(/\s*\[(?:[SFT]\d*)(?:\s*,\s*[SFT]\d*)*\]/g, '').replace(/[ \t]+([.,;:!?])/g, '$1').trim();
 
 export async function askWork(slug: string, question: string, mode: ChatMode, history: ChatTurn[]) {
-  const data = await request<{ answer: string; sources?: { book?: string; pages?: string }[] }>('/api/chat', {
+  const data = await request<{ answer: string; no_info?: boolean; sources?: { book?: string; pages?: string }[] }>('/api/chat', {
     method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ slug, question: question.trim().slice(0, 1000), mode, lang: currentLang(),
       history: history.slice(-20).map(m => ({ role: m.role, content: m.content.slice(0, 4000) })) }),
   });
   const pages = (p?: string) => p && (/^s\.\s/.test(p) ? p : `s. ${p}`);
   const sources = [...new Set((data.sources ?? []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
-  return { answer: stripCitations(data.answer), sources };
+  return { answer: stripCitations(data.answer), sources, noInfo: Boolean(data.no_info) };
 }
 
 // ------------------------------------------------------------------------------------------------- Kamera

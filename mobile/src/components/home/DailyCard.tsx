@@ -8,16 +8,20 @@ import { Button, Eyebrow, Title } from '@/components/UI';
 import { mediaUrl } from '@/lib/api';
 import { dailyPicks, listenSeconds, teaser } from '@/lib/daily';
 import { t } from '@/lib/i18n';
+import { preferenceTiers } from '@/lib/personal';
 import { speak, stopSpeaking } from '@/lib/speech';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, motion, space, type } from '@/lib/theme';
+import { usePreferences } from '@/lib/usePreferences';
 import { home } from './styles';
 
 export function DailyCard() {
   const { items } = useContent();
   const { progress } = usePassport();
   const [speaking, setSpeaking] = useState(false);
-  const today = useMemo(() => dailyPicks(items, progress, new Date(), 1)[0], [items, progress]);
+  const { prefs } = usePreferences();
+  // the same work the notification names: the visitor's city and interests first (personal.ts)
+  const today = useMemo(() => dailyPicks(items, progress, new Date(), 1, preferenceTiers(prefs))[0], [items, progress, prefs]);
   // the voice stops when the visitor leaves the tab
   useFocusEffect(useCallback(() => () => { stopSpeaking(); setSpeaking(false); }, []));
   if (!today) return null;

@@ -1,11 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { LogOut, Trash2 } from 'lucide-react';
+import { ArrowUpRight, Heart, LogOut, Trash2 } from 'lucide-react';
 import { accountApi, useAccount, type ProfileFields, type ProfileOptions } from '../lib/account';
 import { consent, setConsent } from '../lib/analytics';
+import { known } from '../lib/content';
+import { useContent } from '../lib/contentStore';
 import { Link, navigate } from '../lib/navigation';
+import { achievements } from '../lib/progress';
 import { useProgress } from '../lib/store';
 import { t } from '../lib/i18n';
 import { Scene } from '../components/UI';
+import { MedalShelf, PassportStamp } from '../pages/Collection';
 import { MyWriting } from './WriteArticle';
 import './visitor.css';
 
@@ -83,7 +87,8 @@ export function LoginPage({ query }: { query: string }) {
 
 export function AccountPage() {
   const { user, ready, update, logout, remove } = useAccount();
-  const { progress } = useProgress();
+  const { progress, toggleFavorite } = useProgress();
+  const { artifacts } = useContent();
   const options = useOptions();
   const [profile, setProfile] = useState<ProfileFields | null>(null);
   const [mine, setMine] = useState<MyContribution[]>([]);
@@ -99,15 +104,43 @@ export function AccountPage() {
     catch (e) { setMessage((e as Error).message); }
   }
   const STATUS: Record<string, string> = { pending: t('Onay bekliyor', 'Awaiting review'), approved: t('Yayında', 'Published'), rejected: t('Yayınlanmadı', 'Not published') };
+  const medals = achievements(progress, artifacts);
+  const earned = medals.filter(a => a.value >= a.required).length;
+  // the latest stamps first; favourites the latest added first
+  const stamped = artifacts.filter(a => progress.discovered[a.id]).sort((a, b) => progress.discovered[b.id].localeCompare(progress.discovered[a.id]));
+  const cities = new Set(stamped.map(a => a.city)).size;
+  const favorites = progress.favorites.flatMap(id => artifacts.filter(a => a.id === id)).reverse();
   return <Scene className="visitor-scene"><div className="page-shell v-page">
     <p className="eyebrow">{t('HESABIM', 'MY ACCOUNT')}</p>
     <h1>{t('Merhaba', 'Hello')}{user.display_name ? `, ${user.display_name}` : ''}.</h1>
     <p className="v-lede">{user.email} · {t(`Pasaportunda ${Object.keys(progress.discovered).length} mühür, ${progress.favorites.length} favori var; her cihazda aynı.`, `Your passport holds ${Object.keys(progress.discovered).length} stamps and ${progress.favorites.length} favourites, the same on every device.`)}</p>
-    <form className="v-form" onSubmit={save}>
-      <ProfileInputs value={profile} onChange={setProfile} options={options} />
-      {message && <p className="v-note" role="status">{message}</p>}
-      <button className="button dark">{t('Kaydet', 'Save')}</button>
-    </form>
+    <section className="v-section" aria-labelledby="v-medals">
+      <div className="v-head"><h2 id="v-medals">{t('Madalyonlarım', 'My medallions')}</h2><Link className="text-link" to="/basarimlar">{t('Madalyon odasını aç', 'Open the medal room')} <ArrowUpRight size={16} aria-hidden="true" /></Link></div>
+      <p className="v-note">{t(`${medals.length} madalyondan ${earned} tanesi sende.`, `You hold ${earned} of ${medals.length} medallions.`)}</p>
+      <MedalShelf list={medals} />
+    </section>
+    <section className="v-section" aria-labelledby="v-passport">
+      <div className="v-head"><h2 id="v-passport">{t('Miras Pasaportum', 'My Heritage Passport')}</h2><Link className="text-link" to="/pasaport">{t('Pasaportumu aç', 'Open my passport')} <ArrowUpRight size={16} aria-hidden="true" /></Link></div>
+      {stamped.length ? <>
+        <p className="v-note">{t(`${stamped.length} mühür, ${cities} farklı şehir. Son mühürlerin:`, `${stamped.length} stamps from ${cities} ${cities === 1 ? 'city' : 'different cities'}. Your latest stamps:`)}</p>
+        <ul className="v-stamps">{stamped.slice(0, 4).map((a, i) => <li key={a.id}><PassportStamp artifact={a} at={progress.discovered[a.id]} index={i} /></li>)}</ul>
+      </> : <p className="v-note">{t('Henüz mühür yok. Bir eserin hikâyesini oku ve sonunda “Pasaportuma mühürle” seçeneğine dokun.', 'No stamps yet. Read the story of a work and tap “Stamp my passport” at the end.')} <Link to="/kesfet">{t('İlk keşfine başla', 'Start your first discovery')}</Link></p>}
+    </section>
+    <section className="v-section" aria-labelledby="v-favorites">
+      <div className="v-head"><h2 id="v-favorites">{t('Favorilerim', 'My favourites')}</h2>{favorites.length > 0 && <Link className="text-link" to="/kesfet">{t('Daha fazla eser', 'More works')} <ArrowUpRight size={16} aria-hidden="true" /></Link>}</div>
+      {favorites.length ? <ul className="v-favorites">{favorites.map(a => <li key={a.id}>
+        <Link to={`/eser/${a.slug}`}><img src={a.image} alt="" loading="lazy" /><span>{a.city}{known(a.year) ? ` · ${a.year}` : ''}</span><strong>{a.name}</strong></Link>
+        <button type="button" className="v-unfavorite" onClick={() => toggleFavorite(a.id)} aria-label={`${t('Favorilerden çıkar', 'Remove from favourites')}: ${a.name}`}><Heart size={17} fill="currentColor" aria-hidden="true" /></button>
+      </li>)}</ul>
+        : <p className="v-note">{t('Henüz favorin yok. Keşfet’teki eser kartlarında kalbe dokunarak ekleyebilirsin.', 'No favourites yet. Tap the heart on a work’s card in Explore to add one.')} <Link to="/kesfet">{t('Keşfet’e git', 'Go to Explore')}</Link></p>}
+    </section>
+    <section className="v-section" aria-labelledby="v-profile"><h2 id="v-profile">{t('Profilin', 'Your profile')}</h2>
+      <form className="v-form" onSubmit={save}>
+        <ProfileInputs value={profile} onChange={setProfile} options={options} />
+        {message && <p className="v-note" role="status">{message}</p>}
+        <button className="button dark">{t('Kaydet', 'Save')}</button>
+      </form>
+    </section>
     <section className="v-section"><h2>{t('Katkıların', 'Your contributions')}</h2>
       {mine.length ? <ul className="v-mine">{mine.map(c => <li key={c.id}><Link to={`/eser/${c.monument}`}>{c.monument_name}</Link>
         <span>{c.kind === 'photo' ? t('Fotoğraf', 'Photo') : c.text_kind_label}</span><strong className={`v-status ${c.status}`}>{STATUS[c.status]}</strong>

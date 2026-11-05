@@ -31,7 +31,7 @@ export function useSmoothScroll() {
     const query = reducedMotion();
     const start = () => {
       if (query.matches || lenis) return;
-      lenis = new Lenis({ lerp: 0.09, autoRaf: false, allowNestedScroll: true, prevent: node => node.matches('dialog, [role="dialog"], .mobile-menu') });
+      lenis = new Lenis({ lerp: 0.09, autoRaf: false, allowNestedScroll: true, prevent: node => node.matches('dialog, [role="dialog"]') });
       lenis.on('scroll', ScrollTrigger.update);
     };
     const stop = () => { lenis?.destroy(); lenis = null; };

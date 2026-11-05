@@ -1,30 +1,17 @@
 import { Fragment, useEffect, useRef, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowUpRight, Compass, MapPin, Stamp } from 'lucide-react';
+import { ArrowUpRight, Compass, Stamp } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import type { Season } from '../data/collections';
+import { known } from '../lib/content';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
-import { normalize } from '../lib/progress';
-
-// Where the collection's cities lie on the schematic map (/images/turkiye-gece.svg, 1200 × 600), in percent of its width
-// and height: the city's coordinates scaled to the map's outline, moved onto the land where the outline is simplified
-// (İstanbul and Antakya fall just off its coast). A city not listed here gets no pin.
-const CITY_PINS: Record<string, [number, number]> = {
-  bursa: [21, 32], konya: [36.5, 55], hatay: [53.4, 64.7], antakya: [53.4, 64.7], istanbul: [19.2, 25], edirne: [9.4, 16.2],
-  sivas: [57.2, 35.8], izmir: [12.8, 51], ankara: [38.2, 34],
-};
-const mapCities = (artifacts: DiscoveryArtifact[]) => [...new Map(artifacts.flatMap(a => {
-  const pin = CITY_PINS[normalize(a.city)];
-  return pin ? [[normalize(a.city), [a.city, pin] as [string, [number, number]]]] : [];
-})).values()];
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Scroll scenes on the home page, each after one reference site's signature effect. Reduced motion shows them still.
 const MOTION = '(prefers-reduced-motion: no-preference)';
-const pad = (n: number) => String(n).padStart(2, '0');
 
 function useScene<T extends HTMLElement>(build: (root: T) => void, deps: unknown[] = []) {
   const ref = useRef<T>(null);
@@ -38,25 +25,22 @@ function useScene<T extends HTMLElement>(build: (root: T) => void, deps: unknown
   return ref;
 }
 
-// Hart Studio: two rows of large words that slide in opposite directions as the page scrolls.
+// Hart Studio: one line of the five verbs drifting with the scroll, upright in ink and italic in gold by turns.
 const words = () => [t('Fark et', 'Notice'), t('Merak et', 'Wonder'), t('Öğren', 'Learn'), t('Keşfet', 'Discover'), t('Deneyimle', 'Experience')];
 export function Manifesto() {
   const ref = useScene<HTMLElement>(root => {
-    const scroll = { trigger: root, start: 'top bottom', end: 'bottom top', scrub: 0.5 };
-    gsap.fromTo(root.querySelector('.marquee-row.ahead .marquee-track'), { xPercent: -4 }, { xPercent: -28, ease: 'none', scrollTrigger: scroll });
-    gsap.fromTo(root.querySelector('.marquee-row.back .marquee-track'), { xPercent: -28 }, { xPercent: -4, ease: 'none', scrollTrigger: scroll });
+    gsap.fromTo(root.querySelector('.marquee-track'), { xPercent: -6 }, { xPercent: -30, ease: 'none', scrollTrigger: { trigger: root, start: 'top bottom', end: 'bottom top', scrub: 0.5 } });
   });
-  const row = (upper: boolean) => [0, 1, 2].map(copy => <span key={copy}>{words().map(word => <Fragment key={word}><b>{upper ? word.toLocaleUpperCase(locale()) : word}</b><i>✧</i></Fragment>)}</span>);
+  const list = words();
   return <section className="manifesto" ref={ref}>
-    <p className="sr-only">{words().join(', ')}.</p>
-    <div className="marquee-row ahead" aria-hidden="true"><div className="marquee-track">{row(true)}</div></div>
-    <div className="marquee-row back" aria-hidden="true"><div className="marquee-track">{row(false)}</div></div>
+    <p className="sr-only">{list.join(', ')}.</p>
+    <div className="marquee-row" aria-hidden="true"><div className="marquee-track">{[0, 1, 2].map(copy => <span key={copy}>{list.map((word, i) => <Fragment key={word}>{(copy * list.length + i) % 2 ? <em>{word}</em> : <b>{word}</b>}<i>✧</i></Fragment>)}</span>)}</div></div>
   </section>;
 }
 
 // Monoform: numbered cards that pin one after another and pile up, the ones underneath shrinking into the shade.
 // A long route names its first stops and counts the rest, so every card stays the same size.
-const STOPS_SHOWN = 6;
+const STOPS_SHOWN = 4;
 export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Season[]; artifacts: DiscoveryArtifact[]; discovered: Record<string, unknown> }) {
   const ref = useScene<HTMLOListElement>(root => {
     const cards = gsap.utils.toArray<HTMLElement>('.season-card', root);
@@ -75,21 +59,13 @@ export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Seaso
       return <li key={season.id} className="season-card" style={{ '--i': i } as CSSProperties}>
         <Link to={`/kesfet?season=${season.id}`} className="season-link">
           <span className="season-top"><small>{season.kicker}</small><small>{season.artifactIds.length} {t('DURAK', 'STOPS')}{found ? ` · ${found} ${t('MÜHÜR', 'STAMPS')}` : ''}</small></span>
-          <span className="season-number" aria-hidden="true">{pad(i + 1)}</span>
-          <span className="season-body"><h3>{season.title}</h3><span className="season-text">{season.description}</span><span className="season-stops">{stops.slice(0, STOPS_SHOWN).map(a => <span key={a.id}>{a.name}</span>)}{stops.length > STOPS_SHOWN && <span className="more">+{stops.length - STOPS_SHOWN} {t('durak', 'stops')}</span>}</span></span>
+          <span className="season-body"><h3>{season.title}</h3><span className="season-text">{season.description}</span><span className="season-stops">{stops.slice(0, STOPS_SHOWN).map(a => <span key={a.id}>{a.name}</span>)}{stops.length > STOPS_SHOWN && <span className="more">{t(`ve ${stops.length - STOPS_SHOWN} durak daha`, `and ${stops.length - STOPS_SHOWN} more stops`)}</span>}</span></span>
           <span className="season-pics" aria-hidden="true">{stops.slice(0, 4).map((a, k) => <span key={a.id} style={{ '--k': k } as CSSProperties}><img src={a.image} alt="" loading="lazy" /></span>)}</span>
           <span className="season-go" aria-hidden="true"><ArrowUpRight size={22} /></span>
         </Link>
         <span className="season-dim" aria-hidden="true" />
       </li>;
     })}
-    <li className="season-card season-map" style={{ '--i': seasons.length } as CSSProperties}>
-      <Link to="/harita" className="map-teaser"><div className="map-lines" />
-        {/* The map once, at its own proportions, with a pin on each city of the collection where it lies on the map. */}
-        <div className="map-teaser-map" aria-hidden="true"><img src="/images/turkiye-gece.svg" alt="" loading="lazy" />
-          {mapCities(artifacts).map(([name, [x, y]]) => <span key={name} className="map-teaser-pin" style={{ left: `${x}%`, top: `${y}%` }}><MapPin /><b>{name}</b></span>)}</div><div className="route-copy"><span className="eyebrow">{pad(seasons.length + 1)} · {t('MİRAS HARİTASI', 'HERITAGE MAP')}</span><h3>{t('Yakınında bir', 'There is a story')}<br /><em>{t('hikâye var.', 'near you.')}</em></h3><span>{t('Haritada keşfet', 'Explore on the map')} <ArrowUpRight size={20} /></span></div></Link>
-      <span className="season-dim" aria-hidden="true" />
-    </li>
   </ol>;
 }
 
@@ -106,13 +82,18 @@ export function Statement({ parts = STATEMENT }: { parts?: [string, boolean][] }
   })}</p>;
 }
 
-// Shopify Editions: stamps float around the passport at different depths; far ones are small, soft and slow, near
-// ones large and quick, and each turns a little as it passes.
+// Shopify Editions: stamps float around the passport, each at its own pace and turning a little as it passes. One
+// stamp for each of the collection's cities.
 const STAMP_SPOTS = [
-  { x: 12, y: 10, size: 84, depth: 0.35, turn: -14 }, { x: 82, y: 4, size: 112, depth: 1, turn: 10 },
-  { x: 90, y: 68, size: 128, depth: 1.4, turn: 14 }, { x: 4, y: 76, size: 100, depth: 0.8, turn: -6 },
-  { x: 54, y: 96, size: 74, depth: 0.3, turn: 8 }, { x: 40, y: -6, size: 66, depth: 0.5, turn: -18 },
+  { x: 80, y: 16, size: 124, depth: 0.9, turn: 10 }, { x: 74, y: 84, size: 116, depth: 1.1, turn: -8 },
+  { x: 15, y: 30, size: 104, depth: 0.6, turn: -12 }, { x: 22, y: 86, size: 96, depth: 0.8, turn: 14 },
 ];
+// A work from each city, the first whose date is known where the city has one, for the stamps around the passport.
+function cityStamps(artifacts: DiscoveryArtifact[]) {
+  const byCity = new Map<string, DiscoveryArtifact>();
+  for (const a of artifacts) { const have = byCity.get(a.city); if (!have || (!known(have.year) && known(a.year))) byCity.set(a.city, a); }
+  return [...byCity.values()].slice(0, STAMP_SPOTS.length);
+}
 export function PassportVisual({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   const ref = useScene<HTMLDivElement>(root => {
     const scrollTrigger = { trigger: root.closest('section') ?? root, start: 'top bottom', end: 'bottom top', scrub: true };
@@ -124,10 +105,10 @@ export function PassportVisual({ artifacts }: { artifacts: DiscoveryArtifact[] }
   });
   return <div className="passport-illustration" ref={ref} aria-hidden="true">
     <div className="mini-passport"><span>{t('TÜRKİYE KÜLTÜREL MİRASI', 'CULTURAL HERITAGE OF TÜRKİYE')}</span><Compass size={72} strokeWidth={0.8} /><h3>{t('MİRAS', 'HERITAGE')}<br />{t('PASAPORTU', 'PASSPORT')}</h3><span>{t('EŞİK · KEŞİF GÜNLÜĞÜ', 'EŞİK · DISCOVERY JOURNAL')}</span></div>
-    {STAMP_SPOTS.map(({ x, y, size, depth, turn }, i) => {
-      const artifact = artifacts[i % artifacts.length];
-      return <div key={i} className={`float-stamp tone-${i % 3}${depth < 0.6 ? ' far' : ''}${depth > 1.1 ? ' near' : ''}`} data-depth={depth} data-turn={turn} style={{ left: `${x}%`, top: `${y}%`, width: size, fontSize: Math.round(size * 0.11), rotate: `${turn}deg` } as CSSProperties}>
-        <Stamp size={Math.round(size / 5)} /><span>{i === 0 ? t('İLK ADIM', 'FIRST STEP') : artifact.city.toLocaleUpperCase(locale())}</span><i>{i === 0 ? t('YOLCULUK BAŞLIYOR', 'THE JOURNEY BEGINS') : artifact.year}</i>
+    {cityStamps(artifacts).map((artifact, i) => {
+      const { x, y, size, depth, turn } = STAMP_SPOTS[i];
+      return <div key={artifact.city} className={`float-stamp tone-${i % 3}`} data-depth={depth} data-turn={turn} style={{ left: `${x}%`, top: `${y}%`, width: size, fontSize: Math.round(size * 0.1), rotate: `${turn}deg` } as CSSProperties}>
+        <Stamp size={Math.round(size / 5.5)} /><span>{artifact.city.toLocaleUpperCase(locale())}</span>{known(artifact.year) && <i>{artifact.year}</i>}
       </div>;
     })}
   </div>;

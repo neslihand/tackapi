@@ -1,147 +1,100 @@
-// "Hatırla": spaced-repetition cards for discovered works and opened glossary terms (Leitner boxes 1-3-7-21 days).
-// Pure functions; the saved state (esik:recall:v1, recall-state.ts) keeps only ids, boxes and days, never text.
-import type { Item, QuizQuestion } from './api';
-import { fromKey, hash, localDays } from './hunt';
-import { compareKeys, dayKey, type Progress } from './passport';
-import { questionsFor, type Random } from './quiz';
-import type { GlossaryTerm } from './reading';
+// Hatırla (master plan M08): short reviews of the works the visitor has already discovered and the glossary terms they
+// opened, at 1, 3, 7 and 21 days. A work's card is a question from the quiz pool, so its answer and explanation come from
+// the work's own record; a term's card shows the glossary definition. The schedule lives in the passport: it works
+// offline and follows the account. Which terms were opened, and when, stays on the phone (recall-state.ts).
+import type { QuizQuestion } from './api';
+import { addDays, compareKeys, dayKey, type Progress, type RecallState } from './passport';
 
-export const RECALL_KEY = 'esik:recall:v1';
-/** Days until the next review, for boxes 1..4; a card stays in the last box once it gets there. */
-export const BOXES = [1, 3, 7, 21];
-export const SESSION_MAX = 5;
-export const FIRST_SESSION = 3;
-const LAST_BOX = BOXES.length;
+export const RECALL_DAYS = [1, 3, 7, 21];
+export const DAILY_CARDS = 5;
+export type RecallAnswer = 'right' | 'wrong' | 'forgot';
 
-/** work:<slug>:<city|architect|century|period> or term:<slug> */
-export type CardId = string;
-export type Box = 1 | 2 | 3 | 4;
-export type CardState = { box: Box; due: string };
-export type RecallState = { version: 1; cards: Record<CardId, CardState>; terms: Record<string, string>; sessions: number };
-/** A card that can be asked: `first` is the day the work was discovered or the term opened. */
-export type Candidate = { id: CardId; kind: 'work' | 'term'; slug: string; first: string };
+// a work's card: a written question first, then what is hardest to guess; the city is the last resort
+const PREFERENCE = ['century', 'period', 'architect', 'city'];
+const rank = (q: QuizQuestion) => q.id.startsWith('veri:') ? 1 + PREFERENCE.indexOf(q.id.split(':')[1]) : 0;
 
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
-export const addDays = (key: string, n: number) => { const d = fromKey(key); return dayKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)); };
-/** Whole local days from `now` until `key` (negative when past). */
-export const daysUntil = (key: string, now: Date) => localDays(fromKey(key)) - localDays(now);
-// discovery times are ISO instants; a bare day is taken as it is
-const dayOf = (when: string) => (DAY.test(when) ? when : dayKey(new Date(when)));
-
-export function parseCardId(id: CardId): { kind: 'work'; slug: string; field: string } | { kind: 'term'; slug: string } | null {
-  const work = id.match(/^work:(.+):(city|architect|century|period)$/);
-  if (work) return { kind: 'work', slug: work[1], field: work[2] };
-  const term = id.match(/^term:(.+)$/);
-  return term ? { kind: 'term', slug: term[1] } : null;
-}
-
-export const emptyRecall = (): RecallState => ({ version: 1, cards: {}, terms: {}, sessions: 0 });
-
-/** Saved text → state; a malformed card or term is dropped. */
-export function parseRecall(value: string | null): RecallState {
-  const state = emptyRecall();
-  try {
-    const data = JSON.parse(value ?? '{}') ?? {};
-    for (const [id, c] of Object.entries((data.cards ?? {}) as Record<string, Partial<CardState>>))
-      if (parseCardId(id) && typeof c?.box === 'number' && Number.isInteger(c.box) && c.box >= 1 && c.box <= LAST_BOX && typeof c.due === 'string' && DAY.test(c.due))
-        state.cards[id] = { box: c.box as Box, due: c.due };
-    for (const [slug, day] of Object.entries((data.terms ?? {}) as Record<string, unknown>))
-      if (typeof day === 'string' && DAY.test(day)) state.terms[slug] = day;
-    if (Number.isInteger(data.sessions) && data.sessions > 0) state.sessions = data.sessions;
-  } catch { /* a broken save starts over */ }
-  return state;
-}
-
-/** An opened term becomes a card; the first opening day is kept. */
-export function withTerm(state: RecallState, slug: string, now: Date): RecallState {
-  return state.terms[slug] ? state : { ...state, terms: { ...state.terms, [slug]: dayKey(now) } };
-}
-
-/** One card per question quiz.ts can ask about a discovered work; works no longer in the list are skipped. */
-export function workCards(progress: Progress, items: readonly Item[]): Candidate[] {
-  const bySlug = new Map(items.map(i => [i.slug, i]));
-  const out: Candidate[] = [];
-  for (const [slug, when] of Object.entries(progress.discovered)) {
-    const item = bySlug.get(slug);
-    if (!item) continue;
-    // whether a question exists does not depend on the shuffle
-    for (const q of questionsFor(item, items, () => 0)) out.push({ id: `work:${slug}:${q.id.split(':')[1]}`, kind: 'work', slug, first: dayOf(when) });
+/** The one card of each work, whichever way the pool was shuffled. */
+export function deck(pool: readonly QuizQuestion[]) {
+  const cards = new Map<string, QuizQuestion>();
+  for (const q of pool) {
+    const held = cards.get(q.artifactId);
+    if (!held || rank(q) < rank(held)) cards.set(q.artifactId, q);
   }
-  return out;
+  return cards;
 }
 
-/** Opened terms still in the glossary; without the glossary (offline, never loaded) there are none. */
-export function termCards(state: RecallState, glossary: readonly GlossaryTerm[] | null): Candidate[] {
-  if (!glossary) return [];
-  const known = new Set(glossary.map(g => g.slug));
-  return Object.entries(state.terms).filter(([slug]) => known.has(slug)).map(([slug, day]) => ({ id: `term:${slug}`, kind: 'term', slug, first: day }));
+/** When the visitor first met a work: its stamp, or a finished Detay Avı about it (master plan M07). A game writes no stamp,
+ *  but what it taught can still be asked again. */
+function metOn(p: Progress) {
+  const played = new Map<string, string>();
+  for (const h of Object.values(p.hunt)) if (h.work && !(played.get(h.work)! <= h.at)) played.set(h.work, h.at);
+  return (slug: string) => p.discovered[slug] ?? played.get(slug);
 }
 
-/** A new card is first asked the day after its discovery; then on its saved day. */
-export const dueDay = (state: RecallState, card: Candidate) => state.cards[card.id]?.due ?? addDays(card.first, 1);
-
-/** The cards whose day has come: the longest-waiting first, then a fixed order for the day. */
-export function dueCards(state: RecallState, candidates: readonly Candidate[], now: Date): Candidate[] {
+/** Cards due today, the longest waiting first: a work's first card opens the day after the visitor met it. */
+export function dueCards(pool: readonly QuizQuestion[], progress: Progress, now = new Date(), limit = DAILY_CARDS) {
   const today = dayKey(now);
-  return candidates.filter(c => daysUntil(dueDay(state, c), now) <= 0)
-    .sort((a, b) => compareKeys(dueDay(state, a), dueDay(state, b)) || hash(`${today}:${a.id}`) - hash(`${today}:${b.id}`) || compareKeys(a.id, b.id));
-}
-
-/** The soonest day any card comes back, or null with no cards. */
-export function nextDue(state: RecallState, candidates: readonly Candidate[]): string | null {
-  return candidates.map(c => dueDay(state, c)).sort()[0] ?? null;
-}
-
-export const sessionSize = (state: RecallState) => (state.sessions === 0 ? FIRST_SESSION : SESSION_MAX);
-
-/** At most 3 cards the first time, 5 after; different works (and terms) first, a second card of one only to fill up. */
-export function pickSession(state: RecallState, due: readonly Candidate[]): Candidate[] {
-  const size = sessionSize(state);
-  const picked: Candidate[] = [];
-  const covered = new Set<string>();
-  for (const c of due) if (picked.length < size && !covered.has(`${c.kind}:${c.slug}`)) { picked.push(c); covered.add(`${c.kind}:${c.slug}`); }
-  for (const c of due) if (picked.length < size && !picked.includes(c)) picked.push(c);
-  return picked;
-}
-
-/** Right → one box up (the last box keeps it), wrong → box 1; the next day follows from the box. */
-export function answerCard(state: RecallState, id: CardId, correct: boolean, now: Date): RecallState {
-  const from = state.cards[id]?.box ?? 1;
-  const box = (correct ? Math.min(from + 1, LAST_BOX) : 1) as Box;
-  return { ...state, cards: { ...state.cards, [id]: { box, due: addDays(dayKey(now), BOXES[box - 1]) } } };
-}
-
-/** Every card that exists now, new ones included, is due today (Ayarlar → Sunum); boxes and sessions stay as they
- *  are, and a card already overdue keeps its day. */
-export function bringForward(state: RecallState, candidates: readonly Candidate[], now: Date): RecallState {
-  const today = dayKey(now);
-  const cards = { ...state.cards };
-  for (const c of candidates) {
-    const saved = cards[c.id];
-    if (!saved) cards[c.id] = { box: 1, due: today };
-    else if (saved.due > today) cards[c.id] = { ...saved, due: today };
+  const met = metOn(progress);
+  const due: { card: QuizQuestion; since: string; state: RecallState | undefined }[] = [];
+  for (const [slug, card] of deck(pool)) {
+    const state = progress.recall[card.id];
+    const first = met(slug);
+    if (!first) continue;
+    const since = state ? state.due : addDays(dayKey(new Date(first)), RECALL_DAYS[0]);
+    if (since && since <= today && state?.last !== today) due.push({ card, since, state });
   }
-  return { ...state, cards };
+  return due.sort((a, b) => compareKeys(a.since, b.since) || compareKeys(a.card.id, b.card.id)).slice(0, limit);
 }
 
-export const endSession = (state: RecallState): RecallState => ({ ...state, sessions: state.sessions + 1 });
-
-/** mulberry32 seeded from the text: the same card on the same day gives the same order everywhere. */
-export function seededRandom(seed: string): Random {
-  let a = hash(seed);
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let x = Math.imul(a ^ (a >>> 15), 1 | a);
-    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
+/** The day the next card opens, for the Hatırla notification; null when none is waiting. */
+export function nextRecallDay(pool: readonly QuizQuestion[], progress: Progress) {
+  let next: string | null = null;
+  const met = metOn(progress);
+  for (const [slug, card] of deck(pool)) {
+    const first = met(slug);
+    if (!first) continue;
+    const state = progress.recall[card.id];
+    const day = state ? state.due : addDays(dayKey(new Date(first)), RECALL_DAYS[0]);
+    if (day && (!next || day < next)) next = day;
+  }
+  return next;
 }
 
-/** A work card's question, built now in the current language; its options keep their order all day. */
-export function questionFor(id: CardId, items: readonly Item[], now: Date): QuizQuestion | null {
-  const card = parseCardId(id);
-  if (card?.kind !== 'work') return null;
-  const item = items.find(i => i.slug === card.slug);
-  if (!item) return null;
-  return questionsFor(item, items, seededRandom(`${id}:${dayKey(now)}`)).find(q => q.id === `veri:${card.field}:${card.slug}`) ?? null;
+export const termCardId = (slug: string) => `term:${slug}`;
+
+/** Term cards due today, the longest waiting first: a term's first card opens the day after it was opened. */
+export function dueTermCards(opened: Readonly<Record<string, string>>, known: ReadonlySet<string>, progress: Progress, now = new Date()) {
+  const today = dayKey(now);
+  const due: { id: string; slug: string; since: string; state: RecallState | undefined }[] = [];
+  for (const [slug, first] of Object.entries(opened)) {
+    if (!known.has(slug)) continue;
+    const id = termCardId(slug);
+    const state = progress.recall[id];
+    const since = state ? state.due : addDays(first, RECALL_DAYS[0]);
+    if (since && since <= today && state?.last !== today) due.push({ id, slug, since, state });
+  }
+  return due.sort((a, b) => compareKeys(a.since, b.since) || compareKeys(a.id, b.id));
+}
+
+/** The day the next term card opens; null when none is waiting. */
+export function nextTermDay(opened: Readonly<Record<string, string>>, progress: Progress) {
+  let next: string | null = null;
+  for (const [slug, first] of Object.entries(opened)) {
+    const state = progress.recall[termCardId(slug)];
+    const day = state ? state.due : addDays(first, RECALL_DAYS[0]);
+    if (day && (!next || day < next)) next = day;
+  }
+  return next;
+}
+
+/** Records an answer: right moves on to the next interval, anything else starts over from tomorrow. After the last
+ *  interval the card is finished (due: null). A card answered today stays as it is until its next due day. */
+export function answerCard(p: Progress, cardId: string, answer: RecallAnswer, now = new Date()): Progress {
+  const today = dayKey(now);
+  const held = p.recall[cardId];
+  if (held?.last === today) return p;
+  const step = answer === 'right' ? (held?.step ?? 0) + 1 : 0;
+  const state: RecallState = { step, due: answer !== 'right' ? addDays(today, RECALL_DAYS[0]) : step < RECALL_DAYS.length ? addDays(today, RECALL_DAYS[step]) : null,
+    first: held ? held.first : answer === 'right', last: today, at: now.toISOString() };
+  return { ...p, recall: { ...p.recall, [cardId]: state } };
 }

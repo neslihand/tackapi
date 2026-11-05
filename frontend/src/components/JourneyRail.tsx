@@ -6,8 +6,8 @@ import { t } from '../lib/i18n';
 // marks the step being read and jumps to the start of any other; it stays out of the way during the entrance.
 const STEPS: [() => string, string[]][] = [
   [() => t('Etkilen', 'Be moved'), ['giris']],
-  [() => t('Anla', 'Understand'), ['vizyon']],
-  [() => t('Keşfet', 'Discover'), ['featured', 'rotalar', 'araclar']],
+  [() => t('Anla', 'Understand'), ['araclar']],
+  [() => t('Keşfet', 'Discover'), ['featured', 'rotalar', 'eserin-ici']],
   [() => t('Katıl', 'Take part'), ['pasaport', 'kapanis']],
 ];
 

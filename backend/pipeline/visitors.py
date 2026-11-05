@@ -13,6 +13,7 @@
   POST   /api/monuments/{slug}/contributions  katkı (giriş gerekir; multipart: kind=photo|text, text_kind, body, file)
   GET    /api/monuments/{slug}/contributions  onaylanmış katkılar (eser sayfasındaki "Ziyaretçi katkıları")
   GET    /api/me/contributions                kendi katkılarım ve durumları
+  (kaynakta olmayan sorunun takibi: questions.py)
   GET    /api/recommendations?session_id=     "Senin için": kişisel öneriler ve ziyaretçinin profilleri
   GET    /api/popular?days=7                  en çok merak edilenler ve trend
   GET    /api/site-settings                   varsayılan anlatım biçimi, öne çıkan rota (veriden ya da elle)
@@ -23,6 +24,7 @@ uçlar yalnızca JSON kabul eder (başka sitelerden form gönderimiyle tetiklene
 """
 import os, io, re, json, time, uuid, threading
 from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 from fastapi import APIRouter, File, Form, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
@@ -37,7 +39,20 @@ EVENT_TYPES = {
     # makaleler ve terimler sözlüğü
     'article_view', 'article_submit', 'term_submit', 'term_search',
     # site deneyimi (yönetici asistanı): tarayıcı hatası, sayfa açılış süresi, başarısız ve yavaş istek
-    'client_error', 'page_perf', 'api_error', 'api_slow'}
+    'client_error', 'page_perf', 'api_error', 'api_slow',
+    # mobil: ilk kullanım, gerçekten okunan hikâye, Keşif Defteri, rota ve tekrar (WMHE için bkz. insights.wmhe)
+    'onboarding_intent_selected', 'heritage_story_started', 'heritage_story_completed', 'item_saved',
+    'route_started', 'route_completed', 'knowledge_recalled', 'rhythm_changed',
+    # paylaşım: başlatıldı, bağlantı siteye ya da uygulamaya geçti (paylaşım sayfasının kendisi kayıt tutmaz)
+    'share_initiated', 'share_opened',
+    # mobil: çevrimdışı rota paketi indirildi ve yerine yazıldı; bildirim türü kapatıldı
+    'offline_package_downloaded', 'notification_opt_out',
+    # mobil: Detay Avı
+    'daily_hunt_started', 'daily_hunt_completed',
+    # mobil: üç detaydan biri açıldı; kaynakta olmayan soru takip edildi, kapanışı görüldü
+    'heritage_detail_explored', 'question_followed', 'question_answered',
+    # mobil: "Sana göre" tercihi değişti (yalnızca hangi alan; değeri gönderilmez)
+    'preferences_changed'}
 SESSION_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 PROPS_MAX = 2000
 PHOTO_MAX = 10 * 1024 * 1024
@@ -108,7 +123,8 @@ class Limiter:
 
 # Panel sorgularının sayı ya da doğru/yanlış olarak okuduğu alanlar: tipi uymayan değer kaydedilmez
 NUMERIC = {'depth', 'seconds', 'results', 'score', 'radius', 'load_ms', 'ttfb_ms', 'ms', 'status'}
-BOOLEAN = {'on', 'no_info', 'granted'}
+BOOLEAN = {'on', 'no_info', 'granted', 'correct', 'first_attempt_correct', 'dev'}
+OFFLINE_DAYS = 30   # çevrimdışı biriken olayın kendi zamanı en çok bu kadar geriye gidebilir
 
 
 def clean_props(props):
@@ -137,6 +153,20 @@ def clean_props(props):
     while len(json.dumps(out, ensure_ascii=False)) > PROPS_MAX and out:
         out.pop(next(reversed(out)))
     return out
+
+
+def event_time(value):
+    """İstemcinin bildirdiği olay zamanı: geçerli, gelecekte değil ve OFFLINE_DAYS'ten eski değilse; yoksa None."""
+    if not isinstance(value, str):
+        return None
+    try:
+        at = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    if at.tzinfo is None:
+        return None
+    now = datetime.now(timezone.utc)
+    return at if now - timedelta(days=OFFLINE_DAYS) <= at <= now else None
 
 
 def build_router(db, media_dir):
@@ -295,6 +325,8 @@ def build_router(db, media_dir):
         db.execute('DELETE FROM contribution WHERE user_id = %(u)s', dict(u=u['id']))
         import articles   # döngüsel içe aktarmayı önler (articles, visitors.Limiter'ı kullanır)
         articles.forget_user(db, u['id'], media_dir)
+        import questions
+        questions.forget_user(db, u['id'])
         db.execute('DELETE FROM user_session WHERE user_id = %(u)s', dict(u=u['id']))
         db.execute('DELETE FROM user_progress WHERE user_id = %(u)s', dict(u=u['id']))
         db.execute('UPDATE analytics_event SET user_id = NULL WHERE user_id = %(u)s', dict(u=u['id']))
@@ -318,12 +350,19 @@ def build_router(db, media_dir):
             raise HTTPException(422, 'Geçersiz oturum kimliği.')
         event_limit.check('ev:' + body.session_id, 'Çok fazla olay gönderildi.')
         u = user_of(request)
-        rows = [(e.type, e.slug, e.path, json.dumps(clean_props(e.props), ensure_ascii=False))
-                for e in body.events if e.type in EVENT_TYPES]
-        for t, slug, path, props in rows:
-            db.execute("""INSERT INTO analytics_event(session_id, user_id, type, monument_slug, path, props)
-                          VALUES (%(s)s, %(u)s, %(t)s, %(m)s, %(p)s, %(x)s::jsonb)""",
-                       dict(s=body.session_id, u=u['id'] if u else None, t=t, m=slug, p=path, x=props))
+        for e in body.events:
+            if e.type not in EVENT_TYPES:
+                continue
+            props = clean_props(e.props)
+            # Mobil, bağlantı yokken olayları biriktirip sonra gönderir: event_id aynı olayın iki kez yazılmasını önler,
+            # occurred_at olayı gerçekleştiği haftaya yazar. İkisi olmayan (web) olaylar eskisi gibi şimdiki zamanla girer.
+            db.execute("""INSERT INTO analytics_event(at, session_id, user_id, type, monument_slug, path, props)
+                          SELECT COALESCE(%(at)s::timestamptz, now()), %(s)s, %(u)s, %(t)s, %(m)s, %(p)s, %(x)s::jsonb
+                          WHERE %(id)s::text IS NULL OR NOT EXISTS (
+                              SELECT 1 FROM analytics_event WHERE session_id = %(s)s AND props->>'event_id' = %(id)s)""",
+                       dict(at=event_time(props.get('occurred_at')), s=body.session_id, u=u['id'] if u else None, t=e.type,
+                            m=e.slug, p=e.path, x=json.dumps(props, ensure_ascii=False),
+                            id=props.get('event_id') if isinstance(props.get('event_id'), str) else None))
         if u:
             db.execute("UPDATE app_user SET last_seen_at = now() WHERE id = %(u)s AND (last_seen_at IS NULL OR last_seen_at < now() - interval '5 minutes')",
                        dict(u=u['id']))
@@ -428,7 +467,7 @@ def build_router(db, media_dir):
     def site_settings():
         ready()
         s = I.effective_settings(db)
-        return dict(default_mode=s['default_mode'], featured_route=s['featured_route'])
+        return dict(default_mode=s['default_mode'], featured_route=s['featured_route'], medal_tiers=s['medal_tiers'], app_flags=s['app_flags'])
 
     r.user_of, r.require, r.remove_files = user_of, require, remove_files   # katkı ve öneri uçları da kullanır
     r.limiters = [login_limit, event_limit, contrib_limit]

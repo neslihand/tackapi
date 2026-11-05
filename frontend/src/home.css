@@ -14,24 +14,17 @@
 /* The chapters carry their name only, no running number. */
 .home-page .pl-index > b:first-child { margin-left: 0; }
 
-/* ——— Why waqf: one line under the entrance, with the way to the project page ——— */
-.hp-why { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); align-items: end; gap: 14px clamp(30px, 5vw, 90px); padding: clamp(56px, 6vw, 88px) var(--pl-left); color: #17201c; background: radial-gradient(ellipse 60% 60% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
-.hp-why-kicker { grid-column: 1 / -1; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .24em; color: #765b38; }
-.hp-why h2 { grid-column: 1; margin: 0; font-size: clamp(36px, 4.4vw, 72px); font-weight: 400; line-height: 1; letter-spacing: -.024em; }
-.hp-why h2 em { font-style: italic; color: #8a6a36; }
-.hp-why h2:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; box-shadow: none; }
-.hp-why-text { grid-column: 2; margin: 0; font-size: 15.5px; line-height: 1.8; color: #4b5448; }
-.hp-why .hp-link { grid-column: 2; justify-self: start; }
-.hp-why .hp-link:focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
-
 /* ——— How a work is discovered: the page of a work from the inside, then the tools on an ivory plate ——— */
 .hp-inside-plate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); align-items: end; gap: 12px clamp(30px, 5vw, 90px); margin-bottom: clamp(32px, 4vw, 56px); padding-top: 22px; border-top: 1px solid #e6d5ae2e; }
 .hp-inside-plate h3 { margin: 0; font-size: clamp(28px, 2.6vw, 40px); font-weight: 400; line-height: 1.05; color: #fbf7ee; }
 .hp-inside-plate p { margin: 0; font-size: 15px; line-height: 1.75; color: #c9cfc8; }
+/* With no heading above it (the tools chapter opens on the work itself) there is nothing for the rule to part it from. */
+.hp-inside .sr-only + .hp-inside-plate { padding-top: 0; border-top: 0; }
+.hp-tools .sr-only + .hp-tools-panel { margin-top: 0; }
 .hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); padding: clamp(28px, 4vw, 64px); border-radius: 6px; color: #17201c; background: radial-gradient(ellipse 60% 40% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
 .hp-tools-panel :focus-visible { outline-color: #17201c; }
 .hp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
-.hp-actions :focus-visible, .hp-collection :focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
+.hp-actions :focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
 
 /* ——— 01 Featured: the story ring under a statement that lights word by word ——— */
 .hp-featured.tone-ivory .pl-lede .statement { max-width: none; margin: 0; font-size: clamp(21px, 1.7vw, 27px); line-height: 1.32; text-align: left; }
@@ -46,19 +39,11 @@
 .hp-featured.tone-ivory .ring-read { border-radius: 2px; color: #f3ecdf; background: #17201c; }
 .hp-featured.tone-ivory .ring-read:hover { background: #2a4a3f; }
 .hp-featured.tone-ivory .ring-face:focus-visible, .hp-featured.tone-ivory :focus-visible { outline-color: #17201c; }
-.hp-collection { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 30px; margin-top: 34px; padding-top: 22px; border-top: 1px solid #8a6a3640; }
-.hp-collection p { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #4b5448; }
-.hp-collection p span { padding: 0 10px; color: #8a6a36; }
-.hp-featured.tone-night .hp-collection { border-top-color: #e6d5ae2e; }
-.hp-featured.tone-night .hp-collection p { color: #cfcabd; }
-.hp-featured.tone-night .hp-collection p span { color: #c7a96b; }
-.hp-featured.tone-night .hp-collection p i { color: #e6d5ae; }
 .hp-featured.tone-night :focus-visible { outline-color: var(--en-gold-light); }
-.hp-collection p i {font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; color: #6a5a3c; }
 /* Same weight as the shared drawn-link rule in entrance.css, which this file follows. */
-.home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link, .home-page .hp-why .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
-.home-page :is(.pl-chapter, .hp-why) .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
-.home-page :is(.tone-ivory, .hp-why) .hp-link.en-link:hover .en-link-arrow, .hp-today .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
+.home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
+.home-page .pl-chapter .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
+.home-page .tone-ivory .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
 
 /* ——— 02 Divriği (HomeScenes PanoramaScene): the story card as a label ——— */
 .home-page .panorama-copy { border-radius: 3px; background: #f3ede1; box-shadow: 0 0 0 1px #8a6a3666, 0 50px 90px -40px #000; }
@@ -69,25 +54,7 @@
 .home-page .panorama-side { border-radius: 3px; }
 
 /* ——— 03 A second threshold: the next door through a drawn arch ——— */
-.hp-threshold { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: auto 1fr auto; align-items: center; column-gap: clamp(26px, 4vw, 70px); min-height: 100svh; padding: clamp(96px, 10vw, 140px) var(--pl-left) clamp(60px, 7vw, 100px); overflow: hidden; color: var(--en-ivory); background: radial-gradient(ellipse 34% 50% at 50% 50%, #1c3d35 0, #0c2420 50%, transparent 76%), #030a08; }
-.hp-threshold > .pl-index { grid-column: 1 / -1; margin-bottom: 30px; color: #d9c9a5; }
-.hp-arch { position: relative; grid-column: 2; grid-row: 2; width: min(320px, 24vw); aspect-ratio: 300 / 380; }
-.hp-arch-window { position: absolute; inset: 0; overflow: hidden; clip-path: polygon(6.7% 100%, 6.7% 44%, 10% 32%, 18% 21%, 30% 12%, 50% 3.2%, 70% 12%, 82% 21%, 90% 32%, 93.3% 44%, 93.3% 100%); }
-.hp-arch-reveal { position: absolute; inset: 0; display: block; overflow: hidden; }
-.hp-arch-window img { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: 50% 40%; }
-.hp-arch .final-gate-arch { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.hp-arch .final-gate-arch path { stroke: var(--en-gold-light); }
-.hp-arch .final-gate-arch path:nth-child(2) { stroke-opacity: .35; }
-.hp-threshold-title { display: contents; margin: 0; font-family: var(--serif); }
-.hp-tw { display: block; overflow: hidden; padding: .06em .1em .14em; font-size: clamp(44px, min(4.9vw, 9svh), 104px); font-weight: 300; line-height: .95; letter-spacing: -.028em; }
-.hp-tw > span { display: block; }
-.hp-tw.a { grid-column: 1; grid-row: 2; justify-self: end; text-align: right; }
-.hp-tw.b { grid-column: 3; grid-row: 2; justify-self: start; }
-.hp-tw.b em { font-style: italic; font-weight: 400; background: linear-gradient(100deg, #f6ecd0 0%, #ddc28a 40%, #b08a4e 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.hp-threshold-foot { grid-column: 1 / -1; grid-row: 3; display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 40px; text-align: center; }
-.hp-threshold-foot p { margin: 0; font-size: 15.5px; color: var(--en-ivory-soft); }
-.hp-threshold-foot b { font-family: var(--serif); font-size: 21px; font-style: italic; font-weight: 400; color: var(--en-gold-light); }
-.hp-threshold .hp-actions { justify-content: center; }
+.hp-threshold { position: relative; padding: clamp(96px, 10vw, 140px) var(--pl-left) clamp(60px, 7vw, 100px); overflow: hidden; color: var(--en-ivory); background: radial-gradient(ellipse 34% 50% at 50% 50%, #1c3d35 0, #0c2420 50%, transparent 76%), #030a08; }
 .hp-threshold :focus-visible { outline-color: var(--en-gold-light); }
 
 /* ——— 04 Routes: night cards that pile up, each with its stops under arches ——— */
@@ -95,37 +62,61 @@
 .hp-routes .season-card { height: min(60vh, 520px); border-radius: 4px; background: linear-gradient(160deg, #10271f, #07150f) !important; box-shadow: 0 0 0 1px #8a6a3655, 0 -24px 60px -36px #000; }
 .hp-routes .season-card:nth-child(2) { background: linear-gradient(160deg, #13302a, #081a15) !important; }
 .hp-routes .season-card:nth-child(3) { background: linear-gradient(160deg, #182f26, #0a1a14) !important; }
-.hp-routes .season-link { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: auto 1fr auto; column-gap: clamp(26px, 4vw, 60px); color: var(--en-ivory); }
+.hp-routes .season-link { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: auto 1fr; column-gap: clamp(26px, 4vw, 60px); color: var(--en-ivory); }
 .hp-routes .season-top { border-bottom-color: #e6d5ae2e; }
 .hp-routes .season-top small { color: #d9c9a5; }
-.hp-routes .season-number { grid-column: 1; grid-row: 3; font-weight: 300; color: transparent; -webkit-text-stroke: 1.2px #e6d5ae80; }
-.hp-routes .season-body { grid-column: 2; grid-row: 3; }
+.hp-routes .season-body { grid-column: 2; grid-row: 2; }
 .hp-routes .season-body h3 { font-weight: 400; color: #fbf7ee; }
-.hp-routes .season-text { color: #c9cfc8; }
-.hp-routes .season-stops span { color: #e6d5ae; border-color: #e6d5ae40; }
+.hp-routes .season-text { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #c9cfc8; }
+/* the first stops one under another, each after a fine gold dash, the rest counted after them */
+.hp-routes .season-stops { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; font-size: 13.5px; line-height: 1.55; }
+.hp-routes .season-stops span { display: flex; align-items: baseline; gap: 12px; padding: 0; border: 0; border-radius: 0; font-size: inherit; color: #e6d5ae; }
+.hp-routes .season-stops span::before { content: ''; flex: none; width: 14px; height: 1px; background: #a8884f; translate: 0 -4px; }
+.hp-routes .season-stops .more { font-style: italic; color: #c9cfc8; background: none; }
+.hp-routes .season-stops .more::before { opacity: 0; }
 .hp-routes .season-go { color: var(--en-gold-light); border-color: #e6d5ae59; }
 .season-pics { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 20px); padding: 22px 0; }
 .season-pics > span { flex: 1; max-width: 170px; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 50% 50% 4px 4px / 32% 32% 4px 4px; background: #0c241c; box-shadow: 0 0 0 1px #e6d5ae40, 0 24px 40px -24px #000; translate: 0 calc(var(--k) * 8px); transition: translate .6s var(--pl-ease); }
 .season-pics img { width: 100%; height: 100%; max-width: none; object-fit: cover; transition: scale 1.2s var(--pl-ease); }
 .season-link:hover .season-pics > span { translate: 0 0; }
 .season-link:hover .season-pics img { scale: 1.06; }
-.hp-routes .season-map { background: #061410 !important; }
 .hp-routes .season-card :focus-visible, .hp-routes .season-link:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: -6px; }
 
 /* ——— 05 Passport (night): floating stamps beside the count of the reader's seals ——— */
-.hp-passport-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: clamp(30px, 5vw, 80px); }
+.hp-passport-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(30px, 5vw, 80px); }
 .hp-passport .passport-illustration { width: 100%; height: clamp(320px, 34vw, 460px); }
-.hp-passport .float-stamp { background: #f4efe2; }
-.hp-passport-card { padding: clamp(26px, 3vw, 40px); border-radius: 3px; color: var(--en-ivory); background: #ffffff08; box-shadow: inset 0 0 0 1px #e6d5ae33; }
+/* the stamps as paper seals in ink: an ivory disc, a fine ring in the ink's colour and a dashed one inside it */
+.hp-passport .float-stamp { gap: .35em; border: 0; background: radial-gradient(circle at 35% 30%, #fbf8f0, #efe7d6 70%); box-shadow: inset 0 0 0 4px #f4efe2, inset 0 0 0 5.5px currentColor, 0 26px 44px -22px #000d; }
+.hp-passport .float-stamp::before { content: ''; position: absolute; inset: 11%; border: 1.5px dashed currentColor; border-radius: 50%; opacity: .55; }
+.hp-passport .float-stamp span { font-family: var(--serif); font-size: 1.3em; font-weight: 600; letter-spacing: .16em; }
+.hp-passport .float-stamp i { font-family: var(--serif); font-size: 1.05em; font-style: italic; letter-spacing: .04em; opacity: .85; }
+.hp-passport-card { container-type: inline-size; padding: clamp(26px, 3vw, 44px); border-radius: 3px; color: var(--en-ivory); background: linear-gradient(160deg, #ffffff0a, #ffffff03); box-shadow: inset 0 0 0 1px #e6d5ae2e, 0 40px 80px -50px #000; }
 .hp-passport-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 0; font-family: var(--serif); }
 .hp-passport-count strong { font-size: clamp(72px, 7vw, 112px); font-weight: 300; line-height: .85; }
 .hp-passport-count span { font-size: 28px; color: #cdb68c; }
 .hp-passport-count small { flex-basis: 100%; margin-top: 8px; font-family: Inter, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--en-ivory-soft); }
-.hp-passport-ticks { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 28px; padding: 0; list-style: none; }
-.hp-passport-ticks li { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #e6d5ae59; box-shadow: inset 0 0 0 1px #e6d5ae33; }
-.hp-passport-ticks li.on { color: #15130d; background: linear-gradient(180deg, #ecdcb6, #cdb07a); box-shadow: 0 0 18px #e6d5ae55; }
+/* the passport city by city: the name, a hairline that fills in gold as its works are stamped, the count */
+.hp-passport-cities { display: grid; gap: 14px; margin: 30px 0 32px; padding: 22px 0 0; border-top: 1px solid #e6d5ae26; list-style: none; }
+.hp-passport-cities li { display: grid; grid-template-columns: 72px minmax(0, 1fr) 3.4em; align-items: center; gap: 18px; }
+.hp-passport-cities span { font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--en-ivory); }
+.hp-passport-cities i { position: relative; height: 1px; background: #e6d5ae33; }
+.hp-passport-cities b { position: absolute; top: -1px; bottom: -1px; left: 0; border-radius: 2px; background: linear-gradient(90deg, #cdb07a, #f1e5c6); box-shadow: 0 0 10px #e6d5ae66; }
+.hp-passport-cities small { font-family: var(--serif); font-size: 17px; font-style: italic; text-align: right; white-space: nowrap; color: #cdb68c; }
 .hp-passport-note { display: block; margin-top: 18px; font-size: 12px; color: var(--en-ivory-soft); }
 .hp-passport .hp-link.en-link { color: var(--en-ivory); }
+/* the passport's two ways on, side by side: open it (gold) and see the medallions (the same key, drawn in outline);
+   today's work uses the outline key for the quiz too */
+.hp-passport-card .hp-actions { flex-wrap: nowrap; gap: 12px; }
+.hp-passport-card .hp-actions .en-key { flex: 1 1 auto; justify-content: space-between; }
+.hp-passport-card .en-key-label { padding: 0 12px 0 16px; font-size: 11px; letter-spacing: .12em; white-space: nowrap; }
+.hp-passport-card .en-key-arrow { width: 40px; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line { color: var(--en-ivory); background: transparent; box-shadow: inset 0 0 0 1px #e6d5ae80; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line::before { display: none; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line .en-key-arrow { border-left-color: #e6d5ae40; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line:hover { background: #e6d5ae14; box-shadow: inset 0 0 0 1px var(--en-gold-light); }
+/* one under the other only where the card is too narrow for both */
+@container (max-width: 400px) { .hp-passport-card .hp-actions { flex-wrap: wrap; } .hp-passport-card .hp-actions .en-key { flex-basis: 100%; } }
+@media (max-width: 520px) { .hp-today .hp-actions .en-key { flex: 1 1 100%; justify-content: space-between; } }
 .hp-passport .hp-link.en-link:hover .en-link-arrow { color: #15130d; border-color: transparent; background: var(--en-gold-light); }
 .hp-passport :focus-visible { outline-color: var(--en-gold-light); }
 
@@ -149,21 +140,14 @@
 
 /* ——— Smaller screens ——— */
 @media (max-width: 900px) {
-  .hp-threshold { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto auto; row-gap: 18px; text-align: center; }
-  .hp-arch { grid-column: 1; grid-row: 3; justify-self: center; width: min(280px, 64vw); }
-  .hp-tw.a { grid-column: 1; grid-row: 2; justify-self: center; text-align: center; }
-  .hp-tw.b { grid-column: 1; grid-row: 4; justify-self: center; }
-  .hp-threshold-foot { grid-row: 5; margin-top: 10px; }
   .hp-passport-body, .hp-exhibits { grid-template-columns: 1fr; }
-  .hp-routes .season-link { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; }
-  .hp-routes .season-number { grid-row: 4; }
+  .hp-routes .season-link { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
   .hp-routes .season-body { grid-column: 1; grid-row: 3; }
   .hp-routes .season-card { height: auto; }
   .season-pics { padding: 16px 0; }
   .season-pics > span:nth-child(n + 4) { display: none; }
 }
 @media (max-width: 640px) {
-  .hp-collection { flex-direction: column; align-items: flex-start; }
   .hp-featured.tone-ivory .pl-lede .statement { font-size: 20px; }
 }
 @media (forced-colors: active) { .hp-exhibit, .hp-passport-card, .hp-routes .season-card { border: 1px solid CanvasText; } }
@@ -184,46 +168,33 @@
 .hp-exhibit-arch img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
 .hp-exhibit.today .hp-exhibit-art::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 59px, #e6d5ae0d 59px 60px); pointer-events: none; }
 
-/* ——— 10 Closing: the arch's picture toned, and three more doors ——— */
-.hp-arch-window img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.92); }
-.hp-doors { grid-column: 1 / -1; grid-row: 5; width: min(980px, 100%); justify-self: center; margin-top: clamp(40px, 5vw, 64px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
-/* Today's discovery, inside the threshold: today's work and the quiz as two small plates in the doors' own language. */
-.hp-today { grid-column: 1 / -1; grid-row: 4; width: min(980px, 100%); justify-self: center; margin-top: clamp(48px, 6vw, 80px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
-.hp-today h3 { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px 16px; margin: 0 0 22px; font-family: var(--serif); font-size: clamp(26px, 2.2vw, 32px); font-weight: 400; text-align: center; color: var(--en-ivory); }
-.hp-today h3 span { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--en-ivory-soft); }
-.hp-today ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
-.hp-plate { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; column-gap: 18px; height: 100%; padding: 14px 20px 14px 14px; border-radius: 4px; text-align: left; color: var(--en-ivory); background: #ffffff06; box-shadow: inset 0 0 0 1px #e6d5ae26; transition: background .4s, box-shadow .4s, translate .4s var(--pl-ease); }
-.hp-plate:hover { translate: 0 -4px; background: #e6d5ae0f; box-shadow: inset 0 0 0 1px #e6d5ae66; }
-.hp-plate:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; }
-.hp-plate-art { width: 64px; height: 82px; overflow: hidden; border-radius: 999px 999px 3px 3px; background: #0c241c; box-shadow: 0 0 0 1px #e6d5ae40; }
-.hp-plate-art img { width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
-.hp-plate-art.quiz { display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #f6efe0, #e8dcc3); }
-.hp-plate-art.quiz .qz-mark { display: block; width: 46px; height: 54px; }
-.hp-plate-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.hp-plate-body small { font-size: 10px; font-weight: 600; letter-spacing: .18em; color: #d9c9a5; }
-.hp-plate-body b { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.15; }
-.hp-plate-body em { font-size: 12.5px; font-style: normal; color: var(--en-ivory-soft); }
-.hp-plate > svg { color: var(--en-gold-light); transition: rotate .4s; }
-.hp-plate:hover > svg { rotate: 45deg; }
-/* The visitor lists (backend only) under the plates, on the threshold's night. */
-.hp-today .v-discover { gap: 28px; margin-top: 32px; text-align: left; }
-.hp-today .v-discover h2 { font-size: clamp(22px, 2vw, 28px); color: var(--en-ivory); }
-.hp-today .v-discover h2 em { color: var(--en-gold-light); }
-.hp-today .v-discover h2 small { color: var(--en-ivory-soft); }
-.hp-today .v-eyebrow { color: #d9c9a5; }
-.hp-doors > p { margin: 0 0 22px; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-align: center; text-transform: uppercase; color: #d9c9a5; }
-.hp-doors ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
-.hp-doors a { position: relative; display: grid; text-align: left; grid-template-columns: 54px 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 16px; padding: 18px 20px; border-radius: 4px; color: var(--en-ivory); background: #ffffff06; box-shadow: inset 0 0 0 1px #e6d5ae26; transition: background .4s, box-shadow .4s, translate .4s cubic-bezier(.2, .7, .2, 1); }
-.hp-doors a:hover { translate: 0 -4px; background: #e6d5ae0f; box-shadow: inset 0 0 0 1px #e6d5ae66; }
-.hp-doors svg { grid-column: 1; grid-row: 1 / 3; width: 44px; height: 56px; overflow: visible; fill: none; stroke: #e6d5ae; stroke-width: 1.2; }
-.hp-doors svg path:nth-child(2) { stroke-opacity: .4; transition: fill .4s; }
-.hp-doors a:hover svg path:nth-child(2) { fill: #e6d5ae26; }
-.hp-doors i { position: absolute; top: 12px; right: 16px; font-family: var(--serif); font-size: 13px; font-style: italic; color: #c7a96b; }
-.hp-doors b { grid-column: 2; grid-row: 1; align-self: end; font-family: var(--serif); font-size: 22px; font-weight: 400; }
-.hp-doors small { grid-column: 2; grid-row: 2; align-self: start; font-size: 12.5px; color: var(--en-ivory-soft); }
-.hp-doors a > svg:last-child { grid-column: 3; grid-row: 1 / 3; width: 16px; height: 16px; stroke: currentColor; transition: rotate .4s; }
-.hp-doors a:hover > svg:last-child { rotate: 45deg; }
-.hp-doors a:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; }
+/* ——— 10 Closing: today's work brought forward, then three more doors ——— */
+/* Today's work: its picture as a tall arch in a fine gold frame, its name large beside it and the two ways on. */
+.hp-today { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: clamp(36px, 6vw, 96px); width: min(1040px, 100%); margin: 0 auto; }
+.hp-today-art { display: block; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 999px 999px 4px 4px; outline: 1px solid #e6d5ae2e; outline-offset: 10px; box-shadow: 0 0 0 1px #e6d5ae4d, 0 50px 90px -40px #000; }
+.hp-today-art img { width: 100%; height: 100%; max-width: none; object-fit: cover; transition: scale 1.2s var(--pl-ease); }
+.hp-today-art:hover img { scale: 1.05; }
+.hp-today-kicker { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 18px; font-family: Inter, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; }
+.hp-today-kicker span { font-family: var(--serif); font-size: 17px; font-style: italic; font-weight: 400; letter-spacing: .02em; text-transform: none; color: var(--en-gold-light); }
+.hp-today h3 { margin: 0; font-family: var(--serif); font-size: clamp(38px, 4.2vw, 64px); font-weight: 400; line-height: 1.02; letter-spacing: -.015em; color: #fbf7ee; }
+.hp-today-facts { margin: 16px 0 0; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #c7a96b; }
+.hp-today-text { max-width: 46ch; margin: 18px 0 32px; font-size: 15px; line-height: 1.75; color: var(--en-ivory-soft); }
+/* Three more doors: no boxes, three columns between hairlines, each an arch, a name and a line. */
+.hp-doors { width: min(1040px, 100%); margin: clamp(72px, 9vw, 120px) auto 0; }
+.hp-doors > p { margin: 0 0 24px; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-align: center; text-transform: uppercase; color: #d9c9a5; }
+.hp-doors ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border-block: 1px solid #e6d5ae26; }
+.hp-doors li + li { border-left: 1px solid #e6d5ae26; }
+.hp-doors a { display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; padding: 32px 20px 30px; text-align: center; color: var(--en-ivory); transition: background .4s; }
+.hp-doors a:hover { background: radial-gradient(ellipse 60% 80% at 50% 100%, #e6d5ae12, transparent 70%); }
+.hp-door-arch { width: 34px; height: 44px; margin-bottom: 10px; overflow: visible; fill: none; stroke: #e6d5ae; stroke-width: 1.2; }
+.hp-door-arch path:nth-child(2) { stroke-opacity: .4; transition: fill .4s; }
+.hp-doors a:hover .hp-door-arch path:nth-child(2) { fill: #e6d5ae26; }
+.hp-doors b { display: inline-flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 25px; font-weight: 400; transition: color .35s; }
+.hp-doors b svg { color: var(--en-gold-light); transition: translate .35s; }
+.hp-doors a:hover b { color: var(--en-gold-light); }
+.hp-doors a:hover b svg { translate: 2px -2px; }
+.hp-doors small { font-size: 12.5px; color: var(--en-ivory-soft); }
+.hp-doors a:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: -4px; }
 
 @media (max-width: 800px) {
   .hp-passport-steps { grid-template-columns: 1fr; gap: 26px; }
@@ -231,24 +202,28 @@
   .hp-passport-steps li { display: grid; grid-template-columns: 44px 1fr; column-gap: 16px; align-items: start; text-align: left; }
   .hp-passport-steps i { grid-row: span 2; }
   .hp-passport-steps b { margin-top: 0; }
-  .hp-doors, .hp-today { grid-row: auto; }
-  .hp-today ul { grid-template-columns: 1fr; }
+  .hp-today { grid-template-columns: 1fr; gap: 40px; }
+  .hp-today-art { width: min(240px, 70%); margin: 0 auto; }
   .hp-doors ol { grid-template-columns: 1fr; }
+  .hp-doors li + li { border-top: 1px solid #e6d5ae26; border-left: 0; }
+  /* on narrow screens each door is a short row: the arch on the left, its name and line beside it */
+  .hp-doors a { display: grid; grid-template-columns: 28px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: 18px; row-gap: 2px; padding: 16px 6px; text-align: left; }
+  .hp-door-arch { grid-row: 1 / 3; width: 28px; height: 36px; margin: 0; }
+  .hp-doors b { font-size: 22px; }
 }
 
 /* ——— 07 Routes, thinner: shorter cards closer together, the photos toned and a fine inner frame ——— */
 .hp-routes .season-stack { gap: 6vh; }
-.hp-routes .season-card { height: auto; min-height: min(52vh, 440px); }
+.hp-routes .season-card { height: auto; min-height: 0; }
 .hp-routes .season-pics { padding: 16px 0; }
-.hp-routes .season-pics > span { max-width: 124px; }
+.hp-routes .season-pics > span { max-width: 170px; }
 .hp-routes .season-card::before { content: ''; position: absolute; inset: 10px; z-index: 2; border: 1px solid #e6d5ae1f; border-radius: 2px; pointer-events: none; }
 .hp-routes .season-pics img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.92); }
-/* The pictures on the left and the route's name beside them, both from the top of the card; the number below. */
+/* The pictures on the left and the route's name beside them, centred on each other. */
 @media (min-width: 801px) {
-  .hp-routes .season-pics { grid-column: 1; grid-row: 2; align-self: start; }
-  .hp-routes .season-body { grid-column: 2; grid-row: 2 / 4; align-self: start; padding: 16px 64px 6px 0; }
+  .hp-routes .season-pics { grid-column: 1; grid-row: 2; align-self: center; padding: 26px 0 8px; }
+  .hp-routes .season-body { grid-column: 2; grid-row: 2; align-self: center; padding: 26px 64px 8px 0; }
 }
-.hp-routes .season-stops .more { color: #15130d; border-color: transparent; background: #e6d5aecc; }
 
 /* ——— Spacing on smaller screens: the chapters' own padding and the gaps inside them, tightened ——— */
 @media (max-width: 1100px) {
@@ -257,8 +232,7 @@
 }
 @media (max-width: 800px) {
   .home-page .pl-chapter { padding-top: 60px; padding-bottom: 68px; }
-  .hp-why, .hp-inside-plate { grid-template-columns: 1fr; }
-  .hp-why :is(h2, .hp-why-text, .hp-link) { grid-column: 1; }
+  .hp-inside-plate { grid-template-columns: 1fr; }
   .hp-tools-panel { margin-inline: calc(var(--pl-left) * -.5); padding: 24px 18px; }
   .home-page .pl-head { gap: 14px; margin-bottom: 32px; }
   .vs-foot { margin-top: 44px; padding-top: 24px; }

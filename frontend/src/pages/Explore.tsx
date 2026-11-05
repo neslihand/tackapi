@@ -70,7 +70,8 @@ function usePreview() {
 export function Explore({ query }: { query: string }) {
   const initial = new URLSearchParams(query);
   const { artifacts, seasons, readOnly } = useContent();
-  const [search, setSearch] = useState('');
+  // the top bar's search arrives with its words (?q=…)
+  const [search, setSearch] = useState(initial.get('q') || '');
   const [city, setCity] = useState(initial.get('city') || '');
   const [period, setPeriod] = useState(initial.get('period') || '');
   const [category, setCategory] = useState('');

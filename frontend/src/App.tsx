@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
-import { ArrowRight, ArrowUp, ArrowUpRight, Camera, Check, ChevronRight, Menu, Stamp, UserRound, X } from 'lucide-react';
+import { ArrowRight, ArrowUp, ArrowUpRight, Camera, Check, Menu, Search, Stamp, UserRound } from 'lucide-react';
 import { ContentProvider, useContent } from './lib/contentStore';
 import { collectionStats } from './lib/content';
 import { Brand, Scene } from './components/UI';
@@ -18,6 +18,8 @@ import { vakifApiEnabled } from './lib/vakifApi';
 import { AccountProvider, useAccount, useKeptIn } from './lib/account';
 import { track } from './lib/analytics';
 import { ConsentBanner } from './vakif/ConsentBanner';
+import { SiteSearch } from './components/SiteSearch';
+import { SideMenu } from './components/SideMenu';
 const AccountPages = () => import('./vakif/AccountPages');
 const LoginPage = lazy(() => AccountPages().then(m => ({ default: m.LoginPage })));
 const AccountPage = lazy(() => AccountPages().then(m => ({ default: m.AccountPage })));
@@ -38,6 +40,16 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean 
 
 function Navigation({ route }: { route: string }) {
   const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  // The search also opens from the keyboard: "/" anywhere outside a field, or Ctrl/⌘ + K.
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      const typing = event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable="true"]');
+      if ((event.key === '/' && !typing && !event.metaKey && !event.ctrlKey) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) { event.preventDefault(); setSearching(true); }
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, []);
   const [scrolled, setScrolled] = useState(window.scrollY > 60);
   const [dark, setDark] = useState(false);
   const [tucked, setTucked] = useState(false);
@@ -48,15 +60,6 @@ function Navigation({ route }: { route: string }) {
   // The reading toolbar under the bar moves up to the top of the screen while the bar is tucked away.
   useEffect(() => { document.documentElement.classList.toggle('nav-tucked', tucked && !open); }, [tucked, open]);
   useEffect(() => () => document.documentElement.classList.remove('nav-tucked'), []);
-  useEffect(() => {
-    if (!open) return;
-    document.querySelector<HTMLAnchorElement>('#mobile-menu a')?.focus();
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); }
-    };
-    document.addEventListener('keydown', escape);
-    return () => document.removeEventListener('keydown', escape);
-  }, [open]);
   // A layout effect, so the bar has the right treatment in the first frame of a page.
   useLayoutEffect(() => {
     // The bar takes the dark treatment while it floats over any section marked data-nav-theme="dark".
@@ -72,7 +75,7 @@ function Navigation({ route }: { route: string }) {
       lastY = y;
       setScrolled(window.scrollY > 60);
       // The section actually showing under the bar, so a pinned dark section covered by a light one does not count.
-      const under = document.elementsFromPoint(window.innerWidth / 2, 40).find(el => !el.closest('.navigation, .mobile-menu'));
+      const under = document.elementsFromPoint(window.innerWidth / 2, 40).find(el => !el.closest('.navigation, .side-menu, .site-search'));
       // The nearest marked section decides, so a light area inside a dark page counts as light.
       setDark(under?.closest('[data-nav-theme]')?.getAttribute('data-nav-theme') === 'dark');
     };
@@ -87,16 +90,17 @@ function Navigation({ route }: { route: string }) {
     return () => { cancelAnimationFrame(frame); clearTimeout(late); swapped.disconnect(); window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule); };
   }, [route]);
   const links = [['/', t('Ana Sayfa', 'Home')], ['/kesfet', t('Keşfet', 'Explore')], ['/harita', t('Miras Haritası', 'Heritage Map')], ['/oyun', t('Oyna & Öğren', 'Play & Learn')], ...(vakifApiEnabled() ? [['/makaleler', t('Okuma Odası', 'Reading Room')]] : []), ['/basarimlar', t('Madalyonlar', 'Medallions')]];
+  // The top bar keeps the four places to go: the logo already leads home, and the medallions are on the passport page.
+  // The side menu and the footer list every page.
+  const topLinks = links.filter(([to]) => to !== '/' && to !== '/basarimlar');
   // The home link is current only on the home page itself; the others also for the pages under them.
   const current = (to: string) => to === '/' ? route === '/' : route.startsWith(to) || (to === '/makaleler' && (route.startsWith('/makale') || route === '/terimler'));
-  return <header className={`navigation ${dark ? 'nav-dark' : ''} ${scrolled ? 'scrolled' : ''} ${tucked && !open ? 'nav-tucked' : ''}`}><Brand /><nav className="desktop-nav" aria-label={t('Ana menü', 'Main menu')}>{links.map(([to, label], i) => <Link to={to} key={to} className={current(to) ? 'active' : ''} aria-current={current(to) ? 'page' : undefined}><span className="nav-num" aria-hidden="true">0{i + 1}</span><span className="nav-label">{label}</span></Link>)}</nav><div className="nav-actions"><LangSwitch className="nav-lang" /><Link to="/kamera" className="nav-camera" aria-label={t('Kamera ile keşfet', 'Discover with the camera')}><Camera size={19} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'} className="nav-camera" aria-label={account.user ? `${t('Hesabım', 'My account')}${account.user.display_name ? `: ${account.user.display_name}` : ''}` : t('Giriş yap ya da hesap aç', 'Sign in or create an account')} title={account.user ? t('Hesabım', 'My account') : t('Giriş yap', 'Sign in')}><UserRound size={19} /></Link>}<Link className="nav-passport" to="/pasaport"><Stamp size={17} /><span>{t('Miras Pasaportum', 'My Heritage Passport')}</span><small><span className="sr-only">, </span>{Object.keys(progress.discovered).length}<span className="sr-only">{t(' keşif', ' discoveries')}</span></small></Link><button className="mobile-toggle icon-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t('Menüyü kapat', 'Close the menu') : t('Menüyü aç', 'Open the menu')}>{open ? <X /> : <Menu />}</button></div>{open && <nav id="mobile-menu" className="mobile-menu" aria-label={t('Mobil menü', 'Mobile menu')} onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); } }}>{links.map(([to, label]) => <Link key={to} to={to} className={current(to) ? 'active' : ''} aria-current={current(to) ? 'page' : undefined}>{label}<ChevronRight size={18} aria-hidden="true" /></Link>)}<Link to="/pasaport">{t('Miras Pasaportum', 'My Heritage Passport')}<Stamp size={18} /></Link><Link to="/kamera">{t('Kamera ile keşfet', 'Discover with the camera')}<Camera size={18} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'}>{account.user ? t('Hesabım', 'My account') : t('Giriş yap', 'Sign in')}<UserRound size={18} /></Link>}<LangSwitch className="menu-lang" /></nav>}</header>;
+  return <><header className={`navigation ${dark ? 'nav-dark' : ''} ${scrolled ? 'scrolled' : ''} ${tucked && !open ? 'nav-tucked' : ''}`}><div className="nav-start"><button type="button" className="nav-menu" onClick={() => setOpen(true)} aria-label={t('Menüyü aç', 'Open the menu')} aria-haspopup="dialog" aria-expanded={open} aria-controls="side-menu"><Menu size={22} aria-hidden="true" /></button><Brand compact /></div><nav className="desktop-nav" aria-label={t('Ana menü', 'Main menu')}>{topLinks.map(([to, label]) => <Link to={to} key={to} className={current(to) ? 'active' : ''} aria-current={current(to) ? 'page' : undefined}><span className="nav-label">{label}</span></Link>)}</nav><div className="nav-actions"><LangSwitch className="nav-lang" /><button type="button" className="nav-camera nav-search" onClick={() => setSearching(true)} aria-label={t('Sitede ara', 'Search the site')} aria-haspopup="dialog" title={t('Ara (/)', 'Search (/)')}><Search size={19} /></button><Link to="/kamera" className="nav-camera" aria-label={t('Kamera ile keşfet', 'Discover with the camera')}><Camera size={19} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'} className="nav-camera" aria-label={account.user ? `${t('Hesabım', 'My account')}${account.user.display_name ? `: ${account.user.display_name}` : ''}` : t('Giriş yap ya da hesap aç', 'Sign in or create an account')} title={account.user ? t('Hesabım', 'My account') : t('Giriş yap', 'Sign in')}><UserRound size={19} /></Link>}<Link className="nav-passport" to="/pasaport"><Stamp size={17} /><span>{t('Miras Pasaportum', 'My Heritage Passport')}</span><small><span className="sr-only">, </span>{Object.keys(progress.discovered).length}<span className="sr-only">{t(' keşif', ' discoveries')}</span></small></Link></div>{searching && <SiteSearch onClose={() => setSearching(false)} />}</header>{open && <SideMenu route={route} onClose={() => setOpen(false)} />}</>;
 }
 
-// The footer, on every page: one last invitation under a row of doors, the links in three groups, the project's
+// The footer, on every page: the links in three groups, the project's
 // credits and a way back to the top.
 function Footer() {
-  const { artifacts } = useContent();
-  const { cities } = collectionStats(artifacts);
   const groups: [string, [string, string][]][] = [
     [t('Keşfet', 'Explore'), [['/kesfet', t('Eserleri Keşfet', 'Explore the Collection')], ['/harita', t('Miras Haritası', 'Heritage Map')], ['/kamera', t('Kamera ile Keşfet', 'Discover with the Camera')],
       ...(vakifApiEnabled() ? [['/makaleler', t('Okuma Odası', 'Reading Room')], ['/terimler', t('Terimler Sözlüğü', 'Glossary')]] as [string, string][] : [])]],
@@ -107,12 +111,6 @@ function Footer() {
   ];
   function top() { settleScroll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   return <footer className="footer ft" data-nav-theme="dark">
-    <div className="ft-doors" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} />)}</div>
-    <div className="ft-invite" data-curtain>
-      <p className="ft-kicker"><span>✦</span>{t('BİR SONRAKİ HİKÂYEN SENİ BEKLİYOR', 'YOUR NEXT STORY AWAITS')}</p>
-      <Link to="/kesfet" className="ft-cta">{t('Merak etmeye', 'Stay')} <em>{t('devam et.', 'curious.')}</em><span className="ft-cta-arrow" aria-hidden="true"><ArrowUpRight /></span></Link>
-      <p className="ft-count"><b>{String(artifacts.length).padStart(2, '0')}</b> {t('eser', 'works')} <span>·</span> <b>{String(cities).padStart(2, '0')}</b> {t('şehir', 'cities')} <span>·</span> <i>{t('keşfedilmeyi bekliyor', 'waiting to be discovered')}</i></p>
-    </div>
     <div className="ft-main" data-curtain>
       <div className="ft-brand"><Brand /><p>{t('Geçmişin izinde.', 'In the footsteps of the past.')}<br /><em>{t('Geleceğe birlikte.', 'Together into the future.')}</em></p><small>{t('Vakıf Katılım · Vakıf Eserleri Envanter Projesi kapsamında geliştirilen dijital keşif platformu.', 'A digital discovery platform built within Vakıf Katılım’s Waqf Works Inventory Project.')}</small></div>
       {groups.map(([title, links]) => <nav key={title} className="ft-group" aria-label={title}><h2>{title}</h2><ul>{links.map(([to, label]) => <li key={to}><Link to={to}>{label}</Link></li>)}</ul></nav>)}
@@ -145,6 +143,9 @@ function Router() {
     if (path !== '/') document.getElementById('main')?.focus({ preventScroll: true });
     track('page_view');
   }, [path, artifact]);
+  // paylaşım sayfasından gelindi (backend/pipeline/share.py); izin yoksa track hiçbir şey göndermez
+  const shared = artifact && new URLSearchParams(query).get('ref') === 'share' ? artifact.slug : null;
+  useEffect(() => { if (shared) track('share_opened', shared, { surface: 'web', content_type: 'heritage_item' }); }, [shared]);
   let page: ReactNode;
   // The backend collection keeps the home page (the gate entrance); other read-only feeds open on the catalogue.
   if (path === '/') page = readOnly && !vakifApiEnabled() ? <Explore key={query} query={query} /> : <Home />;

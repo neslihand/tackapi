@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Item } from './api';
-import { guessIn, HUNT_KEY, huntFor, huntNumberOf, outcome, parseHunt, withHunt, withoutDay, type HuntDay, type HuntState } from './hunt';
+import { guessIn, HUNT_KEY, huntFor, huntNumberOf, outcome, parseHunt, withHunt, withoutDay, type HuntDay, type HuntState } from './autoHunt';
 import { dayKey } from './passport';
 import { useContent, usePassport } from './store';
 
@@ -34,20 +34,21 @@ export function useHunt(): HuntView {
   }, []));
 
   const save = useCallback((next: HuntState) => { setState(next); AsyncStorage.setItem(HUNT_KEY, JSON.stringify(next)).catch(() => {}); }, []);
-  // the day's puzzle is kept as first seen
+  // the day's puzzle is kept as first seen: added here and saved, so a later change in the list does not change it
+  const current = useMemo(() => state && hunt ? withHunt(state, hunt) : state, [state, hunt]);
   useEffect(() => {
-    if (state && hunt) { const next = withHunt(state, hunt); if (next !== state) save(next); }
-  }, [state, hunt, save]);
+    if (current && current !== state) AsyncStorage.setItem(HUNT_KEY, JSON.stringify(current)).catch(() => {});
+  }, [current, state]);
 
-  const puzzle = state?.days[day] ?? null;
+  const puzzle = current?.days[day] ?? null;
   const guess = useCallback((slug: string) => {
-    if (!state) return;
-    const next = guessIn(state, day, slug);
-    if (next === state) return;
+    if (!current) return;
+    const next = guessIn(current, day, slug);
+    if (next === current) return;
     save(next);
     // finishing the puzzle, found or not, keeps the streak
     if (outcome(next.days[day]).over) markActiveDay();
-  }, [state, day, save, markActiveDay]);
+  }, [current, day, save, markActiveDay]);
 
   return {
     ready: state !== null && !loading, day, number: huntNumberOf(day), puzzle,

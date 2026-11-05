@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { BarChart3, KeyRound, BookA, Building2, CalendarDays, ChevronRight, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, Menu, MessageSquareHeart, Newspaper, NotebookPen, Plus, Route, ScanSearch, Sparkles, SplitSquareVertical, X } from 'lucide-react';
+import { BarChart3, BookA, Building2, CalendarDays, CalendarRange, ChevronRight, CircleHelp, History, Images, KeyRound, LayoutDashboard, LogOut, MapPinned, Megaphone, Menu, MessageCircleQuestion, MessageSquareHeart, Newspaper, NotebookPen, Plus, Route, ScanSearch, Search, Sparkles, SplitSquareVertical, X } from 'lucide-react';
 import { api, getToken, handleUnauthorized, setToken } from './lib/api';
 import { Link, useRoute } from './lib/navigation';
 import { Brand, ToastProvider } from './components/UI';
@@ -16,6 +16,9 @@ import { Segmentation } from './pages/Segmentation';
 import { VisualSearchPage } from './pages/VisualSearchPage';
 import { RoutesPage } from './pages/Routes';
 import { QuizPage } from './pages/Quiz';
+import { HuntsPage } from './pages/Hunts';
+import { QuestionsPage } from './pages/Questions';
+import { WeeklyPage } from './pages/Weekly';
 import { ContributionsPage } from './pages/Contributions';
 import { InsightsPage } from './pages/Insights';
 import { AssistantPage } from './pages/Assistant';
@@ -27,7 +30,7 @@ import { ArticleImport } from './pages/ArticleImport';
 import { TermsPage } from './pages/Terms';
 import { AuthorAccountsPage, AuthorWorkReview, AuthorWorksPage } from './pages/AuthorReview';
 
-type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number; author: number } | null;
+type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number; questions: number; author: number } | null;
 type NavItem = { to: string; label: string; icon: ReactNode; badge?: keyof NonNullable<Pending>; badgeTitle?: string };
 
 // Menü, işin türüne göre gruplanır; uzun liste kendi içinde kaydırılır, giriş bilgisi altta sabit kalır.
@@ -52,12 +55,15 @@ const NAV: { title: string; items: NavItem[] }[] = [
     { to: '/katkilar', label: 'Ziyaretçi katkıları', icon: <MessageSquareHeart size={17} />, badge: 'contributions', badgeTitle: 'Onay bekleyen katkı' },
     { to: '/makaleler', label: 'Makaleler', icon: <Newspaper size={17} />, badge: 'articles', badgeTitle: 'Onay bekleyen makale' },
     { to: '/terimler', label: 'Terimler', icon: <BookA size={17} />, badge: 'terms', badgeTitle: 'Onay bekleyen terim önerisi' },
+    { to: '/bekleyen-sorular', label: 'Bekleyen sorular', icon: <MessageCircleQuestion size={17} />, badge: 'questions', badgeTitle: 'Cevap bekleyen soru' },
   ] },
   { title: 'Keşif ve etkinlik', items: [
     { to: '/rotalar', label: 'Keşif rotaları', icon: <Route size={17} /> },
     { to: '/gundem', label: 'Gündem', icon: <Megaphone size={17} /> },
     { to: '/takvim', label: 'Takvim', icon: <CalendarDays size={17} /> },
     { to: '/sorular', label: 'Yarışma soruları', icon: <CircleHelp size={17} /> },
+    { to: '/detay-avi', label: 'Detay Avı', icon: <Search size={17} /> },
+    { to: '/haftanin-kesfi', label: 'Haftanın Keşfi', icon: <CalendarRange size={17} /> },
   ] },
   { title: 'Sistem', items: [
     { to: '/sehirler', label: 'Şehirler', icon: <MapPinned size={17} /> },
@@ -85,6 +91,9 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (path === '/gorsel-arama') page = <VisualSearchPage />;
   else if (path === '/rotalar') page = <RoutesPage />;
   else if (path === '/sorular') page = <QuizPage />;
+  else if (path === '/detay-avi') page = <HuntsPage />;
+  else if (path === '/haftanin-kesfi') page = <WeeklyPage />;
+  else if (path === '/bekleyen-sorular') page = <QuestionsPage />;
   else if (path === '/katkilar') page = <ContributionsPage params={params} />;
   else if (path === '/analitik') page = <InsightsPage />;
   else if (path === '/asistan') page = <AssistantPage params={params} />;
@@ -147,7 +156,7 @@ export function App() {
     if (!user) return;
     api.stats().then(s => setPending({ images: s.images.find(c => c.review_status === 'draft')?.n ?? 0,
       segmentation: s.segmentation_pending ?? 0, contributions: s.contributions_pending ?? 0, agent: s.agent_open ?? 0,
-      articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0, author: s.author_submitted ?? 0 })).catch(() => {});
+      articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0, questions: s.questions_pending ?? 0, author: s.author_submitted ?? 0 })).catch(() => {});
   }, [user, path]);
   useEffect(() => { document.title = 'EŞİK — Yönetim Paneli'; }, []);
   if (checking) return <div className="login" role="status"><p style={{ color: '#f4efe5' }}>Oturum denetleniyor…</p></div>;

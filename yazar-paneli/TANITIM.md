@@ -77,7 +77,7 @@ Yönetim panelinde "Yazar paneli" başlığı altında iki sayfa var:
 | --- | --- | --- |
 | Yazar paneli | `yazar-paneli/` | React 19 + Vite 7 + TypeScript, admin ile aynı görsel dil. Geliştirmede 5177; derlenince arka uç `/yazar/` altında sunar. |
 | Arka uç | `backend/pipeline/author.py` | `/api/author/*` (yazar) ve `/api/admin/author/*` (editör). |
-| Veritabanı | `backend/migrations/018_author.sql` | `author_account`, `author_session`, `author_work`, `author_source`, `author_note`, `author_draft`. |
+| Veritabanı | `backend/migrations/024_author.sql` | `author_account`, `author_session`, `author_work`, `author_source`, `author_note`, `author_draft`. |
 | Editör sayfaları | `admin/src/pages/AuthorReview.tsx` | `#/yazar-metinleri`, `#/yazar-metni/<id>`, `#/yazarlar`. |
 | Testler | `backend/tests/test_author.py`, `yazar-paneli/tests/` | Yetki ayrımı, hesap akışı, notlar, taslak denetimi, editör onayı. |
 

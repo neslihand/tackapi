@@ -10,7 +10,8 @@ Uç noktalar
   GET  /api/monuments?city=bursa&kind=mosque&period=erken-osmanli&q=muradiye&pilot=true&lang=tr&page=1&page_size=50
        → {total, page, page_size, items: [...], facets: {cities, kinds, periods}}
   GET  /api/monuments/{slug}?lang=tr|en
-  GET  /api/routes?pilot=true&auto=true   → keşif rotaları [{id, kicker, title, description, artifactIds, auto}]
+  GET  /api/routes?pilot=true&auto=true   → keşif rotaları [{id, kicker, title, description, artifactIds, auto, minutes, access_note}]
+  GET  /api/weekly                        → bu haftanın keşfi {available, slug, hook, detail, source, route}
   GET  /api/quiz?pilot=true               → panelde yazılan yarışma soruları [{id, question, options, answer, explanation, artifactId}]
   GET  /api/articles?kind=&city=&q=&lang=&page=   → yayındaki makaleler {total, items, facets}
   GET  /api/articles/{slug}?lang=          → makale: metin, kaynakça, bağlı eserler, ilgili makaleler
@@ -26,18 +27,19 @@ VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında 
 VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/panel/' altında sunulur; 'off' kapatır
                     Tek adresten demo: önce iki uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
 """
-import os, sys, re, time, logging, threading, mimetypes
+import os, sys, re, time, json, hashlib, logging, threading, mimetypes
 from collections import defaultdict, deque
 sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, author
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author
 
 log = logging.getLogger('vakif.api')
 
@@ -71,6 +73,8 @@ app.include_router(visitor_router)
 # Makaleler ve terimler sözlüğü: herkese açık, ziyaretçi ve yönetim uçları (articles.py)
 articles_router = articles.build_router(db, MEDIA_DIR, visitor_router)
 app.include_router(articles_router)
+# Kaynakta olmayan soruların takibi ve editör kuyruğu (questions.py)
+app.include_router(questions.build_router(db, visitor_router))
 
 
 @app.on_event('startup')
@@ -83,6 +87,16 @@ def warm_visual_model():
             log.warning('Yerel görsel model yüklenemedi: %s', str(e)[:300])
     if visual_search.BACKEND == 'local':
         threading.Thread(target=warm, daemon=True).start()
+
+
+_reuse_ready = []
+
+
+def image_reuse_enabled():
+    """image.reuse_allowed var mı (023 göçü)? Yalnızca olumlu sonuç saklanır."""
+    if not _reuse_ready and db.query("""SELECT 1 FROM information_schema.columns WHERE table_name = 'image' AND column_name = 'reuse_allowed'"""):
+        _reuse_ready.append(True)
+    return bool(_reuse_ready)
 
 
 def image_obj(r, lang, prefix=''):
@@ -199,6 +213,8 @@ ITEM_SELECT = f"""
            (SELECT count(*) FROM monument ch WHERE ch.parent_id = m.id) AS children_count,
            EXISTS (SELECT 1 FROM artwork a WHERE a.monument_id = m.id
                       OR a.monument_id IN (SELECT id FROM monument ch WHERE ch.parent_id = m.id)) AS has_artworks,
+           EXISTS (SELECT 1 FROM narration n WHERE n.monument_id = m.id AND n.mode = 'story') AS has_story,
+           EXISTS (SELECT 1 FROM narration n WHERE n.monument_id = m.id AND n.mode = 'child') AS has_child,
            cov.file AS img_file, cov.alt_tr AS img_alt_tr, cov.alt_en AS img_alt_en, cov.width AS img_width,
            cov.height AS img_height, m.lat, m.lon{{geo}},
            {_people('architect')} AS architects, {_people('builder')} AS builders, {_people('patron')} AS patrons
@@ -228,7 +244,7 @@ def list_item(r, lang):
         parent=dict(slug=r['parent_slug'], name=(r['parent_en'] or r['parent_tr']) if en else r['parent_tr'])
         if r['parent_slug'] else None,
         children_count=r['children_count'], summary=r['summary_en'] if en else r['summary_tr'], status=r['status'],
-        has_artworks=r['has_artworks'], image=image_obj(r, lang, 'img_'), location=geocode.public_location(r),
+        has_artworks=r['has_artworks'], has_story=r['has_story'], has_child=r['has_child'], image=image_obj(r, lang, 'img_'), location=geocode.public_location(r),
         # mimar (architect), usta (builder) ve bânî (patron) ayrı tutulur: bânî mimar diye gösterilmemeli
         architect=r['architects'], builder=r['builders'], patron=r['patrons'],
         source=dict(book=r['book'], pages=[r['page_start'], r['page_end']] if r['page_start'] is not None else None))
@@ -279,6 +295,89 @@ def public_routes(pilot: bool | None = None, auto: bool = True):
     return routes.public_routes(db, pilot, auto)
 
 
+def _digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False, default=str).encode('utf-8')).hexdigest()[:16]
+
+
+def _media_size(src):
+    try:
+        return os.path.getsize(os.path.join(MEDIA_DIR, src.removeprefix('/media/')))
+    except OSError:
+        return 0
+
+
+@app.get('/api/routes/{route_id}/manifest')
+def route_manifest(route_id: str, pilot: bool | None = None, lang: Literal['tr', 'en'] = 'tr'):
+    """Çevrimdışı rota paketi indirilmeden önce: boyut, içerik sürümü ve pakete girebilen fotoğraflar. Sürüm, duraklardan biri
+    (metin, anlatım, fotoğraf listesi, izin) değişince değişir; uygulama eski paketi çalışır bırakıp "güncelleme var" der.
+    Kullanım izni teyit edilmemiş fotoğraf pakete girmez (image.reuse_allowed); sayısı ayrıca söylenir."""
+    route = next((r for r in routes.public_routes(db, pilot) if r['id'] == route_id), None)
+    if not route:
+        raise HTTPException(404, 'Rota bulunamadı')
+    works, photos, blocked, text_bytes = [], set(), 0, 0
+    for slug in route['artifactIds']:
+        detail = monument_detail(slug, lang)
+        works.append(dict(slug=slug, version=_digest(detail)))
+        text_bytes += len(json.dumps(detail, ensure_ascii=False, default=str).encode('utf-8'))
+        for image in detail['images']:
+            if image['reusable']:
+                photos.update((image['src'], image['thumb']))
+            else:
+                blocked += 1
+    return dict(id=route_id, version=_digest(works), works=works, photos=len(photos), photo_urls=sorted(photos), blocked_photos=blocked,
+                size_bytes=text_bytes + sum(_media_size(p) for p in photos))
+
+
+@app.get('/api/weekly')
+def weekly_discovery():
+    """Bu haftanın keşfi (Türkiye saati); yoksa available=false ve uygulama kartı göstermez."""
+    return weekly.current(db)
+
+
+class HuntGuess(BaseModel):
+    choice: int
+    attempt: int
+
+
+hunt_limit = visitors.Limiter(60, 60)
+
+
+@app.get('/api/hunt/today')
+def hunt_today():
+    """Günün Detay Avı, cevabı olmadan; görev yoksa available=false (uygulama yedeğini gösterir)."""
+    return hunt.today(db)
+
+
+@app.post('/api/hunt/{hunt_id}/guess')
+def hunt_guess(hunt_id: int, body: HuntGuess, request: Request, lang: Literal['tr', 'en'] = 'tr'):
+    hunt_limit.check(request.client.host if request.client else '-', 'Çok fazla deneme. Biraz sonra yeniden dene.')
+    try:
+        out = hunt.guess(db, hunt_id, body.choice, body.attempt, lang)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    if out is None:
+        raise HTTPException(404, 'Görev bulunamadı')
+    return out
+
+
+@app.get('/api/hunt/{hunt_id}/hints')
+def hunt_hints(hunt_id: int, seen: int = Query(0, ge=0, le=6)):
+    """Kaç tahmin yapıldıysa o kadar ipucu; uygulama kapanıp açılınca ya da başka cihazda oyun sürsün diye."""
+    out = hunt.hints_seen(db, hunt_id, seen)
+    if out is None:
+        raise HTTPException(404, 'Görev bulunamadı')
+    return out
+
+
+@app.get('/api/hunt/{hunt_id}/reveal')
+def hunt_reveal(hunt_id: int, lang: Literal['tr', 'en'] = 'tr'):
+    """Görevi başka cihazda bitiren kişi için sonuç. Yarının görevi açılmaz."""
+    out = hunt.revealed(db, hunt_id, lang)
+    if out is None:
+        raise HTTPException(404, 'Görev bulunamadı')
+    return out
+
+
 @app.get('/api/announcements')
 def public_announcements(pilot: bool | None = None):
     """Ana sayfadaki "Gündem": panelde yayımlanan ve tarihi süren duyurular (agent.py; en çok 3)."""
@@ -311,13 +410,14 @@ def monument_detail(slug, lang, drafts=False):
                              m.summary_en, m.alt_names, m.status, m.qa_flags, m.review_status
                       FROM monument m LEFT JOIN source_section s ON s.id = m.section_id
                       LEFT JOIN source_book b ON b.id = m.book_id WHERE m.slug = %(s)s""", dict(s=slug))[0]
-    imgs = db.query("""SELECT i.file, i.alt_tr, i.alt_en, i.width, i.height, i.is_cover, i.printed_page, i.caption_tr,
-                              i.review_status, b.title AS book
+    reuse = 'i.reuse_allowed' if image_reuse_enabled() else 'false AS reuse_allowed'
+    imgs = db.query(f"""SELECT i.file, i.alt_tr, i.alt_en, i.width, i.height, i.is_cover, i.printed_page, i.caption_tr,
+                              i.review_status, {reuse}, b.title AS book
                        FROM image i JOIN monument m ON m.id = i.monument_id LEFT JOIN source_book b ON b.id = i.book_id
                        WHERE m.slug = %(s)s AND (i.review_status = 'published'
                              OR (%(d)s::boolean AND i.review_status IN ('draft', 'reviewed')))
                        ORDER BY i.is_cover DESC, i.review_status = 'published' DESC, i.sort, i.id""", dict(s=slug, d=drafts))
-    images = [dict(image_obj(r, lang), caption=r['caption_tr'],
+    images = [dict(image_obj(r, lang), caption=r['caption_tr'], reusable=r['reuse_allowed'],
                    source=dict(book=r['book'], page=r['printed_page']) if r['book'] else None,
                    **({'review_status': r['review_status']} if drafts else {})) for r in imgs]
     # Bölümleme düzeltmeleri uygulanmış metin (gizlenen kırıntılar yok, taşınan paragraflar doğru eserde)
@@ -347,13 +447,14 @@ def monument_detail(slug, lang, drafts=False):
         a['images'] = art_imgs.get(a.pop('id'), [])
     # Hikâye ve çocuk anlatımları önceden üretilip kaydedilir; sayfa açılınca yapay zekâ çağrılmaz
     stored = narrations.public(db, f['id'], lang)
+    three = details.public(db, f['id'], lang)
     # Harita: doğrulanmamış otomatik konum "yaklaşık" gelir (belirsizlik dairesiyle); konum yoksa None, bölüm görünmez
     geo = ', m.geo_precision, m.geo_checked' if geocode.enabled(db) else ''
     location = geocode.public_location(db.query(f'SELECT m.lat, m.lon{geo} FROM monument m WHERE m.id = %(i)s',
                                                 dict(i=f['id']))[0])
     f.pop('id', None)
     f.pop('city_id', None)
-    return dict(card=f, text=text, text_note=text_note, narrations=stored, images=images, location=location,
+    return dict(card=f, text=text, text_note=text_note, narrations=stored, details=three, images=images, location=location,
                 source=dict(book=sec['book'], pages=[sec['page_start'], sec['page_end']], credits=sec['credits']),
                 alt_names=sec['alt_names'], status=sec['status'], review_status=sec['review_status'])
 
@@ -456,6 +557,7 @@ def chat(body: ChatIn, request: Request):
                             'Yapay zekâ servisine şu an ulaşılamıyor, lütfen biraz sonra tekrar deneyin.',
                             headers={'Retry-After': '30'})
     r.pop('plan', None)
+    r['no_info'] = rag.says_no_info(r.get('answer'))
     return r
 
 
@@ -516,6 +618,20 @@ class AppFiles(StaticFiles):
 PANEL_DIR = static_dir('VAKIF_PANEL_DIR', os.path.join('admin', 'dist'))
 SITE_DIR = static_dir('VAKIF_SITE_DIR', os.path.join('frontend', 'dist'))
 AUTHOR_DIR = static_dir('VAKIF_AUTHOR_DIR', os.path.join('yazar-paneli', 'dist'))
+
+
+@app.get('/eser/{slug}', include_in_schema=False)
+def share_page(slug: str, request: Request, lang: str = 'tr'):
+    """Paylaşım bağlantısının açtığı sayfa (share.py). Uygulama ve site olmadan da çalışır; site yalnızca pilot eserleri açar."""
+    lang = 'en' if lang == 'en' else 'tr'
+    rows = db.query(f'{item_select()} WHERE m.slug = %(slug)s AND {PUBLISHED}', dict(slug=slug, drafts=False))
+    if not rows:
+        return HTMLResponse(share.missing(lang, bool(SITE_DIR)), 404)
+    pilot = db.query('SELECT pilot FROM monument WHERE slug = %(s)s', dict(s=slug))[0]['pilot']
+    html = share.page(list_item(rows[0], lang), lang, str(request.url.replace(query=None)), bool(SITE_DIR) and pilot)
+    return HTMLResponse(html, headers={'Cache-Control': 'no-cache'})
+
+
 if PANEL_DIR:
     app.mount('/panel', AppFiles(directory=PANEL_DIR, html=True), name='panel')
 if AUTHOR_DIR:   # yazar paneli: yönetim panelinden ayrı uygulama (../yazar-paneli)

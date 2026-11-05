@@ -14,11 +14,15 @@ import { distanceM, formatDistance } from '@/lib/passport';
 import { usePassport } from '@/lib/store';
 import { colors, hit, overlay, radius, shadow, space, type } from '@/lib/theme';
 
-export function ExploreMap({ items, here, locating, error, onLocate }: {
+export function ExploreMap({ items, here, locating, error, onLocate, focus = null }: {
   items: Item[]; here: Here | null; locating: boolean; error: string | null; onLocate: () => void;
+  /** a work a link asked to show: its pin opens */
+  focus?: string | null;
 }) {
   const { progress } = usePassport();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(focus);
+  const [focused, setFocused] = useState(focus);
+  if (focus !== focused) { setFocused(focus); setSelected(focus); }
   const onMap = useMemo(() => placed(items), [items]);
   const pins = useMemo<MapPin[]>(() => onMap.map(i => ({ slug: i.slug, name: i.name, lat: i.location.lat, lon: i.location.lon,
     approximate: i.location.approximate, radius: i.location.radius_m,

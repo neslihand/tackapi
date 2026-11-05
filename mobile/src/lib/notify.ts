@@ -1,21 +1,23 @@
 // Local notifications, scheduled on the device (no server, no push token; they work in Expo Go too):
 //   "Günün Eşiği": every morning one work with a sentence from its book summary; a week is set up ahead, so it
 //                  arrives without a connection. Tapping it opens the work.
-//   streak reminder: one gentle evening note, only when the streak would end that night (no rest day left).
+//   Hatırla: one note on the day a review card opens. Tapping it opens the cards.
+//   rhythm reminder: one gentle evening note, only while a daily rhythm is alive and today has no discovery yet.
+// Which of them goes out on which day is decided in notifyPlan.ts: quiet hours, one a day, slowing down when unopened.
 // The web build (development in the browser) uses notify.web.ts instead: expo-notifications has no web support.
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import type { Item } from './api';
-import { DAILY_DAYS, dailyPicks, teaser } from './daily';
+import { dailyPicks, teaser } from './daily';
 import { t } from './i18n';
-import { dayKey, type Progress } from './passport';
-import { nextReminder, type StreakMode } from './streak';
+import { PLAN_DAYS, planNotifications, type PlanInput } from './notifyPlan';
+import type { Progress } from './passport';
+import { dailyRun } from './rhythm';
 
 const CHANNEL = 'esik';
-const STREAK_ID = 'streak';
-const STREAK_HOUR = 19;
+const OURS = /^(daily-|recall-|streak)/;
 
 export const notificationsSupported = true;
 
@@ -25,6 +27,7 @@ export function setupNotifications() {
   });
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync(CHANNEL, { name: t('Günün Eşiği ve hatırlatmalar', 'Daily work and reminders'),
+      // eslint-disable-next-line import/namespace -- exported through `export *`, which the rule does not follow here
       importance: Notifications.AndroidImportance.DEFAULT }).catch(() => {});
   }
 }
@@ -43,50 +46,48 @@ export function openedFromNotification() {
   return response?.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER;
 }
 
-/** A tapped notification opens its work. */
-export function useNotificationTaps() {
+/** A tapped notification opens its work or screen, once: the response is cleared so a restart does not repeat it. */
+export function useNotificationTaps(onOpen: () => void) {
   const response = Notifications.useLastNotificationResponse();
   useEffect(() => {
-    const data = response?.notification.request.content.data as { slug?: unknown } | undefined;
-    if (response?.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER && typeof data?.slug === 'string') router.push(`/eser/${data.slug}`);
+    if (response?.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+    const data = response.notification.request.content.data as { slug?: unknown; path?: unknown } | undefined;
+    onOpen();
+    if (typeof data?.slug === 'string') router.push(`/eser/${data.slug}`);
+    else if (data?.path === '/hatirla') router.push('/hatirla');
+    Notifications.clearLastNotificationResponse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 }
 
-async function cancelWhere(match: (id: string) => boolean) {
+/** Replaces everything scheduled with what the plan says for the coming days. */
+export async function syncNotifications(input: PlanInput, items: Item[], progress: Progress, tiers?: readonly ((item: Item) => boolean)[]) {
   const all = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(all.filter(n => match(n.identifier)).map(n => Notifications.cancelScheduledNotificationAsync(n.identifier)));
-}
-
-export async function scheduleDailyWork(on: boolean, hour: number, items: Item[], progress: Progress) {
-  await cancelWhere(id => id.startsWith('daily-'));
-  if (!on || !items.length) return;
+  await Promise.all(all.filter(n => OURS.test(n.identifier)).map(n => Notifications.cancelScheduledNotificationAsync(n.identifier)));
   const now = new Date();
-  const picks = dailyPicks(items, progress, now, DAILY_DAYS + 1);
-  for (let i = 0; i <= DAILY_DAYS; i++) {
-    const at = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, hour, 0, 0);
-    if (at <= now) continue;
-    const item = picks[i];
+  const picks = dailyPicks(items, progress, now, PLAN_DAYS + 1, tiers);
+  for (const planned of planNotifications(input, now)) {
+    const content = planned.kind === 'daily' ? dailyContent(picks[planned.offset]) : planned.kind === 'recall' ? recallContent() : streakContent(progress);
+    if (!content) continue;
     await Notifications.scheduleNotificationAsync({
-      identifier: `daily-${dayKey(at)}`,
-      content: { title: t(`Günün Eşiği · ${item.name}`, `Today’s Threshold · ${item.name}`), body: teaser(item), data: { slug: item.slug } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
+      identifier: planned.kind === 'streak' ? 'streak' : `${planned.kind}-${planned.day}`,
+      content,
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: planned.at, channelId: CHANNEL },
     });
   }
 }
 
-export async function scheduleStreakReminder(on: boolean, progress: Progress, mode: StreakMode) {
-  await cancelWhere(id => id === STREAK_ID);
-  if (!on) return;
-  const next = nextReminder(progress.days, mode, new Date(), STREAK_HOUR);
-  if (!next) return;
-  const n = next.state.count;
-  await Notifications.scheduleNotificationAsync({
-    identifier: STREAK_ID,
-    content: mode === 'weekly'
-      ? { title: t(`${n} haftalık serin sürüyor`, `Your ${n}-week streak goes on`),
-        body: t('Bu hafta henüz bir kapı açmadın; hafta bu gece bitiyor.', 'You have not opened a door this week yet; the week ends tonight.'), data: { path: '/' } }
-      : { title: t(`${n} günlük serin sürüyor`, `Your ${n}-day streak goes on`),
-        body: t('Bu haftanın izin gününü kullandın; bugün tek bir hikâye seriyi sürdürür.', 'You have used this week’s rest day; a single story today keeps it going.'), data: { path: '/' } },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: next.at, channelId: CHANNEL },
-  });
+function dailyContent(item: Item | undefined) {
+  if (!item) return null;
+  return { title: t(`Günün Eşiği · ${item.name}`, `Today’s Threshold · ${item.name}`), body: teaser(item), data: { slug: item.slug } };
+}
+
+function recallContent() {
+  return { title: t('Hatırla', 'Remember'), body: t('Daha önce okuduğun bir eserden kısa bir soru hazır.', 'A short question from a work you have read is ready.'), data: { path: '/hatirla' } };
+}
+
+function streakContent(progress: Progress) {
+  const days = dailyRun(progress.days).days;
+  return { title: t(`${days} günlük keşif ritmin sürüyor`, `Your ${days}-day discovery rhythm goes on`),
+    body: t('Bugün bir kapı daha aç: tek bir hikâye yeter.', 'Open one more door today: a single story is enough.'), data: { path: '/' } };
 }

@@ -18,7 +18,7 @@ export function useReducedMotion() {
 
 /** A style that grows and settles back whenever `key` changes (not on the first draw). */
 export function usePop(key: string | undefined) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const [scale] = useState(() => new Animated.Value(1));
   const reduced = useReducedMotion();
   const last = useRef(key);
   useEffect(() => {

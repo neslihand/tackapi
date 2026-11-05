@@ -33,9 +33,15 @@ export function listenSeconds(text: string) {
   return s < 60 ? Math.max(10, Math.round(s / 10) * 10) : Math.round(s / 60) * 60;
 }
 
-/** The works of the coming days: undiscovered ones first, a stable order so a reschedule keeps the same day's work. */
-export function dailyPicks(items: Item[], progress: Progress, from = new Date(), days = DAILY_DAYS) {
-  const pool = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || compareKeys(a.slug, b.slug));
+// a choice of one or two works would repeat too often: below this the whole collection takes turns
+const FEWEST_PREFERRED = 3;
+
+/** The works of the coming days: undiscovered ones first, a stable order so a reschedule keeps the same day's work. tiers narrow the
+ *  turn to the closest fit for the visitor that still has enough works left to discover. */
+export function dailyPicks(items: Item[], progress: Progress, from = new Date(), days = DAILY_DAYS, tiers: readonly ((item: Item) => boolean)[] = []) {
+  const sorted = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || compareKeys(a.slug, b.slug));
+  const open = sorted.filter(i => !progress.discovered[i.slug]);
+  const pool = tiers.map(fit => open.filter(fit)).find(list => list.length >= FEWEST_PREFERRED) ?? sorted;
   if (!pool.length) return [];
   const epoch = Math.floor(new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime() / 86400000);
   return Array.from({ length: days }, (_, i) => pool[(epoch + i) % pool.length]);

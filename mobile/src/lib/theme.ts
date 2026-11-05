@@ -17,6 +17,7 @@ export const colors = {
   soft: '#4B5448',
   line: '#D9C9A5',         // fine gold hairlines (decorative)
   mist: '#C9CFC8',         // body text on night
+  ivory: '#F3ECDF',        // light text on night (the ground's ivory)
   danger: '#8D3A30',
   dangerSoft: '#F6E9E6',   // behind a wrong answer; danger and ink text stay above 4.5:1
   tabInactive: '#8E978F',  // tab labels on emeraldDeep (6.6:1)
@@ -38,6 +39,10 @@ export const gradients = {
 // Medallion fills; the tier is always written out too, so the metal is never the only clue.
 export const metal = { bronze: '#A9773F', silver: '#B7B6B1', gold: colors.gold };
 
+// The passport's stamp book, as on the site (frontend/src/pages/Collection.tsx): its cover and paper, and the inks of
+// the round stamps (gold for on the spot, green and burgundy in turn for the digital ones).
+export const stampBook = { cover: '#CFC8B6', edge: '#B9B2A1', paper: '#EBE6DA', goldInk: '#7A5B1E', greenInk: '#326055', redInk: '#87554A', goldWash: '#C7A96B26' };
+
 // Loaded in src/app/_layout.tsx. Each weight is its own family on the phone, so pick the family, not a fontWeight.
 export const fonts = {
   serif: 'CormorantGaramond_500Medium',
@@ -48,8 +53,9 @@ export const fonts = {
 };
 
 export const serif = fonts.serif;
+export const sans = fonts.sans;
 
-export const space = { xs: 4, s: 8, m: 16, l: 24, xl: 32, gutter: 20 };
+export const space = { xs: 4, s: 8, m: 16, l: 24, xl: 32, xxl: 48, gutter: 20 };
 
 // Translucent night laid over photos so gold and ivory text stay readable.
 export const overlay = {

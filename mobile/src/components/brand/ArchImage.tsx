@@ -1,7 +1,7 @@
 // A picture under an arch (the web's border-radius: 999px 999px 3px 3px) with a thin gold outline; a flat plate while
 // it loads and the type's line drawing when there is no photo or it fails to load.
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import { arch, colors, radius, space } from '@/lib/theme';
 import { ArchPlaceholder } from './ArchPlaceholder';
@@ -16,7 +16,9 @@ export function ArchImage({ uri, size = 'md', kind, kind_label, alt, framed = tr
   light?: boolean; style?: StyleProp<ViewStyle>;
 }) {
   const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
-  useEffect(() => setState('loading'), [uri]);
+  // a new picture starts loading again
+  const [shownUri, setShownUri] = useState(uri);
+  if (uri !== shownUri) { setShownUri(uri); setState('loading'); }
   const [lgWidth, setLgWidth] = useState(0);
   const fixed = size === 'sm' || size === 'md' ? arch[size] : typeof size === 'number' ? { width: size, height: Math.round(size * arch.lgRatio) } : null;
   const width = fixed?.width ?? lgWidth;

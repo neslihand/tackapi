@@ -59,7 +59,6 @@
 .passport-banner { border-block: 1px solid #acaba866; background: radial-gradient(ellipse at 22% 50%, #fdfaf4, transparent 60%), linear-gradient(180deg, #f1ebde, #e6decc); }
 .route-item { border-bottom-color: #aaa9a580; transition: background .5s ease-in-out; }
 .route-item:hover { background: linear-gradient(90deg, #c3a86914, transparent 70%); }
-.map-teaser { border-radius: 14px; box-shadow: 0 0 0 1px #a4a29f, 0 0 0 5px #a4a29f1a, 0 30px 56px -30px #2f2d2b88; }
 .daily-discovery, .quiz-teaser { position: relative; padding: 30px; border: 1px solid #bbbab6; border-radius: 16px; background: linear-gradient(180deg, #fcfaf4, #f0eade); box-shadow: inset 0 1px 0 #fff, 0 30px 50px -34px #3e3d3a66; }
 .daily-discovery::before, .quiz-teaser::before { content: ''; position: absolute; inset: 7px; border: 1px solid #d7d6d2; border-radius: 11px; pointer-events: none; }
 .quiz-teaser { border-top: 1px solid #bbbab6; border-bottom: 1px solid #bbbab6; }

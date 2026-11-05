@@ -1,84 +1,80 @@
-// Hatırla: today's review cards, one at a time. A work card asks a quiz.ts question built from the work's own record
-// (multiple choice); a term card shows the glossary definition and asks whether it was remembered. A summary ends it.
+// Hatırla (S08): today's review cards, one at a time. A work card asks a question from the quiz pool, so its answer and
+// explanation come from the work's own record; a term card shows the glossary definition and asks whether it was
+// remembered. A summary ends it. Having no card is a good thing to hear, never a reproach.
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { AnswerOption, ProgressBar } from '@/components/Controls';
 import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
-import { mediaUrl } from '@/lib/api';
+import { track } from '@/lib/analytics';
+import { mediaUrl, sourceTitle } from '@/lib/api';
 import { t, useLang } from '@/lib/i18n';
 import { buzz } from '@/lib/motion';
-import { capitalize, type GlossaryTerm } from '@/lib/reading';
-import { daysUntil, nextDue, parseCardId, questionFor, type Candidate } from '@/lib/recall';
-import { useRecall } from '@/lib/recall-state';
+import { dayKey } from '@/lib/passport';
+import { capitalize } from '@/lib/reading';
+import type { RecallAnswer } from '@/lib/recall';
+import { useRecall, type RecallCardView } from '@/lib/recall-state';
 import { useContent } from '@/lib/store';
 import { colors, hit, radius, serif, space, type } from '@/lib/theme';
 
-type Result = { card: Candidate; correct: boolean; due: string | null };
+type Result = { card: RecallCardView; correct: boolean; due: string | null };
+
+/** Whole local days from today until `key` (negative when past). */
+const daysUntil = (key: string) => { const [y, m, d] = key.split('-').map(Number); const [ty, tm, td] = dayKey(new Date()).split('-').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86400000); };
 
 const when = (days: number) => (days <= 0 ? t('bugün', 'today') : days === 1 ? t('yarın', 'tomorrow') : t(`${days} gün sonra`, `in ${days} days`));
-const fieldLabel = (field: string) => ({ city: t('ŞEHİR', 'CITY'), architect: t('MİMAR / USTA', 'ARCHITECT / MASTER'), century: t('YÜZYIL', 'CENTURY'), period: t('DÖNEM', 'ERA') })[field] ?? '';
+// a question made from the record says which field it asks; an editor's question is simply about the work
+const fieldLabel = (id: string) => ({ city: t('ŞEHİR', 'CITY'), architect: t('MİMAR / USTA', 'ARCHITECT / MASTER'), century: t('YÜZYIL', 'CENTURY'), period: t('DÖNEM', 'ERA') })[id.startsWith('veri:') ? id.split(':')[1] : ''] ?? t('SORU', 'QUESTION');
 const goHome = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 export default function Recall() {
-  const { items, bySlug } = useContent();
+  const { bySlug } = useContent();
   const { lang } = useLang();
-  const { ready, session, candidates, state, glossary, termsMissing, answer, finish } = useRecall();
-  const [cards, setCards] = useState<Candidate[] | null>(null);
+  const { ready, session, hasCards, next, termsMissing, answer } = useRecall();
+  const [cards, setCards] = useState<RecallCardView[] | null>(null);
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<Result[]>([]);
   // a work card: the picked option (-1: "show me"); a term card: whether the definition is shown
   const [chosen, setChosen] = useState<number | null>(null);
   const [shown, setShown] = useState(false);
-  const ended = useRef(false);
 
-  // the session is picked once when the screen opens, so answering never reshuffles it
-  useEffect(() => {
-    if (ready && cards === null)
-      setCards(session.filter(c => (c.kind === 'work' ? questionFor(c.id, items, new Date()) : glossary?.some(g => g.slug === c.slug))));
-  }, [ready, cards, session, items, glossary]);
-
-  // the session ends at the summary, or on leaving after at least one answer: it counts for the streak once
-  const end = useCallback(() => { if (!ended.current) { ended.current = true; finish(); } }, [finish]);
-  const leave = useRef(() => {});
-  leave.current = () => { if (results.length) end(); };
-  useEffect(() => () => leave.current(), []);
+  // the session is picked once when the screen opens (a notification may open it first), so answering never reshuffles it
+  if (ready && cards === null) setCards(session);
 
   const card = cards?.[index];
-  const field = card ? parseCardId(card.id) : null;
-  const question = useMemo(() => (card?.kind === 'work' ? questionFor(card.id, items, new Date()) : null), [card, items, lang]); // eslint-disable-line react-hooks/exhaustive-deps
-  const term: GlossaryTerm | undefined = card?.kind === 'term' ? glossary?.find(g => g.slug === card.slug) : undefined;
   const result = results[index];
 
   if (!ready || cards === null) return <Loading />;
 
   if (!cards.length) {
-    if (!candidates.length) return <Empty title={t('Henüz hatırlanacak bir şey yok', 'Nothing to recall yet')}
+    if (!hasCards) return <Empty title={t('Henüz hatırlanacak bir şey yok', 'Nothing to recall yet')}
       body={t('Bir eserin hikâyesini okuyup pasaportuna ekle ya da sözlükte bir terim aç; ertesi gün kartı burada olur.', 'Read a work’s story to add it to your passport, or open a term in the glossary; its card is here the next day.')}
       action={<Button icon="compass-outline" label={t('Keşfet’e git', 'Go to Explore')} onPress={() => router.push('/kesfet')} />} />;
-    const next = state && nextDue(state, candidates);
     return <Empty title={t('Bugünlük bu kadar', 'That’s all for today')}
-      body={next ? t(`Sıradaki kart ${when(daysUntil(next, new Date()))} gelecek.`, `The next card comes ${when(daysUntil(next, new Date()))}.`) : undefined}
+      body={next ? t(`Sıradaki kart ${when(daysUntil(next))} gelecek.`, `The next card comes ${when(daysUntil(next))}.`) : undefined}
       action={<Button icon="home-outline" label={t('Bugün’e dön', 'Back to Today')} onPress={goHome} />} />;
   }
 
-  if (!card) return <Summary results={results} bySlug={slug => bySlug(slug)?.name} termName={slug => capitalize(glossary?.find(g => g.slug === slug)?.term ?? slug)} />;
+  if (!card) return <Summary results={results} bySlug={slug => bySlug(slug)?.name} />;
 
-  const record = (correct: boolean) => {
-    const next = answer(card.id, correct);
-    if (correct) buzz('light');
-    setResults(r => [...r, { card, correct, due: next?.cards[card.id]?.due ?? null }]);
+  const record = (result: RecallAnswer, pick: number | null) => {
+    if (results[index]) return;
+    setChosen(pick);
+    const due = answer(card, result);
+    track('knowledge_recalled', card.kind === 'work' ? card.slug : undefined, { card_id: card.id, card_kind: card.kind, correct: result === 'right', answer: result,
+      repetition_step: card.state?.step ?? 0, first_attempt_correct: card.state ? card.state.first : result === 'right' }, `recall:${card.id}:${card.state?.last ?? 'ilk'}`);
+    if (result === 'right') buzz('light');
+    setResults(r => [...r, { card, correct: result === 'right', due }]);
   };
-  const advance = () => {
-    setChosen(null); setShown(false);
-    if (index + 1 === cards.length) end();
-    setIndex(i => i + 1);
-  };
+  const advance = () => { setChosen(null); setShown(false); setIndex(i => i + 1); };
   const item = card.kind === 'work' ? bySlug(card.slug) : undefined;
   const photo = mediaUrl(item?.image?.thumb ?? item?.image?.src);
+  const question = card.kind === 'work' ? card.question : null;
+  const term = card.kind === 'term' ? card.term : null;
   const answerText = question ? question.options[question.answer] : '';
 
   return <ScrollView contentContainerStyle={s.page}>
@@ -88,17 +84,17 @@ export default function Recall() {
     </View>
     {termsMissing && index === 0 && <Notice icon="cloud-offline-outline">{t('Sözlük bu cihazda yok; terim kartları bağlanınca gelecek.', 'The glossary is not on this device; term cards come back once you are online.')}</Notice>}
 
-    {question && field?.kind === 'work' && <Card style={s.card}>
-      <Eyebrow>{t('ESER', 'WORK')} · {fieldLabel(field.field)}</Eyebrow>
+    {question && <Card style={s.card}>
+      <Eyebrow>{t('ESER', 'WORK')} · {fieldLabel(question.id)}</Eyebrow>
       <View style={s.row}>
         {photo && <Image source={photo} alt="" style={s.photo} contentFit="cover" accessibilityIgnoresInvertColors />}
         <Text style={s.question} accessibilityRole="header">{question.question}</Text>
       </View>
       <View style={s.options}>
-        {question.options.map((o, i) => <AnswerOption key={o} label={o} onPress={() => { setChosen(i); record(i === question.answer); }}
+        {question.options.map((o, i) => <AnswerOption key={o} label={o} onPress={() => record(i === question.answer ? 'right' : 'wrong', i)}
           state={!result ? 'open' : i === question.answer ? 'right' : i === chosen ? 'wrong' : 'other'} />)}
       </View>
-      {!result && <Button kind="plain" icon="eye-outline" label={t('Bilmiyorum, cevabı göster', 'I don’t know, show me')} onPress={() => { setChosen(-1); record(false); }} />}
+      {!result && <Button kind="plain" icon="eye-outline" label={t('Bilmiyorum, cevabı göster', 'I don’t know, show me')} onPress={() => record('forgot', -1)} />}
     </Card>}
 
     {term && <Card style={s.card}>
@@ -109,8 +105,8 @@ export default function Recall() {
         <Text style={s.definition} accessibilityLiveRegion="polite">{term.definition}</Text>
         {term.definition_lang !== lang && <Text style={s.small}>{term.definition_lang === 'tr' ? t('Tanım Türkçe.', 'Definition in Turkish.') : t('Tanım İngilizce.', 'Definition in English.')}</Text>}
         {!result && <View style={s.pair}>
-          <Button kind="gold" icon="checkmark" label={t('Biliyordum', 'I knew it')} style={s.half} onPress={() => record(true)} />
-          <Button kind="plain" icon="close" label={t('Bilmiyordum', 'I didn’t know')} style={s.half} onPress={() => record(false)} />
+          <Button kind="gold" icon="checkmark" label={t('Biliyordum', 'I knew it')} style={s.half} onPress={() => record('right', null)} />
+          <Button kind="plain" icon="close" label={t('Bilmiyordum', 'I didn’t know')} style={s.half} onPress={() => record('forgot', null)} />
         </View>}
       </>}
     </Card>}
@@ -121,8 +117,9 @@ export default function Recall() {
         <Text style={s.feedbackTitle}>{card.kind === 'term' ? (result.correct ? t('Güzel, biliyordun.', 'Nice, you knew it.') : t('Bunu yeniden soracağız.', 'We’ll ask this one again.'))
           : result.correct ? t('Doğru!', 'Right!') : chosen === -1 ? t(`Doğrusu: ${answerText}`, `The answer: ${answerText}`) : t(`Yanlış. Doğrusu: ${answerText}`, `Not quite. The answer: ${answerText}`)}</Text>
       </View>
-      {question && <Text style={s.feedbackText}>{question.explanation}</Text>}
-      {result.due && <Text style={s.small}>{t(`Bu kartı ${when(daysUntil(result.due, new Date()))} yeniden göreceksin.`, `You’ll see this card again ${when(daysUntil(result.due, new Date()))}.`)}</Text>}
+      {!!question?.explanation && <Text style={s.feedbackText}>{question.explanation}</Text>}
+      {item && <Text style={s.small}>{t('Kaynak', 'Source')}: {sourceTitle(item.source)}</Text>}
+      {result.due && <Text style={s.small}>{t(`Bu kartı ${when(daysUntil(result.due))} yeniden göreceksin.`, `You’ll see this card again ${when(daysUntil(result.due))}.`)}</Text>}
       <View style={s.pair}>
         <Button icon="arrow-forward" label={index + 1 < cards.length ? t('Sonraki kart', 'Next card') : t('Bitir', 'Finish')} style={s.half} onPress={advance} />
         {card.kind === 'work' && <Button kind="plain" icon="book-outline" label={t('Eser', 'Work')} onPress={() => router.push(`/eser/${card.slug}`)} />}
@@ -133,7 +130,8 @@ export default function Recall() {
 }
 
 /** The closing card: the counts come from this session's answers. */
-function Summary({ results, bySlug, termName }: { results: Result[]; bySlug: (slug: string) => string | undefined; termName: (slug: string) => string }) {
+function Summary({ results, bySlug }: { results: Result[]; bySlug: (slug: string) => string | undefined }) {
+  const name = (card: RecallCardView) => card.kind === 'work' ? bySlug(card.slug) ?? card.slug : capitalize(card.term.term);
   const right = results.filter(r => r.correct);
   const works = new Set(right.filter(r => r.card.kind === 'work').map(r => r.card.slug)).size;
   const terms = right.filter(r => r.card.kind === 'term').length;
@@ -155,10 +153,10 @@ function Summary({ results, bySlug, termName }: { results: Result[]; bySlug: (sl
       </View>
       <Text style={s.body}>{remembered} {later}</Text>
       <View style={s.list}>
-        {results.map(r => <View key={r.card.id} style={s.line} accessible accessibilityLabel={`${r.card.kind === 'work' ? bySlug(r.card.slug) : termName(r.card.slug)}, ${r.correct ? t('bildin', 'right') : t('tekrar edilecek', 'to review')}${r.due ? `, ${when(daysUntil(r.due, new Date()))}` : ''}`}>
+        {results.map(r => <View key={r.card.id} style={s.line} accessible accessibilityLabel={`${name(r.card)}, ${r.correct ? t('bildin', 'right') : t('tekrar edilecek', 'to review')}${r.due ? `, ${when(daysUntil(r.due))}` : ''}`}>
           <Ionicons name={r.correct ? 'checkmark-circle' : 'close-circle'} size={20} color={r.correct ? colors.emeraldLight : colors.danger} />
-          <Text style={s.lineName} numberOfLines={1}>{r.card.kind === 'work' ? bySlug(r.card.slug) : termName(r.card.slug)}</Text>
-          {r.due && <Text style={s.small}>{when(daysUntil(r.due, new Date()))}</Text>}
+          <Text style={s.lineName} numberOfLines={1}>{name(r.card)}</Text>
+          {r.due && <Text style={s.small}>{when(daysUntil(r.due))}</Text>}
         </View>)}
       </View>
       <View style={s.pair}>

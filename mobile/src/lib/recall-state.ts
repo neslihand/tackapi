@@ -1,15 +1,32 @@
-// Hatırla as saved on the phone (esik:recall:v1, apart from the passport). Read again whenever a screen comes into
-// focus, so Bugün's card and the review screen count the same cards.
+// Hatırla on the phone: which glossary terms were opened, and when (esik:recall:v1, apart from the passport), and the
+// day's cards. The schedule itself is in the passport (recall.ts), so it follows the account. Read again whenever a
+// screen comes into focus, so Bugün's card and the review screen count the same cards.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import type { QuizQuestion } from './api';
 import { useLang } from './i18n';
-import { dayKey } from './passport';
+import { compareKeys, dayKey, type RecallState } from './passport';
+import { quizPool } from './quiz';
 import { loadTerms, type GlossaryTerm } from './reading';
-import { answerCard, bringForward, dueCards, endSession, parseRecall, pickSession, RECALL_KEY, termCards, withTerm, workCards, type Candidate, type CardId, type RecallState } from './recall';
-import type { Item } from './api';
-import type { Progress } from './passport';
+import { answerCard, DAILY_CARDS, dueCards, dueTermCards, nextRecallDay, nextTermDay, type RecallAnswer } from './recall';
 import { useContent, usePassport } from './store';
+
+export const RECALL_KEY = 'esik:recall:v1';
+type Saved = { terms: Record<string, string>; forward: string | null };
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+function parse(value: string | null): Saved {
+  const saved: Saved = { terms: {}, forward: null };
+  try {
+    const data = JSON.parse(value ?? '{}') ?? {};
+    for (const [slug, day] of Object.entries((data.terms ?? {}) as Record<string, unknown>)) if (typeof day === 'string' && DAY.test(day)) saved.terms[slug] = day;
+    if (typeof data.forward === 'string' && DAY.test(data.forward)) saved.forward = data.forward;
+  } catch { /* a broken save starts over */ }
+  return saved;
+}
+const read = async () => parse(await AsyncStorage.getItem(RECALL_KEY).catch(() => null));
+const write = (saved: Saved) => AsyncStorage.setItem(RECALL_KEY, JSON.stringify(saved)).catch(() => {});
 
 // the glossary is fetched once per language (the device copy when offline); null when neither is there, tried again later
 let glossaryCache: { lang: string; promise: Promise<GlossaryTerm[] | null> } | null = null;
@@ -24,72 +41,80 @@ function glossary(lang: string) {
 
 /** The term screen calls this when a term opens: from the next day it comes back as a card. */
 export async function rememberTerm(slug: string) {
-  const state = parseRecall(await AsyncStorage.getItem(RECALL_KEY).catch(() => null));
-  const next = withTerm(state, slug, new Date());
-  if (next !== state) await AsyncStorage.setItem(RECALL_KEY, JSON.stringify(next)).catch(() => {});
+  const saved = await read();
+  if (!saved.terms[slug]) await write({ ...saved, terms: { ...saved.terms, [slug]: dayKey(new Date()) } });
 }
 
-/** Ayarlar → Sunum: every card is due today; returns how many cards are due now. */
-export async function bringRecallForward(progress: Progress, items: readonly Item[], lang: string) {
-  const state = parseRecall(await AsyncStorage.getItem(RECALL_KEY).catch(() => null));
-  const candidates = [...workCards(progress, items), ...termCards(state, await glossary(lang))];
-  const next = bringForward(state, candidates, new Date());
-  await AsyncStorage.setItem(RECALL_KEY, JSON.stringify(next)).catch(() => {});
-  return dueCards(next, candidates, new Date()).length;
+/** Ayarlar → Sunum: for the rest of today every card the visitor has is due, whatever its day. Only this phone sees it;
+ *  the schedule in the passport is not touched until a card is answered. */
+export async function bringRecallForward() {
+  await write({ ...(await read()), forward: dayKey(new Date()) });
 }
+
+// far enough ahead that every scheduled card has come round
+const FAR = new Date(2100, 0, 1);
+
+export type RecallCardView =
+  | { kind: 'work'; id: string; slug: string; question: QuizQuestion; state: RecallState | undefined }
+  | { kind: 'term'; id: string; slug: string; term: GlossaryTerm; state: RecallState | undefined };
 
 export type RecallView = {
-  ready: boolean; state: RecallState | null;
-  /** Every card that exists, due or not, and the ones due today. */
-  candidates: Candidate[]; due: Candidate[]; session: Candidate[];
-  glossary: GlossaryTerm[] | null;
+  ready: boolean;
+  /** Today's cards, at most DAILY_CARDS, the longest waiting first. */
+  session: RecallCardView[];
+  /** Whether the visitor has any card at all, due or not. */
+  hasCards: boolean;
+  /** The day the next card opens, when none is due now. */
+  next: string | null;
   /** Opened terms that cannot be asked now: the glossary is not on the device. */
   termsMissing: boolean;
-  answer: (id: CardId, correct: boolean) => RecallState | null;
-  finish: () => void;
+  /** Records an answer and says the card's next day (null: finished). */
+  answer: (card: RecallCardView, answer: RecallAnswer) => string | null;
 };
 
 export function useRecall(): RecallView {
-  const { items, loading } = useContent();
-  const { progress, ready: passportReady, markActiveDay } = usePassport();
+  const { items, quiz, loading } = useContent();
+  const { progress, ready: passportReady, answerCard: answerInPassport } = usePassport();
   const { lang } = useLang();
-  const [state, setState] = useState<RecallState | null>(null);
+  const [saved, setSaved] = useState<Saved | null>(null);
   const [terms, setTerms] = useState<GlossaryTerm[] | null | undefined>(undefined);
-  const latest = useRef<RecallState | null>(null);
-  latest.current = state;
   const day = dayKey(new Date());
 
   useFocusEffect(useCallback(() => {
     let live = true;
-    AsyncStorage.getItem(RECALL_KEY).then(v => { if (live) setState(parseRecall(v)); }, () => { if (live) setState(parseRecall(null)); });
+    read().then(v => { if (live) setSaved(v); });
     glossary(lang).then(list => { if (live) setTerms(list); });
     return () => { live = false; };
   }, [lang]));
 
-  const save = useCallback((next: RecallState) => {
-    latest.current = next; setState(next);
-    AsyncStorage.setItem(RECALL_KEY, JSON.stringify(next)).catch(() => {});
-  }, []);
+  const pool = useMemo(() => quizPool(quiz, items), [quiz, items]);
+  const session = useMemo(() => {
+    if (!saved) return [];
+    const forward = saved.forward === day;
+    const when = forward ? FAR : new Date();
+    const notToday = (state: RecallState | undefined) => state?.last !== day;
+    const byTerm = new Map((terms ?? []).map(g => [g.slug, g]));
+    const works = dueCards(pool, progress, when, Number.MAX_SAFE_INTEGER).filter(c => notToday(c.state))
+      .map(c => ({ since: c.since, view: { kind: 'work' as const, id: c.card.id, slug: c.card.artifactId, question: c.card, state: c.state } }));
+    const termsDue = dueTermCards(saved.terms, new Set(byTerm.keys()), progress, when).filter(c => notToday(c.state))
+      .map(c => ({ since: c.since, view: { kind: 'term' as const, id: c.id, slug: c.slug, term: byTerm.get(c.slug)!, state: c.state } }));
+    return [...works, ...termsDue].sort((a, b) => compareKeys(a.since, b.since) || compareKeys(a.view.id, b.view.id))
+      .slice(0, DAILY_CARDS).map(c => c.view);
+  }, [saved, terms, pool, progress, day]);
 
-  const candidates = useMemo(() => (state ? [...workCards(progress, items), ...termCards(state, terms ?? null)] : []), [state, progress, items, terms]);
-  const due = useMemo(() => (state ? dueCards(state, candidates, new Date()) : []), [state, candidates, day]); // eslint-disable-line react-hooks/exhaustive-deps
-  const session = useMemo(() => (state ? pickSession(state, due) : []), [state, due]);
+  const next = useMemo(() => {
+    const days = [nextRecallDay(pool, progress), saved ? nextTermDay(saved.terms, progress) : null].filter((d): d is string => Boolean(d)).sort();
+    return days[0] ?? null;
+  }, [pool, progress, saved]);
 
-  const answer = useCallback((id: CardId, correct: boolean) => {
-    if (!latest.current) return null;
-    const next = answerCard(latest.current, id, correct, new Date());
-    save(next);
-    return next;
-  }, [save]);
-  // a session with at least one answer counts once: the next one is a full one, and today keeps the streak
-  const finish = useCallback(() => {
-    if (!latest.current) return;
-    save(endSession(latest.current));
-    markActiveDay();
-  }, [save, markActiveDay]);
+  const answer = useCallback((card: RecallCardView, result: RecallAnswer) => {
+    answerInPassport(card.id, result);
+    return answerCard(progress, card.id, result).recall[card.id]?.due ?? null;
+  }, [answerInPassport, progress]);
 
   return {
-    ready: state !== null && terms !== undefined && !loading && passportReady, state, candidates, due, session,
-    glossary: terms ?? null, termsMissing: terms === null && Object.keys(state?.terms ?? {}).length > 0, answer, finish,
+    ready: saved !== null && terms !== undefined && !loading && passportReady, session, next, answer,
+    hasCards: next !== null || session.length > 0,
+    termsMissing: terms === null && Object.keys(saved?.terms ?? {}).length > 0,
   };
 }

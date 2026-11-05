@@ -1,7 +1,7 @@
 // Bugün's "Yakınında": the five closest located works. With the permission already given the phone is located at
 // once; otherwise a button asks for it, and only then. Hidden when no work has a location.
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { HorizontalRail, SectionHeader } from '@/components/Layout';
@@ -20,14 +20,14 @@ export function NearbyCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const located = useMemo(() => placed(items).length, [items]);
-  const near = useMemo(() => here ? byDistance(items, here, 5) : [], [items, here]);
+  // with the permission already given, the reading Bugün's other cards share
+  const allowed = useHereIfAllowed();
+  const at = here ?? allowed;
+  const near = useMemo(() => at ? byDistance(items, at, 5) : [], [items, at]);
   const locate = () => {
     setBusy(true); setError(null);
     whereAmI().then(setHere, e => setError(String(e?.message ?? e))).finally(() => setBusy(false));
   };
-  // with the permission already given, the reading Bugün's other cards share
-  const allowed = useHereIfAllowed();
-  useEffect(() => { if (allowed) setHere(h => h ?? allowed); }, [allowed]);
   if (!located) return null;
 
   if (near.length) return <HorizontalRail title={t('Yakınında', 'Near you')} actionLabel={t('Tümü', 'See all')} onAction={() => router.push('/kesfet')}

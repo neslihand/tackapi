@@ -2,13 +2,13 @@
 // rest are built from the works' own records: the right answer is the work's value, the wrong ones are other works'
 // values for the same field, never made up. A question needs at least three distinct choices, otherwise it is not asked.
 import { makers, type Item, type QuizQuestion } from './api';
-import { t } from './i18n';
+import { currentLang, t } from './i18n';
 import { normalize } from './passport';
+import { ROUND_SIZE } from './quizRound';
 
 export type Random = () => number;
 const MAX_OPTIONS = 4;
 const MIN_OPTIONS = 3;
-export const ROUND_SIZE = 5;
 
 export function shuffle<T>(items: readonly T[], random: Random = Math.random) {
   const copy = [...items];
@@ -60,13 +60,32 @@ export function questionsFor(item: Item, items: readonly Item[], random: Random 
   return out;
 }
 
+/** The same questions as questionsFor for every work, with each field read once per work instead of once per pair. */
 export function generateQuestions(items: readonly Item[], random: Random = Math.random): QuizQuestion[] {
-  return items.flatMap(item => questionsFor(item, items, random));
+  const values = templates.map(tpl => items.map(tpl.value));
+  return items.flatMap((item, i) => {
+    const out: QuizQuestion[] = [];
+    templates.forEach((tpl, k) => {
+      const correct = values[k][i];
+      if (!correct) return;
+      const others = values[k].filter((v, j): v is string => j !== i && items[j].slug !== item.slug && Boolean(v));
+      const picked = choices(correct, others, random);
+      if (picked) out.push({ id: `veri:${tpl.kind}:${item.slug}`, question: tpl.question(item), ...picked, explanation: tpl.explanation(item, correct), artifactId: item.slug });
+    });
+    return out;
+  });
 }
 
+// Bugün's cards, Hatırla and the notifications all ask for the same pool: it is built once per collection and language
+let lastPool: { written: readonly QuizQuestion[]; items: readonly Item[]; lang: string; pool: QuizQuestion[] } | null = null;
+
 export function quizPool(written: readonly QuizQuestion[], items: readonly Item[], random: Random = Math.random) {
+  const lang = currentLang();
+  if (random === Math.random && lastPool && lastPool.written === written && lastPool.items === items && lastPool.lang === lang) return lastPool.pool;
   const slugs = new Set(items.map(i => i.slug));
-  return [...written.filter(q => slugs.has(q.artifactId)), ...generateQuestions(items, random)];
+  const pool = [...written.filter(q => slugs.has(q.artifactId)), ...generateQuestions(items, random)];
+  if (random === Math.random) lastPool = { written, items, lang, pool };
+  return pool;
 }
 
 /** Different works where it can; with a focus the round opens with a question about it (a quest step links here). */

@@ -1,4 +1,5 @@
 """Ziyaretçi hesapları, pasaport eşitleme ve davranış olayları (visitors.py, users.py)."""
+from datetime import datetime, timedelta, timezone
 import uuid, unittest
 from _testdb import needs_db, fresh_db, png_header
 import users as U
@@ -8,6 +9,12 @@ SID = str(uuid.uuid4())
 
 
 class PureTest(unittest.TestCase):
+    def test_read_stories_join_and_the_first_date_stays(self):
+        a = dict(read={'x': '2026-11-02T10:00:00Z', 'y': '2026-11-01T10:00:00Z'})
+        b = dict(read={'x': '2026-11-01T10:00:00Z', 'z': '2026-11-03T10:00:00Z'})
+        self.assertEqual(U.merge_progress(a, b)['read'], {'x': '2026-11-01T10:00:00Z', 'y': '2026-11-01T10:00:00Z', 'z': '2026-11-03T10:00:00Z'})
+        self.assertEqual(U.clean_progress(dict(read={'x': 5, 'y': '2026-11-01'}))['read'], {'y': '2026-11-01'})
+
     def test_password_hash(self):
         h = U.hash_password('gizli-sifre-1')
         self.assertTrue(h.startswith('scrypt$'))
@@ -44,6 +51,26 @@ class PureTest(unittest.TestCase):
         self.assertEqual(m['days'], ['2026-10-01', '2026-10-05', '2026-10-06'])                          # bozuk günler atılır
         web = dict(version=1, discovered={'x': '2026-10-01T10:00:00Z'})           # site bu alanları göndermez
         self.assertEqual(U.merge_progress(m, web)['visits'], m['visits'])
+
+    def test_notebook_label_last_change_wins_and_removal_stays_removed(self):
+        phone = dict(version=1, notebook={'x': {'learned': {'on': True, 'at': '2026-10-10T10:00:00Z'},
+                                                'visited': {'on': False, 'at': '2026-10-12T10:00:00Z'}}})
+        other = dict(version=1, notebook={'x': {'learned': {'on': False, 'at': '2026-10-11T10:00:00Z'},
+                                                'visited': {'on': True, 'at': '2026-10-09T10:00:00Z'},
+                                                'uydurma': {'on': True, 'at': '2026-10-09T10:00:00Z'}},
+                                          'y': {'want_to_go': {'on': 'evet', 'at': '2026-10-09T10:00:00Z'}}})
+        m = U.merge_progress(phone, other)
+        self.assertEqual(m['notebook'], {'x': {'learned': {'on': False, 'at': '2026-10-11T10:00:00Z'},
+                                               'visited': {'on': False, 'at': '2026-10-12T10:00:00Z'}}})
+        self.assertEqual(U.merge_progress(m, m)['notebook'], m['notebook'])                    # aynı kayıt tekrar gelse de değişmez
+        self.assertEqual(U.merge_progress(m, dict(version=1))['notebook'], m['notebook'])      # site bu alanı göndermez
+
+    def test_recall_keeps_the_last_answer_and_the_first_attempt(self):
+        a = dict(version=1, recall={'c': dict(step=0, due='2026-10-11', first=False, last='2026-10-10', at='2026-10-10T10:00:00Z')})
+        b = dict(version=1, recall={'c': dict(step=2, due='2026-10-20', first=True, last='2026-10-13', at='2026-10-13T10:00:00Z'),
+                                    'bozuk': dict(step=99, due='yarın', last='dün', at='x')})
+        m = U.merge_progress(a, b)
+        self.assertEqual(m['recall'], {'c': dict(step=2, due='2026-10-20', first=False, last='2026-10-13', at='2026-10-13T10:00:00Z')})
 
     def test_event_props_are_flattened_and_bounded(self):
         out = V.clean_props({'q': 'x' * 900, 'n': 3, 'nested': {'a': 1}, 'list': ['a', {'b': 1}, 2]})
@@ -117,6 +144,19 @@ class AccountApiTest(unittest.TestCase):
         self.assertEqual(self.c.post('/api/auth/logout', headers=auth).status_code, 204)
         self.assertEqual(self.c.get('/api/me', headers=auth).status_code, 401)  # çıkışta oturum silinir
 
+    def test_notebook_and_recall_follow_the_account(self):
+        token = self.register(token=True).json()['token']
+        auth = {'Authorization': f'Bearer {token}'}
+        notebook = {'x': {'want_to_go': {'on': True, 'at': '2026-10-30T10:00:00Z'}}}
+        recall = {'c': dict(step=1, due='2026-11-02', first=True, last='2026-10-30', at='2026-10-30T10:00:00Z')}
+        r = self.c.put('/api/me/progress', headers=auth, json=dict(progress={'version': 1, 'notebook': notebook, 'recall': recall}))
+        self.assertEqual((r.json()['progress']['notebook'], r.json()['progress']['recall']), (notebook, recall))
+        removed = {'x': {'want_to_go': {'on': False, 'at': '2026-10-31T10:00:00Z'}}}     # öbür cihazda kaldırıldı
+        r = self.c.put('/api/me/progress', headers=auth, json=dict(progress={'version': 1, 'notebook': removed}))
+        self.assertEqual(r.json()['progress']['notebook'], removed)
+        r = self.c.put('/api/me/progress', headers=auth, json=dict(progress={'version': 1, 'discovered': {'y': '2026-10-31T10:00:00Z'}}))   # site
+        self.assertEqual(r.json()['progress']['notebook'], removed)
+
     def test_profile_progress_and_delete(self):
         self.register()
         r = self.c.patch('/api/me', json=dict(home_city='Bursa', interests=['stories', 'kids']))
@@ -131,6 +171,22 @@ class AccountApiTest(unittest.TestCase):
         self.assertEqual(self.q('SELECT count(*) AS n FROM user_session')[0]['n'], 0)
         self.assertIsNone(self.q('SELECT user_id FROM analytics_event')[0]['user_id'])  # olay kalır, anonim
         self.assertEqual(self.register().status_code, 201)                              # e-posta yeniden kullanılabilir
+
+    def test_mobile_events_are_idempotent_and_keep_their_own_time(self):
+        when = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+        event = dict(type='heritage_story_completed', slug='x', props=dict(platform='mobile', event_id='ayni', occurred_at=when, mode='brief'))
+        for _ in range(2):      # bağlantı koptu, istemci aynı olayı yeniden gönderdi
+            self.assertEqual(self.c.post('/api/events', json=dict(session_id=SID, events=[event])).status_code, 204)
+        rows = self.api.db.query("SELECT at, props FROM analytics_event WHERE type = 'heritage_story_completed'")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['at'].isoformat()[:10], when[:10])
+        future = dict(type='item_saved', slug='x', props=dict(event_id='gelecek', occurred_at='2999-01-01T00:00:00Z'))
+        self.c.post('/api/events', json=dict(session_id=SID, events=[future]))
+        self.assertLess(self.api.db.query("SELECT at FROM analytics_event WHERE type = 'item_saved'")[0]['at'].year, 2999)
+        web = dict(type='page_view', path='/')      # kimliksiz (web) olaylar eskisi gibi yazılır
+        for _ in range(2):
+            self.c.post('/api/events', json=dict(session_id=SID, events=[web]))
+        self.assertEqual(self.api.db.query("SELECT count(*) AS n FROM analytics_event WHERE type = 'page_view'")[0]['n'], 2)
 
     def test_events(self):
         r = self.c.post('/api/events', json=dict(session_id=SID, events=[
