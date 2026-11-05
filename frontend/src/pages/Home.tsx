@@ -3,7 +3,6 @@ import { HeroGate } from '../components/HeroGate';
 import { Manifesto, PassportVisual, SeasonStack } from '../components/HomeScenes';
 import { ArtifactAnatomy, known } from '../components/ArtifactAnatomy';
 import { Chapter } from '../components/PlayScenes';
-import { QuizMark } from '../components/PlayArt';
 import { DoorGallery } from '../components/DoorGallery';
 import { ToolsShowcase } from '../components/ToolsShowcase';
 import { JourneyRail } from '../components/JourneyRail';
@@ -22,23 +21,30 @@ const pad = (n: number) => String(n).padStart(2, '0');
 // How the passport fills: read, get the stamp, open the medals.
 const passportSteps = (): [string, string][] => [[t('Oku', 'Read'), t('Bir eserin hikâyesini sonuna kadar oku.', 'Read a work’s story to the end.')], [t('Mühürle', 'Stamp'), t('Eser, pasaportuna bir mühür olarak işlensin.', 'The work is pressed into your passport as a stamp.')], [t('Kazan', 'Earn'), t('Mühürler biriktikçe madalyonların kilidi açılsın.', 'As stamps gather, medallions unlock.')]];
 
-// The closing section: the day's discovery (today's work and the quiz) as two small plates, and three more doors to
-// walk through. The suggestions ("Senin için", "Bu hafta öne çıkanlar") stay on Keşfet, not here.
+// The closing section: today's work brought forward (its arch, its name, the way to its story and to the quiz), then
+// three more doors to walk through. The suggestions ("Senin için", "Bu hafta öne çıkanlar") stay on Keşfet, not here.
 const doors = (): [string, string, string][] => [['/kesfet', t('Koleksiyon', 'Collection'), t('Tüm eserler, tek bir yerde', 'Every work, in one place')], ['/harita', t('Miras Haritası', 'Heritage Map'), t('Yakınındaki eseri bul', 'Find a work near you')], ['/oyun', t('Oyna & Öğren', 'Play & Learn'), t('Oyunlar, görevler, yarışma', 'Games, quests, a quiz')]];
 function Threshold({ today, questions }: { today: { name: string; city: string; slug: string; image: string; year: string }; questions: number }) {
+  const facts = [today.city, today.year].filter(known);
   return <section id="kapanis" className="hp-threshold" data-nav-theme="dark" aria-labelledby="today-title">
-    <section className="hp-today" aria-labelledby="today-title">
-      <h3 id="today-title">{t('Günün keşfi', 'Today’s discovery')}<span>{t('Her gün koleksiyondan bir eser öne çıkar; oku, sonra bildiklerini sına.', 'Every day one work steps forward; read it, then test what you know.')}</span></h3>
-      <ul>
-        <li><Link className="hp-plate" to={`/eser/${today.slug}`}><span className="hp-plate-art" aria-hidden="true"><img src={today.image} alt="" loading="lazy" /></span><span className="hp-plate-body"><small>{t('GÜNÜN ESERİ', 'TODAY’S WORK')}{[today.city, today.year].filter(known).map(v => ` · ${v.toLocaleUpperCase(locale())}`).join('')}</small><b>{today.name}</b><em>{t('Hikâyesini oku', 'Read its story')}</em></span><ArrowUpRight size={16} aria-hidden="true" /></Link></li>
-        <li><Link className="hp-plate" to="/oyun/quiz"><span className="hp-plate-art quiz" aria-hidden="true"><QuizMark n={1} total={4} /></span><span className="hp-plate-body"><small>{t('BİLGİ YARIŞMASI', 'KNOWLEDGE QUIZ')}</small><b>{t('Tarihin izini sürebilir misin?', 'Can you follow the trail of history?')}</b><em>{questions} {t('soru · bir madalyon', 'questions · a medallion')}</em></span><ArrowUpRight size={16} aria-hidden="true" /></Link></li>
-      </ul>
-    </section>
+    <article className="hp-today">
+      <Link className="hp-today-art" to={`/eser/${today.slug}`} tabIndex={-1} aria-hidden="true"><img src={today.image} alt="" loading="lazy" /></Link>
+      <div className="hp-today-body">
+        <h2 id="today-title" className="hp-today-kicker">{t('Günün keşfi', 'Today’s discovery')} <span>· {new Date().toLocaleDateString(locale(), { day: 'numeric', month: 'long' })}</span></h2>
+        <h3>{today.name}</h3>
+        {facts.length > 0 && <p className="hp-today-facts">{facts.join(' · ')}</p>}
+        <p className="hp-today-text">{questions ? t(`Her gün koleksiyondan bir eser öne çıkar. Hikâyesini oku, sonra ${questions} soruluk yarışmada bildiklerini sına.`, `Every day one work steps forward. Read its story, then test what you know in a ${questions}-question quiz.`) : t('Her gün koleksiyondan bir eser öne çıkar. Hikâyesini oku, izini sür.', 'Every day one work steps forward. Read its story and follow its trail.')}</p>
+        <div className="hp-actions">
+          <Link className="hp-cta en-key" to={`/eser/${today.slug}`}><span className="en-key-label">{t('Hikâyesini oku', 'Read its story')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></Link>
+          {questions > 0 && <Link className="hp-cta en-key hp-cta-line" to="/oyun/quiz"><span className="en-key-label">{t('Bilgi yarışması', 'Knowledge quiz')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link>}
+        </div>
+      </div>
+    </article>
     <nav className="hp-doors" aria-label={t('Başka bir kapıdan gir', 'Enter by another door')}>
       <p>{t('Ya da başka bir kapıdan gir', 'Or enter by another door')}</p>
-      <ol>{doors().map(([to, title, note], i) => <li key={to}><Link to={to}>
-        <svg viewBox="0 0 60 76" aria-hidden="true"><path d="M4 76V26A26 22 0 0 1 56 26V76" /><path d="M12 76V30A18 15 0 0 1 48 30V76" /></svg>
-        <i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><small>{note}</small><ArrowUpRight size={16} aria-hidden="true" />
+      <ol>{doors().map(([to, title, note]) => <li key={to}><Link to={to}>
+        <svg className="hp-door-arch" viewBox="0 0 60 76" aria-hidden="true"><path d="M4 76V26A26 22 0 0 1 56 26V76" /><path d="M12 76V30A18 15 0 0 1 48 30V76" /></svg>
+        <b>{title} <ArrowUpRight size={15} aria-hidden="true" /></b><small>{note}</small>
       </Link></li>)}</ol>
     </nav>
   </section>;

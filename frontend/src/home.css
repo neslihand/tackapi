@@ -43,7 +43,7 @@
 /* Same weight as the shared drawn-link rule in entrance.css, which this file follows. */
 .home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
 .home-page .pl-chapter .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
-.home-page .tone-ivory .hp-link.en-link:hover .en-link-arrow, .hp-today .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
+.home-page .tone-ivory .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
 
 /* ——— 02 Divriği (HomeScenes PanoramaScene): the story card as a label ——— */
 .home-page .panorama-copy { border-radius: 3px; background: #f3ede1; box-shadow: 0 0 0 1px #8a6a3666, 0 50px 90px -40px #000; }
@@ -104,17 +104,19 @@
 .hp-passport-cities small { font-family: var(--serif); font-size: 17px; font-style: italic; text-align: right; white-space: nowrap; color: #cdb68c; }
 .hp-passport-note { display: block; margin-top: 18px; font-size: 12px; color: var(--en-ivory-soft); }
 .hp-passport .hp-link.en-link { color: var(--en-ivory); }
-/* the passport's two ways on, side by side: open it (gold) and see the medallions (the same key, drawn in outline) */
+/* the passport's two ways on, side by side: open it (gold) and see the medallions (the same key, drawn in outline);
+   today's work uses the outline key for the quiz too */
 .hp-passport-card .hp-actions { flex-wrap: nowrap; gap: 12px; }
 .hp-passport-card .hp-actions .en-key { flex: 1 1 auto; justify-content: space-between; }
 .hp-passport-card .en-key-label { padding: 0 12px 0 16px; font-size: 11px; letter-spacing: .12em; white-space: nowrap; }
 .hp-passport-card .en-key-arrow { width: 40px; }
-.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line { color: var(--en-ivory); background: transparent; box-shadow: inset 0 0 0 1px #e6d5ae80; }
-.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line::before { display: none; }
-.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line .en-key-arrow { border-left-color: #e6d5ae40; }
-.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line:hover { background: #e6d5ae14; box-shadow: inset 0 0 0 1px var(--en-gold-light); }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line { color: var(--en-ivory); background: transparent; box-shadow: inset 0 0 0 1px #e6d5ae80; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line::before { display: none; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line .en-key-arrow { border-left-color: #e6d5ae40; }
+.home-page :is(.hp-passport-card, .hp-today) .hp-cta.en-key.hp-cta-line:hover { background: #e6d5ae14; box-shadow: inset 0 0 0 1px var(--en-gold-light); }
 /* one under the other only where the card is too narrow for both */
 @container (max-width: 400px) { .hp-passport-card .hp-actions { flex-wrap: wrap; } .hp-passport-card .hp-actions .en-key { flex-basis: 100%; } }
+@media (max-width: 520px) { .hp-today .hp-actions .en-key { flex: 1 1 100%; justify-content: space-between; } }
 .hp-passport .hp-link.en-link:hover .en-link-arrow { color: #15130d; border-color: transparent; background: var(--en-gold-light); }
 .hp-passport :focus-visible { outline-color: var(--en-gold-light); }
 
@@ -166,45 +168,33 @@
 .hp-exhibit-arch img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
 .hp-exhibit.today .hp-exhibit-art::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 59px, #e6d5ae0d 59px 60px); pointer-events: none; }
 
-/* ——— 10 Closing: today's discovery and three more doors ——— */
-.hp-doors { width: min(980px, 100%); margin: 0 auto; margin-top: clamp(40px, 5vw, 64px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
-/* Today's discovery, inside the threshold: today's work and the quiz as two small plates in the doors' own language. */
-.hp-today { width: min(980px, 100%); margin: 0 auto; }
-.hp-today h3 { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px 16px; margin: 0 0 22px; font-family: var(--serif); font-size: clamp(26px, 2.2vw, 32px); font-weight: 400; text-align: center; color: var(--en-ivory); }
-.hp-today h3 span { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--en-ivory-soft); }
-.hp-today ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
-.hp-plate { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; column-gap: 18px; height: 100%; padding: 14px 20px 14px 14px; border-radius: 4px; text-align: left; color: var(--en-ivory); background: #ffffff06; box-shadow: inset 0 0 0 1px #e6d5ae26; transition: background .4s, box-shadow .4s, translate .4s var(--pl-ease); }
-.hp-plate:hover { translate: 0 -4px; background: #e6d5ae0f; box-shadow: inset 0 0 0 1px #e6d5ae66; }
-.hp-plate:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; }
-.hp-plate-art { width: 64px; height: 82px; overflow: hidden; border-radius: 999px 999px 3px 3px; background: #0c241c; box-shadow: 0 0 0 1px #e6d5ae40; }
-.hp-plate-art img { width: 100%; height: 100%; max-width: none; object-fit: cover; filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
-.hp-plate-art.quiz { display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #f6efe0, #e8dcc3); }
-.hp-plate-art.quiz .qz-mark { display: block; width: 46px; height: 54px; }
-.hp-plate-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.hp-plate-body small { font-size: 10px; font-weight: 600; letter-spacing: .18em; color: #d9c9a5; }
-.hp-plate-body b { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.15; }
-.hp-plate-body em { font-size: 12.5px; font-style: normal; color: var(--en-ivory-soft); }
-.hp-plate > svg { color: var(--en-gold-light); transition: rotate .4s; }
-.hp-plate:hover > svg { rotate: 45deg; }
-/* The visitor lists (backend only) under the plates, on the threshold's night. */
-.hp-today .v-discover { gap: 28px; margin-top: 32px; text-align: left; }
-.hp-today .v-discover h2 { font-size: clamp(22px, 2vw, 28px); color: var(--en-ivory); }
-.hp-today .v-discover h2 em { color: var(--en-gold-light); }
-.hp-today .v-discover h2 small { color: var(--en-ivory-soft); }
-.hp-today .v-eyebrow { color: #d9c9a5; }
-.hp-doors > p { margin: 0 0 22px; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-align: center; text-transform: uppercase; color: #d9c9a5; }
-.hp-doors ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
-.hp-doors a { position: relative; display: grid; text-align: left; grid-template-columns: 54px 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 16px; padding: 18px 20px; border-radius: 4px; color: var(--en-ivory); background: #ffffff06; box-shadow: inset 0 0 0 1px #e6d5ae26; transition: background .4s, box-shadow .4s, translate .4s cubic-bezier(.2, .7, .2, 1); }
-.hp-doors a:hover { translate: 0 -4px; background: #e6d5ae0f; box-shadow: inset 0 0 0 1px #e6d5ae66; }
-.hp-doors svg { grid-column: 1; grid-row: 1 / 3; width: 44px; height: 56px; overflow: visible; fill: none; stroke: #e6d5ae; stroke-width: 1.2; }
-.hp-doors svg path:nth-child(2) { stroke-opacity: .4; transition: fill .4s; }
-.hp-doors a:hover svg path:nth-child(2) { fill: #e6d5ae26; }
-.hp-doors i { position: absolute; top: 12px; right: 16px; font-family: var(--serif); font-size: 13px; font-style: italic; color: #c7a96b; }
-.hp-doors b { grid-column: 2; grid-row: 1; align-self: end; font-family: var(--serif); font-size: 22px; font-weight: 400; }
-.hp-doors small { grid-column: 2; grid-row: 2; align-self: start; font-size: 12.5px; color: var(--en-ivory-soft); }
-.hp-doors a > svg:last-child { grid-column: 3; grid-row: 1 / 3; width: 16px; height: 16px; stroke: currentColor; transition: rotate .4s; }
-.hp-doors a:hover > svg:last-child { rotate: 45deg; }
-.hp-doors a:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; }
+/* ——— 10 Closing: today's work brought forward, then three more doors ——— */
+/* Today's work: its picture as a tall arch in a fine gold frame, its name large beside it and the two ways on. */
+.hp-today { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; gap: clamp(36px, 6vw, 96px); width: min(1040px, 100%); margin: 0 auto; }
+.hp-today-art { display: block; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 999px 999px 4px 4px; outline: 1px solid #e6d5ae2e; outline-offset: 10px; box-shadow: 0 0 0 1px #e6d5ae4d, 0 50px 90px -40px #000; }
+.hp-today-art img { width: 100%; height: 100%; max-width: none; object-fit: cover; transition: scale 1.2s var(--pl-ease); }
+.hp-today-art:hover img { scale: 1.05; }
+.hp-today-kicker { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 18px; font-family: Inter, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: #d9c9a5; }
+.hp-today-kicker span { font-family: var(--serif); font-size: 17px; font-style: italic; font-weight: 400; letter-spacing: .02em; text-transform: none; color: var(--en-gold-light); }
+.hp-today h3 { margin: 0; font-family: var(--serif); font-size: clamp(38px, 4.2vw, 64px); font-weight: 400; line-height: 1.02; letter-spacing: -.015em; color: #fbf7ee; }
+.hp-today-facts { margin: 16px 0 0; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #c7a96b; }
+.hp-today-text { max-width: 46ch; margin: 18px 0 32px; font-size: 15px; line-height: 1.75; color: var(--en-ivory-soft); }
+/* Three more doors: no boxes, three columns between hairlines, each an arch, a name and a line. */
+.hp-doors { width: min(1040px, 100%); margin: clamp(72px, 9vw, 120px) auto 0; }
+.hp-doors > p { margin: 0 0 24px; font-size: 11px; font-weight: 600; letter-spacing: .24em; text-align: center; text-transform: uppercase; color: #d9c9a5; }
+.hp-doors ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border-block: 1px solid #e6d5ae26; }
+.hp-doors li + li { border-left: 1px solid #e6d5ae26; }
+.hp-doors a { display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; padding: 32px 20px 30px; text-align: center; color: var(--en-ivory); transition: background .4s; }
+.hp-doors a:hover { background: radial-gradient(ellipse 60% 80% at 50% 100%, #e6d5ae12, transparent 70%); }
+.hp-door-arch { width: 34px; height: 44px; margin-bottom: 10px; overflow: visible; fill: none; stroke: #e6d5ae; stroke-width: 1.2; }
+.hp-door-arch path:nth-child(2) { stroke-opacity: .4; transition: fill .4s; }
+.hp-doors a:hover .hp-door-arch path:nth-child(2) { fill: #e6d5ae26; }
+.hp-doors b { display: inline-flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 25px; font-weight: 400; transition: color .35s; }
+.hp-doors b svg { color: var(--en-gold-light); transition: translate .35s; }
+.hp-doors a:hover b { color: var(--en-gold-light); }
+.hp-doors a:hover b svg { translate: 2px -2px; }
+.hp-doors small { font-size: 12.5px; color: var(--en-ivory-soft); }
+.hp-doors a:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: -4px; }
 
 @media (max-width: 800px) {
   .hp-passport-steps { grid-template-columns: 1fr; gap: 26px; }
@@ -212,9 +202,14 @@
   .hp-passport-steps li { display: grid; grid-template-columns: 44px 1fr; column-gap: 16px; align-items: start; text-align: left; }
   .hp-passport-steps i { grid-row: span 2; }
   .hp-passport-steps b { margin-top: 0; }
-  .hp-doors, .hp-today { grid-row: auto; }
-  .hp-today ul { grid-template-columns: 1fr; }
+  .hp-today { grid-template-columns: 1fr; gap: 40px; }
+  .hp-today-art { width: min(240px, 70%); margin: 0 auto; }
   .hp-doors ol { grid-template-columns: 1fr; }
+  .hp-doors li + li { border-top: 1px solid #e6d5ae26; border-left: 0; }
+  /* on narrow screens each door is a short row: the arch on the left, its name and line beside it */
+  .hp-doors a { display: grid; grid-template-columns: 28px minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: 18px; row-gap: 2px; padding: 16px 6px; text-align: left; }
+  .hp-door-arch { grid-row: 1 / 3; width: 28px; height: 36px; margin: 0; }
+  .hp-doors b { font-size: 22px; }
 }
 
 /* ——— 07 Routes, thinner: shorter cards closer together, the photos toned and a fine inner frame ——— */
