@@ -26,7 +26,7 @@ export const LENGTH_LABELS: Record<DraftLength, string> = { short: 'Kısa', medi
 export const STYLE_LABELS: Record<DraftStyle, string> = { inventory: 'Envanter üslubu', plain: 'Sade (genel okur)' };
 
 export type AuthorWorkRow = {
-  id: number; title: string; city: string | null; city_tr: string | null; monument: string | null; monument_tr: string | null;
+  id: number; title: string; city: string | null;   // 81 ilden birinin adı; sistemdeki şehir/eser kaydına bağlı değil
   author: string; status: WorkStatus; review_note: string | null; reviewed_by: string | null; reviewed_at: string | null;
   submitted_at: string | null; created_at: string; updated_at: string; notes: number; sources: number; drafts: number;
 };

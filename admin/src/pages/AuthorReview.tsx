@@ -35,7 +35,7 @@ export function AuthorWorksPage() {
 function WorkRow({ w }: { w: AuthorWorkRow }) {
   return <li><Link to={`/yazar-metni/${w.id}`} className="author-work-card">
     <span className="author-work-icon" aria-hidden="true"><BookMarked size={20} /></span>
-    <span className="author-work-main"><strong>{w.title}</strong><small>{[w.author, w.city_tr, w.monument_tr ? `kayıt: ${w.monument_tr}` : null].filter(Boolean).join(' · ')}</small></span>
+    <span className="author-work-main"><strong>{w.title}</strong><small>{[w.author, w.city].filter(Boolean).join(' · ')}</small></span>
     <span className="author-work-counts"><span><b>{w.notes}</b> not</span><span><b>{w.sources}</b> kaynak</span></span>
     <span className="author-work-status"><WorkStatusBadge value={w.status} /><small>{formatDate(w.status === 'submitted' ? w.submitted_at : w.updated_at)}</small></span>
   </Link></li>;
@@ -76,8 +76,8 @@ export function AuthorWorkReview({ id }: { id: number }) {
 
   return <>
     <Back />
-    <PageHead kicker={`YAZAR METNİ${w.city_tr ? ` · ${w.city_tr.toLocaleUpperCase('tr-TR')}` : ''}`} title={w.title}
-      actions={<><WorkStatusBadge value={w.status} />{w.monument && <Link className="text-link" to={`/eser/${w.monument}`}>Sistemdeki kayıt</Link>}</>}>
+    <PageHead kicker={`YAZAR METNİ${w.city ? ` · ${w.city.toLocaleUpperCase('tr-TR')}` : ''}`} title={w.title}
+      actions={<><WorkStatusBadge value={w.status} /></>}>
       {w.author} · {cur.notes.length} not · {cur.sources.length} kaynak · {w.submitted_at ? `gönderim ${formatDate(w.submitted_at)}` : `son değişiklik ${formatDate(w.updated_at)}`}
     </PageHead>
 
@@ -123,7 +123,7 @@ export function AuthorWorkReview({ id }: { id: number }) {
         <ol className="author-note-list">{cur.notes.map(n => { const src = n.source_id ? sources.get(n.source_id) : undefined;
           return <li key={n.id} id={`note-${n.no}`} className={`author-note ${flash === n.no ? 'flash' : ''}`}>
             <div className="author-note-head"><span className="author-ref">N{n.no}</span><span className="author-note-topic">{TOPIC_LABELS[n.topic]}</span>
-              <span className={`author-cert ${n.certainty}`}>{CERTAINTY_LABELS[n.certainty]}</span>{n.origin === 'book' && <span className="agent-flag muted">envanterden</span>}</div>
+              <span className={`author-cert ${n.certainty}`}>{CERTAINTY_LABELS[n.certainty]}</span></div>
             <p>{n.body}</p><small className={src ? '' : 'author-nosource'}>{src ? `${src.label}${n.pages ? `, s. ${n.pages}` : ''}` : n.certainty === 'own' ? 'Kaynaksız: yazarın kendi bilgisi' : 'Kaynak seçilmedi'}</small>
           </li>; })}</ol>
       </section>
