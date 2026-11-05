@@ -15,7 +15,7 @@ import { syncLabel, useAccount } from '@/lib/account';
 import type { Item, MedalTiers } from '@/lib/api';
 import { t, useLang } from '@/lib/i18n';
 import { useJournal } from '@/lib/journal';
-import { medals, type Medal } from '@/lib/passport';
+import { compareKeys, medals, type Medal } from '@/lib/passport';
 import { savePassportFile } from '@/lib/passportFile';
 import { discoveryProfile } from '@/lib/personal';
 import { useQuestionCounts } from '@/lib/questions';
@@ -39,7 +39,7 @@ export default function Passport() {
   const [page, setPage] = useState(0);
   const [fileError, setFileError] = useState<string | null>(null);
   const memories = useJournal().memories.length;
-  const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => progress.discovered[b.slug].localeCompare(progress.discovered[a.slug])), [items, progress]);
+  const found = useMemo(() => items.filter(i => progress.discovered[i.slug]).sort((a, b) => compareKeys(progress.discovered[b.slug], progress.discovered[a.slug])), [items, progress]);
   const onSite = found.filter(i => progress.visits[i.slug]);
   const digital = found.filter(i => !progress.visits[i.slug]);
   const cities = new Set(found.map(i => i.city.slug)).size;

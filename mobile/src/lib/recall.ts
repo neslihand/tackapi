@@ -3,7 +3,7 @@
 // the work's own record; a term's card shows the glossary definition. The schedule lives in the passport: it works
 // offline and follows the account. Which terms were opened, and when, stays on the phone (recall-state.ts).
 import type { QuizQuestion } from './api';
-import { addDays, dayKey, type Progress, type RecallState } from './passport';
+import { addDays, compareKeys, dayKey, type Progress, type RecallState } from './passport';
 
 export const RECALL_DAYS = [1, 3, 7, 21];
 export const DAILY_CARDS = 5;
@@ -43,7 +43,7 @@ export function dueCards(pool: readonly QuizQuestion[], progress: Progress, now 
     const since = state ? state.due : addDays(dayKey(new Date(first)), RECALL_DAYS[0]);
     if (since && since <= today && state?.last !== today) due.push({ card, since, state });
   }
-  return due.sort((a, b) => a.since.localeCompare(b.since) || a.card.id.localeCompare(b.card.id)).slice(0, limit);
+  return due.sort((a, b) => compareKeys(a.since, b.since) || compareKeys(a.card.id, b.card.id)).slice(0, limit);
 }
 
 /** The day the next card opens, for the Hatırla notification; null when none is waiting. */
@@ -73,7 +73,7 @@ export function dueTermCards(opened: Readonly<Record<string, string>>, known: Re
     const since = state ? state.due : addDays(first, RECALL_DAYS[0]);
     if (since && since <= today && state?.last !== today) due.push({ id, slug, since, state });
   }
-  return due.sort((a, b) => a.since.localeCompare(b.since) || a.id.localeCompare(b.id));
+  return due.sort((a, b) => compareKeys(a.since, b.since) || compareKeys(a.id, b.id));
 }
 
 /** The day the next term card opens; null when none is waiting. */

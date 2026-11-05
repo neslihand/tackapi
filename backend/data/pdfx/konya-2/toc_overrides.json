@@ -1,0 +1,104 @@
+{
+ "_not": "Külliye üyelerinin kısa adları gövdedeki ara başlıktan tamamlandı (geliştirici kararı, 2 Kasım 2026); il adı (Beyşehir/Karapınar/Ilgın) ilçe alanında. TOC'taki 'Imarat' yazımı 'Imaret' yapıldı. Eşleme kararları (3 Kasım 2026, geliştirici onayı): metin denetimi + \"slug adı doğru olsun\" kuralı.",
+ "set": {
+  "k2-0006": {
+   "_was": "Hamam",
+   "name_tr": "Eşrefoğlu Süleyman Bey Hamamı",
+   "name_en": "Eşrefoğlu Süleyman Bey Bath"
+  },
+  "k2-0007": {
+   "_was": "Bedesten",
+   "name_tr": "Eşrefoğlu Bedesteni",
+   "name_en": "Eşrefoğlu Bedesten"
+  },
+  "k2-0011": {
+   "_was": "İmaret",
+   "name_tr": "Sultan II. Selim Külliyesi İmareti",
+   "name_en": "Sultan Selim II Complex Imaret"
+  },
+  "k2-0012": {
+   "_was": "Hamam",
+   "name_tr": "Sultan II. Selim Külliyesi Hamamı",
+   "name_en": "Sultan Selim II Complex Bath",
+   "db_slug": "konya-karapinar-hamami"
+  },
+  "k2-0013": {
+   "_was": "Çeşme",
+   "name_tr": "Sultan II. Selim Külliyesi Çeşmesi",
+   "name_en": "Sultan Selim II Complex Fountain",
+   "db_slug": "konya-karapinar-karapinar-sultan-selim-ii-complex-inn-cesmesi"
+  },
+  "k2-0014": {
+   "_was": "Arasta",
+   "name_tr": "Sultan II. Selim Külliyesi Arastası",
+   "name_en": "Sultan Selim II Complex Bazaar"
+  },
+  "k2-0015": {
+   "_was": "Han",
+   "name_tr": "Sultan II. Selim Külliyesi Hanı",
+   "name_en": "Sultan Selim II Complex Inn"
+  },
+  "k2-0019": {
+   "_was": "Kervansaray",
+   "name_tr": "Lala Mustafa Paşa Külliyesi Kervansarayı",
+   "name_en": "Lala Mustafa Paşa Complex Caravanserai"
+  },
+  "k2-0020": {
+   "_was": "İmaret",
+   "name_tr": "Lala Mustafa Paşa Külliyesi İmareti",
+   "name_en": "Lala Mustafa Paşa Complex Imaret",
+   "db_slug": "konya-ilgin-ilgin-lala-mustafa-pasa-imareti"
+  },
+  "k2-0021": {
+   "_was": "Arasta",
+   "name_tr": "Lala Mustafa Paşa Külliyesi Arastası",
+   "name_en": "Lala Mustafa Paşa Complex Bazaar",
+   "db_new": true
+  },
+  "k2-0022": {
+   "_was": "Tabhane",
+   "name_tr": "Lala Mustafa Paşa Külliyesi Tabhanesi",
+   "name_en": "Lala Mustafa Paşa Complex Tabhane",
+   "db_new": true
+  },
+  "k2-0023": {
+   "_was": "Medrese (Sıbyan Mektebi)",
+   "name_tr": "Lala Mustafa Paşa Külliyesi Medresesi (Sıbyan Mektebi)",
+   "name_en": "Lala Mustafa Paşa Complex Madrasa (Primary School)",
+   "db_slug": "konya-ilgin-madrasa-primary-school",
+   "rename": true
+  },
+  "k2-0041": {
+   "_was": "Ateşbaz Veli Kümbeti ve Zaviyesi",
+   "db_slug": "konya-meram-atesbaz-veli-turbesi"
+  },
+  "k2-0017": {
+   "_was": "Lala Mustafa Paşa Külliyesi",
+   "db_slug": "konya-ilgin-lala-mustafa-pasa-kulliyesi"
+  },
+  "k2-0089": {
+   "_was": "Rüstem Paşa (Şifa) Hamamı",
+   "db_slug": "konya-eregli-sifa-hamami"
+  },
+  "k2-0087": {
+   "_was": "Şifa Hamamı",
+   "db_new": true
+  }
+ },
+ "ok": [
+  "k2-0057",
+  "k2-0113",
+  "k2-0134"
+ ],
+ "retire": {
+  "konya-ilgin-ilgin-lala-mustafa-pasa-imarat": "metni Lala Mustafa Paşa Külliyesi Arastası (k2-0021)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi": "metni Lala Mustafa Paşa Külliyesi Arastası (k2-0021)",
+  "konya-karapinar-sultan-ii-selim-camii": "metni Sultan II. Selim Külliyesi Arastası (k2-0014)",
+  "konya-karapinar-sultan-ii-selim-camii-2": "metni Sultan II. Selim Külliyesi Hanı (k2-0015)",
+  "konya-ilgin-karapinar-sultan-selim-ii-complex-inn": "metni Lala Mustafa Paşa Külliyesi (k2-0017)",
+  "konya-meram-vakif-is-hani-vakiflar-bolge-mudurlugu": "metni Vakıf İş Hanı (k2-0113)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi-2": "metni Lala Mustafa Paşa Külliyesi Medresesi (k2-0023)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-kulliyesi-3": "metni Lala Mustafa Paşa Külliyesi Tabhanesi (k2-0022)",
+  "konya-ilgin-ilgin-lala-mustafa-pasa-bazaar": "metni Lala Mustafa Paşa Külliyesi Medresesi (k2-0023)"
+ }
+}

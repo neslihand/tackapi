@@ -1,0 +1,43 @@
+{
+ "_not": "Kaynakça içindekilerde 482 yazıyor; gövdede s. 492 (2 Kasım 2026). Kitapta İngilizce karşılığı yok. Eşleme kararları (3 Kasım 2026, geliştirici onayı): metin denetimi + \"slug adı doğru olsun\" kuralı.",
+ "set": {
+  "h1-0087": {
+   "_was": "KAYNAKÇA",
+   "page": 492
+  },
+  "h1-0023": {
+   "_was": "KARHANE MESCİDİ",
+   "db_slug": "hatay-antakya-kerhan-yemeniciler-mescidi"
+  },
+  "h1-0031": {
+   "_was": "RIFATAĞA (CİVELEK) MESCİDİ",
+   "db_slug": "hatay-antakya-rifat-aga-mescidi"
+  },
+  "h1-0054": {
+   "_was": "ŞEYH HIZIR TÜRBESİ",
+   "db_slug": "hatay-arsuz-gokmeydan-seyh-hizir-makami"
+  },
+  "h1-0058": {
+   "_was": "ŞEYH HIDIR TÜRBESİ",
+   "db_slug": "hatay-defne-5-mintika905-parsel-seyh-hidir-turbesi"
+  },
+  "h1-0064": {
+   "_was": "ŞEYH HIZIR TÜRBESİ",
+   "db_slug": "hatay-arsuz-5-mintika-905-parsel-hizir-turbesi"
+  },
+  "h1-0067": {
+   "_was": "ŞEYH HASAN GATELLİ TÜRBESİ",
+   "db_slug": "hatay-antakya-seyh-hasan-gatelli-albitelli-ziyareti-sheikh-hasan-gatelli-albitel"
+  },
+  "h1-0085": {
+   "_was": "3. MINTIKA 466 PARSEL KONUT",
+   "db_slug": "hatay-antakya-3rd-district-plot-no-466-house"
+  }
+ },
+ "ok": [
+  "h1-0087"
+ ],
+ "retire": {
+  "hatay-samandag-old-houses-and": "metni Samandağ Vakıflı Köyü Konut (h1-0082)"
+ }
+}

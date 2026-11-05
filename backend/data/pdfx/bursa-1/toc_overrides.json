@@ -1,0 +1,150 @@
+{
+ "_not": "Ulucami kitapta da büyük harfli tek kayıt; Davutpaşa ve Paşa Camii sayfaları içindekilerde baskı hatası, gövde başlığından bulundu (2 Kasım 2026). I. Murad Hudâvendigâr Türbesi pilotu db_slug ile bağlandı: eski kaydın toc_title'ı kaymıştı ('İmareti'). Eşleme kararları (3 Kasım 2026, geliştirici onayı): metin denetimi + \"slug adı doğru olsun\" kuralı.",
+ "ok": [
+  "b1-0003",
+  "b1-0065",
+  "b1-0104"
+ ],
+ "set": {
+  "b1-0010": {
+   "_was": "I. Murad Hudâvendigâr Türbesi",
+   "db_slug": "bursa-osmangazi-murad-hudavendigar-turbesi"
+  },
+  "b1-0041": {
+   "_was": "Demirtaş (Timurtaş) Camii Haziresi",
+   "db_slug": "bursa-osmangazi-haziresi"
+  },
+  "b1-0078": {
+   "_was": "Hatice İsfendiyâr Sultan (Atpazarı) Camii ve Kabri",
+   "db_slug": "bursa-osmangazi-hatice-isfendiyar-kabri"
+  },
+  "b1-0100": {
+   "_was": "Molla Fenârî Camii ve Haziresi",
+   "db_slug": "bursa-osmangazi-molla-fenari-camii-ve-haziresi"
+  },
+  "b1-0059": {
+   "_was": "Başçı İbrahim Bey Camii ve Haziresi",
+   "db_new": true
+  },
+  "b1-0071": {
+   "_was": "Fidan (Mahmudpaşa) Hanı Mescidi",
+   "db_new": true
+  },
+  "b1-0101": {
+   "_was": "Molla Gürani (Yeşil-Güranlı) Mescidi",
+   "db_new": true
+  },
+  "b1-0045": {
+   "_was": "Acem Reis (Arap Dede) Camii ve Haziresi",
+   "db_slug": "bursa-osmangazi-acem-reis-arap-dede-camii-ve-haziresi"
+  },
+  "b1-0005": {
+   "_was": "I. MURAD HUDÂVENDİGÂR KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-murad-i-hudavendigar-kulliyesi"
+  },
+  "b1-0011": {
+   "_was": "II. MURAD KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-murad-ii-kulliyesi"
+  },
+  "b1-0030": {
+   "_was": "HAMZA BEY KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-hamza-bey-kulliyesi"
+  },
+  "b1-0035": {
+   "_was": "ORHAN BEY KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-orhan-bey-kulliyesi"
+  },
+  "b1-0039": {
+   "_was": "TİMURTAŞ PAŞA KÜLLİYESİ",
+   "db_slug": "bursa-osmangazi-timurtas-pasa-kulliyesi"
+  }
+ },
+ "hazire": {
+  "b1-0048-hz1": {
+   "_was": "Ahmet Paşa (Fenârî) Camii Haziresi",
+   "db_slug": "bursa-osmangazi-ahmet-pasa-fenari-camii-haziresi"
+  },
+  "b1-0049-hz1": {
+   "_was": "Akbıyık Haziresi",
+   "db_slug": "bursa-osmangazi-akbiyik-haziresi"
+  },
+  "b1-0050-hz1": {
+   "_was": "Alâeddin Bey Camii Haziresi",
+   "db_slug": "bursa-osmangazi-alaeddin-bey-camii-haziresi"
+  },
+  "b1-0053-hz1": {
+   "_was": "Ali Paşa Camii Haziresi",
+   "db_slug": "bursa-osmangazi-ali-pasa-camii-haziresi"
+  },
+  "b1-0054-hz1": {
+   "_was": "Altıparmak Camii Haziresi",
+   "db_slug": "bursa-osmangazi-altiparmak-camii-haziresi"
+  },
+  "b1-0056-hz1": {
+   "_was": "Arap Dede Haziresi",
+   "db_slug": "bursa-osmangazi-arap-dede-haziresi"
+  },
+  "b1-0059-hz1": {
+   "_was": "Başçı İbrahim Bey Haziresi",
+   "db_slug": "bursa-osmangazi-basci-ibrahim-bey-haziresi"
+  },
+  "b1-0061-hz1": {
+   "_was": "Mecnundede Camii Haziresi",
+   "db_slug": "bursa-osmangazi-mecnundede-camii-haziresi"
+  },
+  "b1-0073-hz1": {
+   "_was": "Güngörmez Camii Haziresi",
+   "db_slug": "bursa-osmangazi-gungormez-camii-haziresi"
+  },
+  "b1-0081-hz1": {
+   "_was": "Hoca Alizâde Haziresi",
+   "db_slug": "bursa-osmangazi-hoca-alizade-haziresi"
+  },
+  "b1-0082-hz1": {
+   "_was": "Hoca Hasan Camii Haziresi",
+   "db_slug": "bursa-osmangazi-hoca-hasan-camii-haziresi"
+  },
+  "b1-0085-hz1": {
+   "_was": "İsmail Hakkı Tekkesi Camii Haziresi",
+   "db_slug": "bursa-osmangazi-ismail-hakki-tekkesi-camii-haziresi"
+  },
+  "b1-0087-hz1": {
+   "_was": "Kademeri (Çukur) Camii Haziresi",
+   "db_slug": "bursa-osmangazi-kademeri-cukur-camii-haziresi"
+  },
+  "b1-0090-hz1": {
+   "_was": "Karakâdî Camii Haziresi",
+   "db_slug": "bursa-osmangazi-karakadi-camii-haziresi"
+  },
+  "b1-0092-hz1": {
+   "_was": "Kaygan (Kayhan) Camii Haziresi",
+   "db_slug": "bursa-osmangazi-kaygan-kayhan-camii-haziresi"
+  },
+  "b1-0128-hz1": {
+   "_was": "Veled-i Yaniç Haziresi",
+   "db_slug": "bursa-osmangazi-veled-i-yanic-haziresi"
+  },
+  "b1-0135-hz1": {
+   "_was": "İbn-i Yiğit Haziresi",
+   "db_slug": "bursa-osmangazi-ibn-i-yigit-haziresi"
+  },
+  "b1-0045-hz1": {
+   "_was": "Acem Reis (Arap Dede) Camii Haziresi",
+   "db_slug": "bursa-osmangazi-acem-reis-arap-dede-camii-haziresi"
+  },
+  "b1-0102-hz1": {
+   "_was": "Nakkaş Ali Mescidi Hazire Alanı",
+   "db_slug": "bursa-osmangazi-nakkas-ali-mescidi-hazire-alani"
+  }
+ },
+ "retire": {
+  "bursa-osmangazi-fidan-mahmudpasa-hani": "metni Fidan (Mahmudpaşa) Hanı Mescidi (b1-0071)",
+  "bursa-osmangazi-basci-ibrahim-bey-mezari": "metni Başçı İbrahim Bey Camii (b1-0059)",
+  "bursa-osmangazi-basci-ibrahim-bey-grave": "metni Başçı İbrahim Bey Camii (b1-0059)",
+  "bursa-osmangazi-ali-pasa-camii-haziresi-2": "metni Altıparmak Camii ve Haziresi (b1-0054)",
+  "bursa-osmangazi-daya-hatun-taya-kadin-camii-haziresi-2": "metni Duhteri Şeref (Fışkırık) Camii (b1-0067)",
+  "bursa-osmangazi-ertugrul-bey-kabri": "metni Ertuğrul Bey Camii ve Kabri (b1-0070)",
+  "bursa-osmangazi-uc-kuzular-kabri": "metni Üç Kuzular (Kozlar) Camii ve Kabri (b1-0122)",
+  "bursa-osmangazi-nakkas-ali-mescidi-ve-haziresi-2": "metni Nakkaş Ali Mescidi Hazire Alanı (b1-0102-hz1)"
+ }
+}

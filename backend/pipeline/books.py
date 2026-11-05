@@ -16,6 +16,37 @@ part türleri:
   parcel_list   – Hatay'daki bölüm sonu ada/parsel listeleri (ilçe bilgisi için ayrıştırılır)
 """
 
+# PDF'ten doğrudan çıkarım (pdfx/, plan: docs/pdf-cikarim-plani.md). Fontlar `python -m pdfx.layout --fonts KITAP`
+# dökümüyle doğrulandı (2 Kasım 2026). toc_pages: içindekiler sayfaları, 0 tabanlı PDF sayfa dizini (ilk, son).
+# roles: sırayla denenir, ilk uyan kazanır (pdfx/layout.py → span_role). lang: tr | en | weight | detect.
+_BRANDON_ROLES = [
+    dict(role='title', font=r'^Acuta-Bold', min_size=24, max_size=40, lang='tr'),       # eser adı (TR), 29 pt
+    dict(role='district', font=r'Grotesque-Bold$', min_size=19, max_size=23),           # O S M A N G A Z İ, 21 pt
+    dict(role='heading', font=r'Grotesque-(Black|Medium)$', min_size=12.5, max_size=16, lang='detect'),  # EN ad / ara başlık
+    dict(role='section', font=r'^Korolev', min_size=12),                                 # bölüm ayracı (Külliyeler)
+    dict(role='section', font=r'^Acuta-Bold', min_size=40),                             # ayraç sayfası, 50 pt
+    dict(role='quote', font=r'Grotesque-(LightIt|MediumI|RegularIt)', min_size=10.5, max_size=12.5, lang='weight'),
+    dict(role='body', font=r'Grotesque-(Regular|Light|Medium|Bold)$', min_size=10.5, max_size=12.5, lang='weight'),
+    dict(role='note', font=r'Grotesque-(Regular|Light|LightIt)$', min_size=9.5, max_size=10.5, lang='weight'),
+    dict(role='caption', font=r'^Acuta-(Book|Medium|LightItalic)', max_size=9.5, lang='weight'),
+    dict(role='biblio', font=r'^MinionPro'),
+]
+_BRANDON = dict(
+    lang_rule='font_weight',
+    # Regular/Medium/Bold → tr, Light → en (Konya foto altı: Acuta-Medium tr, Acuta-Book en)
+    lang_fonts=[(r'Light', 'en'), (r'Book', 'en'), (r'(Regular|Medium|Bold)', 'tr')],
+    roles=_BRANDON_ROLES,
+)
+_HATAY_ROLES = [
+    dict(role='vertical', font=r'^TimesNewRomanPS-BoldMT', min_size=30, max_size=43),  # sol kenarda dikey süs harfleri
+    dict(role='title', font=r'^TimesNewRomanPS', min_size=44, lang='detect'),           # 52 pt: TR kalın, EN normal
+    dict(role='heading', font=r'BoldItal', min_size=15, lang='detect'),                 # ara başlık (Cami / Mosque), 20 pt
+    dict(role='quote', font=r'Italic', min_size=12.5, max_size=15, lang='detect'),
+    dict(role='body', font=r'^TimesNewRomanPS(MT|-BoldMT)$', min_size=12.5, max_size=15, lang='detect'),
+    dict(role='parcel', font=r'^TimesNewRomanPS', max_size=12.5),                        # bölüm sonu ada/parsel listeleri
+]
+
+
 BOOKS = {
     'bursa-1': dict(
         file='bursa-envanteri-cilt-1.txt', pdf='bursa-envanteri-cilt-1.pdf', city='bursa', volume=1,
@@ -25,6 +56,7 @@ BOOKS = {
         authors=['Prof. Dr. Hasan Basri Öcalan', 'Dr. Öğr. Üyesi Doğan Yavaş',
                  'Dr. Öğr. Üyesi Sezai Sevim', 'Fikret Alkan', 'Aziz Elbas'],
         editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
+        pdfx=dict(_BRANDON, toc_pages=(6, 7), fix_glyphs=True),
         parts=[
             ('skip', 1, 1137, None),
             ('intro', 1138, 1813, 'Giriş'),
@@ -39,6 +71,7 @@ BOOKS = {
         authors=['Prof. Dr. Hasan Basri Öcalan', 'Dr. Öğr. Üyesi Doğan Yavaş',
                  'Dr. Öğr. Üyesi Sezai Sevim', 'Fikret Alkan', 'Aziz Elbas'],
         editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
+        pdfx=dict(_BRANDON, toc_pages=(4, 5), fix_glyphs=True),
         parts=[
             ('skip', 1, 772, None),
             ('entries', 773, 16022, None),
@@ -51,6 +84,7 @@ BOOKS = {
         authors=['Prof. Dr. Hasan Basri Öcalan', 'Dr. Öğr. Üyesi Doğan Yavaş',
                  'Dr. Öğr. Üyesi Sezai Sevim', 'Fikret Alkan', 'Aziz Elbas'],
         editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
+        pdfx=dict(_BRANDON, toc_pages=(4, 5)),
         parts=[
             ('skip', 1, 711, None),
             ('entries', 712, 10962, None),
@@ -64,6 +98,7 @@ BOOKS = {
                  'Doç. Dr. Razan Aykaç', 'Dr. Erdal Elmas', 'Dr. Naci Bakırcı',
                  'Dr. Mehmet Mutlu', 'Burhan Öztürk', 'Sema Şentürk'],
         editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
+        pdfx=dict(_BRANDON, toc_pages=(5, 6), toc_order='section>district'),
         parts=[
             ('skip', 1, 905, None),
             ('city_history', 906, 1825, 'Konya Tarihi'),
@@ -79,6 +114,7 @@ BOOKS = {
                  'Doç. Dr. Razan Aykaç', 'Dr. Erdal Elmas', 'Dr. Naci Bakırcı',
                  'Dr. Mehmet Mutlu', 'Burhan Öztürk', 'Sema Şentürk'],
         editor='Emine Şule Demirtaş', translator='Ahmet Tunç Demirtaş',
+        pdfx=dict(_BRANDON, toc_pages=(2, 3), toc_order='section>district'),
         parts=[
             ('skip', 1, 494, None),
             ('entries', 495, 7983, None),
@@ -90,6 +126,8 @@ BOOKS = {
         title='Hatay İli Vakıf Eserleri', en_quality='needs_review', toc_lines=(205, 305), heading_pos='after', boundary_mode='heading',
         authors=['Halil Agah', 'Prof. Dr. Nusret Çam', 'Berica Nevin Berberoğlu Şen'],
         editor='Özlem Çelik', translator='Zeynep Burçak Tarlan',
+        pdfx=dict(toc_pages=(4, 5), lang_rule='detect', roles=_HATAY_ROLES, toc_style='dotted',
+                  split_gutters=True),  # TR/EN konumla ayrılmıyor; yan yana sütunlar dar boşlukla ayrılır
         parts=[
             ('skip', 1, 1246, None),
             ('city_history', 1247, 1375, 'Hatay İlinin Konumu ve Tarihçesi'),

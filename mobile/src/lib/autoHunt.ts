@@ -2,7 +2,7 @@
 // close-up; the saved state (esik:hunt:v1, hunt-state.ts) is only read and changed here.
 import type { Item } from './api';
 import { dailyPicks } from './daily';
-import { dayKey, emptyProgress } from './passport';
+import { compareKeys, dayKey, emptyProgress } from './passport';
 
 export const HUNT_KEY = 'esik:hunt:v1';
 /** Puzzle #1; every local day after it adds one. */
@@ -26,7 +26,7 @@ export function hash(text: string) {
   h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
   return h >>> 0;
 }
-const byHash = (salt: string) => (a: Item, b: Item) => hash(`${salt}:${a.slug}`) - hash(`${salt}:${b.slug}`) || a.slug.localeCompare(b.slug);
+const byHash = (salt: string) => (a: Item, b: Item) => hash(`${salt}:${a.slug}`) - hash(`${salt}:${b.slug}`) || compareKeys(a.slug, b.slug);
 const sameName = (a: Item, b: Item) => a.name.trim().toLocaleLowerCase('tr-TR') === b.name.trim().toLocaleLowerCase('tr-TR');
 
 export const localDays = (date: Date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000;
@@ -109,7 +109,7 @@ export function parseHunt(value: string | null): HuntState {
 export function withHunt(state: HuntState, hunt: Hunt): HuntState {
   if (state.days[hunt.day]) return state;
   const days = { ...state.days, [hunt.day]: { slug: hunt.slug, options: hunt.options, focus: hunt.focus, guesses: [] } };
-  return { version: 1, days: Object.fromEntries(Object.entries(days).sort(([a], [b]) => a.localeCompare(b)).slice(-KEEP_DAYS)) };
+  return { version: 1, days: Object.fromEntries(Object.entries(days).sort(([a], [b]) => compareKeys(a, b)).slice(-KEEP_DAYS)) };
 }
 
 /** Ayarlar → Sunum: forgets one day's puzzle and guesses; the other days stay. */

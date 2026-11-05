@@ -6,7 +6,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import type { QuizQuestion } from './api';
 import { useLang } from './i18n';
-import { dayKey, type RecallState } from './passport';
+import { compareKeys, dayKey, type RecallState } from './passport';
 import { quizPool } from './quiz';
 import { loadTerms, type GlossaryTerm } from './reading';
 import { answerCard, DAILY_CARDS, dueCards, dueTermCards, nextRecallDay, nextTermDay, type RecallAnswer } from './recall';
@@ -98,7 +98,7 @@ export function useRecall(): RecallView {
       .map(c => ({ since: c.since, view: { kind: 'work' as const, id: c.card.id, slug: c.card.artifactId, question: c.card, state: c.state } }));
     const termsDue = dueTermCards(saved.terms, new Set(byTerm.keys()), progress, when).filter(c => notToday(c.state))
       .map(c => ({ since: c.since, view: { kind: 'term' as const, id: c.id, slug: c.slug, term: byTerm.get(c.slug)!, state: c.state } }));
-    return [...works, ...termsDue].sort((a, b) => a.since.localeCompare(b.since) || a.view.id.localeCompare(b.view.id))
+    return [...works, ...termsDue].sort((a, b) => compareKeys(a.since, b.since) || compareKeys(a.view.id, b.view.id))
       .slice(0, DAILY_CARDS).map(c => c.view);
   }, [saved, terms, pool, progress, day]);
 

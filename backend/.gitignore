@@ -30,3 +30,9 @@ media/
 data/images.jsonl
 data/geocode_cache.json
 data/backup/
+
+# PDF'ten çıkarım (pipeline/pdfx): kitap metni ve ondan türeyenler telifli, yerelde üretilir.
+# Yalnızca elle yazılan içindekiler düzeltmeleri (toc_overrides.json) izlenir.
+data/pdfx/**
+!data/pdfx/**/
+!data/pdfx/*/toc_overrides.json

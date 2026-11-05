@@ -4,7 +4,7 @@
 import type { Item } from './api';
 import { foldSearch, type ReadingMode } from './discovery';
 import { t } from './i18n';
-import { distanceM, hasLabel, type Progress } from './passport';
+import { compareKeys, distanceM, hasLabel, type Progress } from './passport';
 
 export type Intent = 'listen' | 'nearby' | 'play' | 'family' | 'deep';
 export const INTENTS: Intent[] = ['listen', 'nearby', 'play', 'family', 'deep'];
@@ -37,7 +37,10 @@ export function preferenceTiers(prefs: Preferences): ((item: Item) => boolean)[]
 /** The account's free-text city, if it is one the collection has. */
 export function citySlugOf(name: string | null | undefined, items: readonly Item[]) {
   const wanted = foldSearch(name?.trim() ?? '');
-  return wanted ? items.find(i => foldSearch(i.city.name) === wanted || i.city.slug === wanted)?.city.slug ?? null : null;
+  if (!wanted) return null;
+  // the few cities, not every work: folding Turkish letters is a call into Java on Android
+  for (const [slug, city] of new Map(items.map(i => [i.city.slug, i.city.name]))) if (slug === wanted || foldSearch(city) === wanted) return slug;
+  return null;
 }
 export const cityNameOf = (slug: string | null | undefined, items: readonly Item[]) => items.find(i => i.city.slug === slug)?.city.name ?? null;
 
@@ -84,7 +87,7 @@ function scoreAll(items: readonly Item[], p: Progress, prefs: Preferences): Scor
 export function suggestFor(items: readonly Item[], p: Progress, prefs: Preferences, limit = 4, skip: readonly (string | undefined)[] = []) {
   if (!prefs.on) return [];
   return scoreAll(items, p, prefs).filter(s => s.score >= 1 && !skip.includes(s.item.slug) && !noted(p, s.item.slug))
-    .sort((a, b) => b.score - a.score || a.item.slug.localeCompare(b.item.slug)).slice(0, limit)
+    .sort((a, b) => b.score - a.score || compareKeys(a.item.slug, b.item.slug)).slice(0, limit)
     .map(s => ({ item: s.item, reason: s.reasons.join(' · ') }));
 }
 

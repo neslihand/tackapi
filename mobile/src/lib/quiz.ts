@@ -16,6 +16,11 @@ export function shuffle<T>(items: readonly T[], random: Random = Math.random) {
   return copy;
 }
 
+// The same few values (3 cities, a handful of eras) are compared over and over; on Android Hermes every normalize()
+// is a call into Java, so a million of them froze the app. Each distinct value is normalized once.
+const keys = new Map<string, string>();
+const keyOf = (value: string) => { let key = keys.get(value); if (key === undefined) { key = normalize(value); keys.set(value, key); } return key; };
+
 const known = (value: string | null | undefined): value is string => Boolean(value && value.trim() && !/^(bilinmiyor|unknown|dönemi belirtilmemiş)$/i.test(value.trim()));
 const centuryOf = (year: string | null | undefined) => { const found = year?.match(/\d{3,4}/); return found ? Math.floor((Number(found[0]) - 1) / 100) + 1 : null; };
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
@@ -28,11 +33,6 @@ const templates: Template[] = [
   { kind: 'century', value: a => { const c = centuryOf(a.built.label); return c ? centuryName(c) : null; }, question: a => t(`${a.name} hangi yüzyıla tarihlenir?`, `To which century does ${a.name} date?`), explanation: (a, century) => t(`${a.name} için verilen tarih ${a.built.label}; bu, ${century}a denk gelir.`, `The date given for ${a.name} is ${a.built.label}, which falls in the ${century}.`) },
   { kind: 'period', value: a => known(a.period?.name) ? a.period!.name : null, question: a => t(`${a.name} hangi döneme aittir?`, `Which era does ${a.name} belong to?`), explanation: (a, period) => t(`Envanter kitabına göre ${a.name} eserinin dönemi: ${period}.`, `According to the inventory book, the era of ${a.name} is: ${period}.`) },
 ];
-
-// Turkish lower-casing is slow and the same few values (cities, centuries, eras) come up thousands of times over the
-// whole collection: each distinct value is normalised once
-const keys = new Map<string, string>();
-const keyOf = (value: string) => { let key = keys.get(value); if (key === undefined) { key = normalize(value); keys.set(value, key); } return key; };
 
 function choices(correct: string, others: string[], random: Random) {
   const seen = new Set([keyOf(correct)]);
@@ -100,5 +100,16 @@ export function pickRound(pool: readonly QuizQuestion[], size = ROUND_SIZE, focu
   return round;
 }
 
-/** Works the quiz can ask about (does not depend on the shuffle). */
-export const answerable = (written: readonly QuizQuestion[], items: readonly Item[]) => new Set(quizPool(written, items).map(q => q.artifactId));
+/** Works the quiz can ask about (does not depend on the shuffle). The same answer as quizPool without building every
+ *  question: a work gets a question for a field when it has a value and the field has MIN_OPTIONS distinct values in all
+ *  (its own and at least two others). */
+export function answerable(written: readonly QuizQuestion[], items: readonly Item[]) {
+  const slugs = new Set(items.map(i => i.slug));
+  const out = new Set(written.filter(q => slugs.has(q.artifactId)).map(q => q.artifactId));
+  for (const tpl of templates) {
+    const values = items.map(tpl.value);
+    if (new Set(values.filter((v): v is string => Boolean(v)).map(keyOf)).size < MIN_OPTIONS) continue;
+    items.forEach((item, i) => { if (values[i]) out.add(item.slug); });
+  }
+  return out;
+}

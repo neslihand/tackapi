@@ -1,0 +1,64 @@
+{
+ "_not": "Selami Dergâhı Camii: içindekilerde 260 yazıyor, gövde başlığı s. 512 (2 Kasım 2026). Hz. Üftâde Tekkesi pilotu db_slug ile bağlandı (slug İngilizce addan kurulmuş). Eşleme kararları (3 Kasım 2026, geliştirici onayı): metin denetimi + \"slug adı doğru olsun\" kuralı.",
+ "ok": [
+  "b2-0109"
+ ],
+ "set": {
+  "b2-0046": {
+   "_was": "Hz. Üftâde Tekkesi",
+   "db_slug": "bursa-osmangazi-hz-uftade-sufi-lodge"
+  },
+  "b2-0092": {
+   "_was": "Açık (Umur Bey) Namazgâh",
+   "db_slug": "bursa-yildirim-umur-bey-open-air-prayer-area"
+  },
+  "b2-0032": {
+   "_was": "Eyne Bey (İnebey) Hamamı",
+   "db_new": true
+  },
+  "b2-0024": {
+   "_was": "Belediye Binası",
+   "db_slug": "bursa-osmangazi-town-hall",
+   "rename": true
+  },
+  "b2-0072": {
+   "_was": "Emir Sultan Hamamı",
+   "db_slug": "bursa-yildirim-emir-sultan-hamami"
+  },
+  "b2-0075": {
+   "_was": "UMUR BEY KÜLLİYESİ",
+   "db_slug": "bursa-yildirim-umur-bey-kulliyesi"
+  },
+  "b2-0080": {
+   "_was": "YEŞİL ÇELEBİ MEHMED KÜLLİYESİ",
+   "db_slug": "bursa-yildirim-yesil-celebi-mehmed-kulliyesi"
+  },
+  "b2-0086": {
+   "_was": "YILDIRIM BAYEZİD KÜLLİYESİ",
+   "db_slug": "bursa-yildirim-yildirim-bayezid-kulliyesi"
+  }
+ },
+ "hazire": {
+  "b2-0044-hz1": {
+   "_was": "Nûmâniye Dergâhı Haziresi",
+   "db_slug": "bursa-osmangazi-dergahin-hazire-alani"
+  },
+  "b2-0105-hz1": {
+   "_was": "Musa Baba Hazire Alanı",
+   "db_slug": "bursa-yildirim-musa-baba-camii-haziresi"
+  },
+  "b2-0110-hz1": {
+   "_was": "Selimzade Camii Haziresi",
+   "db_slug": "bursa-yildirim-selimzade-camii-haziresi"
+  }
+ },
+ "retire": {
+  "bursa-osmangazi-eyne-bey-inebey-medresesi": "metni Eyne Bey (İnebey) Hamamı (b2-0032)",
+  "bursa-yildirim-jumada-al-thani-865-hijri-march-1461-gregorian": "metni Umur Bey Çeşmesi (b2-0077)",
+  "bursa-yildirim-emir-sultan-hamami-2": "metni Emir Sultan Hamamı (b2-0072; -2'siz kayıt seçildi)",
+  "bursa-yildirim-muharrem-ayi-basinda-haziran-1406": "metni Yıldırım Bayezid Türbesi (b2-0090)",
+  "bursa-yildirim-hoca-taskin-kabri": "metni Hoca Taşkın Camii ve Kabri (b2-0098)",
+  "bursa-yildirim-arif-i-billah-emir-sultan-i-kerrubi-s-sifat": "metni Umur Bey Camii ve Haziresi (b2-0076)",
+  "bursa-yildirim-ibn-i-bezzaz-camii-haziresi": "metni İshak Şah (Müftü Önü) Camii (b2-0101)"
+ }
+}

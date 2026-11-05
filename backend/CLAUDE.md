@@ -143,7 +143,38 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   sayfasından `books.py`'ye eklendi; altı kitabın künyesi tam. Mevcut veritabanına `book_credits.py --report/--apply`
   yazar (yalnızca `source_book.credits`). Sitede eser sayfasının kaynakçasında "Kitabın yazarları" olarak görünür.
   Konya I künyesindeki ISBN, `books.py`'de Konya II için yazılanla aynı; hangisinin doğru olduğu kontrol edilmeli.
-- **Testler:** `python -m unittest discover -s tests` (270 test, `TZ=UTC` ile; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
+- **PDF'ten doğrudan çıkarım (2 Kasım 2026, devam ediyor):** plan ve ilerleme `docs/pdf-cikarim-plani.md`. Kod
+  `pipeline/pdfx/` (`python -m pdfx.layout | pdfx.toc | pdfx.cityqueue | pdfx.anchor | pdfx.text | pdfx.gold |
+  pdfx.photos | pdfx.report | pdfx.load`,
+  pipeline klasöründen). Çıktılar `data/pdfx/` altında ve git dışında; yalnızca `toc_overrides.json` izlenir. Kitap
+  kuralları `books.py` → `pdfx`. Adım 1–4 bitti: sayfa düzeni, içindekiler, şehir kuyruğu (26/26 pilot kilitli,
+  veritabanıyla doğrulandı), çapalar (`anchors.json`; TR ve ayrı EN başlangıcı) ve TR/EN paragraflar (`works.json`).
+  Geliştirici kararları (2 Kasım 2026): Hatay'da içindekiler ile gövde adı farklıysa
+  gövde adı; hazireler alt eser (`<üst>-hz1`), diğer alt başlıklar ana metinde ara başlık. Kuyruk eşleştirmesi bire
+  birdir; 4 kırılgan pilot overrides'ta `db_slug` ile sabit. Hatay'da dil metinden bulunur, eser adları sol kenarda
+  dikey yazılıdır (`layout` → `vertical`). Konya'da bazı paragraflar ters kalınlıkta dizilmiş; dili metinden
+  düzeltilir (`check_weight_lang`). Pilot altın küme (`pdfx.gold`; 2 Kasım 2026): 26 pilotun hepsinde Türkçe
+  kapsama ≥ 0,90 (ortanca 0,982); düşük farkların kaynağı altın metindeki eski `.txt` izleri, çıkarım hatası bulunmadı.
+  Adım 5 (3 Kasım 2026): `pdfx.photos` 3.413 fotoğrafı çapaya göre bağlar (`photos.json`; WebP'ler mevcut, yeni dosya
+  yok); eski bağlamayla 2.732 aynı, 313 farklı (farklarda eski kayıt hataları). Pilot Hatuniye Mescidi'ne eskiden
+  Şems-i Tebrizi Camii'nin 11 fotoğrafı bağlanmıştı; panelde kontrol edilmeli.
+  Adım 6 (3 Kasım 2026): `pdfx.report` → `data/pdfx/report.csv` (737 eser; engel 0, kontrol 224). Metin denetimi eski
+  kayıtların ad/metin uyuşmazlığını bulur (`match_suspect` 7, `absorbs_old` 82) ve 46 eser için `oneri_db_slug` önerir;
+  öneriler otomatik uygulanmaz, geliştirici onaylar. Onaylanan eşleme kararları (3 Kasım 2026; kural: slug'ın adı
+  doğru olan kayıt seçilir) `toc_overrides.json` içinde: `set` → `db_slug`/`db_new`, `hazire`, `retire` (eski kayıt
+  `merged` olacak, silinmez). 3 Kasım 8. oturumda kalan 21 `absorbs_old` için kararlar da yazıldı (Mevlâna Külliyesi'nin
+  13 bölüm kaydı dahil 40 emekli; Bursa'nın 8 külliyesi türetilmiş üst kayıtlara `db_slug` ile bağlı).
+  **`merged` bir review_status değil, qa_flags bayrağıdır** (review_status 'draft'); cityqueue artık buna göre süzer.
+  Adım 7 (3 Kasım 2026): `pdfx.load --report | --rehearse | --apply [--per-city 10] [--city X]`. Eşleşen eserde kimlik ve
+  slug korunur; ad, TR/EN metin, sayfalar, üst eser, fotoğraf bağları yenilenir; eski hâl `data/backup/pdfx/<slug>.json`,
+  para_fix satırları orada arşivlenip silinir. Yeni eser ve hazire `draft`/`source_note='pdfx'`. Emekliler gerekçedeki
+  eser yüklendiği turda `merged` olur. qa_flags `pdfx_review` + `pdfx_round:<n>`. TR parçalar `textfix_db.rechunk`
+  (embed yok), EN parçalar yükleyicide; Gemini çağrılmaz. Pilot kilidi: plan (pilot, pilot hazire, pilota paragraf
+  taşıyan eser atlanır) + her SQL'de `NOT pilot` + tur öncesi/sonrası pilot parmak izi (değişirse tur geri alınır).
+  Eşleşen eserde **veritabanındaki ad korunur** (geliştirici kararı, 4 Kasım 2026); PDF adı yalnızca yeni eserde,
+  overrides `"rename": true` ya da elle bağlanmış kayıtta ad benzerliği < 0,6 ise yazılır; öneri tur CSV'sinde
+  `name_suggest`. 1. tur gerçek veritabanında provadan geçti (4 Kasım: 30 eşleşen, 13 emekli, pilot izi aynı).
+- **Testler:** `python -m unittest discover -s tests` (357 test, `TZ=UTC` ile; veritabanı testleri için `VAKIF_TEST_DSN`, adı `_test` ile biten
   boş bir veritabanı). Gemini çağrılmaz.
 
 - **Ziyaretçiler ve veriyle gelişen döngü (28 Ekim 2026, devam ediyor):** plan `docs/kullanici-ve-analitik-plani.md`.

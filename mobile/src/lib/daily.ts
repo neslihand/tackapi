@@ -2,7 +2,7 @@
 // the notifications (notify.ts) pick the same work on every platform.
 import type { Item } from './api';
 import { t } from './i18n';
-import type { Progress } from './passport';
+import { compareKeys, type Progress } from './passport';
 
 export const DAILY_DAYS = 7;
 
@@ -39,7 +39,7 @@ const FEWEST_PREFERRED = 3;
 /** The works of the coming days: undiscovered ones first, a stable order so a reschedule keeps the same day's work. tiers narrow the
  *  turn to the closest fit for the visitor that still has enough works left to discover. */
 export function dailyPicks(items: Item[], progress: Progress, from = new Date(), days = DAILY_DAYS, tiers: readonly ((item: Item) => boolean)[] = []) {
-  const sorted = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || a.slug.localeCompare(b.slug));
+  const sorted = [...items].sort((a, b) => Number(Boolean(progress.discovered[a.slug])) - Number(Boolean(progress.discovered[b.slug])) || compareKeys(a.slug, b.slug));
   const open = sorted.filter(i => !progress.discovered[i.slug]);
   const pool = tiers.map(fit => open.filter(fit)).find(list => list.length >= FEWEST_PREFERRED) ?? sorted;
   if (!pool.length) return [];
