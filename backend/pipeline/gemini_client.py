@@ -18,17 +18,18 @@ LITE_MODEL = os.environ.get('VAKIF_LITE_MODEL', 'gemini-3.5-flash-lite')
 FAKE = os.environ.get('VAKIF_FAKE_LLM') == '1'
 TIMEOUT_S = int(os.environ.get('VAKIF_LLM_TIMEOUT', '300'))   # istek başına; API için daha kısa tutulabilir
 
-_client = None
+_clients = {}
 
 
-def client():
-    global _client
-    if _client is None:
+def client(timeout_s=None):
+    """timeout_s: istek başına zaman aşımı (sn). Kullanıcının beklediği çağrılar (yazar taslağı gibi) daha kısa tutar."""
+    t = int(timeout_s or TIMEOUT_S)
+    if t not in _clients:
         from google import genai  # pip install google-genai
         from google.genai import types
-        _client = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'),
-                               http_options=types.HttpOptions(timeout=TIMEOUT_S * 1000))  # ms
-    return _client
+        _clients[t] = genai.Client(api_key=os.environ.get('GEMINI_API_KEY'),
+                                   http_options=types.HttpOptions(timeout=t * 1000))  # ms
+    return _clients[t]
 
 
 class LLMError(RuntimeError):
@@ -120,12 +121,13 @@ def _fake_image_vec(data, dim):
 
 
 # ---------------------------------------------------------------------------- üretim
-def generate(prompt, system=None, schema=None, model=None, thinking='low', tries=5):
-    """Metin ya da (schema verilirse) JSON döndürür. tries: geçici hatalarda en çok deneme sayısı."""
+def generate(prompt, system=None, schema=None, model=None, thinking='low', tries=5, timeout_s=None):
+    """Metin ya da (schema verilirse) JSON döndürür. tries: geçici hatalarda en çok deneme sayısı.
+    timeout_s: istek başına zaman aşımı (verilmezse VAKIF_LLM_TIMEOUT)."""
     model = model or GEN_MODEL
     if FAKE:
         return _fake_generate(prompt, system, schema)
-    c = client()
+    c = client(timeout_s)
     if hasattr(c, 'interactions'):
         kw = dict(model=model, input=prompt)
         if system:

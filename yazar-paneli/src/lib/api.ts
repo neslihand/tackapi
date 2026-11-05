@@ -41,7 +41,10 @@ export async function request<T>(path: string, init: RequestInit = {}, fetcher: 
   if (init.body) headers.set('Content-Type', 'application/json');
   let response: Response;
   try { response = await fetcher(path, { ...init, headers }); }
-  catch { throw new ApiError(0, errorMessage(0, null)); }
+  catch (e) {
+    if ((e as Error)?.name === 'TimeoutError') throw new ApiError(0, 'Sunucu zamanında yanıt vermedi. Biraz sonra yeniden deneyin.');
+    throw new ApiError(0, errorMessage(0, null));
+  }
   if (response.status === 204) return undefined as T;
   const body = await response.json().catch(() => null);
   if (!response.ok) {

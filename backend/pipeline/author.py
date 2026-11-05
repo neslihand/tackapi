@@ -24,7 +24,7 @@ Kurallar (projenin "uydurma yok" ilkesiyle aynı):
 - Hicri → Miladi çeviri yapılmaz. Yapay zekâya ulaşılamazsa notlar konu sırasıyla birleştirilir (şablon taslak).
 - Hiçbir şey sitede kendiliğinden yayımlanmaz; dosyalar sohbet asistanının kaynağı değildir.
 """
-import os, re, json, secrets, datetime as dt
+import os, re, json, secrets, time, datetime as dt
 from typing import Literal
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
@@ -48,6 +48,10 @@ STYLES = {'inventory': 'envanter kitabı üslubu: akademik, nesnel, üçüncü �
           'plain': 'genel okura sade anlatım: kısa cümleler, terimler ilk geçtiği yerde kısaca açıklanır (açıklama notlarda yoksa terim olduğu gibi bırakılır)'}
 MODEL = os.environ.get('VAKIF_AUTHOR_MODEL', G.GEN_MODEL)
 FALLBACK_MODEL = G.LITE_MODEL
+# Yazar düğmeye basıp bekliyor: istek başına kısa zaman aşımı ve toplam süre sınırı. Aşılırsa ikinci modele,
+# o da olmazsa yapay zekâsız şablona düşülür (genel VAKIF_LLM_TIMEOUT 300 sn; 2 model × 2 deneme ≈ 20 dk sürebiliyordu).
+DRAFT_TIMEOUT_S = int(os.environ.get('VAKIF_AUTHOR_TIMEOUT', '60'))
+DRAFT_BUDGET_S = int(os.environ.get('VAKIF_AUTHOR_BUDGET', '100'))
 NOTE_MAX = 4000
 MAX_NOTES = 400
 DRAFT_KEEP = 30
@@ -257,11 +261,18 @@ def make_draft(work, notes, sources, length='medium', style='inventory'):
               'conflicts: çelişen notlar (about: konu, notes: not numaraları, detail: ne çelişiyor). '
               'gaps: notlarda bilgisi olmayan olağan envanter bölümleri ya da yazarın tamamlaması gereken eksikler.')
     out, model, errors = None, None, []
+    start = time.monotonic()
     for m in dict.fromkeys((MODEL, FALLBACK_MODEL)):
-        try:
-            out, model = G.generate(prompt, system=DRAFT_RULES, schema=DRAFT_SCHEMA, model=m, thinking='low', tries=2), m
+        left = DRAFT_BUDGET_S - (time.monotonic() - start)
+        if left < 10:   # süre bitti: yazarı daha fazla bekletmeden şablona düş
+            errors.append('zaman aşımı')
             break
-        except Exception as e:   # kota, aşırı yük (503), ağ: sıradaki modele, o da olmazsa şablona
+        try:
+            out, model = G.generate(prompt, system=DRAFT_RULES, schema=DRAFT_SCHEMA, model=m, thinking='low', tries=1,
+                                    timeout_s=min(DRAFT_TIMEOUT_S, left)), m
+            break
+        except Exception as e:   # kota, aşırı yük (503), ağ, zaman aşımı: sıradaki modele, o da olmazsa şablona
+            print(f'  Yazar taslağı: {m} başarısız ({type(e).__name__}): {str(e)[:120]}', flush=True)
             errors.append(type(e).__name__)
     out = out or {}
     paras = [re.sub(r'[*_#`]+', '', p).strip() for p in out.get('paragraphs') or [] if isinstance(p, str) and p.strip()]

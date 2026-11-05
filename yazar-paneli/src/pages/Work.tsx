@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AlertTriangle, ArrowLeft, BookOpen, Check, ClipboardCopy, Download, FileDown, GitCompareArrows, History, Lightbulb, Lock,
+import { AlertTriangle, ArrowLeft, BookOpen, Check, ClipboardCopy, Download, GitCompareArrows, History, Lightbulb, Lock,
   NotebookPen, Pencil, Plus, RotateCcw, Save, Send, Sparkles, Trash2, Undo2, X } from 'lucide-react';
 import { authorApi, CERTAINTY_LABELS, LENGTH_LABELS, paragraphsOf, segments, SOURCE_KIND_LABELS, STATUS_STEPS, STYLE_LABELS, TOPIC_LABELS, TOPICS,
   wordsOf, type AuthorNote, type AuthorSource, type Certainty, type DraftLength, type DraftStyle, type SourceFields, type SourceKind, type Topic,
@@ -48,10 +48,10 @@ function Workspace({ d, setD }: { d: WorkDetail; setD: (d: WorkDetail) => void }
 
   return <>
     <BackLink />
-    <PageHead kicker={`YAZIM DOSYASI${w.city_tr ? ` · ${w.city_tr.toLocaleUpperCase('tr-TR')}` : ''}`} title={w.title} actions={<>
+    <PageHead kicker={`YAZIM DOSYASI${w.city ? ` · ${w.city.toLocaleUpperCase('tr-TR')}` : ''}`} title={w.title} actions={<>
       <WorkStatusBadge value={w.status} />
     </>}>
-      {w.monument_tr ? `Sistemdeki kayıt: ${w.monument_tr} · ` : ''}{d.notes.length} not · {d.sources.length} kaynak · son değişiklik {formatDate(w.updated_at)}
+      {d.notes.length} not · {d.sources.length} kaynak · son değişiklik {formatDate(w.updated_at)}
     </PageHead>
     <ol className="author-stepper" aria-label="Dosyanın aşaması">{STATUS_STEPS.map((s, i) =>
       <li key={s.key} className={i < step ? 'done' : i === step ? 'now' : ''} aria-current={i === step ? 'step' : undefined}>
@@ -106,7 +106,6 @@ function NotesPanel({ d, sources, busy, run, filter, setFilter, flash }: { d: Wo
   const [bulk, setBulk] = useState(false);
   const [lastSource, setLastSource] = useState<number | null>(null);
   const w = d.work;
-  const hasBook = d.notes.some(n => n.origin === 'book');
   const shown = filter ? d.notes.filter(n => n.topic === filter) : d.notes;
   const counts = Object.fromEntries(d.coverage.topics.map(t => [t.topic, t.notes])) as Record<Topic, number>;
   return <div className="author-notes">
@@ -123,9 +122,6 @@ function NotesPanel({ d, sources, busy, run, filter, setFilter, flash }: { d: Wo
       <div className="segmented" role="group" aria-label="Not ekleme biçimi">
         <button aria-pressed={!bulk} onClick={() => setBulk(false)}>Tek not</button>
         <button aria-pressed={bulk} onClick={() => setBulk(true)}>Toplu yapıştır</button></div>
-      {w.monument && !hasBook && <button className="button line small" disabled={busy || w.status === 'submitted'}
-        onClick={() => run(() => authorApi.importBook(w.id).then(r => r), 'Envanterdeki metin not olarak eklendi; konuları kontrol edin.')}
-        title="Sistemdeki kaydın envanter kitabındaki paragraflarını, kitap ve sayfa bilgisiyle not olarak ekler"><FileDown size={15} /> Envanterdeki metni not olarak al</button>}
     </div>
     <NoteForm key={`${bulk}-${d.notes.length}`} bulk={bulk} sources={d.sources} busy={busy} initial={emptyNote(filter, lastSource)}
       submitLabel={bulk ? 'Notlara böl ve ekle' : 'Notu ekle'} onSubmit={(n) => {
@@ -154,7 +150,6 @@ function NoteCard({ n, source, flash, busy, onEdit, onDelete }: { n: AuthorNote;
       <span className="author-ref">N{n.no}</span>
       <span className="author-note-topic">{TOPIC_LABELS[n.topic]}</span>
       <span className={`author-cert ${n.certainty}`}>{CERTAINTY_LABELS[n.certainty]}</span>
-      {n.origin === 'book' && <span className="agent-flag muted">envanterden</span>}
       <span className="author-note-actions">
         <button className="icon-button" disabled={busy} onClick={onEdit} aria-label={`N${n.no} notunu düzenle`}><Pencil size={15} /></button>
         <button className="icon-button" disabled={busy} onClick={onDelete} aria-label={`N${n.no} notunu sil`}><Trash2 size={15} /></button></span>
@@ -243,6 +238,14 @@ function DraftPanel({ d, busy, setBusy, run, locked, showNote, sources }: { d: W
   const [length, setLength] = useState<DraftLength>('medium');
   const [style, setStyle] = useState<DraftStyle>('inventory');
   const [writing, setWriting] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  // Yazılırken geçen süreyi göster: uzun beklemede düğme donmuş gibi görünmesin
+  useEffect(() => {
+    if (!writing) return;
+    setElapsed(0);
+    const t = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [writing]);
   const saved = useRef(draft?.id);
   // Yeni bir sürüm geldiğinde (taslak yazıldı ya da kaydedildi) editörü onunla değiştir
   useEffect(() => { if (draft?.id !== saved.current) { saved.current = draft?.id; setText(draft?.body ?? ''); } }, [draft?.id, draft?.body]);
@@ -291,7 +294,7 @@ function DraftPanel({ d, busy, setBusy, run, locked, showNote, sources }: { d: W
       <div className="segmented" role="group" aria-label="Üslup">{(Object.keys(STYLE_LABELS) as DraftStyle[]).map(s =>
         <button key={s} aria-pressed={style === s} onClick={() => setStyle(s)}>{STYLE_LABELS[s]}</button>)}</div>
       <button className="button gold" disabled={busy || locked || !d.notes.length} onClick={generate}>
-        <Sparkles size={16} /> {writing ? 'Notlar birleştiriliyor…' : draft ? 'Notlardan yeniden yaz' : 'Notlarımdan taslak yaz'}</button>
+        <Sparkles size={16} /> {writing ? `Notlar birleştiriliyor… ${elapsed} sn` :draft ? 'Notlardan yeniden yaz' : 'Notlarımdan taslak yaz'}</button>
     </div>
     <p className="admin-help">Yapay zekâ yalnızca bu dosyadaki {d.notes.length} notunuzu kullanır; her cümlenin sonunda dayandığı not görünür. Notlarda olmayan yıl ve adlar
       işaretlenir, çelişen notlar çözülmeden listelenir.{d.fake ? ' Deneme modu: yapay zekâ kapalı, notlar konu sırasıyla birleştirilir.' : ''}</p>

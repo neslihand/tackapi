@@ -27,10 +27,10 @@ export const LENGTH_LABELS: Record<DraftLength, string> = { short: 'Kısa', medi
 export const STYLE_LABELS: Record<DraftStyle, string> = { inventory: 'Envanter üslubu', plain: 'Sade (genel okur)' };
 
 export type Me = { id: number; name: string; email: string; must_change: boolean };
-export type City = { slug: string; name_tr: string };
-export type MonumentHit = { slug: string; name_tr: string; city: string; city_tr: string; district: string | null };
+/** Sistemde aynı adla kayıtlı eser (yeni dosya açılırken uyarı için). */
+export type SimilarHit = { name_tr: string; city: string; district: string | null };
 export type AuthorWorkRow = {
-  id: number; title: string; author: string; city: string | null; city_tr: string | null; monument: string | null; monument_tr: string | null;
+  id: number; title: string; author: string; city: string | null;   // city: 81 ilden birinin adı
   status: WorkStatus; review_note: string | null; reviewed_by: string | null; reviewed_at: string | null;
   submitted_at: string | null; created_at: string; updated_at: string; notes: number; sources: number; drafts: number;
 };
@@ -58,12 +58,12 @@ export const authorApi = {
   logout: () => request<void>(`${base}/logout`, { method: 'POST' }),
   me: () => request<Me>(`${base}/me`),
   changePassword: (current: string, next: string) => request<Me>(`${base}/password`, json('POST', { current, new: next })),
-  cities: () => request<City[]>('/api/cities'),
-  monuments: (query: string, city?: string) => request<MonumentHit[]>(`${base}/monuments${q({ q: query, city: city ?? '' })}`),
+  provinces: () => request<string[]>(`${base}/provinces`),
+  similar: (title: string, city?: string) => request<SimilarHit[]>(`${base}/similar${q({ title, city: city ?? '' })}`),
   works: () => request<{ items: AuthorWorkRow[] }>(`${base}/works`),
-  create: (body: { title: string; city?: string; monument?: string }) => request<WorkDetail>(`${base}/works`, json('POST', body)),
+  create: (body: { title: string; city?: string }) => request<WorkDetail>(`${base}/works`, json('POST', body)),
   work: (id: number) => request<WorkDetail>(`${base}/works/${id}`),
-  update: (id: number, body: { title?: string; city?: string; monument?: string }) => request<WorkDetail>(`${base}/works/${id}`, json('PATCH', body)),
+  update: (id: number, body: { title?: string; city?: string }) => request<WorkDetail>(`${base}/works/${id}`, json('PATCH', body)),
   remove: (id: number) => request<void>(`${base}/works/${id}`, { method: 'DELETE' }),
   addSource: (id: number, body: SourceFields) => request<WorkDetail & { id: number }>(`${base}/works/${id}/sources`, json('POST', body)),
   updateSource: (sid: number, body: SourceFields) => request<WorkDetail>(`${base}/sources/${sid}`, json('PATCH', body)),
@@ -73,9 +73,9 @@ export const authorApi = {
     request<WorkDetail & { added: number }>(`${base}/works/${id}/notes/bulk`, json('POST', body)),
   updateNote: (nid: number, body: NoteFields) => request<WorkDetail>(`${base}/notes/${nid}`, json('PATCH', body)),
   deleteNote: (nid: number) => request<WorkDetail>(`${base}/notes/${nid}`, { method: 'DELETE' }),
-  importBook: (id: number) => request<WorkDetail & { added: number }>(`${base}/works/${id}/import-book`, { method: 'POST' }),
   summarize: (id: number, body: { length: DraftLength; style: DraftStyle; notes?: number[] }) =>
-    request<WorkDetail>(`${base}/works/${id}/summarize`, json('POST', body)),
+    // Arka uç en çok ~100 sn'de taslağı (ya da şablonu) döndürür; bu sınır yalnızca ağ/sunucu takılırsa devreye girer
+    request<WorkDetail>(`${base}/works/${id}/summarize`, { ...json('POST', body), signal: AbortSignal.timeout(150_000) }),
   saveDraft: (id: number, body: string) => request<WorkDetail>(`${base}/works/${id}/draft`, json('PUT', { body })),
   version: (id: number, did: number) => request<AuthorDraft>(`${base}/works/${id}/drafts/${did}`),
   exportText: (id: number) => request<{ text: string; filename: string }>(`${base}/works/${id}/export`),

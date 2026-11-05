@@ -2,7 +2,8 @@
 
 Vakıf eserleri envanter kitaplarını yazan akademisyenler (bilim kurulu üyeleri) için çalışma alanı. Yazar bir eseri
 yazmadan önce topladığı notları ve kaynakçayı burada tutar, notlarından "eser hakkında" taslağını yazdırır, düzenler ve
-editörüne gönderir.
+editörüne gönderir. Panel **sistemde kaydı olmayan eserler** içindir; yazım dosyası sistemdeki şehir ve eser kayıtlarına
+bağlanmaz.
 
 Ziyaretçi sitesinden (`../frontend`) ve yönetim panelinden (`../admin`) **ayrı** bir uygulamadır:
 - Yazarlar kısa süreli çalışan dış kullanıcılardır; yönetim panelini (fotoğraf kuyruğu, analitik, değişiklik kaydı…)
@@ -19,8 +20,9 @@ ekranda bir kez gösterilen geçici şifreyi yazara iletir. Yazar ilk girişte k
 Oturum anahtarı yalnızca açık sekmede (`sessionStorage`) tutulur ve sunucuda 12 saat sonra düşer.
 
 ## Yazarın akışı
-1. **Yazım dosyası:** her eser için bir dosya. İstenirse sistemdeki eser kaydına bağlanır; o zaman envanterdeki mevcut
-   metin tek tıkla, kitap ve sayfa bilgisiyle not olarak alınabilir (yeni baskı ya da güncelleme için).
+1. **Yazım dosyası:** her eser için bir dosya. İl, Türkiye'nin 81 ilinden seçilir (sistemde kayıtlı iller de seçilebilir).
+   Eser adı sistemdeki bir kayıtla aynıysa (il seçildiyse yalnızca o ilde) yazar uyarılır; eser farklıysa dosyayı yine de
+   açabilir.
 2. **Notlar ve kaynakça:** her notun konusu, kaynağı, sayfası ve kesinliği (belgeye dayalı, tahmin, rivayet, kendi
    bilgim) vardır. Word'den toplu yapıştırmada her paragraf ayrı not olur.
 3. **Eksik başlıklar:** konum, tarihçe, kitâbe, mimari, süsleme, onarımlar, günümüz durumu; notu olmayanlar işaretlenir.
@@ -31,7 +33,7 @@ Oturum anahtarı yalnızca açık sekmede (`sessionStorage`) tutulur ve sunucuda
    kilitlidir; yazar gönderimi geri çekebilir. Editörün düzeltme notu dosyanın üstünde görünür.
 
 ## Çalıştırma
-Önce arka ucu başlatın (`../backend/README.md` §4) ve göçleri uygulayın (`python migrate.py --apply`, göç 018).
+Önce arka ucu başlatın (`../backend/README.md` §4) ve göçleri uygulayın (`python migrate.py --apply`, göç 024 ve 025).
 ```powershell
 npm install
 npm run dev        # http://127.0.0.1:5177

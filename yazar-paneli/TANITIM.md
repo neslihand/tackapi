@@ -4,6 +4,7 @@
 
 Yazar paneli, envanter kitaplarını yazan akademisyenlerin (bilim kurulu üyeleri) araştırma notlarını tek yerde toplayıp
 bu notlardan, her cümlesi kaynağına bağlı bir "eser hakkında" taslağı çıkarmasını sağlayan **ayrı bir uygulamadır**.
+Panel, **sistemde henüz kaydı olmayan eserler** (envanteri çıkmamış iller ya da kayda girmemiş eserler) içindir.
 Yazarların en çok zorlandığı adım olan notları birleştirip özetleme işini hızlandırır; metni editöre onaya göndermek de
 panelin içindedir.
 
@@ -30,8 +31,8 @@ ziyaretçi analitiği, değişiklik kaydı vb.) hiç görmezler.
 
 | Özellik | Ne işe yarar |
 | --- | --- |
-| Yazım dosyası | Her eser için bir dosya. İstenirse sistemdeki eser kaydına bağlanır. |
-| Envanter metnini not olarak alma | Eser sistemdeki kayda bağlıysa, envanter kitabındaki mevcut metin tek tıkla, kitap ve sayfa bilgisiyle not olur (yeni baskı/güncelleme için). |
+| Yazım dosyası | Her eser için bir dosya. İl, 81 ilden seçilir; sistemdeki şehir ve eser kayıtlarına bağlanmaz. |
+| Aynı ad uyarısı | Eser adı sistemdeki bir kayıtla aynıysa (il seçildiyse o ilde) uyarı çıkar; eser farklıysa dosya yine de açılır. |
 | Notlar | Her notun konusu, kaynağı, sayfası ve kesinliği var. Kesinlik: belgeye dayalı, tahmin, rivayet, kendi bilgim/gözlemim. |
 | Toplu yapıştırma | Word'den ya da defterden yapıştırılan metinde her paragraf ayrı bir not olur. |
 | Kaynakça | Kitap, makale, arşiv belgesi, vakfiye, kitâbe, saha çalışması, sözlü kaynak… Metin içi atıf adı kendiliğinden oluşur ("Ayverdi 1972"). |
@@ -77,7 +78,7 @@ Yönetim panelinde "Yazar paneli" başlığı altında iki sayfa var:
 | --- | --- | --- |
 | Yazar paneli | `yazar-paneli/` | React 19 + Vite 7 + TypeScript, admin ile aynı görsel dil. Geliştirmede 5177; derlenince arka uç `/yazar/` altında sunar. |
 | Arka uç | `backend/pipeline/author.py` | `/api/author/*` (yazar) ve `/api/admin/author/*` (editör). |
-| Veritabanı | `backend/migrations/024_author.sql` | `author_account`, `author_session`, `author_work`, `author_source`, `author_note`, `author_draft`. |
+| Veritabanı | `backend/migrations/024_author.sql`, `025_author_new_works.sql` (şehir metin olarak, eser kaydı bağlantısı kaldırıldı) | `author_account`, `author_session`, `author_work`, `author_source`, `author_note`, `author_draft`. |
 | Editör sayfaları | `admin/src/pages/AuthorReview.tsx` | `#/yazar-metinleri`, `#/yazar-metni/<id>`, `#/yazarlar`. |
 | Testler | `backend/tests/test_author.py`, `yazar-paneli/tests/` | Yetki ayrımı, hesap akışı, notlar, taslak denetimi, editör onayı. |
 
@@ -89,7 +90,7 @@ yazar paneli `/yazar/` adreslerinde sunulur. Yapay zekâ modeli `VAKIF_AUTHOR_MO
 Çalışıyor ve testlerden geçti; tarayıcıda baştan sona denendi (hesap açma → giriş → dosya → not → taslak → gönderme →
 düzeltme isteği). Denemeler sahte yapay zekâ modeliyle yapıldı.
 
-- [ ] Göç 018'i gerçek veritabanına uygulamak (`python migrate.py --apply`).
+- [ ] Göç 024 ve 025'i gerçek veritabanına uygulamak (`python migrate.py --apply`).
 - [ ] Gerçek Gemini ile bir taslak üretip kalitesine bakmak.
 - [ ] `yazar-paneli` için `npm run build` (demo tek adresten açılacaksa).
 - [ ] Onaylanan metnin sitedeki eser sayfasına nasıl aktarılacağına karar vermek (şimdilik kopyala/indir).
