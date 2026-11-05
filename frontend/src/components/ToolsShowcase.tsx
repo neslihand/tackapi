@@ -6,6 +6,7 @@ import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 import { vakifApiEnabled } from '../lib/vakifApi';
 import { collectionStats, spotlight } from '../lib/content';
+import { normalize } from '../lib/progress';
 import '../tools.css';
 
 // "Keşfin araçları": what the platform offers, one tool at a time. On wide screens a stage stays on the left and shows
@@ -15,12 +16,27 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 type Tool = { id: string; name: string; title: ReactNode; text: string; tags: string[]; to: string; cta: string; scene: (artifacts: DiscoveryArtifact[]) => ReactNode };
 
+// Where the collection's cities lie on the schematic map (/images/turkiye-gece.svg, 1200 × 600), in percent of its width
+// and height: the city's coordinates scaled to the map's outline, moved onto the land where the outline is simplified
+// (İstanbul and Antakya fall just off its coast). A city not listed here gets no pin.
+const CITY_PINS: Record<string, [number, number]> = {
+  bursa: [21, 32], konya: [36.5, 55], hatay: [53.4, 64.7], antakya: [53.4, 64.7], istanbul: [19.2, 25], edirne: [9.4, 16.2],
+  sivas: [57.2, 35.8], izmir: [12.8, 51], ankara: [38.2, 34],
+};
+
 function MapScene({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
-  const spots = [[22, 38], [41, 30], [58, 46], [74, 34], [33, 58], [66, 62]];
+  // the whole country in its own proportions, one pin on each of the collection's cities
+  const cities = [...new Map(artifacts.flatMap(a => {
+    const pin = CITY_PINS[normalize(a.city)];
+    return pin ? [[normalize(a.city), [a.city, pin] as [string, [number, number]]]] as const : [];
+  })).values()];
+  const stats = collectionStats(artifacts);
   return <div className="ts-map">
-    <img src="/images/turkiye-gece.svg" alt="" />
-    {spots.map(([x, y], i) => <span key={i} className="ts-pin" style={{ left: `${x}%`, top: `${y}%`, '--i': i } as CSSProperties}><MapPin size={18} /></span>)}
-    <p className="ts-chip"><Compass size={14} />{collectionStats(artifacts).works} {t('eser', 'works')} · {collectionStats(artifacts).cities} {t('şehir', 'cities')}</p>
+    <div className="ts-land">
+      <img src="/images/turkiye-gece.svg" alt="" />
+      {cities.map(([name, [x, y]], i) => <span key={name} className="ts-pin" style={{ left: `${x}%`, top: `${y}%`, '--i': i } as CSSProperties}><MapPin size={18} /><b>{name}</b></span>)}
+    </div>
+    <p className="ts-chip"><Compass size={14} />{stats.works} {t('eser', 'works')} · {stats.cities} {t('şehir', 'cities')}</p>
   </div>;
 }
 

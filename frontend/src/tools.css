@@ -38,9 +38,13 @@
 .ts-bubble.a > span { height: 8px; border-radius: 8px; background: #f3ecdf33; }
 .ts-bubble.a > span.short { width: 60%; }
 
-/* Map: the country at night, pins dropping onto it one after another. */
-.ts-map img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+/* Map: the whole country at night, kept at its own 2:1 so the pins stay on their cities, which drop onto it one after
+   another. The scene takes the map's sea colour, so the drawing has no edge; the strip under it is the chip's. */
+.ts-map { position: absolute; inset: 0; display: flex; align-items: center; padding-bottom: 64px; background: #081e17; }
+.ts-land { position: relative; flex: none; width: 100%; aspect-ratio: 2 / 1; mask-image: linear-gradient(transparent, #000 6%, #000 94%, transparent); }
+.ts-land img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
 .ts-pin { position: absolute; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; margin: -34px 0 0 -17px; color: #15130d; }
+.ts-pin b { position: absolute; top: calc(100% + 9px); left: 50%; translate: -50% 0; font-family: var(--serif); font-size: 15px; font-weight: 500; font-style: italic; white-space: nowrap; color: #f3ede1; text-shadow: 0 1px 6px #062119; }
 .ts-pin svg { position: relative; z-index: 1; fill: #e6d5ae; stroke: #15130d; }
 .ts-pin::after { content: ''; position: absolute; bottom: -4px; left: 50%; width: 10px; height: 4px; margin-left: -5px; border-radius: 50%; background: #e6d5ae; box-shadow: 0 0 0 0 #e6d5ae80; }
 
@@ -126,6 +130,7 @@
   .ts-item { min-height: 0; opacity: 1; }
   .ts-inline { display: block; width: 100%; margin-bottom: 26px; }
   .ts-inline .ts-frame { aspect-ratio: 4 / 3; border-radius: 20px; }
+  .ts-pin b { top: calc(100% + 7px); font-size: 13px; }
   .ts-item h3 { font-size: clamp(30px, 8vw, 44px); }
   .ts-text { margin-top: 16px; font-size: 14.5px; line-height: 1.7; }
   .ts-tags { margin: 16px 0 18px; }
