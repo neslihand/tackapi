@@ -337,8 +337,6 @@
 .hero-scroll .cy-facts dt { color: #cdb68c; }
 .hero-scroll .cy-facts dd { font-size: 21px; white-space: nowrap; color: #fbf7ee; }
 .hero-scroll .cy-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; }
-/* The note runs up the left edge, clear of the inscription. */
-.hero-scroll .cy-note { top: 50%; right: auto; bottom: auto; left: clamp(10px, 1.6vw, 26px); font-size: 9.5px; color: #f1e9db8c; writing-mode: vertical-rl; rotate: 180deg; translate: 0 50%; }
 .hero-scroll .courtyard-scene :focus-visible { outline: 2px solid var(--en-gold-light, #e6d5ae); outline-offset: 8px; box-shadow: none; }
 @media (max-width: 1100px) {
   .cy-label { grid-template-columns: minmax(0, 1fr) auto; }
@@ -348,13 +346,12 @@
   .hero-scroll .courtyard-scene { --cy-title: clamp(42px, 13vw, 76px); }
   .hero-scroll .cy-shade { background: radial-gradient(ellipse 50% 40% at 50% 46%, transparent 0, transparent 40%, #020806b3 100%), linear-gradient(180deg, #020806f2 0%, #02080699 30%, transparent 40%, transparent 46%, #020806e6 64%, #020806 100%); }
   .cy-kitabe { top: calc(78px + 2svh); padding: 10px 18px 14px; }
-  .cy-index { gap: 8px; font-size: 9.5px; letter-spacing: .16em; white-space: nowrap; }
+  .cy-index { gap: 8px; font-size: 9.5px; letter-spacing: .16em; text-align: center; text-wrap: balance; }
   .cy-index > i { width: 14px; }
   .hero-scroll .cy-copy h2 { flex-direction: column; }
   .cy-label { right: 7%; left: 7%; grid-template-columns: 1fr; gap: 14px; padding-top: 16px; }
   .hero-scroll .cy-text { font-size: 14px; }
   .hero-scroll .cy-facts { gap: 20px; }
   .hero-scroll .cy-facts dd { font-size: 16px; }
-  .hero-scroll .cy-note { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .cy-kitabe { --rule: 1; } }

@@ -68,14 +68,13 @@
 .cy-mission { display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: calc(88px + 2.5svh) clamp(22px, 5vw, 96px) clamp(18px, 4svh, 40px); }
 .cy-mission .cy-kitabe { position: relative; top: auto; left: auto; translate: none; }
 .hero-scroll .cy-mission h2 { font-size: clamp(40px, min(4.8vw, 8.6svh), 92px); }
-.cy-lead { max-width: 62ch; margin: clamp(18px, 3.6svh, 40px) 0 0; font-size: clamp(15px, 1.12vw, 17.5px); line-height: 1.75; text-align: center; color: #efe9dc; text-shadow: 0 2px 18px #020806, 0 0 40px #020806b3; }
+.cy-lead { max-width: 48ch; text-wrap: balance; margin: clamp(18px, 3.6svh, 40px) 0 0; font-size: clamp(15px, 1.12vw, 17.5px); line-height: 1.75; text-align: center; color: #efe9dc; text-shadow: 0 2px 18px #020806, 0 0 40px #020806b3; }
 .cy-lead b { font-weight: 600; color: var(--en-gold-light); }
 .cy-mission .cy-label { position: static; width: min(100%, 1180px); margin-top: clamp(32px, 7svh, 80px); grid-template-columns: minmax(0, 1fr) auto; }
-.cy-pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.6vw, 44px); margin: 0; padding: 0; list-style: none; }
-.cy-pillars li { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 12px; }
+.cy-pillars { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px clamp(28px, 3.6vw, 60px); margin: 0; padding: 0; list-style: none; }
+.cy-pillars li { display: flex; align-items: baseline; gap: 10px; }
 .cy-pillars span { font-family: var(--serif); font-size: 14px; font-style: italic; color: var(--en-gold); }
 .cy-pillars b { font-family: var(--serif); font-size: clamp(22px, 1.8vw, 28px); font-weight: 400; color: #fbf7ee; }
-.cy-pillars small { grid-column: 2; font-size: 13.5px; line-height: 1.55; color: #d9d3c5; }
 
 @media (prefers-reduced-motion: no-preference) {
   .fc-frame { animation: fc-in 2.4s cubic-bezier(.16, 1, .3, 1) backwards; }
@@ -106,8 +105,7 @@
   .hero-scroll .cy-mission h2 { flex-direction: row; font-size: clamp(32px, 9vw, 56px); }
   .cy-lead { margin-top: 14px; font-size: 14px; line-height: 1.6; }
   .cy-mission .cy-label { grid-template-columns: 1fr; gap: 16px; padding-top: 16px; }
-  .cy-pillars { grid-template-columns: 1fr; gap: 8px; }
-  .cy-pillars small { font-size: 12.5px; }
+  .cy-pillars { gap: 8px 24px; }
   .fc-shade { background: radial-gradient(ellipse 60% 40% at 50% 62%, transparent 0, transparent 50%, #04130f66 100%), linear-gradient(180deg, #04130ff2 0%, #04130fc7 24%, #04130f33 42%, transparent 52%, transparent 66%, #04130fcc 84%, #04130ff7 100%); }
 }
 

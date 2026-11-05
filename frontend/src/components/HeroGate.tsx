@@ -27,11 +27,7 @@ function DoorLeaf({ side }: { side: 'left' | 'right' }) {
 }
 
 // The platform in three verbs, after the inventory project's aim: keep the culture alive, record it, hand it on.
-const pillars = () => [
-  [t('Yaşat', 'Keep alive'), t('Eserlerin hikâyelerini merakla okunur kılar.', 'Makes the works’ stories a pleasure to read.')],
-  [t('Kaydet', 'Record'), t('Envanter bilgisini kaynaklarıyla bir arada tutar.', 'Keeps the inventory together with its sources.')],
-  [t('Aktar', 'Hand on'), t('Rotalar, oyunlar ve pasaportla mirası yeni nesillere taşır.', 'Carries the heritage to new generations through routes, games and a passport.')],
-];
+const pillars = () => [t('Yaşat', 'Keep alive'), t('Kaydet', 'Record'), t('Aktar', 'Hand on')];
 
 // Behind the door: a stone arcade a little way in, standing against a warm stone light that turns to the emerald night
 // as the camera passes through the door, then through the arcade's middle arch, into the courtyard.
@@ -151,16 +147,15 @@ export function HeroGate() {
             three verbs with the way in along the floor. */}
         <div className="cy-copy cy-mission">
           <div className="cy-kitabe">
-            <p className="cy-index cy-fade">{t('Vakıf Eserleri Envanter Projesi', 'Waqf Works Inventory Project')}</p>
+            <p className="cy-index cy-fade">{t('Vakıf Katılım · Vakıf Eserleri Envanter Projesi', 'Vakıf Katılım · Waqf Works Inventory Project')}</p>
             <h2 tabIndex={-1}>{t('Kadim bir kültür,', 'An ancient culture,').split(' ').map((word, i) => <Fragment key={`a${i}`}>{i > 0 && ' '}<span className="reveal-line"><span>{word}</span></span></Fragment>)} {t('yaşayan bir hafıza.', 'a living memory.').split(' ').map((word, i) => <Fragment key={`b${i}`}>{i > 0 && ' '}<span className="reveal-line"><span><em>{word}</em></span></span></Fragment>)}</h2>
           </div>
-          <p className="cy-fade cy-lead">{t('Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli. EŞİK, Vakıf Katılım’ın kadim vakıf kültürünü yaşatmak, kayıt altına almak ve gelecek nesillere aktarmak için yürüttüğü', 'Mosques, fountains, caravanserais and madrasas that have served our cities for centuries; each one an act of kindness set in stone. EŞİK is a digital discovery platform built within the')} <b>{t('Vakıf Eserleri Envanter Projesi', 'Waqf Works Inventory Project')}</b>{t(' kapsamında geliştirilen dijital keşif platformudur.', ', which Vakıf Katılım carries out to keep the ancient waqf culture alive, to record it and to hand it on to future generations.')}</p>
+          <p className="cy-fade cy-lead">{t('Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli.', 'Mosques, fountains, caravanserais and madrasas that have served our cities for centuries; each one an act of kindness set in stone.')}</p>
           <div className="cy-label">
-            <ol className="cy-pillars cy-fade">{pillars().map(([verb, text], i) => <li key={verb}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><b>{verb}</b><small>{text}</small></li>)}</ol>
+            <ol className="cy-pillars cy-fade">{pillars().map((verb, i) => <li key={verb}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><b>{verb}</b></li>)}</ol>
             <div className="cy-actions cy-fade"><Link className="button gold en-key" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span className="en-key-label">{t('Koleksiyonu keşfet', 'Explore the collection')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hero-secondary en-link" to="/hakkinda" onPointerMove={magnet} onPointerLeave={release}><span>{t('Projeyi tanı', 'About the project')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
           </div>
         </div>
-        <span className="cy-note">{t('VAKIF KATILIM · VAKIF ESERLERİ ENVANTER PROJESİ', 'VAKIF KATILIM · WAQF WORKS INVENTORY PROJECT')}</span>
       </div>
     </div>
   </section>;
