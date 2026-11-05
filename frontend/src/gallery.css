@@ -33,9 +33,7 @@
 /* The story of the door in the middle, and the controls. */
 .dg-info { display: grid; grid-template-columns: minmax(0, 1.2fr) auto; align-items: end; gap: 18px clamp(24px, 4vw, 70px); margin-top: clamp(22px, 3svh, 36px); padding-top: 22px; border-top: 1px solid #e6d5ae2e; }
 .dg-kicker { margin: 0 0 8px; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; color: #d9c9a5; }
-.dg-kicker span { font-family: var(--serif); font-size: 16px; font-style: italic; letter-spacing: 0; color: #e6d5ae; }
 .dg-info h3 { margin: 0; font-family: var(--serif); font-size: clamp(30px, 3vw, 46px); font-weight: 400; line-height: 1.04; letter-spacing: -.015em; color: #fbf7ee; }
-.dg-text { display: -webkit-box; max-width: 62ch; margin: 10px 0 0; overflow: hidden; font-size: 14.5px; line-height: 1.65; color: #c9cfc8; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .dg-controls { display: flex; align-items: center; gap: 12px; }
 .dg-controls .hp-cta { margin-right: 10px; }
 .dg-step { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #e6d5ae59; border-radius: 50%; color: #e6d5ae; background: #ffffff08; cursor: pointer; transition: background .3s, border-color .3s, opacity .3s; }

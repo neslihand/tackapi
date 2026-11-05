@@ -13,7 +13,6 @@ import { useKeptIn } from '../lib/account';
 import { useProgress } from '../lib/store';
 import { useContent } from '../lib/contentStore';
 import { quizPool } from '../lib/quiz';
-import { collectionStats, spotlight } from '../lib/content';
 import { Agenda } from '../vakif/Agenda';
 
 // The home page after the entrance: the tools of discovery, then chapters in the entrance's language, each with its
@@ -50,11 +49,9 @@ export function Home() {
   const kept = useKeptIn();
   const { artifacts, seasons, quizQuestions } = useContent();
   const today = artifacts[Math.floor(Date.now() / 86400000) % artifacts.length];
-  // The next door: one of the spotlight works while they are still to be found, then the collection in order.
   // The artifact shown from the inside: the one with the most to show (sources, a known date), today's on a tie.
   const insideArtifact = [...artifacts].sort((a, b) => (b.sourceReferences.length + Number(known(b.year))) - (a.sourceReferences.length + Number(known(a.year))))[0] ?? today;
   const found = artifacts.filter(a => progress.discovered[a.id]).length;
-  const stats = collectionStats(artifacts);
   return <div className="home-page"><HeroGate />
     <Chapter id="araclar" tone="night" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" headless title={<>{t('Keşfin', 'Tools of')} <em>{t('araçları.', 'discovery.')}</em></>}>
       <div className="hp-tools-panel"><ToolsShowcase artifacts={artifacts} /></div>
@@ -62,7 +59,6 @@ export function Home() {
     <Chapter id="featured" tone="night" kicker={t('TAŞA İŞLENEN HİKÂYELER', 'STORIES CARVED IN STONE')} titleId="featured-title" className="hp-featured" title={<>{t('Bazı kapılar,', 'Some doors')} <em>{t('yüzyıllara açılır.', 'open onto centuries.')}</em></>} lede={<p>{t('Koleksiyondaki her eser, kendi hikâyesiyle seni bekliyor. Birini seç, kapısını arala.', 'Every work in the collection is waiting for you with its own story. Choose one and open its door.')}</p>}>
       <Agenda />
       <DoorGallery artifacts={artifacts} />
-      <div className="hp-collection"><p>{pad(stats.works)} {t('eser', 'works')} <span>·</span> {pad(stats.cities)} {t('şehir', 'cities')} <span>·</span> <i>{t('Birlikte koruduğumuz miras.', 'A heritage we keep together.')}</i></p><Link className="hp-link en-link" to="/kesfet"><span>{t('Tüm eserleri keşfet', 'Explore every work')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
     </Chapter>
     <Chapter id="rotalar" tone="ivory" kicker={t('KEŞİF SEZONLARI', 'DISCOVERY SEASONS')} titleId="routes-title" className="hp-routes" title={<>{t('Kendi izini', 'Find your')} <em>{t('bul.', 'own trail.')}</em></>} lede={<p>{t('Bir şehir, bir dönem, bir ustanın dokunuşu. Bu kez hangi rotanın peşindesin? Her rota bir avuç eserden kurulur; haritada da yürüyebilirsin.', 'A city, an era, a master’s touch. Which route will you follow this time? Each route is made of a handful of works, and you can walk it on the map too.')}</p>}>
       <SeasonStack seasons={seasons} artifacts={artifacts} discovered={progress.discovered} />

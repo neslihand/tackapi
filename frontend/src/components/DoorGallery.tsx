@@ -131,9 +131,8 @@ export function DoorGallery({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
     </div>
     <div className="dg-info">
       <div key={current.id} className="dg-info-body">
-        <p className="dg-kicker"><span>{pad(active + 1)}</span> / {pad(doors.length)} · {facts.join(' · ').toLocaleUpperCase(locale())}</p>
+        <p className="dg-kicker">{facts.join(' · ').toLocaleUpperCase(locale())}</p>
         <h3>{current.name}</h3>
-        <p className="dg-text">{current.description}</p>
       </div>
       <div className="dg-controls">
         <Link className="hp-cta en-key" to={`/eser/${current.slug}`}><span className="en-key-label">{t('Hikâyeyi oku', 'Read the story')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link>

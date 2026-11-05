@@ -24,7 +24,7 @@
 .hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); padding: clamp(28px, 4vw, 64px); border-radius: 6px; color: #17201c; background: radial-gradient(ellipse 60% 40% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
 .hp-tools-panel :focus-visible { outline-color: #17201c; }
 .hp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
-.hp-actions :focus-visible, .hp-collection :focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
+.hp-actions :focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
 
 /* ——— 01 Featured: the story ring under a statement that lights word by word ——— */
 .hp-featured.tone-ivory .pl-lede .statement { max-width: none; margin: 0; font-size: clamp(21px, 1.7vw, 27px); line-height: 1.32; text-align: left; }
@@ -39,15 +39,7 @@
 .hp-featured.tone-ivory .ring-read { border-radius: 2px; color: #f3ecdf; background: #17201c; }
 .hp-featured.tone-ivory .ring-read:hover { background: #2a4a3f; }
 .hp-featured.tone-ivory .ring-face:focus-visible, .hp-featured.tone-ivory :focus-visible { outline-color: #17201c; }
-.hp-collection { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 30px; margin-top: 34px; padding-top: 22px; border-top: 1px solid #8a6a3640; }
-.hp-collection p { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #4b5448; }
-.hp-collection p span { padding: 0 10px; color: #8a6a36; }
-.hp-featured.tone-night .hp-collection { border-top-color: #e6d5ae2e; }
-.hp-featured.tone-night .hp-collection p { color: #cfcabd; }
-.hp-featured.tone-night .hp-collection p span { color: #c7a96b; }
-.hp-featured.tone-night .hp-collection p i { color: #e6d5ae; }
 .hp-featured.tone-night :focus-visible { outline-color: var(--en-gold-light); }
-.hp-collection p i {font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; color: #6a5a3c; }
 /* Same weight as the shared drawn-link rule in entrance.css, which this file follows. */
 .home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
 .home-page .pl-chapter .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
@@ -132,7 +124,6 @@
   .season-pics > span:nth-child(n + 4) { display: none; }
 }
 @media (max-width: 640px) {
-  .hp-collection { flex-direction: column; align-items: flex-start; }
   .hp-featured.tone-ivory .pl-lede .statement { font-size: 20px; }
 }
 @media (forced-colors: active) { .hp-exhibit, .hp-passport-card, .hp-routes .season-card { border: 1px solid CanvasText; } }
