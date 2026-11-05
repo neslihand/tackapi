@@ -1,5 +1,5 @@
 // Yönetim API'si istemcisi. Anahtar yalnızca bu sekmenin oturumunda (sessionStorage) tutulur; sekme kapanınca silinir.
-import type { QuestionRow, QuestionStatus, WeeklyFields, WeeklyItem, WorkDetail, WorkDetailKind, Hunt, HuntFields, Article, ArticleFields, ArticleRow, ArticleSource, ArticleSourceDetail, ArticleStatus, ArticleKind, ArticleOrigin, Term, TermFields, AgentDraft, AgentSuggestion, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
+import type { QuestionRow, QuestionStatus, WeeklyFields, WeeklyItem, WorkDetail, WorkDetailKind, Hunt, HuntFields, Article, ArticleFields, ArticleRow, ArticleSource, ArticleSourceDetail, ArticleStatus, ArticleKind, ArticleOrigin, Term, TermFields, AgentDraft, AgentSuggestion, DraftTone, Overview, Announcement, AnnouncementFields, CalendarDay, CalendarFields, DraftKind, AdminImage, AdminRoute, AutoRoute, Book, City, Contribution, ContributionStatus, Insights, QuizFields, QuizQuestion, SiteSettings, DecisionResult, ImageStatus, Kind, LogRow, MonumentDetail, MonumentFields, MonumentRow, Page,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
@@ -181,6 +181,7 @@ export const api = {
       `/api/admin/contributions${qs({ status: status ?? '', page })}`),
   reviewContribution: (id: number, body: { status: ContributionStatus; reject_reason?: string | null }) =>
     request<{ id: number; status: ContributionStatus }>(`/api/admin/contributions/${id}`, json('PATCH', body)),
+  overview: (demo = true) => request<Overview>(`/api/admin/overview${qs({ demo: demo ? null : false })}`),
   insights: (days: number, demo: boolean) => request<Insights>(`/api/admin/insights${qs({ days, demo })}`),
   settings: () => request<Insights['settings']>('/api/admin/settings'),
   saveSettings: (body: Partial<SiteSettings>) => request<Insights['settings']>('/api/admin/settings', json('PUT', body)),
@@ -188,7 +189,8 @@ export const api = {
     last_scan: string | null; model?: string; fake?: boolean }>(`/api/admin/agent${qs({ status })}`),
   agentScan: () => request<{ found: number; new: number; expired: number }>('/api/admin/agent/scan', { method: 'POST' }),
   agentStatus: (id: number, status: 'open' | 'done' | 'dismissed') => request<AgentSuggestion>(`/api/admin/agent/${id}`, json('PATCH', { status })),
-  agentDraft: (id: number, kind: DraftKind) => request<AgentDraft>(`/api/admin/agent/${id}/draft`, json('POST', { kind })),
+  agentDraft: (id: number, kind: DraftKind, tone: DraftTone = 'auto', note?: string) =>
+    request<AgentDraft>(`/api/admin/agent/${id}/draft`, json('POST', { kind, tone, note: note?.trim() || null })),
   agentApply: (id: number, kind: DraftKind, draft: Record<string, unknown>) =>
     request<{ id: number; result_ref: string }>(`/api/admin/agent/${id}/apply`, json('POST', { kind, draft })),
   calendar: () => request<{ enabled: boolean; days: CalendarDay[]; horizon?: number }>('/api/admin/calendar'),

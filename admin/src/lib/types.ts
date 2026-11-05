@@ -149,7 +149,27 @@ export type PagePhotos = { book: string | null; book_title?: string | null; page
 // Yönetici asistanı (agent.py, göç 016)
 export type AgentKind = 'calendar' | 'anniversary' | 'experience' | 'content' | 'engagement';
 export type DraftKind = 'route' | 'announcement' | 'summary';
-export type AgentDraft = { kind: DraftKind; draft: Record<string, unknown>; ai: boolean; warnings: string[]; model: string | null };
+export type DraftTone = 'auto' | 'warm' | 'formal' | 'short' | 'kids';
+export type AgentDraft = { kind: DraftKind; draft: Record<string, unknown>; ai: boolean; warnings: string[]; model: string | null; tone?: DraftTone };
+
+// Panelin ilk sayfası (backend/pipeline/overview.py)
+export type Delta = { now: number; prev: number };
+export type FeedItem = { id: number; at: string; type: string; slug: string | null; name_tr: string | null; city: string | null;
+  platform: string; member: boolean; text: string | null; result: string | null };
+export type Overview = {
+  demo: boolean; generated_at: string; last_event: string | null; published: number; registered: number;
+  live: { m15: number; m60: number };
+  compare: { day: Record<'visitors' | 'views' | 'reads' | 'questions' | 'stamps' | 'searches', Delta>;
+    week: Record<'visitors' | 'views' | 'reads' | 'questions' | 'stamps' | 'searches' | 'signups', Delta> };
+  hourly: { hour: string; visitors: number; views: number; prev: number }[];
+  daily: { day: string; visitors: number; views: number }[];
+  top: { slug: string; name_tr: string; city: string; kind: Kind; visitors: number; visitors_prev: number; questions: number; stamps: number;
+    avg_seconds: number | null; thumb: string | null }[];
+  cities: { slug: string; city: string; visitors: number; views: number }[];
+  platforms: { platform: string; visitors: number }[];
+  feed: FeedItem[];
+  searches: { q: string; n: number; empty: number }[];
+};
 export type AgentSuggestion = { id: number; key: string; kind: AgentKind; title: string; detail: string; action: string | null;
   evidence: Record<string, unknown>; monuments: string[]; monument_names: string[]; drafts: DraftKind[]; due_on: string | null;
   priority: number; demo: boolean; status: 'open' | 'done' | 'dismissed' | 'expired'; draft_kind: DraftKind | null; draft: AgentDraft | null;

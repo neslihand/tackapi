@@ -36,8 +36,8 @@ type NavItem = { to: string; label: string; icon: ReactNode; badge?: keyof NonNu
 // Menü, işin türüne göre gruplanır; uzun liste kendi içinde kaydırılır, giriş bilgisi altta sabit kalır.
 const NAV: { title: string; items: NavItem[] }[] = [
   { title: 'Genel', items: [
-    { to: '/', label: 'Pano', icon: <LayoutDashboard size={17} /> },
-    { to: '/asistan', label: 'Asistan', icon: <Sparkles size={17} />, badge: 'agent', badgeTitle: 'Asistanın açık önerisi' },
+    { to: '/', label: 'Genel bakış', icon: <LayoutDashboard size={17} /> },
+    { to: '/asistan', label: 'AI asistan', icon: <Sparkles size={17} />, badge: 'agent', badgeTitle: 'Asistanın açık önerisi' },
     { to: '/analitik', label: 'Ziyaretçi analitiği', icon: <BarChart3 size={17} /> },
   ] },
   { title: 'Koleksiyon', items: [
@@ -80,7 +80,7 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   const current = NAV.flatMap(g => g.items.map(i => ({ group: g.title, ...i }))).find(i => active(i.to));
   const waiting = pending ? Object.values(pending).reduce((a, b) => a + b, 0) : 0;
   let page: ReactNode;
-  if (path === '/') page = <Dashboard />;
+  if (path === '/') page = <Dashboard user={user} />;
   else if (path === '/fotograflar') page = <ImageQueue params={params} />;
   else if (path === '/eserler') page = <Monuments params={params} />;
   else if (path.startsWith('/eser/')) page = <MonumentEdit key={path} slug={decodeURIComponent(path.slice(6))} />;
@@ -121,8 +121,8 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
         <button className="icon-button sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Menüyü kapat"><X size={20} /></button></div>
       <nav className="sidebar-nav" aria-label="Yönetim menüsü">{NAV.map(group => <div className="nav-group" key={group.title}>
         <p className="nav-group-title">{group.title}</p>
-        {group.items.map(({ to, label, icon, badge, badgeTitle }) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>
-          {icon}<span>{label}</span>{badge && pending?.[badge] ? <b title={badgeTitle}>{pending[badge]}</b> : null}</Link>)}
+        {group.items.map(({ to, label, icon, badge, badgeTitle }) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined} className={to === '/asistan' ? 'nav-ai' : undefined}>
+          {icon}<span>{label}</span>{to === '/asistan' && !(badge && pending?.[badge]) ? <i>AI</i> : null}{badge && pending?.[badge] ? <b title={badgeTitle}>{pending[badge]}</b> : null}</Link>)}
       </div>)}</nav>
       <div className="sidebar-foot"><span className="avatar" aria-hidden="true">{initials(user)}</span>
         <span className="sidebar-user"><small>Giriş yapan</small><strong>{user}</strong></span>
@@ -134,7 +134,8 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
         <button className="icon-button menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Menüyü aç" aria-controls="sidebar" aria-expanded={menuOpen}>
           <Menu size={21} />{waiting > 0 && <i className="menu-dot" aria-hidden="true" />}</button>
         <p className="crumbs">{current ? <><span>{current.group}</span><ChevronRight size={14} aria-hidden="true" /><strong>{current.label}</strong></> : <strong>Yönetim paneli</strong>}</p>
-        <span className="topbar-date">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        <span className="topbar-right"><span className="topbar-live" title="Site yayında"><i aria-hidden="true" />Site yayında</span>
+          <span className="topbar-date">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></span>
       </header>
       <main id="main" tabIndex={-1} className="content">{page}</main>
     </div>

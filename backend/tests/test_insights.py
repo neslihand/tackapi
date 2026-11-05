@@ -102,6 +102,37 @@ class InsightsApiTest(unittest.TestCase):
         self.assertEqual(self.api.db.query('SELECT count(*) AS n FROM analytics_event WHERE demo')[0]['n'], 0)
         self.assertEqual(self.api.db.query('SELECT count(*) AS n FROM analytics_event')[0]['n'], 9)
 
+    def test_overview_live_dashboard(self):
+        self.assertEqual(self.c.get('/api/admin/overview').status_code, 401)
+        a, b = str(uuid.uuid4()), str(uuid.uuid4())
+        self.send(a, dict(type='monument_view', slug=CAMI), dict(type='chat_question', slug=CAMI, props={'question': 'Kim yaptırdı?'}))
+        self.send(b, dict(type='monument_view', slug=CAMI, props={'platform': 'mobile'}), dict(type='search', props={'q': 'Hamam', 'results': 0}))
+        self.api.db.execute("""INSERT INTO analytics_event(at, session_id, type, monument_slug) VALUES
+                               (now() - interval '30 hours', 'eski', 'monument_view', %(k)s),
+                               (now() - interval '9 days', 'daha-eski', 'monument_view', %(k)s)""", dict(k=KONYA))
+        o = self.c.get('/api/admin/overview', headers=NES).json()
+        self.assertEqual(o['compare']['day']['visitors'], dict(now=2, prev=1))
+        self.assertEqual(o['compare']['day']['views'], dict(now=2, prev=1))
+        self.assertEqual(o['compare']['week']['visitors'], dict(now=3, prev=1))
+        self.assertEqual(o['compare']['day']['questions']['now'], 1)
+        self.assertEqual(o['live']['m15'], 2)
+        self.assertEqual(len(o['hourly']), 24)
+        self.assertEqual(sum(h['visitors'] for h in o['hourly'][-2:]), 2)
+        self.assertEqual(len(o['daily']), 30)
+        self.assertEqual(o['top'][0]['slug'], CAMI)
+        self.assertEqual(o['top'][0]['visitors'], 2)
+        self.assertEqual({p['platform'] for p in o['platforms']}, {'web', 'mobile'})
+        self.assertEqual(o['feed'][0]['type'], 'search')                       # en yeni önce
+        self.assertEqual(o['feed'][0]['text'], 'Hamam')
+        self.assertEqual(o['searches'][0], dict(q='hamam', n=1, empty=1))
+        # deneme verisi: --refresh en yeniyi şimdiye kaydırır; demo=false onu saymaz
+        self.api.db.execute("""INSERT INTO analytics_event(at, session_id, type, monument_slug, demo)
+                               VALUES (now() - interval '5 days', 'deneme', 'monument_view', %(k)s, true)""", dict(k=KONYA))
+        with redirect_stdout(io.StringIO()):
+            self.D.refresh(self.api.db)
+        self.assertEqual(self.c.get('/api/admin/overview', headers=NES).json()['compare']['day']['visitors']['now'], 3)
+        self.assertEqual(self.c.get('/api/admin/overview', headers=NES, params={'demo': 'false'}).json()['compare']['day']['visitors']['now'], 2)
+
     def test_wmhe_counts_a_person_once_and_only_qualifying_actions(self):
         import json
         def event(sid, type_, user=None, demo=False, **props):
@@ -178,7 +209,7 @@ class InsightsApiTest(unittest.TestCase):
         f = d['funnel']
         self.assertTrue(f['visited'] >= f['viewed'] >= f['read'] >= 0)
         self.assertTrue(any(q['no_info'] for q in d['questions']))
-        self.assertIn('kervansaray', [s['q'] for s in d['searches']])
+        self.assertTrue(any(s['empty'] for s in d['searches']))                   # sonuçsuz aramalar sayılır
         self.assertTrue(any(s['kind'] == 'search' for s in d['suggestions']))   # sonuçsuz arama önerisi
         for kind in ('question', 'search'):                                    # biri ötekileri dışarı itmez
             self.assertLessEqual(sum(s['kind'] == kind for s in d['suggestions']), I.PER_KIND)

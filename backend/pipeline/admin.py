@@ -1590,6 +1590,13 @@ def build_router(db, media_dir, save_webp):
         insights_ready()
         return insights.dashboard(db, days, demo)
 
+    @r.get('/overview')
+    def get_overview(demo: bool = True, user: str = Depends(admin_user)):
+        """Panelin ilk sayfası: son 24 saat / 7 gün, saatlik trafik, en çok bakılanlar ve canlı etkinlik akışı."""
+        insights_ready()
+        import overview
+        return overview.overview(db, demo)
+
     @r.get('/settings')
     def get_site_settings(user: str = Depends(admin_user)):
         insights_ready()

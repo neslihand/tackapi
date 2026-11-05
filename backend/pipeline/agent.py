@@ -27,7 +27,7 @@ from admin import admin_user, slugify
 PILOT = True                       # site şimdilik yalnızca pilot eserleri gösteriyor
 HORIZON_DAYS = int(os.environ.get('VAKIF_AGENT_HORIZON', '45'))   # yaklaşan tarihler bu kadar gün önceden önerilir
 SCAN_EVERY_H = 20
-DRAFT_MODEL = os.environ.get('VAKIF_AGENT_MODEL', G.LITE_MODEL)
+DRAFT_MODEL = os.environ.get('VAKIF_AGENT_MODEL', G.GEN_MODEL)   # ziyaretçinin okuyacağı metin: ucuz model değil; yanıt vermezse lite
 DRAFT_KINDS = ('route', 'announcement', 'summary')
 
 KIND_TR = {'complex': 'külliye', 'mosque': 'cami', 'masjid': 'mescit', 'madrasa': 'medrese', 'tomb': 'türbe',
@@ -344,29 +344,62 @@ def ensure_fresh(db):
 
 
 # ------------------------------------------------------------------------------------------- taslak
-DRAFT_RULES = """Sen vakıf eserlerini tanıtan bir sitenin yönetici asistanısın. Yöneticinin düzenleyip onaylayacağı bir taslak yazıyorsun.
-Kurallar:
-- Eserler hakkında yalnızca BAĞLAM'daki bilgileri kullan. Bağlamda olmayan tarih, kişi, olay ya da sayı ekleme.
-- Hicri tarihi miladiye çevirme. Yıl yazacaksan bağlamda geçtiği gibi yaz.
-- VESİLE yalnızca taslağın nedenidir (yöneticinin takviminden). Onunla ilgili tarihî ayrıntı ekleme; yalnızca adını an.
-- Anma günlerinde kutlama dili kullanma; sade ve saygılı yaz.
-- Türkçe, sade ve davetkâr yaz. Markdown, emoji ve ünlem kullanma.
-- Eser seçerken yalnızca köşeli parantez içindeki kimlikleri (slug) kullan."""
+# Ziyaretçinin okuyacağı metin: yöneticinin iç gerekçesi (hemen çıkma oranı, düşen geri dönüş…) asla metne girmez.
+DRAFT_RULES = """Sen, Türkiye'deki vakıf eserlerini tanıtan "EŞİK" adlı kültür sitesinin editörüsün. Yöneticinin düzenleyip
+onaylayacağı, ziyaretçinin okuyacağı kısa metinler yazıyorsun. İyi bir müze ya da kültür dergisi editörü gibi yaz.
+
+DOĞRULUK (en önemli kural):
+- Eserler hakkında yalnızca BAĞLAM'daki bilgileri kullan. Bağlamda olmayan tarih, kişi, olay, sayı ya da nitelik ekleme.
+- Hicri tarihi miladiye çevirme; yıl yazacaksan bağlamda geçtiği gibi yaz. Emin değilsen yıl yazma.
+- VESİLE yalnızca metnin nedenidir. Vesilenin kendisi hakkında tarihî ayrıntı yazma, yalnızca adını an.
+- Eser seçerken yalnızca köşeli parantez içindeki kimlikleri (slug) kullan.
+
+ÜSLUP:
+- Somut ol: bağlamdaki belirli bir ayrıntıyla aç (bir kitâbe, bir çini, bir bânî, bir yapım hikâyesi, bir mimari öğe).
+  Genel övgüyle değil, okuru meraklandıran bir gerçekle başla.
+- Kısa, akıcı, sıcak ve saygılı bir Türkçe kullan. Ziyaretçiye "sen" diye hitap et (ör. "keşfet", "bak", "oku").
+- Başlık bir haber başlığı gibi çarpıcı ve bilgi taşıyan olsun; eser ya da şehir adı geçsin. İki nokta ile iki parçaya
+  bölmekten ve soru cümlesini her başlıkta kullanmaktan kaçın.
+- Metin bir davetle bitsin ama bu davet somut olsun ("Muradiye'nin çini panolarına yakından bak" gibi).
+- YASAK ifadeler: "tarihin derinliklerine", "eşsiz", "büyüleyici", "muhteşem", "göz alıcı", "zamanda yolculuk",
+  "sizi bekliyor", "kaçırmayın", "unutulmaz", "keşfe çıkın", "tarihe tanıklık", "büyülü", "nefes kesen", "hazine".
+- Markdown, emoji, ünlem işareti, hashtag ve tırnak içinde slogan kullanma.
+- Anma günlerinde kutlama dili kullanma; sade, ağırbaşlı ve saygılı yaz.
+- Sitenin iç işleyişinden, ziyaretçi sayılarından, verilerden ya da "bu öneri" gibi yönetim konularından asla söz etme."""
 DRAFT_TASKS = {
-    'route': 'Bu vesileyle ziyaretçilere önerilecek bir keşif rotası taslağı yaz: kısa bir ad (en çok 60 karakter), kısa bir '
-             'üst etiket (en çok 30 karakter), rotayı anlatan 2–3 cümle ve verilen eserlerden 2–6 durak (sırayla, kimlikleriyle).',
-    'announcement': 'Sitenin ana sayfasındaki "Gündem" bandı için kısa bir duyuru yaz: başlık (en çok 70 karakter), 2–3 '
-                    'cümlelik metin (en çok 400 karakter) ve öne çıkarılacak 1–4 eser (kimlikleriyle).',
-    'summary': 'Eser kartında görünecek 1–2 cümlelik kısa bir özet yaz (en çok 280 karakter). Ziyaretçiyi esere davet etsin.'}
+    'route': 'Bu vesileyle ziyaretçilere önerilecek bir keşif rotası taslağı yaz: akılda kalan kısa bir ad (en çok 60 '
+             'karakter; şehir ya da temayı söylesin), kısa bir üst etiket (en çok 30 karakter, ör. "BAYRAM ROTASI"), rotayı '
+             'anlatan 2–3 cümle (duraklar arasındaki ortak hikâyeyi ya da temayı somut bir ayrıntıyla kur) ve verilen '
+             'eserlerden 2–6 durak (gezme sırasıyla, kimlikleriyle).',
+    'announcement': 'Sitenin ana sayfasındaki "Gündem" bandı için ÜÇ farklı duyuru seçeneği yaz. Her seçenekte bir başlık '
+                    '(en çok 70 karakter), 2–3 cümlelik bir metin (220–380 karakter) ve öne çıkarılacak 1–4 eser '
+                    '(kimlikleriyle) olsun. Seçenekler gerçekten farklı açılardan yazılsın:\n'
+                    '1) "Ayrıntı": bağlamdaki tek bir çarpıcı ayrıntıyla açılır.\n'
+                    '2) "Hikâye": eserin ya da bânîsinin hikâyesinden bir anla açılır.\n'
+                    '3) "Kısa": tek cümlelik net bir davet ve bir cümle bilgi; en sade seçenek.',
+    'summary': 'Eser kartında görünecek kısa özet için ÜÇ seçenek yaz (her biri 1–2 cümle, en çok 260 karakter). Özet eserin '
+               'ne olduğunu (tür, şehir, varsa dönem) ve onu ayırt eden bir ayrıntıyı söylesin; okuru esere çeksin. '
+               'Seçenekler farklı ayrıntılarla açılsın.'}
+TONES = {
+    'auto': '',
+    'warm': 'TON: Samimi ve sıcak; bir arkadaşa öneriyormuş gibi.',
+    'formal': 'TON: Kurumsal ve ölçülü; bir vakıf ya da müze duyurusu gibi. "Siz" hitabı kullan.',
+    'short': 'TON: Çok kısa ve net; her metin en fazla iki kısa cümle.',
+    'kids': 'TON: Çocuklar ve aileler için; basit sözcükler, merak uyandıran bir soru ya da benzetme.',
+}
 _str = {'type': 'string'}
 _slugs = {'type': 'array', 'items': _str}
+_ann = {'type': 'object', 'properties': {'angle': _str, 'title': _str, 'body': _str, 'monuments': _slugs},
+        'required': ['angle', 'title', 'body', 'monuments']}
 DRAFT_SCHEMAS = {
     'route': {'type': 'object', 'properties': {'title': _str, 'kicker': _str, 'description': _str, 'stops': _slugs},
               'required': ['title', 'kicker', 'description', 'stops']},
-    'announcement': {'type': 'object', 'properties': {'title': _str, 'body': _str, 'monuments': _slugs},
-                     'required': ['title', 'body', 'monuments']},
-    'summary': {'type': 'object', 'properties': {'summary': _str}, 'required': ['summary']}}
+    'announcement': {'type': 'object', 'properties': {'variants': {'type': 'array', 'items': _ann}}, 'required': ['variants']},
+    'summary': {'type': 'object', 'properties': {'variants': {'type': 'array', 'items': _str}}, 'required': ['variants']}}
 LIMITS = {'title': 70, 'kicker': 30, 'description': 600, 'body': 400, 'summary': 280}
+# Kalıp sözler: model yine de yazarsa yöneticiye uyarı olarak gösterilir
+CLICHES = ('tarihin derinlik', 'eşsiz', 'büyüleyici', 'muhteşem', 'göz alıcı', 'zamanda yolculuk', 'sizi bekliyor',
+           'seni bekliyor', 'kaçırmayın', 'kaçırma', 'unutulmaz', 'keşfe çık', 'tarihe tanıklık', 'büyülü', 'nefes kesen')
 
 
 def years_text(r):
@@ -377,7 +410,7 @@ def years_text(r):
     return str(a) if a == b else f'{a}–{b}'
 
 
-def monument_context(db, slugs, text_chars=700):
+def monument_context(db, slugs, text_chars=1100):
     """Taslağın dayanacağı bilgi: her eser için künye, kitaptaki olaylar ve metnin başı."""
     rows = db.query("""SELECT m.id, m.slug, m.name_tr, m.kind, m.district, m.built_years::text AS built, m.date_basis,
                               m.summary_tr, c.name_tr AS city, p.name_tr AS period
@@ -406,22 +439,31 @@ def monument_context(db, slugs, text_chars=700):
             t = db.query('SELECT s.text_tr FROM monument m LEFT JOIN source_section s ON s.id = m.section_id WHERE m.id = %(m)s',
                          dict(m=r['id']))
             text = t[0]['text_tr'] if t else None
-        if text:
-            lines.append('Kitaptan: ' + re.sub(r'\s+', ' ', text)[:text_chars])
+        r['text'] = re.sub(r'\s+', ' ', text or '').strip()
+        if r['text']:
+            lines.append('Kitaptan: ' + r['text'][:text_chars])
         blocks.append('\n'.join(lines))
     return '\n\n'.join(blocks), found
 
 
+def public_occasion(s):
+    """Vesile ziyaretçiye söylenebilir mi? Takvim ve yıl dönümü evet; davranış önerilerinin gerekçesi (iç veri) hayır."""
+    ev = s['evidence'] or {}
+    return bool(ev.get('occasion')) and s['kind'] in ('calendar', 'anniversary')
+
+
 def occasion_text(s):
     ev = s['evidence'] or {}
-    if ev.get('occasion'):
+    if public_occasion(s):
         parts = [ev['occasion']]
         if ev.get('start'):
             parts.append(f"tarih: {ev['start']}" + (f", {ev['days']} gün" if (ev.get('days') or 1) > 1 else ''))
         if ev.get('note'):
             parts.append(f"not: {ev['note']}")
         return '; '.join(parts)
-    return f"{s['title']}. {s['detail']}"
+    # İç gerekçe modele verilmez: ziyaretçi metnine "ziyaretçilerin %45'i…" gibi bir cümle sızmasın
+    return ('Belirli bir gün yok. Amaç: sitenin ana sayfasında bu eserleri öne çıkarıp ziyaretçiyi bir esere girmeye '
+            'davet etmek. Metinde neden şimdi yazıldığını söyleme; eserlerin kendisinden söz et.')
 
 
 def _first_sentences(text, limit):
@@ -433,71 +475,196 @@ def _first_sentences(text, limit):
     return out or (text or '')[:limit].strip()
 
 
+def _join_tr(names):
+    names = list(names)
+    return names[0] if len(names) == 1 else f"{', '.join(names[:-1])} ve {names[-1]}"
+
+
+def _fact(r, limit=220):
+    """Eserden ziyaretçiye söylenebilecek kısa ve kayıtlı bir bilgi: önce özet, yoksa kitap metninin ilk cümleleri."""
+    return _first_sentences(r.get('summary_tr') or r.get('text') or '', limit)
+
+
+def _ek(word, case):
+    """Özel ada Türkçe hâl eki (kesme işaretiyle): 'gen' (-in), 'loc' (-de), 'abl' (-den). Ünlü uyumu ve sertleşme."""
+    low = word.replace('I', 'ı').replace('İ', 'i').lower().translate(str.maketrans('âîû', 'aiu'))
+    vowels = [c for c in low if c in 'aeıioöuü'] or ['e']
+    v = vowels[-1]
+    front, rnd = v in 'eiöü', v in 'oöuü'
+    last = low[-1:]
+    if case == 'gen':
+        v4 = ('ü' if rnd else 'i') if front else ('u' if rnd else 'ı')
+        return f"{word}’{'n' if last in 'aeıioöuü' else ''}{v4}n"
+    d = 't' if last in 'çfhkpsşt' else 'd'
+    return f"{word}’{d}{'e' if front else 'a'}{'n' if case == 'abl' else ''}"
+
+
+def _de(word):
+    """Bağlaç 'de/da' (ayrı yazılır, yalnızca ünlü uyumu)."""
+    low = word.replace('I', 'ı').replace('İ', 'i').lower().translate(str.maketrans('âîû', 'aiu'))
+    vowels = [c for c in low if c in 'aeıioöuü'] or ['e']
+    return 'de' if vowels[-1] in 'eiöü' else 'da'
+
+
+def _kind_phrase(r):
+    return f"{_ek(r['city'], 'loc')}ki vakıf eserlerinden biri"
+
+
 def template_draft(kind, s, found, context):
-    """Yapay zekâsız taslak: yalnızca kayıttaki bilgi (adlar ve vesile)."""
+    """Yapay zekâsız taslak: yalnızca kayıttaki bilgi (adlar, şehir, tür, özet ya da kitap metninin ilk cümlesi) ve
+    vesile. Yapay zekâ yoksa ya da yanıt vermezse yönetici bununla devam eder."""
     names = [r['name_tr'] for r in found]
-    occ = (s['evidence'] or {}).get('occasion') or s['title']
+    first = found[0]
+    ev = s['evidence'] or {}
+    occ = ev.get('occasion') if public_occasion(s) else None
+    cities = list(dict.fromkeys(r['city'] for r in found))
+    place = cities[0] if len(cities) == 1 else 'Bursa, Konya ve Hatay' if len(cities) >= 3 else _join_tr(cities)
     if kind == 'route':
-        return dict(title=f'{occ} rotası'[:60], kicker='ÖZEL ROTA',
-                    description=f"{occ} vesilesiyle seçilen {len(found)} eser: {', '.join(names)}.",
+        title = (f'{occ}: {place} rotası' if occ and len(occ) < 40 else f'{place} vakıf eserleri rotası')[:60]
+        desc = (f"{_join_tr(names[:6])} aynı rotada. " + (f"{_fact(first, 200)} " if _fact(first) else '') +
+                'Durakları sırayla gez, her eserin hikâyesini yerinde oku.')
+        return dict(title=title, kicker=('VESİLE ROTASI' if occ else 'ÖNERİLEN ROTA'), description=desc[:600].strip(),
                     stops=[r['slug'] for r in found[:6]])
     if kind == 'announcement':
-        return dict(title=occ[:70], body=f"{occ} için seçtiğimiz eserler: {', '.join(names[:4])}. Hikâyelerini sitede okuyabilirsin."[:400],
-                    monuments=[r['slug'] for r in found[:4]])
-    r = found[0]
-    text = re.search(r'Kitaptan: (.*)', context)
-    return dict(summary=r['summary_tr'] or _first_sentences(text.group(1) if text else '', LIMITS['summary']))
+        slugs = [r['slug'] for r in found[:4]]
+        fact = _fact(first, 230)
+        rest = names[1:4]
+        if s['kind'] == 'anniversary' and occ:
+            n = ev.get('anniversary')
+            title1 = f"{first['name_tr']}: {n}. yıl" if n else occ
+        elif occ:
+            title1 = f"{occ} için {_ek(place, 'abl')} seçtiklerimiz" if len(occ) < 34 else occ
+        else:
+            title1 = f"Bu hafta {first['name_tr']}"
+        body1 = ' '.join(x for x in [
+            fact or f"{first['name_tr']}, {_kind_phrase(first)}.",
+            f"{_join_tr(rest)} {_de(rest[-1])} bu seçkide." if rest else '',
+            f"{_ek(first['name_tr'], 'gen')} hikâyesini eser sayfasında oku."] if x)
+        body2 = (f"{occ} vesilesiyle {_ek(place, 'loc')}ki {len(found)} vakıf eserini bir araya getirdik: {_join_tr(names[:4])}. "
+                 if occ else f"{_join_tr(names[:4])}: {_ek(place, 'gen')} vakıf eserlerinden bir seçki. ") + \
+                'Her birinin kitaptaki hikâyesi, fotoğrafları ve "Esere Sor" ile sitede.'
+        body3 = f"{first['name_tr']} ve {len(found) - 1} eser daha bu hafta ana sayfada. Hikâyelerini oku." if len(found) > 1 \
+            else f"{first['name_tr']} bu hafta ana sayfada. Hikâyesini oku."
+        variants = [dict(angle='Ayrıntı', title=title1[:70], body=body1[:400], monuments=slugs),
+                    dict(angle='Seçki', title=(f'{occ}: {place} seçkisi' if occ else f"{_ek(place, 'abl')} bir seçki")[:70],
+                         body=body2[:400], monuments=slugs),
+                    dict(angle='Kısa', title=f"{first['name_tr']} ana sayfada"[:70], body=body3[:400], monuments=slugs[:1])]
+        return dict(variants[0], variants=variants)
+    texts = [first['summary_tr']] if first['summary_tr'] else []
+    m = re.search(r'Kitaptan: (.*)', context)
+    lead = _first_sentences(m.group(1) if m else '', LIMITS['summary'])
+    if lead and lead not in texts:
+        texts.append(lead)
+    texts = texts or [f"{first['name_tr']}, {_kind_phrase(first)}."]
+    return dict(summary=texts[0], variants=texts)
+
+
+def clean_text(v, key):
+    v = re.sub(r'[*_#`]+', '', v).replace('!', '.').strip()
+    v = re.sub(r'\s+', ' ', v)
+    return v[:LIMITS.get(key, 400)].rstrip()
 
 
 def clean_draft(kind, out, allowed):
-    """Uzunluk sınırları, yalnızca verilen eserler ve boş alanlar."""
+    """Uzunluk sınırları, yalnızca verilen eserler, boş alanlar. Seçenekli taslakta ilk geçerli seçenek ana alanlara
+    yazılır; seçenekler 'variants' altında kalır."""
     res = {}
+    cap = 6 if kind == 'route' else 4
+    if kind == 'announcement':
+        variants = []
+        raw = out.get('variants') or ([out] if out.get('title') or out.get('body') else [])   # tek seçenekli eski biçim
+        for v in raw[:3]:
+            if not isinstance(v, dict):
+                continue
+            item = dict(angle=clean_text(str(v.get('angle') or ''), 'kicker'), title=clean_text(str(v.get('title') or ''), 'title'),
+                        body=clean_text(str(v.get('body') or ''), 'body'),
+                        monuments=[x for x in dict.fromkeys(v.get('monuments') or []) if x in allowed][:cap])
+            if item['title'] and item['body']:
+                variants.append(item)
+        if variants:
+            res = dict({k: variants[0][k] for k in ('title', 'body', 'monuments')}, variants=variants)
+        return res
+    if kind == 'summary':
+        variants = [clean_text(x, 'summary') for x in (out.get('variants') or []) if isinstance(x, str) and x.strip()][:3]
+        return dict(summary=variants[0], variants=variants) if variants else {}
     for k, v in out.items():
         if isinstance(v, str):
-            v = re.sub(r'[*_#`]+', '', v).strip()
-            res[k] = v[:LIMITS.get(k, 400)].rstrip()
+            res[k] = clean_text(v, k)
         elif isinstance(v, list):
-            res[k] = [x for x in dict.fromkeys(v) if x in allowed][:6 if kind == 'route' else 4]
+            res[k] = [x for x in dict.fromkeys(v) if x in allowed][:cap]
     return res
 
 
-def make_draft(db, s, kind):
-    """Taslak yazar. Döner: dict(kind, draft, ai, warnings)."""
+def _generate(prompt, kind):
+    """Önce taslak modeli, olmazsa ucuz model (tek deneme). İkisi de olmazsa hata yükselir, şablona düşülür."""
+    try:
+        return G.generate(prompt, system=DRAFT_RULES, schema=DRAFT_SCHEMAS[kind], model=DRAFT_MODEL, thinking='low', tries=2), DRAFT_MODEL
+    except Exception:
+        if DRAFT_MODEL == G.LITE_MODEL:
+            raise
+        return G.generate(prompt, system=DRAFT_RULES, schema=DRAFT_SCHEMAS[kind], model=G.LITE_MODEL, thinking='low', tries=1), G.LITE_MODEL
+
+
+def _verify(text, support, fallback, warnings):
     import rag                    # sohbet doğrulaması (yıl ve ad denetimi); yalnızca taslak yazarken yüklenir
+    check = rag.verify(text, support)
+    if check['unsupported_years']:
+        fixed, removed = rag.drop_years(text, check['unsupported_years'])
+        text = fallback if fixed == rag.NO_INFO['tr'] else fixed
+        warnings.append(f"Kaynakta olmayan yıl ({', '.join(check['unsupported_years'])}) içeren {removed} cümle çıkarıldı.")
+    if check['unsupported_names']:
+        warnings.append(f"Kaynakta doğrulanamayan adlar ({', '.join(check['unsupported_names'][:4])}): uygulamadan önce kontrol edin.")
+    return text
+
+
+def make_draft(db, s, kind, tone='auto', note=None):
+    """Taslak yazar. tone: TONES anahtarı; note: yöneticinin ek isteği ("çinilere vurgu yap"). Döner: dict(kind, draft,
+    ai, warnings, model). Duyuru ve özette draft['variants'] seçenekleri taşır."""
     slugs = s['monuments'][:1] if kind == 'summary' else s['monuments']
     context, found = monument_context(db, slugs)
     if not found:
         raise HTTPException(422, 'Bu öneride taslak için yayında bir eser yok.')
     occasion = occasion_text(s)
     allowed = {r['slug'] for r in found}
-    warnings, ai = [], True
+    warnings, ai, model = [], True, None
+    extra = '\n'.join(x for x in [TONES.get(tone or 'auto', ''),
+                                  f'YÖNETİCİNİN İSTEĞİ (kurallara aykırıysa uyma): {note.strip()[:300]}' if note and note.strip() else ''] if x)
+    prompt = f'VESİLE:\n{occasion}\n\nBAĞLAM:\n{context}\n\nGÖREV: {DRAFT_TASKS[kind]}' + (f'\n\n{extra}' if extra else '')
     try:
-        out = G.generate(f'VESİLE:\n{occasion}\n\nBAĞLAM:\n{context}\n\nGÖREV: {DRAFT_TASKS[kind]}',
-                         system=DRAFT_RULES, schema=DRAFT_SCHEMAS[kind], model=DRAFT_MODEL, thinking='low', tries=2)
+        out, model = _generate(prompt, kind)
         out = clean_draft(kind, out or {}, allowed)
     except Exception as e:  # kota, ağ: yönetici yine de kayıttaki bilgiden bir taslakla devam eder
         out, ai = {}, False
         warnings.append(f'Yapay zekâ şu an yanıt vermedi ({type(e).__name__}); kayıttaki bilgiden şablon taslak hazırlandı.')
     base = template_draft(kind, s, found, context)
-    if not all(out.get(k) for k in base):
-        if ai and any(out.get(k) for k in base) and not G.FAKE:
+    main = [k for k in base if k != 'variants']
+    if not all(out.get(k) for k in main):
+        if ai and any(out.get(k) for k in main) and not G.FAKE:
             warnings.append('Yapay zekâ taslağı eksik geldi; boş alanlar kayıttaki bilgiyle dolduruldu.')
-        ai = ai and any(out.get(k) for k in base)
+        ai = ai and any(out.get(k) for k in main)
         out = {k: out.get(k) or v for k, v in base.items()}
     # Doğrulama: vesile ve bağlamda olmayan yıl içeren cümle çıkarılır, desteksiz adlar uyarı olur
-    support = f'{occasion}\n{context}'
+    support = f'{occasion}\n{context}\n{s["evidence"].get("occasion", "") if s["evidence"] else ""}'
     for k in ('description', 'body', 'summary', 'title'):
         if out.get(k):
-            check = rag.verify(out[k], support)
-            if check['unsupported_years']:
-                fixed, removed = rag.drop_years(out[k], check['unsupported_years'])
-                out[k] = base[k] if fixed == rag.NO_INFO['tr'] else fixed
-                warnings.append(f"Kaynakta olmayan yıl ({', '.join(check['unsupported_years'])}) içeren {removed} cümle çıkarıldı.")
-            if check['unsupported_names']:
-                warnings.append(f"Kaynakta doğrulanamayan adlar ({', '.join(check['unsupported_names'][:4])}): uygulamadan önce kontrol edin.")
+            out[k] = _verify(out[k], support, base.get(k) or out[k], warnings)
+    if isinstance(out.get('variants'), list):
+        checked = []
+        for i, v in enumerate(out['variants']):
+            if isinstance(v, dict):
+                v = dict(v, body=_verify(v['body'], support, base['body'], []) , title=_verify(v['title'], support, base['title'], []))
+            elif isinstance(v, str):
+                v = _verify(v, support, base['summary'], [])
+            checked.append(v)
+        out['variants'] = checked
+    said = ' '.join(str(v) for v in out.values()).lower()
+    hits = [c for c in CLICHES if c in said]
+    if hits:
+        warnings.append(f"Kalıp ifade var ({', '.join(hits[:3])}): yayımlamadan önce sadeleştirin.")
     if kind == 'summary':
         out['slug'] = found[0]['slug']
-    return dict(kind=kind, draft=out, ai=ai, warnings=warnings, model=DRAFT_MODEL if ai else None)
+    return dict(kind=kind, draft=out, ai=ai, warnings=list(dict.fromkeys(warnings)), model=model if ai else None,
+                tone=tone or 'auto')
 
 
 # ------------------------------------------------------------------------------------------- uçlar
@@ -507,6 +674,8 @@ class StatusIn(BaseModel):
 
 class DraftIn(BaseModel):
     kind: Literal['route', 'announcement', 'summary']
+    tone: Literal['auto', 'warm', 'formal', 'short', 'kids'] = 'auto'
+    note: str | None = Field(None, max_length=300)       # yöneticinin ek isteği ("çinilere vurgu yap")
 
 
 class ApplyIn(BaseModel):
@@ -603,10 +772,10 @@ def build_router(db):
         s = suggestion(sid)
         if body.kind not in s['drafts']:
             raise HTTPException(422, 'Bu öneri için bu tür taslak hazırlanamaz.')
-        res = make_draft(db, s, body.kind)
+        res = make_draft(db, s, body.kind, body.tone, body.note)
         db.execute("""UPDATE agent_suggestion SET draft_kind = %(k)s, draft = %(d)s::jsonb, draft_at = now() WHERE id = %(i)s""",
                    dict(k=body.kind, d=json.dumps(res, ensure_ascii=False), i=sid))
-        log(user, 'agent.draft', f'agent:{sid}', dict(kind=body.kind, ai=res['ai']))
+        log(user, 'agent.draft', f'agent:{sid}', dict(kind=body.kind, ai=res['ai'], tone=body.tone, note=body.note))
         return res
 
     @r.post('/agent/{sid}/apply')

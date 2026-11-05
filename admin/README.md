@@ -38,7 +38,8 @@ adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS
 | Sayfa | Adres | Amaç |
 |---|---|---|
 | Giriş | — | Kişisel yönetici anahtarı; yalnızca o sekmenin oturumunda tutulur |
-| Pano | `#/` | Kontrol bekleyen ve esere bağlanmamış fotoğraflar, fotoğrafsız eserler, son değişiklikler |
+| Genel bakış | `#/` | Sitenin canlı hâli (`GET /api/admin/overview`): şu an sitede olanlar, son 24 saat / 7 gün (öncekiyle karşılaştırmalı), saatlik ve günlük trafik, canlı etkinlik akışı, en çok bakılan eserler, şehirler, aramalar, asistanın önerileri ve onay bekleyenler; dakikada bir tazelenir. Deneme verisi varsayılan olarak dahildir, "Yalnızca gerçek ziyaretçiler" ile çıkarılır. Sunumdan önce `python demo_activity.py --refresh` eski deneme verisini şimdiye kaydırır |
+| AI asistan | `#/asistan` | Önerileri türe göre süzme; taslak stüdyosu: ton (otomatik, samimi, kurumsal, kısa, çocuklar için), asistana not, duyuru ve özette üç seçenek, karakter sayaçları ve "sitede böyle görünecek" önizlemesi |
 | Fotoğraflar | `#/fotograflar` | Kontrol kuyruğu: onayla, esere bağla, kapak yap, at; kitaba göre süzme ve toplu işlem |
 | Eserler | `#/eserler` | Taslaklar dahil liste; şehir, durum, fotoğraf ve MVP pilot seçkisine göre süzme. Eser sayfasındaki "Pilot seçkide" kutusu eseri seçkiye ekler; panoda şehir başına sayaç ve hedef görünür |
 | Eser | `#/eser/<slug>` | Künye, tarih, konum, özet, kaynak notu, yayın durumu; panel eserlerinde metin; galeri ve yükleme; süsleme ve sanat kayıtlarına fotoğraf bağlama (eserin, üst ve alt yapılarının fotoğraflarından seçilir; seçim sırası sayfadaki sıradır); üstte tek tıkla "Yayından kaldır / Yayına al"; altta kitap eserleri için "Eseri kaldır" (geri getirilebilir, eser listesinde "Kaldırılanlar" filtresi), panelden eklenen ve paragraflarından ayrılmış eserler için "Kalıcı olarak sil" |

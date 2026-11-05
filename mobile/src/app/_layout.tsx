@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaInsetsContext, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MedalCelebration } from '@/components/MedalCelebration';
 import { Button } from '@/components/UI';
 import { AccountProvider, useAccount } from '@/lib/account';
 import { initAnalytics, track } from '@/lib/analytics';
@@ -164,6 +165,7 @@ export default function RootLayout() {
       <PreferenceSync />
       <DemoStrip><Screens /></DemoStrip>
       <WelcomeGate />
+      <MedalCelebration />
     </JournalProvider></AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
   </SafeAreaProvider>;
 }

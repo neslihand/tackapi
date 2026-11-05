@@ -136,6 +136,12 @@ export default function Passport() {
       </View>
     </Card>)}
     <View style={s.grid}>{list.map(m => <MedalTile key={m.id} m={m} onShare={setShared} />)}</View>
+    <View style={s.shareHint}>
+      <Ionicons name="share-social-outline" size={16} color={colors.goldText} />
+      <Text style={s.small}>{earned.length
+        ? t('Kazandığın bir madalyona dokun; kartını Instagram, WhatsApp ya da istediğin yerde paylaş.', 'Tap a medallion you earned and share its card on Instagram, WhatsApp or anywhere you like.')
+        : t('Madalyon kazandığında kartını sosyal medyada paylaşabileceksin.', 'Once you earn a medallion you can share its card on social media.')}</Text>
+    </View>
 
     {flags.tiered_medals && !!site.medal_tiers && <Tiers tiers={site.medal_tiers} onShare={setShared} />}
 
@@ -224,14 +230,14 @@ function MedalTile({ m, onShare }: { m: Medal; onShare: (s: Shared) => void }) {
   const status = done ? `${metalName(m.metal)} · ${t('Kazanıldı', 'Earned')}` : `${t('Kilitli', 'Locked')} · ${shown} / ${m.required}`;
   const label = `${m.name}. ${m.description} ${status}.`;
   return <Pressable style={({ pressed }) => [s.medal, pressed && { opacity: 0.85 }]}
-    onPress={() => done ? onShare({ kind: 'medal', name: m.name, description: m.description, metal: m.metal }) : setOpen(o => !o)}
+    onPress={() => done ? onShare({ kind: 'medal', name: m.name, description: m.description, metal: m.metal, id: m.id }) : setOpen(o => !o)}
     accessibilityRole="button" accessibilityState={done ? undefined : { expanded: open }}
     accessibilityLabel={done ? `${label} ${t('Paylaşmak için dokun.', 'Tap to share.')}` : label}>
     <Medallion metal={m.metal} earned={done} symbol={m.id} size={86} />
     <Text style={s.name} numberOfLines={2}>{m.name}</Text>
     <Text style={[s.status, done && s.statusWon]}>{done ? t('Kazanıldı', 'Earned') : `${shown} / ${m.required}`}{m.mobile ? ` · ${t('mobil', 'mobile')}` : ''}</Text>
     {open && !done && <Text style={s.medalNote}>{m.description}</Text>}
-    {done && <Ionicons name="share-social-outline" size={14} color={colors.goldText} />}
+    {done && <View style={s.sharePill}><Ionicons name="share-social-outline" size={12} color={colors.onGold} /><Text style={s.sharePillText}>{t('PAYLAŞ', 'SHARE')}</Text></View>}
   </Pressable>;
 }
 
@@ -303,6 +309,9 @@ const s = StyleSheet.create({
   name: { ...type.body, fontFamily: serif, fontSize: 16, lineHeight: 19, color: colors.ink, textAlign: 'center' },
   status: { color: colors.soft, textAlign: 'center', ...type.caption, fontFamily: fonts.sansSemi, letterSpacing: 1 },
   statusWon: { color: colors.goldText },
+  shareHint: { flexDirection: 'row', alignItems: 'center', gap: space.s, padding: space.s + space.xs, borderRadius: radius.m, backgroundColor: colors.paper, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.ivoryLine },
+  sharePill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: space.s, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: colors.goldSoft },
+  sharePillText: { color: colors.onGold, fontFamily: fonts.sansSemi, fontSize: 9.5, letterSpacing: 1.2 },
   medalNote: { color: colors.soft, textAlign: 'center', ...type.caption },
   tierState: { color: colors.goldText, ...type.caption, fontFamily: fonts.sansSemi },
   small: { color: colors.soft, ...type.caption },
