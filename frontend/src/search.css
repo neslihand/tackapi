@@ -1,0 +1,47 @@
+/* ——— The search in the top bar (SiteSearch.tsx) ———
+   A dark panel just under the bar: the field, then the cities to start from or the works found, each with its arch. */
+.navigation .nav-search { display: grid; }
+.site-search { width: min(680px, calc(100vw - 28px)); max-width: none; max-height: none; margin: 84px auto auto; padding: 0; overflow: hidden; border: 0; border-radius: 14px; color: #f3ecdf; background: linear-gradient(170deg, #10271f, #07150f); box-shadow: 0 0 0 1px #e6d5ae33, 0 40px 100px -30px #000; }
+.site-search::backdrop { background: #020806b3; backdrop-filter: blur(6px); }
+.site-search[open] { animation: ss-in .35s cubic-bezier(.2, .7, .2, 1); }
+.ss-field { display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 22px; border-bottom: 1px solid #e6d5ae26; transition: border-color .3s; }
+/* the field shows its focus with the gold line under it, not the site's usual frame */
+.ss-field:focus-within { border-bottom-color: #e6d5ae80; }
+.site-search .ss-field input:is(:focus, :focus-visible) { outline: 0; box-shadow: none; }
+.ss-field > svg { flex: none; color: #e6d5ae; }
+.ss-field input { flex: 1; min-width: 0; padding: 6px 0; border: 0; outline: 0; font-family: var(--serif); font-size: 24px; color: #fbf7ee; background: none; appearance: none; }
+.ss-field input::placeholder { font-style: italic; color: #a9b3a5; }
+.ss-field input::-webkit-search-cancel-button { display: none; }
+.ss-close { display: grid; flex: none; place-items: center; width: 40px; height: 40px; border: 1px solid #e6d5ae40; border-radius: 50%; color: #e6d5ae; background: none; cursor: pointer; transition: background .3s, border-color .3s; }
+.ss-close:hover { border-color: #e6d5ae; background: #e6d5ae14; }
+.ss-body { max-height: min(62svh, 520px); overflow-y: auto; padding: 8px 10px 12px; overscroll-behavior: contain; }
+.ss-hint { margin: 0; padding: 12px 12px 8px; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #d9c9a5; }
+.ss-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 12px 10px; }
+.ss-chips button { min-height: 40px; padding: 0 18px; border: 1px solid #e6d5ae40; border-radius: 999px; font-family: var(--serif); font-size: 18px; color: #fbf7ee; background: none; cursor: pointer; transition: background .3s, border-color .3s; }
+.ss-chips button:hover { border-color: #e6d5ae; background: #e6d5ae14; }
+.ss-results { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.ss-results a { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 10px 12px; border-radius: 8px; color: inherit; text-decoration: none; transition: background .25s; }
+.ss-results a:hover, .ss-results a:focus-visible { outline: 0; background: #e6d5ae12; box-shadow: inset 0 0 0 1px #e6d5ae40; }
+.ss-results img { width: 44px; height: 56px; max-width: none; object-fit: cover; border-radius: 999px 999px 3px 3px; box-shadow: 0 0 0 1px #e6d5ae40; }
+.ss-results b { display: block; overflow: hidden; font-family: var(--serif); font-size: 19px; font-weight: 400; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis; }
+.ss-results small { display: block; margin-top: 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #c7a96b; }
+.ss-results a > svg { color: #e6d5ae; opacity: .5; transition: opacity .25s, translate .25s; }
+.ss-results a:hover > svg, .ss-results a:focus-visible > svg { opacity: 1; translate: 3px 0; }
+/* the way into Keşfet stays in view at the foot of the list however long it is */
+.ss-all { position: sticky; bottom: -12px; display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 52px; margin-top: 8px; padding: 0 14px; border: 0; border-top: 1px solid #e6d5ae1f; font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #e6d5ae; background: #091a14; cursor: pointer; }
+.ss-all:hover, .ss-all:focus-visible { outline: 0; color: #fbf7ee; background: #12271f; }
+.ss-empty { margin: 0; padding: 18px 12px; font-size: 14.5px; color: #c9cfc8; }
+.site-search :is(.ss-close, .ss-chips button):focus-visible { outline: 2px solid #e6d5ae; outline-offset: 2px; }
+@keyframes ss-in { from { opacity: 0; translate: 0 -10px; } }
+@media (max-width: 640px) {
+  .site-search { margin-top: 72px; }
+  .ss-field input { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .site-search[open] { animation: none; } }
+/* On phones the bar holds the brand, the search, the passport and the menu: set closer together so all four fit. */
+@media (max-width: 480px) {
+  header.navigation { gap: 10px; padding-right: 16px; padding-left: 16px; }
+  header.navigation .nav-actions { gap: 4px; }
+  header.navigation .nav-search { width: 40px; height: 40px; border-color: transparent; }
+}
+@media (max-width: 380px) { header.navigation { padding-right: 12px; padding-left: 12px; } }
