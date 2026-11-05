@@ -1,9 +1,9 @@
 // Keşfet: the whole collection as a list, on the Heritage Map or by distance ("Yakınımda"), with one search and the
 // same city and type filters for all three views. It opens on the visitor's own city, with what fits them first
 // (personal.ts); a link can open a work's pin (?eser=) or the near list (?gorunum=yakin). The location stays on the device.
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View, type ListRenderItem } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View, type ListRenderItem } from 'react-native';
 import { SegmentedControl } from '@/components/Controls';
 import { ExploreMap } from '@/components/explore/ExploreMap';
 import { ExploreFilters } from '@/components/explore/Filters';
@@ -72,6 +72,9 @@ export default function Explore() {
       <Text style={s.count} accessibilityLiveRegion="polite">{t(`${shown.length} eser`, `${shown.length} works`)}</Text>
       <View style={s.rule}><Hairline /></View>
     </View>
+    {/* the order is never personal in silence: it says so and leads to the choices behind it */}
+    {shown !== found && shown.some((item, i) => item !== found[i]) && <Pressable accessibilityRole="link" onPress={() => router.push('/tercihler')} style={[s.pad, s.sorted]}>
+      <Text style={s.sortedText}>{t('Sana göre sıralandı. Tercihlerimi değiştir', 'Sorted for you. Change my choices')}</Text></Pressable>}
   </View>;
 
   return <View style={{ flex: 1 }}>
@@ -89,7 +92,7 @@ export default function Explore() {
       <View style={s.mapFilters}>{filters}</View>
       <ExploreMap items={shown} here={here} locating={locating} error={placeError} onLocate={locate} focus={focus} />
     </>}
-    {view === 'near' && <NearList items={shown} here={here} locating={locating} error={placeError} onLocate={locate} header={filters} />}
+    {view === 'near' && <NearList items={shown} here={here} locating={locating} error={placeError} onLocate={locate} header={filters} narrowed={Boolean(filter.city || query.trim())} />}
   </View>;
 }
 
@@ -106,4 +109,6 @@ const s = StyleSheet.create({
   rule: { flex: 1 },
   // clear but quiet: the serif number in ink, a rule running out to the edge
   count: { fontFamily: serif, color: colors.ink, ...type.heading },
+  sorted: { minHeight: 32, justifyContent: 'center' },
+  sortedText: { color: colors.goldText, textDecorationLine: 'underline', ...type.small },
 });
