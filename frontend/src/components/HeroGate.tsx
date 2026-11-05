@@ -101,9 +101,9 @@ export function HeroGate() {
   }
   function skipIntro() {
     stopTravel(); settleScroll();
-    const next = document.getElementById('vizyon');
+    const next = document.getElementById('araclar');
     window.scrollTo({ top: next ? next.offsetTop - 70 : (section.current?.offsetHeight ?? 0), behavior: 'instant' });
-    document.getElementById('vision-title')?.focus({ preventScroll: true });
+    document.getElementById('tools-title')?.focus({ preventScroll: true });
   }
   function parallax(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.pointerType !== 'mouse' || reduced()) return;

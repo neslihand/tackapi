@@ -16,8 +16,8 @@ import { quizPool } from '../lib/quiz';
 import { collectionStats, spotlight } from '../lib/content';
 import { Agenda } from '../vakif/Agenda';
 
-// The home page after the entrance: a short line on why waqf, then chapters in the entrance's language, each with its
-// own scene — the door gallery, the routes, how a work is discovered (an artifact from the inside and the tools), the
+// The home page after the entrance: the tools of discovery, then chapters in the entrance's language, each with its
+// own scene — the door gallery, the routes, how a work is discovered (an artifact from the inside), the
 // day's discovery, the passport and a last threshold.
 const pad = (n: number) => String(n).padStart(2, '0');
 // How the passport fills: read, get the stamp, open the medals.
@@ -45,16 +45,6 @@ function Threshold({ today, questions }: { today: { name: string; city: string; 
   </section>;
 }
 
-// Why waqf, in one line under the entrance: what a waqf is, and the way to the project's own page for more.
-function WhyWaqf() {
-  return <section id="vizyon" className="hp-why" data-nav-theme="light" aria-labelledby="vision-title">
-    <p className="hp-why-kicker">{t('NEDEN VAKIF?', 'WHY WAQF?')}</p>
-    <h2 id="vision-title" tabIndex={-1}>{t('Bir iyilik,', 'One kindness,')} <em>{t('yüzyıllarca yaşar.', 'lives for centuries.')}</em></h2>
-    <p className="hp-why-text">{t('Vakıf, bir kimsenin malını hayır amacıyla süresiz olarak topluma adamasıdır. Anadolu’nun dört bir yanındaki camiler, çeşmeler, hanlar ve köprüler bu anlayışla yaşadı.', 'A waqf is a gift of property to the public, for good and for ever. The mosques, fountains, caravanserais and bridges all across Anatolia have lived on in this spirit.')}</p>
-    <Link className="hp-link en-link" to="/hakkinda"><span>{t('Projeyi ve kaynakları tanı', 'About the project and its sources')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link>
-  </section>;
-}
-
 export function Home() {
   const { progress } = useProgress();
   const kept = useKeptIn();
@@ -66,7 +56,9 @@ export function Home() {
   const found = artifacts.filter(a => progress.discovered[a.id]).length;
   const stats = collectionStats(artifacts);
   return <div className="home-page"><HeroGate />
-    <WhyWaqf />
+    <Chapter id="araclar" tone="night" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" headless title={<>{t('Keşfin', 'Tools of')} <em>{t('araçları.', 'discovery.')}</em></>}>
+      <div className="hp-tools-panel"><ToolsShowcase artifacts={artifacts} /></div>
+    </Chapter>
     <Chapter id="featured" tone="night" kicker={t('TAŞA İŞLENEN HİKÂYELER', 'STORIES CARVED IN STONE')} titleId="featured-title" className="hp-featured" title={<>{t('Bazı kapılar,', 'Some doors')} <em>{t('yüzyıllara açılır.', 'open onto centuries.')}</em></>} lede={<p>{t('Koleksiyondaki her eser, kendi hikâyesiyle seni bekliyor. Birini seç, kapısını arala.', 'Every work in the collection is waiting for you with its own story. Choose one and open its door.')}</p>}>
       <Agenda />
       <DoorGallery artifacts={artifacts} />
@@ -75,10 +67,9 @@ export function Home() {
     <Chapter id="rotalar" tone="ivory" kicker={t('KEŞİF SEZONLARI', 'DISCOVERY SEASONS')} titleId="routes-title" className="hp-routes" title={<>{t('Kendi izini', 'Find your')} <em>{t('bul.', 'own trail.')}</em></>} lede={<p>{t('Bir şehir, bir dönem, bir ustanın dokunuşu. Bu kez hangi rotanın peşindesin? Her rota bir avuç eserden kurulur; haritada da yürüyebilirsin.', 'A city, an era, a master’s touch. Which route will you follow this time? Each route is made of a handful of works, and you can walk it on the map too.')}</p>}>
       <SeasonStack seasons={seasons} artifacts={artifacts} discovered={progress.discovered} />
     </Chapter>
-    <Chapter id="araclar" tone="night" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools hp-how" headless title={<>{t('Bir eser,', 'One work,')} <em>{t('birçok kapı.', 'many doors.')}</em></>}>
+    <Chapter id="eserin-ici" tone="night" kicker={t('BİR ESERİN İÇİ', 'INSIDE A WORK')} titleId="inside-title" className="hp-inside" headless title={<>{t('Bir eser,', 'One work,')} <em>{t('birçok kapı.', 'many doors.')}</em></>}>
       <div className="hp-inside-plate"><h3>{t('Bir eserin içi', 'Inside a work')}</h3><p>{t('Her eserin kendi sayfası var. Hikâyesini sana uyan biçimde oku, kaynaklarına bak, merak ettiğini sor; okuduğun her eser pasaportuna işlensin.', 'Every work has a page of its own. Read its story the way that suits you, look at its sources, ask what you wonder about; every work you read is stamped into your passport.')}</p></div>
       <ArtifactAnatomy artifact={insideArtifact} />
-      <div className="hp-tools-panel"><ToolsShowcase artifacts={artifacts} /></div>
     </Chapter>
     <Chapter id="pasaport" tone="night" kicker={t('BAKMAKLA BAŞLAR, KEŞFETMEKLE DEĞİŞİR', 'IT STARTS WITH A LOOK AND CHANGES WITH DISCOVERY')} titleId="passport-title" className="hp-passport" title={<>{t('Her keşif bir iz.', 'Every discovery leaves a mark.')} <em>{t('Her iz senin hikâyen.', 'Every mark is your story.')}</em></>} lede={<p>{t('Eserlerin hikâyelerini keşfet, madalyonlarını kazan. Kendi miras pasaportunu, kendi merakınla doldur.', 'Discover the works’ stories and earn their medallions. Fill your own heritage passport with your own curiosity.')}</p>}>
       <div className="hp-passport-body">

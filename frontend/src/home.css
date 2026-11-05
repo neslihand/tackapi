@@ -14,22 +14,13 @@
 /* The chapters carry their name only, no running number. */
 .home-page .pl-index > b:first-child { margin-left: 0; }
 
-/* ——— Why waqf: one line under the entrance, with the way to the project page ——— */
-.hp-why { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); align-items: end; gap: 14px clamp(30px, 5vw, 90px); padding: clamp(56px, 6vw, 88px) var(--pl-left); color: #17201c; background: radial-gradient(ellipse 60% 60% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
-.hp-why-kicker { grid-column: 1 / -1; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .24em; color: #765b38; }
-.hp-why h2 { grid-column: 1; margin: 0; font-size: clamp(36px, 4.4vw, 72px); font-weight: 400; line-height: 1; letter-spacing: -.024em; }
-.hp-why h2 em { font-style: italic; color: #8a6a36; }
-.hp-why h2:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; box-shadow: none; }
-.hp-why-text { grid-column: 2; margin: 0; font-size: 15.5px; line-height: 1.8; color: #4b5448; }
-.hp-why .hp-link { grid-column: 2; justify-self: start; }
-.hp-why .hp-link:focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
-
 /* ——— How a work is discovered: the page of a work from the inside, then the tools on an ivory plate ——— */
 .hp-inside-plate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); align-items: end; gap: 12px clamp(30px, 5vw, 90px); margin-bottom: clamp(32px, 4vw, 56px); padding-top: 22px; border-top: 1px solid #e6d5ae2e; }
 .hp-inside-plate h3 { margin: 0; font-size: clamp(28px, 2.6vw, 40px); font-weight: 400; line-height: 1.05; color: #fbf7ee; }
 .hp-inside-plate p { margin: 0; font-size: 15px; line-height: 1.75; color: #c9cfc8; }
 /* With no heading above it (the tools chapter opens on the work itself) there is nothing for the rule to part it from. */
-.hp-tools .sr-only + .hp-inside-plate { padding-top: 0; border-top: 0; }
+.hp-inside .sr-only + .hp-inside-plate { padding-top: 0; border-top: 0; }
+.hp-tools .sr-only + .hp-tools-panel { margin-top: 0; }
 .hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); padding: clamp(28px, 4vw, 64px); border-radius: 6px; color: #17201c; background: radial-gradient(ellipse 60% 40% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
 .hp-tools-panel :focus-visible { outline-color: #17201c; }
 .hp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
@@ -58,9 +49,9 @@
 .hp-featured.tone-night :focus-visible { outline-color: var(--en-gold-light); }
 .hp-collection p i {font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; text-transform: none; color: #6a5a3c; }
 /* Same weight as the shared drawn-link rule in entrance.css, which this file follows. */
-.home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link, .home-page .hp-why .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
-.home-page :is(.pl-chapter, .hp-why) .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
-.home-page :is(.tone-ivory, .hp-why) .hp-link.en-link:hover .en-link-arrow, .hp-today .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
+.home-page .pl-chapter .hp-link.en-link, .home-page .hp-threshold .hp-link.en-link { display: inline-flex; align-items: center; gap: 16px; min-height: 52px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: inherit; transition: translate .35s var(--pl-ease); }
+.home-page .pl-chapter .hp-link.en-link .en-link-arrow { border-color: currentColor; border-color: color-mix(in srgb, currentColor 40%, transparent); }
+.home-page .tone-ivory .hp-link.en-link:hover .en-link-arrow, .hp-today .hp-link.en-link:hover .en-link-arrow { color: #f3ecdf; background: #17201c; }
 
 /* ——— 02 Divriği (HomeScenes PanoramaScene): the story card as a label ——— */
 .home-page .panorama-copy { border-radius: 3px; background: #f3ede1; box-shadow: 0 0 0 1px #8a6a3666, 0 50px 90px -40px #000; }
@@ -234,8 +225,7 @@
 }
 @media (max-width: 800px) {
   .home-page .pl-chapter { padding-top: 60px; padding-bottom: 68px; }
-  .hp-why, .hp-inside-plate { grid-template-columns: 1fr; }
-  .hp-why :is(h2, .hp-why-text, .hp-link) { grid-column: 1; }
+  .hp-inside-plate { grid-template-columns: 1fr; }
   .hp-tools-panel { margin-inline: calc(var(--pl-left) * -.5); padding: 24px 18px; }
   .home-page .pl-head { gap: 14px; margin-bottom: 32px; }
   .vs-foot { margin-top: 44px; padding-top: 24px; }
