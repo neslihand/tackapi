@@ -1,6 +1,7 @@
 // Bugün: what to do today, one card per action (src/components/home/), never a long list. The collection is in Keşfet.
 // The greeting and Günün Eşiği share a night band at the top; the other cards sit on ivory below it, in the order that
-// suits the way the visitor likes to explore (personal.ts homeOrder). Someone we know sees their own card first.
+// suits the way the visitor likes to explore (personal.ts homeOrder). Someone we know sees their own card first: it sits
+// in the night band, right under the greeting.
 import { Fragment, useMemo, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NightGlow } from '@/components/brand/Gradient';
@@ -39,7 +40,7 @@ export default function Today() {
     action={<Button label={t('Yeniden dene', 'Try again')} icon="refresh" onPress={reload} />} />;
 
   const cards: Record<HomeCardKey, ReactNode> = {
-    lead: lead && <LeadCard lead={lead} style={home.pad} />,
+    lead: null,   // in the night band above
     continue: <ContinueCard />,
     ask: <AskPreferences style={home.pad} />,
     weekly: flags.weekly_discovery && <Weekly style={home.pad} />,
@@ -69,6 +70,7 @@ export default function Today() {
     <View style={s.night}>
       <NightGlow color={colors.emeraldLight} />
       <TodayHeader />
+      {lead && <LeadCard lead={lead} style={home.pad} />}
       <DailyCard />
     </View>
     {stale && <View style={home.pad}><Notice icon="cloud-offline-outline">{t('Çevrimdışısın: cihazdaki son hâli gösteriliyor.', 'You are offline: the copy on this device is shown.')}</Notice></View>}
