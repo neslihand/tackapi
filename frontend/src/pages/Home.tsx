@@ -6,6 +6,7 @@ import { Chapter } from '../components/PlayScenes';
 import { DoorGallery } from '../components/DoorGallery';
 import { ToolsShowcase } from '../components/ToolsShowcase';
 import { JourneyRail } from '../components/JourneyRail';
+import { MobileAppChapter } from '../components/MobileApp';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 import { useKeptIn } from '../lib/account';
@@ -87,6 +88,7 @@ export function Home() {
       </div>
       <ol className="hp-passport-steps">{passportSteps().map(([title, text], i) => <li key={title}><i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><span>{text}</span></li>)}</ol>
     </Chapter>
+    <MobileAppChapter />
     <Threshold today={today} questions={Math.min(4, quizPool(quizQuestions, artifacts).length)} />
     <Manifesto />
     <JourneyRail />

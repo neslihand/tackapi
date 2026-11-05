@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { BookA, BookOpen, Camera, Compass, HelpCircle, House, Info, MapPin, Medal, Puzzle, Settings, ShieldCheck, Stamp, UserRound, X } from 'lucide-react';
+import { BookA, BookOpen, Camera, Compass, HelpCircle, House, Info, MapPin, Medal, Puzzle, Settings, ShieldCheck, Smartphone, Stamp, UserRound, X } from 'lucide-react';
 import { Brand } from './UI';
 import { LangSwitch } from './LangSwitch';
 import { useAccount } from '../lib/account';
@@ -31,6 +31,7 @@ export function SideMenu({ route, onClose }: { route: string; onClose: () => voi
     [['/oyun', t('Oyna & Öğren', 'Play & Learn'), <Puzzle />], ['/oyun/quiz', t('Bilgi Yarışması', 'Knowledge Quiz'), <HelpCircle />],
       ['/pasaport', t('Miras Pasaportum', 'My Heritage Passport'), <Stamp />], ['/basarimlar', t('Madalyonlar', 'Medallions'), <Medal />]],
     [...(account.enabled ? [[account.user ? '/hesabim' : '/giris', account.user ? t('Hesabım', 'My account') : t('Giriş yap', 'Sign in'), <UserRound />]] as Item[] : []),
+      ['/uygulama', t('Mobil Uygulama', 'Mobile App'), <Smartphone />],
       ['/hakkinda', t('Proje & Kaynaklar', 'Project & Sources'), <Info />],
       // the admin page is listed only in the browser-only demo; with the backend, works are managed in the admin panel
       api ? ['/gizlilik', t('Gizlilik ve veriler', 'Privacy and data'), <ShieldCheck />] : ['/yonetim', t('Demo Yönetim Paneli', 'Demo Admin Panel'), <Settings />]],
