@@ -436,6 +436,8 @@ def build_router(db, media_dir, save_webp):
             agent_open=db.query("SELECT count(*) AS n FROM agent_suggestion WHERE status = 'open'")[0]['n']
                        if db.query("SELECT to_regclass('agent_suggestion') IS NOT NULL AS ok")[0]['ok'] else 0,
             **articles.pending_counts(db),
+            author_submitted=db.query("SELECT count(*) AS n FROM author_work WHERE status = 'submitted'")[0]['n']
+                             if db.query("SELECT to_regclass('author_work') IS NOT NULL AS ok")[0]['ok'] else 0,
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'],

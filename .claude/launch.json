@@ -2,6 +2,32 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "api-author-test",
+      "runtimeExecutable": "C:\\Users\\dogan\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "api:app", "--app-dir", "backend/pipeline", "--host", "127.0.0.1", "--port", "8004"],
+      "env": {
+        "DATABASE_URL": "postgresql://test@localhost:55434/vakif_author_test",
+        "VAKIF_FAKE_LLM": "1",
+        "VAKIF_ADMIN_TOKENS": "neslihan:yerel-deneme-anahtari-0001",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "port": 8004
+    },
+    {
+      "name": "yazar-paneli-test",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "yazar-paneli", "run", "dev"],
+      "env": { "VAKIF_API_URL": "http://127.0.0.1:8004" },
+      "port": 5177
+    },
+    {
+      "name": "admin-author",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "admin", "run", "dev", "--", "--port", "5176"],
+      "env": { "VAKIF_API_URL": "http://127.0.0.1:8004" },
+      "port": 5176
+    },
+    {
       "name": "mobile-web",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

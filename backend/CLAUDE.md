@@ -207,6 +207,21 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   "doğrulanmadı"**, Diyanet takviminden kontrol edilmeli. Yeni olaylar: `client_error`, `page_perf`, `api_error`,
   `api_slow`. Taslak gerçek Gemini ile denenmedi (testler ve tarayıcı denemesi sahte modelle). README §7.13.
 
+- **Yazar paneli (5 Kasım 2026):** envanter kitabı yazarları (bilim kurulu) için araştırma notlarından "eser hakkında"
+  metnine. **Ayrı uygulama `../yazar-paneli`** (5177; derlenince uvicorn `/yazar/` altında sunar); yazarlar yönetim
+  panelini görmez (geliştirici kararı: ilk sürüm admin paneline gömülmüştü, yanlıştı). Arka uç `author.py`, göç
+  `018_author.sql` (gerçek veritabanında henüz uygulanmadı). İki uç grubu: `/api/author/*` (yazar hesabı: e-posta +
+  scrypt şifre, `author_session`'da sha256 özetli Bearer oturum, 12 saat; yalnızca kendi dosyaları, başkasınınki 404) ve
+  `/api/admin/author/*` (editör: hesap aç/kapat/şifre sıfırla, metinleri oku, onayla ya da düzeltme iste; yazarın metnini
+  değiştirmez). Yönetici anahtarı yazar uçlarında, yazar oturumu yönetim uçlarında geçmez (testli). Admin panelinde
+  `#/yazar-metinleri`, `#/yazar-metni/<id>`, `#/yazarlar`. Akış: dosya → kaynakça + notlar (konu, kaynak, sayfa,
+  kesinlik; toplu yapıştırma; bağlı eserin envanter metni not olur) → eksik başlıklar → yapay zekâ taslağı (yalnızca
+  yazar isteyince, `VAKIF_AUTHOR_MODEL`, ulaşılamazsa lite model, o da olmazsa notlar konu sırasıyla birleşir) → sürümler →
+  editöre gönder → onay/düzeltme. Taslakta her cümle `[N3]` atfı taşır; dışa aktarımda "Ayverdi 1972: 45" ve kaynakça.
+  Denetim (`check_draft`): bilinmeyen atıf, atıfsız paragraf, notlarda olmayan yıl/ad (`rag.verify`; eserin adı ve şehri
+  destek sayılır). Çelişen notlar çözülmez, listelenir. Hiçbir şey sitede yayımlanmaz; sohbet kaynağı değildir. Gerçek
+  Gemini ile denenmedi (testler ve tarayıcı denemesi sahte modelle).
+
 ## Mimari özeti
 `segment → finalize → chunk` (çevrim dışı, deterministik) → `load_db` (yalnızca bir kez) → `extract_gemini` + `load_extractions` →
 `embed_gemini` → `rag.py` → `api.py`. Ayrıntılar `README.md` dosyasında.
