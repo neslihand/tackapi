@@ -66,7 +66,7 @@ summary { min-height: 44px; }
 
 /* P21: small gold and grey labels on the ivory pages reach 4.5:1 (they sat at 3.6–4.4:1). The darker gold keeps the
    same hue. `:root` lifts these over the page sheets that load later with the same selectors. */
-:root .aa-corner, :root .ts-page small, :root .ts-count span, :root .v-tile-body small, :root .v-tile-go,
+:root .aa-corner, :root .ts-page small, :root .ts-count span,
 :root .explore-page .ex-card .ex-stamp > span, :root .gl-entry dt small, :root .gl-where b, :root .v-contrib-list small,
 :root .v-status.pending, :root .pv-answer sup a, :root .pv-cites b, :root .rr-editor-bar small.short,
 :root .story-authors .story-sources-kicker span, :root .pv-facts em { color: #76581f; }
