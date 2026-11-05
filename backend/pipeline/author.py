@@ -1,4 +1,8 @@
-"""Yazar paneli arka ucu (göç 018): envanter kitabının yazarları için araştırma notlarından "eser hakkında" metnine.
+"""Yazar paneli arka ucu (göç 024, 025): envanter kitabının yazarları için araştırma notlarından "eser hakkında" metnine.
+
+Panel, sistemde kaydı olmayan eserler ve envanteri henüz çıkmamış iller içindir: yazım dosyası sistemdeki şehir ve eser
+kayıtlarına bağlanmaz. Şehir 81 ilden biri olarak metin tutulur (PROVINCES); eser adı sistemdeki bir kayıtla aynıysa
+yazar uyarılır (/similar) ama dosyayı yine de açabilir.
 
 Yazarlar (bilim kurulu üyeleri) bir eseri yazmadan önce kaynak tarar, arşiv belgesi ve kitâbe okur, sahada gözlem yapar
 ve bunları not alır; en çok zorlandıkları iş bu notları birleştirip özetlemektir. Akış:
@@ -47,6 +51,27 @@ FALLBACK_MODEL = G.LITE_MODEL
 NOTE_MAX = 4000
 MAX_NOTES = 400
 DRAFT_KEEP = 30
+
+# Yazım dosyasının şehri: Türkiye'nin 81 ili (plaka sırasıyla). Sistemdeki city tablosuna bağlı değildir; envanteri
+# henüz çıkmamış iller de, sistemde kayıtlı iller de seçilebilir (göç 025).
+PROVINCES = ('Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Amasya', 'Ankara', 'Antalya', 'Artvin', 'Aydın', 'Balıkesir',
+             'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli',
+             'Diyarbakır', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane',
+             'Hakkâri', 'Hatay', 'Isparta', 'Mersin', 'İstanbul', 'İzmir', 'Kars', 'Kastamonu', 'Kayseri', 'Kırklareli',
+             'Kırşehir', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Kahramanmaraş', 'Mardin', 'Muğla', 'Muş',
+             'Nevşehir', 'Niğde', 'Ordu', 'Rize', 'Sakarya', 'Samsun', 'Siirt', 'Sinop', 'Sivas', 'Tekirdağ', 'Tokat',
+             'Trabzon', 'Tunceli', 'Şanlıurfa', 'Uşak', 'Van', 'Yozgat', 'Zonguldak', 'Aksaray', 'Bayburt', 'Karaman',
+             'Kırıkkale', 'Batman', 'Şırnak', 'Bartın', 'Ardahan', 'Iğdır', 'Yalova', 'Karabük', 'Kilis', 'Osmaniye', 'Düzce')
+assert len(PROVINCES) == 81
+
+
+def tr_fold(text):
+    """Türkçe büyük/küçük harf ve şapka farkını yok sayan karşılaştırma anahtarı ('HAKKARİ' = 'Hakkâri')."""
+    t = (text or '').replace('I', 'ı').replace('İ', 'i').lower()
+    return ' '.join(t.translate(str.maketrans('âîû', 'aiu')).split())
+
+
+PROVINCE_BY_KEY = {tr_fold(p): p for p in PROVINCES}
 
 REF_RE = re.compile(r'\[N(\d+)((?:\s*[,;]\s*N?\d+)*)\]')
 
@@ -141,26 +166,6 @@ def coverage(notes):
     return dict(topics=[dict(topic=t, label=TOPIC_TR[t], notes=counts[t]) for t in TOPICS],
                 missing=[TOPIC_TR[t] for t in CORE_TOPICS if not counts[t]],
                 unsourced=sum(1 for n in notes if not n.get('source_id') and n['certainty'] != 'own'))
-
-
-TOPIC_HINTS = [('inscription', r'kit[âa]be|vakfiye|vakıf\w* (?:kayd|defter)|tarih düşür|celî sülüs|talik'),
-               ('repairs', r'onar|restor|tamir|yenilen|ihya|yıkıl|deprem|yangın'),
-               ('decoration', r'mihrap|minber|çini|kalem ?işi|süsle|bezeme|mukarnas|kündekâri|rumî|palmet|şebeke'),
-               ('architecture', r'\bplan\b|kubbe|duvar|cephe|revak|son cemaat|minare|örgü|kemer|pencere|tromp|pandantif|kesme taş|tuğla'),
-               ('today', r'günümüz|bugün|ibadete açık|kullanılmakta|hizmet vermekte'),
-               ('history', r'yaptır|inşa|bânî|bani|vakf|hicr|tarihinde|yüzyıl|döneminde'),
-               ('location', r'mahalle|sokağ|cadde|semt|yer al|bulunmakta|konumlan|meydan')]
-
-
-def guess_topic(text):
-    """Kitaptan aktarılan paragrafa konu tahmini (en çok eşleşen; eşitlikte listede önce gelen). Yazar düzeltebilir."""
-    low = (text or '').lower()
-    best, score = 'other', 0
-    for topic, pat in TOPIC_HINTS:
-        n = len(re.findall(pat, low))
-        if n > score:
-            best, score = topic, n
-    return best
 
 
 def split_bulk(text):
@@ -306,8 +311,7 @@ class AccountPatch(Strict):
 
 class WorkIn(Strict):
     title: str | None = Field(None, min_length=2, max_length=200)
-    city: str | None = Field(None, max_length=60)          # şehir slug'ı; '' → bağlı değil
-    monument: str | None = Field(None, max_length=200)     # eser slug'ı; '' → bağlı değil
+    city: str | None = Field(None, max_length=60)          # 81 ilden birinin adı (PROVINCES); '' → seçilmedi
 
 
 class SourceIn(Strict):
@@ -350,12 +354,11 @@ class ReviewIn(Strict):
     note: str | None = Field(None, max_length=1000)
 
 
-WORK_SELECT = """SELECT w.*, a.name AS author, c.slug AS city, c.name_tr AS city_tr, m.slug AS monument, m.name_tr AS monument_tr,
+WORK_SELECT = """SELECT w.*, a.name AS author, w.city_name AS city,
                         (SELECT count(*) FROM author_note n WHERE n.work_id = w.id)::int AS notes,
                         (SELECT count(*) FROM author_source s WHERE s.work_id = w.id)::int AS sources,
                         (SELECT count(*) FROM author_draft d WHERE d.work_id = w.id)::int AS drafts
-                 FROM author_work w JOIN author_account a ON a.id = w.author_id
-                 LEFT JOIN city c ON c.id = w.city_id LEFT JOIN monument m ON m.id = w.monument_id"""
+                 FROM author_work w JOIN author_account a ON a.id = w.author_id"""
 ACCOUNT_COLS = 'id, name, email, must_change, active, created_by, created_at, last_login_at'
 
 
@@ -458,14 +461,14 @@ def build_author_router(db):
         if w['status'] == 'submitted':
             raise HTTPException(409, 'Metin editörde. Değiştirmek için önce gönderimi geri çekin.')
 
-    def lookup(table, slug):
-        if not slug:
+    def province(name):
+        """İl adı → PROVINCES'taki yazımı; boş → None, listede olmayan → 422."""
+        if not name:
             return None
-        extra = " AND review_status <> 'removed'" if table == 'monument' else ''
-        rows = db.query(f'SELECT id FROM {table} WHERE slug = %(s)s{extra}', dict(s=slug))
-        if not rows:
-            raise HTTPException(422, f"{'Şehir' if table == 'city' else 'Eser'} bulunamadı: {slug}")
-        return rows[0]['id']
+        hit = PROVINCE_BY_KEY.get(tr_fold(name))
+        if not hit:
+            raise HTTPException(422, f"İl bulunamadı: {name}. Türkiye'nin 81 ilinden birini seçin.")
+        return hit
 
     # ------------------------------------------------------------------ oturum
     @r.post('/login')
@@ -512,17 +515,26 @@ def build_author_router(db):
                    dict(a=a['id'], t=U.token_hash(bearer(authorization))))
         return dict(me(a), must_change=False)
 
-    @r.get('/monuments')
-    def search_monuments(q: str = '', city: str = '', a=Depends(author)):
-        """Dosyayı sistemdeki eser kaydına bağlamak için ad araması (yalnızca ad, şehir, ilçe döner)."""
-        q = q.strip()
-        if len(q) < 2:
+    @r.get('/provinces')
+    def provinces(a=Depends(author)):
+        """Yazım dosyasında seçilebilecek 81 il (sistemde kayıtlı olsun olmasın)."""
+        return list(PROVINCES)
+
+    @r.get('/similar')
+    def similar(title: str = '', city: str = '', a=Depends(author)):
+        """Yeni dosyanın adı sistemdeki bir eserle aynı mı? Yalnızca uyarı içindir; dosya yine de açılabilir.
+        İl seçildiyse yalnızca o ildeki kayıtlara bakılır ("Ulu Camii" gibi adlar birçok ilde vardır)."""
+        key = tr_fold(title)
+        if len(key) < 2:
             return []
-        return db.query("""SELECT m.slug, m.name_tr, c.slug AS city, c.name_tr AS city_tr, m.district
-                           FROM monument m JOIN city c ON c.id = m.city_id
-                           WHERE m.review_status <> 'removed' AND NOT m.is_synthetic
-                             AND (m.name_tr ILIKE %(q)s OR m.slug ILIKE %(q)s) AND (%(c)s = '' OR c.slug = %(c)s)
-                           ORDER BY m.name_tr LIMIT 12""", dict(q=f'%{q}%', c=city))
+        # I/İ/ı ve şapkalı harfler veritabanında farklı küçülebilir: bu harfler joker (_) olur, kesin eşleşme Python'da
+        pattern = re.sub(r'[\%_]', '_', key)
+        pattern = re.sub('[iıaâuûIİ]', '_', pattern)
+        rows = db.query("""SELECT m.name_tr, c.name_tr AS city, m.district FROM monument m JOIN city c ON c.id = m.city_id
+                           WHERE m.review_status <> 'removed' AND NOT m.is_synthetic AND m.name_tr ILIKE %(p)s
+                           ORDER BY c.name_tr, m.name_tr LIMIT 200""", dict(p=pattern))
+        want = tr_fold(province(city)) if city else None
+        return [r for r in rows if tr_fold(r['name_tr']) == key and (want is None or tr_fold(r['city']) == want)][:8]
 
     # ------------------------------------------------------------------ dosyalar
     @r.get('/works')
@@ -533,11 +545,8 @@ def build_author_router(db):
     def create_work(body: WorkIn, a=Depends(author)):
         if not body.title:
             raise HTTPException(422, 'Eserin adını yazın.')
-        city_id, mon_id = lookup('city', body.city), lookup('monument', body.monument)
-        if mon_id and not city_id:
-            city_id = db.query('SELECT city_id FROM monument WHERE id = %(m)s', dict(m=mon_id))[0]['city_id']
-        wid = db.query("""INSERT INTO author_work(author_id, title, city_id, monument_id) VALUES (%(a)s, %(t)s, %(c)s, %(m)s)
-                          RETURNING id""", dict(a=a['id'], t=body.title, c=city_id, m=mon_id))[0]['id']
+        wid = db.query("""INSERT INTO author_work(author_id, title, city_name) VALUES (%(a)s, %(t)s, %(c)s)
+                          RETURNING id""", dict(a=a['id'], t=body.title, c=province(body.city)))[0]['id']
         return st.detail(wid, a['id'])
 
     @r.get('/works/{wid}')
@@ -551,9 +560,7 @@ def build_author_router(db):
         if body.title is not None:
             sets.append('title = %(t)s'); p['t'] = body.title
         if body.city is not None:
-            sets.append('city_id = %(c)s'); p['c'] = lookup('city', body.city)
-        if body.monument is not None:
-            sets.append('monument_id = %(m)s'); p['m'] = lookup('monument', body.monument)
+            sets.append('city_name = %(c)s'); p['c'] = province(body.city)
         if sets:
             db.execute(f"UPDATE author_work SET {', '.join(sets)}, updated_at = now() WHERE id = %(i)s", p)
         return st.detail(wid, a['id'])
@@ -665,41 +672,6 @@ def build_author_router(db):
         st.touch(n['work_id'])
         return st.detail(n['work_id'], a['id'])
 
-    @r.post('/works/{wid}/import-book')
-    def import_book(wid: int, a=Depends(author)):
-        """Bağlı eserin mevcut envanter metnini (ör. yeni baskı için) not olarak ekler: paragraf başına bir not,
-        kaynağı envanter kitabı ve sayfası. Konu kural tabanlı tahmin edilir; yazar düzeltir. Bir kez yapılır."""
-        import textfix_db
-        w = st.work(wid, a['id'])
-        if not w['monument_id']:
-            raise HTTPException(422, 'Önce dosyayı sistemdeki bir esere bağlayın.')
-        if db.query("SELECT 1 FROM author_note WHERE work_id = %(w)s AND origin = 'book' LIMIT 1", dict(w=wid)):
-            raise HTTPException(409, 'Kitap metni bu dosyaya daha önce eklendi.')
-        paras = textfix_db.effective_paragraphs(db, w['monument_id'])
-        if not paras:
-            raise HTTPException(422, 'Bu eserin envanter kitabında metni yok.')
-        books = {}
-        for b in db.query("""SELECT b.id, b.title, b.publisher, b.published, b.credits, s.authors AS section_authors
-                             FROM source_book b LEFT JOIN monument m ON m.id = %(m)s LEFT JOIN source_section s ON s.id = m.section_id
-                             WHERE b.id = ANY(%(b)s::int[])""", dict(m=w['monument_id'], b=list({p['book_id'] for p in paras if p['book_id']}))):
-            credits = b['credits'] if isinstance(b['credits'], dict) else json.loads(b['credits'] or '{}')
-            authors = '; '.join(credits.get('authors') or b['section_authors'] or [])
-            existing = db.query("""SELECT id FROM author_source WHERE work_id = %(w)s AND kind = 'inventory' AND title = %(t)s""",
-                                dict(w=wid, t=b['title']))
-            books[b['id']] = existing[0]['id'] if existing else db.query(
-                """INSERT INTO author_source(work_id, kind, authors, year, title, publisher)
-                   VALUES (%(w)s, 'inventory', %(a)s, %(y)s, %(t)s, %(p)s) RETURNING id""",
-                dict(w=wid, a=authors or None, y=str(b['published'].year) if b['published'] else None, t=b['title'],
-                     p=b['publisher']))[0]['id']
-        rows = []
-        for p in paras:
-            pages = sorted(p['pages'] or [])
-            rows.append(dict(body=p['text'][:NOTE_MAX], topic=guess_topic(p['text']), source_id=books.get(p['book_id']),
-                             pages=(f'{pages[0]}–{pages[-1]}' if len(pages) > 1 and pages[0] != pages[-1] else str(pages[0])) if pages else None,
-                             certainty='documented', origin='book'))
-        n = insert_notes(wid, rows)
-        return dict(added=n, **st.detail(wid, a['id']))
-
     # ------------------------------------------------------------------ taslak
     def prune(wid):
         db.execute("""DELETE FROM author_draft WHERE work_id = %(w)s AND id NOT IN
@@ -715,7 +687,7 @@ def build_author_router(db):
             pick = set(body.notes)
             notes = [n for n in notes if n['no'] in pick]
         src_map = {s['id']: s for s in st.sources(wid)}
-        res = make_draft(dict(title=w['title'], city=w['city_tr']), notes, src_map, body.length, body.style)
+        res = make_draft(dict(title=w['title'], city=w['city']), notes, src_map, body.length, body.style)
         db.execute("""INSERT INTO author_draft(work_id, body, ai, model, length, warnings, conflicts, gaps, created_by)
                       VALUES (%(w)s, %(b)s, %(ai)s, %(m)s, %(l)s, %(wr)s::jsonb, %(c)s::jsonb, %(g)s::jsonb, %(u)s)""",
                    dict(w=wid, b=res['body'], ai=res['ai'], m=res['model'], l=body.length, u=a['name'],
@@ -734,7 +706,7 @@ def build_author_router(db):
         prev = st.latest_draft(wid)
         if prev and prev['body'] == text:
             return st.detail(wid, a['id'])
-        warnings = check_draft(text, st.notes(wid), (w['title'], w['city_tr']))
+        warnings = check_draft(text, st.notes(wid), (w['title'], w['city']))
         db.execute("""INSERT INTO author_draft(work_id, body, ai, warnings, conflicts, gaps, created_by)
                       VALUES (%(w)s, %(b)s, false, %(wr)s::jsonb, %(c)s::jsonb, %(g)s::jsonb, %(u)s)""",
                    dict(w=wid, b=text, u=a['name'], wr=json.dumps(warnings, ensure_ascii=False),

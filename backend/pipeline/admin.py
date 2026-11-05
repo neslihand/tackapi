@@ -820,7 +820,11 @@ def build_router(db, media_dir, save_webp):
         db.execute(f"UPDATE image SET {', '.join(sets)} WHERE id = %(i)s", params)
         new_monument = params.get('m', old_monument)
         if data.get('is_cover'):
-            db.execute('UPDATE image SET is_cover = (id = %(i)s) WHERE monument_id = %(m)s', dict(i=image_id, m=new_monument))
+            # Önce eski kapak kalkar, sonra yenisi işaretlenir: tek UPDATE'te satır sırasına göre bir an iki kapak
+            # olabiliyor ve image_one_cover benzersiz indeksi (satır satır denetlenir) 500 hatası veriyordu.
+            db.execute('UPDATE image SET is_cover = false WHERE monument_id = %(m)s AND is_cover AND id <> %(i)s',
+                       dict(i=image_id, m=new_monument))
+            db.execute('UPDATE image SET is_cover = true WHERE id = %(i)s', dict(i=image_id))
             changed['is_cover'] = True
         refresh_cover(old_monument)
         refresh_cover(new_monument)

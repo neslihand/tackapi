@@ -758,7 +758,7 @@ INSERT INTO schema_migration(name) VALUES ('001_publish_existing.sql'), ('002_im
                                          ('015_visitors.sql'), ('016_agent.sql'),
                                          ('017_articles.sql'), ('018_daily_hunt.sql'),
                                          ('019_route_duration.sql'), ('020_work_detail.sql'), ('021_weekly_discovery.sql'),
-                                         ('022_question_ticket.sql'), ('023_image_reuse.sql'), ('024_author.sql');
+                                         ('022_question_ticket.sql'), ('023_image_reuse.sql'), ('024_author.sql'), ('025_author_new_works.sql');
 
 -- Bölümleme düzeltmeleri: kitap metnini silmeden "bu paragraf hangi esere ait" kararları (text_fixes.py)
 CREATE TABLE para_fix (
@@ -866,8 +866,7 @@ CREATE TABLE IF NOT EXISTS author_work (
     id                  serial PRIMARY KEY,
     author_id           int NOT NULL REFERENCES author_account(id),
     title               text NOT NULL,                       -- çalışılan eserin adı ("Muradiye Camii")
-    city_id             int REFERENCES city(id) ON DELETE SET NULL,
-    monument_id         int REFERENCES monument(id) ON DELETE SET NULL,   -- sistemdeki eser kaydı (varsa)
+    city_name           text,                                -- 81 ilden biri (author.PROVINCES); sistemdeki city tablosuna bağlı değil
     status              text NOT NULL DEFAULT 'research'
                           CHECK (status IN ('research', 'writing', 'submitted', 'changes', 'approved')),
     review_note         text,                                -- editörün düzeltme isteği ya da onay notu

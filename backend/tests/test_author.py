@@ -46,9 +46,12 @@ class PureTest(unittest.TestCase):
 
     def test_bulk_and_topic(self):
         self.assertEqual(A.split_bulk('- Birinci not\nsatır devamı\n\n\n2) İkinci not\n\nx'), ['Birinci not satır devamı', 'İkinci not'])
-        self.assertEqual(A.guess_topic('Kapı üzerindeki kitâbeye göre yapı vakfedilmiştir.'), 'inscription')
-        self.assertEqual(A.guess_topic('Mihrap mukarnas kavsaralıdır ve çini kaplıdır.'), 'decoration')
-        self.assertEqual(A.guess_topic('Kısa bir cümle.'), 'other')
+
+    def test_provinces(self):
+        self.assertEqual(len(set(A.PROVINCES)), 81)
+        self.assertEqual(A.PROVINCE_BY_KEY[A.tr_fold('HAKKARİ')], 'Hakkâri')
+        self.assertEqual(A.PROVINCE_BY_KEY[A.tr_fold(' ığdır ')], 'Iğdır')
+        self.assertEqual(A.tr_fold('MURADİYE  CAMİİ'), A.tr_fold('Muradiye Camii'))
 
     def test_check_draft(self):
         w = A.check_draft('Cami 1425 yılında yaptırıldı [N1].\n\nYapı 1490 depreminde yıkıldı.\n\nAyrıca [N9] geçer.', NOTES)
@@ -77,12 +80,6 @@ class AuthorApiTest(unittest.TestCase):
         import api
         cls.api = api
         cls.c = TestClient(api.app)
-        api.db.execute("""UPDATE source_book SET credits = '{"authors": ["Prof. Dr. Örnek Yazar"]}'::jsonb, published = '2026-04-01'
-                          WHERE slug = 'bursa-1'""")
-        api.db.execute("""UPDATE source_section SET text_tr = %(t)s, page_map = '[{"p":0,"pages":[45]},{"p":1,"pages":[45,46]}]'::jsonb
-                          WHERE kind = 'monument'""",
-                       dict(t='Caminin kapısı üzerindeki kitâbeye göre yapı 1425 yılında tamamlanmıştır.\n\n'
-                              'Mihrap mukarnas kavsaralıdır; çini süsleme dikkat çeker.'))
 
     def account(self, name, email):
         """Yönetici yazar hesabı açar; yazar geçici şifreyle girer ve şifresini değiştirir. Döner: (kimlik, yazar başlıkları)."""
@@ -118,10 +115,19 @@ class AuthorApiTest(unittest.TestCase):
         c = self.c
         _, h = self.account('Prof. Dr. Birinci Yazar', 'birinci@ornek.edu.tr')
         _, h2 = self.account('Doç. Dr. İkinci Yazar', 'ikinci@ornek.edu.tr')
-        self.assertEqual([m['slug'] for m in c.get('/api/author/monuments?q=Muradiye', headers=h).json()][:1], [CAMI])
-        w = c.post('/api/author/works', json=dict(title='Muradiye Camii', monument=CAMI), headers=h).json()
+        # 81 il seçilebilir (sistemde olmayanlar da); sistemdeki eserle aynı ad yalnızca uyarıdır
+        self.assertEqual(len(c.get('/api/author/provinces', headers=h).json()), 81)
+        self.assertEqual(c.get('/api/author/monuments?q=Muradiye', headers=h).status_code, 404)
+        same = c.get('/api/author/similar', params=dict(title='MURADİYE CAMİİ'), headers=h).json()
+        self.assertEqual([(m['name_tr'], m['city']) for m in same], [('Muradiye Camii', 'Bursa')])
+        self.assertEqual(c.get('/api/author/similar', params=dict(title='Muradiye Camii', city='Hakkari'), headers=h).json(), [])
+        self.assertEqual(c.post('/api/author/works', json=dict(title='Muradiye Camii', city='Atlantis'), headers=h).status_code, 422)
+        self.assertEqual(c.post('/api/author/works', json=dict(title='Muradiye Camii', monument=CAMI), headers=h).status_code, 422)
+        w = c.post('/api/author/works', json=dict(title='Muradiye Camii', city='bursa'), headers=h).json()
         wid = w['work']['id']
-        self.assertEqual((w['work']['author'], w['work']['status'], w['work']['city']), ('Prof. Dr. Birinci Yazar', 'research', 'bursa'))
+        self.assertEqual((w['work']['author'], w['work']['status'], w['work']['city']), ('Prof. Dr. Birinci Yazar', 'research', 'Bursa'))
+        self.assertNotIn('monument', w['work'])
+        self.assertEqual(c.patch(f'/api/author/works/{wid}', json=dict(city='hakkari'), headers=h).json()['work']['city'], 'Hakkâri')
         # başka yazar bu dosyayı göremez, değiştiremez
         self.assertEqual(c.get(f'/api/author/works/{wid}', headers=h2).status_code, 404)
         self.assertEqual(c.get('/api/author/works', headers=h2).json()['items'], [])
@@ -141,14 +147,15 @@ class AuthorApiTest(unittest.TestCase):
         # başka dosyanın kaynağı bağlanamaz
         other = c.post('/api/author/works', json=dict(title='Başka eser'), headers=h).json()['work']['id']
         self.assertEqual(c.post(f'/api/author/works/{other}/notes', json=dict(body='Deneme notu', source_id=sid), headers=h).status_code, 422)
-        # kitap metninden not: kaynak envanter kitabı, sayfa ve konu tahmini; ikinci kez 409
-        w = c.post(f'/api/author/works/{wid}/import-book', headers=h).json()
-        self.assertEqual(w['added'], 2)
-        book = [n for n in w['notes'] if n['origin'] == 'book']
-        self.assertEqual([(n['topic'], n['pages']) for n in book], [('inscription', '45'), ('decoration', '45–46')])
-        inv = next(s for s in w['sources'] if s['kind'] == 'inventory')
-        self.assertEqual((inv['label'], inv['title']), ('Yazar 2026', 'Bursa Vakıf Eserleri I'))
-        self.assertEqual(c.post(f'/api/author/works/{wid}/import-book', headers=h).status_code, 409)
+        # envanter kitabı da elle eklenen bir kaynaktır ("envanterdeki metni not olarak al" kaldırıldı)
+        self.assertEqual(c.post(f'/api/author/works/{wid}/import-book', headers=h).status_code, 404)
+        inv = c.post(f'/api/author/works/{wid}/sources', json=dict(kind='inventory', authors='Prof. Dr. Örnek Yazar', year='2026',
+                                                                   title='Bursa Vakıf Eserleri I'), headers=h).json()['id']
+        c.post(f'/api/author/works/{wid}/notes', json=dict(body='Kitâbeye göre yapı 1425 yılında tamamlanmıştır.', topic='inscription',
+                                                           source_id=inv, pages='45'), headers=h)
+        w = c.post(f'/api/author/works/{wid}/notes', json=dict(body='Mihrap mukarnas kavsaralıdır.', topic='decoration',
+                                                               source_id=inv, pages='45–46'), headers=h).json()
+        self.assertEqual([n['no'] for n in w['notes']], [1, 2, 3, 4, 5])
         # taslak (sahte model → şablon), yazar düzenler, denetim yeniden yapılır
         w = c.post(f'/api/author/works/{wid}/summarize', json=dict(length='short'), headers=h).json()
         self.assertEqual(w['work']['status'], 'writing')
