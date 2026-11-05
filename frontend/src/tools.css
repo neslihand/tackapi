@@ -1,32 +1,42 @@
 /* ——— Keşfin araçları (ToolsShowcase.tsx) ———
-   Wide screens: a sticky stage on the left (a dark emerald frame with the active tool's scene, a counter and dots) and
-   the tools' texts on the right, each brightening as it crosses the middle of the screen. Narrow screens: each tool
-   carries its own scene above its text. The scenes only move while they are on stage. */
-.ts { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(40px, 6vw, 110px); }
-.ts-stage { position: sticky; top: calc(50svh - min(33svh, 290px)); display: flex; flex-direction: column; gap: 18px; height: min(66svh, 580px); align-self: start; }
+   One screen. Wide screens: the chosen tool's scene in a dark emerald frame on the left, as tall as the column beside
+   it; on the right the tools as a list of tabs, then the chosen one's text. While the tools turn by themselves a gold
+   line fills under the active tab and the next comes forward when it is full (it stands still while held). Narrow
+   screens: the tabs run in a row above the scene, the text under it. The scenes only move while they are on stage. */
+.ts { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: stretch; gap: clamp(40px, 6vw, 110px); }
+.ts-stage { display: flex; min-height: 440px; }
 .ts-frame { position: relative; flex: 1; overflow: hidden; border-radius: 26px; color: #f3ecdf; background: radial-gradient(ellipse 70% 60% at 30% 10%, #1d4538, transparent 70%), linear-gradient(160deg, #0d2723, #061410); box-shadow: 0 50px 90px -50px #061410b3, inset 0 0 0 1px #e6d5ae26; }
 .ts-scene { position: absolute; inset: 0; opacity: 0; transform: scale(.96); filter: blur(8px); transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .9s cubic-bezier(.2, .7, .2, 1), filter .7s; }
 .ts-scene.on { opacity: 1; transform: none; filter: none; }
-.ts-count { display: flex; align-items: baseline; gap: 10px; margin: 0; font-family: var(--serif); color: #17201c; }
-.ts-count b { font-size: 34px; font-weight: 400; }
-.ts-count span { font-size: 18px; font-style: italic; color: #8a6a36; }
-.ts-count i { margin-left: 14px; font-family: var(--sans, inherit); font-size: 11px; font-style: normal; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #5b6359; }
-.ts-dots { position: absolute; right: 0; bottom: 14px; display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.ts-dots li { width: 22px; height: 2px; border-radius: 2px; background: #17201c26; transition: width .5s, background .5s; }
-.ts-dots li.on { width: 44px; background: #8a6a36; }
 
-.ts-list { margin: 0; padding: 8svh 0; list-style: none; }
-.ts-item { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-height: 64svh; opacity: .32; transition: opacity .6s; }
-.ts-item.on { opacity: 1; }
-.ts-inline { display: none; }
-.ts-kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #765b38; }
-.ts-kicker > span { margin-right: 6px; font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 400; letter-spacing: 0; }
-.ts-item h3 { margin: 0; font-family: var(--serif); font-size: clamp(34px, 3.6vw, 60px); font-weight: 400; line-height: 1; letter-spacing: -.02em; color: #17201c; }
-.ts-item h3 em { font-style: italic; color: #8a6a36; }
-.ts-text { max-width: 46ch; margin: 22px 0 0; font-size: 15.5px; line-height: 1.8; color: #4b5448; }
-.ts-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 26px; padding: 0; list-style: none; }
+.ts-side { display: flex; flex-direction: column; gap: clamp(28px, 3vw, 40px); min-width: 0; }
+/* the tabs: a numbered list ruled in hairlines; the chosen one in ink with a gold rule under it */
+.ts-tabs { display: flex; flex-direction: column; border-top: 1px solid #8a6a3633; }
+.ts-tabs button { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 0; border: 0; border-bottom: 1px solid #8a6a3633; font-size: 15px; font-weight: 500; text-align: left; color: #5b6359; background: none; cursor: pointer; transition: color .3s; }
+.ts-tabs button:hover { color: #17201c; }
+.ts-tabs button.on { color: #17201c; }
+.ts-tabs button svg { flex: none; color: #8a6a36; }
+.ts-tab-n { min-width: 26px; font-family: var(--serif); font-size: 18px; font-style: italic; color: #8a6a36; }
+.ts-tabs button::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: #8a6a36; transform: scaleX(0); transform-origin: left; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+.ts-tabs button.on::after { transform: none; }
+/* while the tools turn by themselves the chosen tab's rule is a faint track that the time fills */
+.ts.turning .ts-tabs button.on::after { background: #8a6a3633; }
+.ts-tab-time { position: absolute; right: 0; bottom: -1px; left: 0; z-index: 1; height: 2px; background: #8a6a36; transform: scaleX(0); transform-origin: left; animation: ts-time var(--ts-turn, 6.5s) linear forwards; animation-play-state: paused; }
+.ts.running .ts-tab-time { animation-play-state: running; }
+@keyframes ts-time { to { transform: none; } }
+.ts-tabs button:focus-visible { outline: 2px solid #17201c; outline-offset: 2px; border-radius: 2px; box-shadow: none; }
+
+/* the texts share one cell: the box is as tall as the longest, only the chosen one shows */
+.ts-panels { display: grid; }
+.ts-panel { display: flex; flex-direction: column; align-items: flex-start; grid-area: 1 / 1; visibility: hidden; }
+.ts-panel.on { visibility: visible; }
+.ts-panel h3 { margin: 0; font-family: var(--serif); font-size: clamp(32px, 3vw, 48px); font-weight: 400; line-height: 1.02; letter-spacing: -.02em; color: #17201c; }
+.ts-panel h3 em { font-style: italic; color: #8a6a36; }
+.ts-text { max-width: 46ch; margin: 18px 0 0; font-size: 15.5px; line-height: 1.75; color: #4b5448; }
+.ts-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 24px; padding: 0; list-style: none; }
 .ts-tags li { padding: 7px 14px; border: 1px solid #8a6a3640; border-radius: 999px; font-size: 12px; font-weight: 500; color: #4b5448; background: #fffdf8a6; }
-.ts-item .hp-link.en-link { color: #17201c; }
+.ts-panel .hp-link.en-link { color: #17201c; }
+@media (prefers-reduced-motion: no-preference) { .ts-panel.on > * { animation: ts-rise .5s cubic-bezier(.2, .7, .2, 1) backwards; } .ts-panel.on > :nth-child(2) { animation-delay: .05s; } .ts-panel.on > :nth-child(n + 3) { animation-delay: .1s; } }
 
 /* Shared pieces of the scenes. */
 .ts-chip { position: absolute; bottom: 22px; left: 22px; z-index: 3; display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 15px; border: 1px solid #e6d5ae40; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: #f3ecdf; background: #061410b3; backdrop-filter: blur(8px); }
@@ -73,18 +83,6 @@
 .ts-card.c3 b { color: #15130d; }
 .ts-card.c4 { rotate: 16deg; translate: 78% 6%; }
 
-/* Passport: the booklet, stamps pressed around it. */
-.ts-passport { position: absolute; inset: 0; display: grid; place-items: center; }
-.ts-book { display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: clamp(140px, 36%, 190px); aspect-ratio: 3 / 4.2; padding: 22px 12px; border-radius: 8px 14px 14px 8px; color: #e6d5ae; background: linear-gradient(160deg, #6b3328, #3e1c16); box-shadow: inset 6px 0 0 #00000033, 0 34px 60px -26px #000; rotate: -6deg; }
-.ts-book small { font-size: 9px; font-weight: 600; letter-spacing: .2em; }
-.ts-book b { font-family: var(--serif); font-size: 22px; font-weight: 400; letter-spacing: .2em; }
-.ts-stamp { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 84px; height: 84px; border: 2px dashed #e6d5aecc; border-radius: 50%; color: #e6d5ae; background: #0b232199; }
-.ts-stamp small { font-size: 8.5px; font-weight: 700; letter-spacing: .12em; }
-.ts-stamp:nth-child(2) { top: 14%; left: 12%; rotate: -14deg; }
-.ts-stamp:nth-child(3) { top: 12%; right: 12%; rotate: 12deg; }
-.ts-stamp:nth-child(4) { bottom: 16%; left: 14%; rotate: 8deg; }
-.ts-stamp:nth-child(5) { right: 13%; bottom: 18%; rotate: -10deg; }
-
 /* Contribution: a photo from a visit and a memory, approved. */
 .ts-share { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px 30px 80px; }
 .ts-photo { display: flex; flex-direction: column; gap: 8px; width: clamp(150px, 46%, 240px); padding: 10px 10px 12px; border-radius: 4px; background: #f6f1e6; box-shadow: 0 30px 50px -24px #000; rotate: -4deg; }
@@ -108,7 +106,6 @@
   .ts-scene.on .ts-card.c2 { animation-delay: .08s; }
   .ts-scene.on .ts-card.c3 { animation-delay: .16s; }
   .ts-scene.on .ts-card.c4 { animation-delay: .24s; }
-  .ts-scene.on .ts-stamp { animation: ts-stamp .5s cubic-bezier(.3, 1.5, .5, 1) calc(.3s + var(--i) * .25s) backwards; }
   .ts-scene.on .ts-photo { animation: ts-rise .8s cubic-bezier(.2, .7, .2, 1) backwards; }
   .ts-scene.on .ts-share > :nth-child(2) { animation: ts-rise .7s .45s cubic-bezier(.2, .7, .2, 1) backwards; }
   .ts-scene.on .ts-chip { animation: ts-rise .6s .7s cubic-bezier(.2, .7, .2, 1) backwards; }
@@ -120,19 +117,25 @@
 @keyframes ts-rise { from { opacity: 0; transform: translateY(16px); } }
 @keyframes ts-dot { 50% { opacity: 1; transform: translateY(-3px); } }
 @keyframes ts-deal { from { opacity: 0; rotate: 0deg; translate: 0 30%; } }
-@keyframes ts-stamp { from { opacity: 0; scale: 1.8; } }
 
-/* Narrow screens: each tool with its own scene, no sticky stage. */
+/* Narrow screens: the tabs in a row that scrolls sideways (edge to edge), the scene under them, then the text. */
 @media (max-width: 900px) {
-  .ts { grid-template-columns: 1fr; gap: 0; }
-  .ts-stage { display: none; }
-  .ts-list { display: grid; gap: 64px; padding: 0; }
-  .ts-item { min-height: 0; opacity: 1; }
-  .ts-inline { display: block; width: 100%; margin-bottom: 26px; }
-  .ts-inline .ts-frame { aspect-ratio: 4 / 3; border-radius: 20px; }
+  .ts { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .ts-side { display: contents; }
+  .ts-tabs { order: -1; flex-direction: row; gap: 8px; margin-inline: calc(var(--pl-left, 22px) * -1); padding: 2px var(--pl-left, 22px) 6px; overflow-x: auto; border: 0; scrollbar-width: none; }
+  .ts-tabs::-webkit-scrollbar { display: none; }
+  .ts-tabs button { flex: none; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #8a6a3640; border-radius: 999px; font-size: 14px; white-space: nowrap; background: #fffdf8a6; }
+  .ts-tabs button.on { border-color: #17201c; color: #f3ecdf; background: #17201c; }
+  .ts-tabs button.on svg, .ts-tabs button.on .ts-tab-n { color: #e6d5ae; }
+  .ts-tab-n { display: none; }
+  .ts-tabs button::after, .ts-tab-time { right: 16px; bottom: 6px; left: 16px; height: 1.5px; }
+  .ts-tabs button::after { display: none; }
+  .ts-tab-time { background: #e6d5ae; }
+  .ts-stage { min-height: 0; }
+  .ts-frame { flex: none; width: 100%; aspect-ratio: 4 / 3; border-radius: 20px; }
   .ts-pin b { top: calc(100% + 7px); font-size: 13px; }
-  .ts-item h3 { font-size: clamp(30px, 8vw, 44px); }
-  .ts-text { margin-top: 16px; font-size: 14.5px; line-height: 1.7; }
+  .ts-panel h3 { font-size: clamp(30px, 8vw, 44px); }
+  .ts-text { margin-top: 14px; font-size: 14.5px; line-height: 1.7; }
   .ts-tags { margin: 16px 0 18px; }
 }
 
