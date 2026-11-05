@@ -16,6 +16,8 @@ import { colors, serif, space } from '@/lib/theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const CARD_MAX = 420;
+// cards drawn on each side of the one in view
+const DRAWN = 2;
 
 export default function Cards() {
   const { items, loading } = useContent();
@@ -46,8 +48,9 @@ export default function Cards() {
       <Text style={s.small}>{t('Bu oturumda', 'This visit')}</Text>
     </View>
     <ScrollView ref={deck} horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={onScroll} scrollEventThrottle={64} accessibilityLabel={t('Bilgi kartları destesi', 'Deck of knowledge cards')}>
+      {/* the deck holds the whole collection: only the cards next to the one in view are drawn, the rest keep their place */}
       {items.map((item, i) => <View key={item.slug} style={{ width: page, alignItems: 'center', paddingHorizontal: space.m }}>
-        <Card item={item} number={i + 1} front={i === active} width={Math.min(page - space.m * 2, CARD_MAX)} />
+        {Math.abs(i - active) <= DRAWN && <Card item={item} number={i + 1} front={i === active} width={Math.min(page - space.m * 2, CARD_MAX)} />}
       </View>)}
     </ScrollView>
     <View style={s.controls}>

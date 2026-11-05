@@ -2,7 +2,7 @@
 // rest are built from the works' own records: the right answer is the work's value, the wrong ones are other works'
 // values for the same field, never made up. A question needs at least three distinct choices, otherwise it is not asked.
 import { makers, type Item, type QuizQuestion } from './api';
-import { t } from './i18n';
+import { currentLang, t } from './i18n';
 import { normalize } from './passport';
 import { ROUND_SIZE } from './quizRound';
 
@@ -29,11 +29,16 @@ const templates: Template[] = [
   { kind: 'period', value: a => known(a.period?.name) ? a.period!.name : null, question: a => t(`${a.name} hangi döneme aittir?`, `Which era does ${a.name} belong to?`), explanation: (a, period) => t(`Envanter kitabına göre ${a.name} eserinin dönemi: ${period}.`, `According to the inventory book, the era of ${a.name} is: ${period}.`) },
 ];
 
+// Turkish lower-casing is slow and the same few values (cities, centuries, eras) come up thousands of times over the
+// whole collection: each distinct value is normalised once
+const keys = new Map<string, string>();
+const keyOf = (value: string) => { let key = keys.get(value); if (key === undefined) { key = normalize(value); keys.set(value, key); } return key; };
+
 function choices(correct: string, others: string[], random: Random) {
-  const seen = new Set([normalize(correct)]);
+  const seen = new Set([keyOf(correct)]);
   const wrong: string[] = [];
   for (const value of shuffle(others, random)) {
-    const key = normalize(value);
+    const key = keyOf(value);
     if (seen.has(key)) continue;
     seen.add(key); wrong.push(value);
     if (wrong.length === MAX_OPTIONS - 1) break;
@@ -55,13 +60,32 @@ export function questionsFor(item: Item, items: readonly Item[], random: Random 
   return out;
 }
 
+/** The same questions as questionsFor for every work, with each field read once per work instead of once per pair. */
 export function generateQuestions(items: readonly Item[], random: Random = Math.random): QuizQuestion[] {
-  return items.flatMap(item => questionsFor(item, items, random));
+  const values = templates.map(tpl => items.map(tpl.value));
+  return items.flatMap((item, i) => {
+    const out: QuizQuestion[] = [];
+    templates.forEach((tpl, k) => {
+      const correct = values[k][i];
+      if (!correct) return;
+      const others = values[k].filter((v, j): v is string => j !== i && items[j].slug !== item.slug && Boolean(v));
+      const picked = choices(correct, others, random);
+      if (picked) out.push({ id: `veri:${tpl.kind}:${item.slug}`, question: tpl.question(item), ...picked, explanation: tpl.explanation(item, correct), artifactId: item.slug });
+    });
+    return out;
+  });
 }
 
+// Bugün's cards, Hatırla and the notifications all ask for the same pool: it is built once per collection and language
+let lastPool: { written: readonly QuizQuestion[]; items: readonly Item[]; lang: string; pool: QuizQuestion[] } | null = null;
+
 export function quizPool(written: readonly QuizQuestion[], items: readonly Item[], random: Random = Math.random) {
+  const lang = currentLang();
+  if (random === Math.random && lastPool && lastPool.written === written && lastPool.items === items && lastPool.lang === lang) return lastPool.pool;
   const slugs = new Set(items.map(i => i.slug));
-  return [...written.filter(q => slugs.has(q.artifactId)), ...generateQuestions(items, random)];
+  const pool = [...written.filter(q => slugs.has(q.artifactId)), ...generateQuestions(items, random)];
+  if (random === Math.random) lastPool = { written, items, lang, pool };
+  return pool;
 }
 
 /** Different works where it can; with a focus the round opens with a question about it (a quest step links here). */
