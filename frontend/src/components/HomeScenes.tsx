@@ -11,7 +11,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Scroll scenes on the home page, each after one reference site's signature effect. Reduced motion shows them still.
 const MOTION = '(prefers-reduced-motion: no-preference)';
-const pad = (n: number) => String(n).padStart(2, '0');
 
 function useScene<T extends HTMLElement>(build: (root: T) => void, deps: unknown[] = []) {
   const ref = useRef<T>(null);
@@ -43,7 +42,7 @@ export function Manifesto() {
 
 // Monoform: numbered cards that pin one after another and pile up, the ones underneath shrinking into the shade.
 // A long route names its first stops and counts the rest, so every card stays the same size.
-const STOPS_SHOWN = 6;
+const STOPS_SHOWN = 4;
 export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Season[]; artifacts: DiscoveryArtifact[]; discovered: Record<string, unknown> }) {
   const ref = useScene<HTMLOListElement>(root => {
     const cards = gsap.utils.toArray<HTMLElement>('.season-card', root);
@@ -62,8 +61,7 @@ export function SeasonStack({ seasons, artifacts, discovered }: { seasons: Seaso
       return <li key={season.id} className="season-card" style={{ '--i': i } as CSSProperties}>
         <Link to={`/kesfet?season=${season.id}`} className="season-link">
           <span className="season-top"><small>{season.kicker}</small><small>{season.artifactIds.length} {t('DURAK', 'STOPS')}{found ? ` · ${found} ${t('MÜHÜR', 'STAMPS')}` : ''}</small></span>
-          <span className="season-number" aria-hidden="true">{pad(i + 1)}</span>
-          <span className="season-body"><h3>{season.title}</h3><span className="season-text">{season.description}</span><span className="season-stops">{stops.slice(0, STOPS_SHOWN).map(a => <span key={a.id}>{a.name}</span>)}{stops.length > STOPS_SHOWN && <span className="more">+{stops.length - STOPS_SHOWN} {t('durak', 'stops')}</span>}</span></span>
+          <span className="season-body"><h3>{season.title}</h3><span className="season-text">{season.description}</span><span className="season-stops">{stops.slice(0, STOPS_SHOWN).map(a => <span key={a.id}>{a.name}</span>)}{stops.length > STOPS_SHOWN && <span className="more">{t(`ve ${stops.length - STOPS_SHOWN} durak daha`, `and ${stops.length - STOPS_SHOWN} more stops`)}</span>}</span></span>
           <span className="season-pics" aria-hidden="true">{stops.slice(0, 4).map((a, k) => <span key={a.id} style={{ '--k': k } as CSSProperties}><img src={a.image} alt="" loading="lazy" /></span>)}</span>
           <span className="season-go" aria-hidden="true"><ArrowUpRight size={22} /></span>
         </Link>

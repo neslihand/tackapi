@@ -62,14 +62,18 @@
 .hp-routes .season-card { height: min(60vh, 520px); border-radius: 4px; background: linear-gradient(160deg, #10271f, #07150f) !important; box-shadow: 0 0 0 1px #8a6a3655, 0 -24px 60px -36px #000; }
 .hp-routes .season-card:nth-child(2) { background: linear-gradient(160deg, #13302a, #081a15) !important; }
 .hp-routes .season-card:nth-child(3) { background: linear-gradient(160deg, #182f26, #0a1a14) !important; }
-.hp-routes .season-link { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: auto 1fr auto; column-gap: clamp(26px, 4vw, 60px); color: var(--en-ivory); }
+.hp-routes .season-link { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: auto 1fr; column-gap: clamp(26px, 4vw, 60px); color: var(--en-ivory); }
 .hp-routes .season-top { border-bottom-color: #e6d5ae2e; }
 .hp-routes .season-top small { color: #d9c9a5; }
-.hp-routes .season-number { grid-column: 1; grid-row: 3; font-weight: 300; color: transparent; -webkit-text-stroke: 1.2px #e6d5ae80; }
-.hp-routes .season-body { grid-column: 2; grid-row: 3; }
+.hp-routes .season-body { grid-column: 2; grid-row: 2; }
 .hp-routes .season-body h3 { font-weight: 400; color: #fbf7ee; }
-.hp-routes .season-text { color: #c9cfc8; }
-.hp-routes .season-stops span { color: #e6d5ae; border-color: #e6d5ae40; }
+.hp-routes .season-text { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #c9cfc8; }
+/* the first stops one under another, each after a fine gold dash, the rest counted after them */
+.hp-routes .season-stops { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; font-size: 13.5px; line-height: 1.55; }
+.hp-routes .season-stops span { display: flex; align-items: baseline; gap: 12px; padding: 0; border: 0; border-radius: 0; font-size: inherit; color: #e6d5ae; }
+.hp-routes .season-stops span::before { content: ''; flex: none; width: 14px; height: 1px; background: #a8884f; translate: 0 -4px; }
+.hp-routes .season-stops .more { font-style: italic; color: #c9cfc8; background: none; }
+.hp-routes .season-stops .more::before { opacity: 0; }
 .hp-routes .season-go { color: var(--en-gold-light); border-color: #e6d5ae59; }
 .season-pics { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 20px); padding: 22px 0; }
 .season-pics > span { flex: 1; max-width: 170px; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 50% 50% 4px 4px / 32% 32% 4px 4px; background: #0c241c; box-shadow: 0 0 0 1px #e6d5ae40, 0 24px 40px -24px #000; translate: 0 calc(var(--k) * 8px); transition: translate .6s var(--pl-ease); }
@@ -116,8 +120,7 @@
 /* ——— Smaller screens ——— */
 @media (max-width: 900px) {
   .hp-passport-body, .hp-exhibits { grid-template-columns: 1fr; }
-  .hp-routes .season-link { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; }
-  .hp-routes .season-number { grid-row: 4; }
+  .hp-routes .season-link { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
   .hp-routes .season-body { grid-column: 1; grid-row: 3; }
   .hp-routes .season-card { height: auto; }
   .season-pics { padding: 16px 0; }
@@ -197,17 +200,16 @@
 
 /* ——— 07 Routes, thinner: shorter cards closer together, the photos toned and a fine inner frame ——— */
 .hp-routes .season-stack { gap: 6vh; }
-.hp-routes .season-card { height: auto; min-height: min(52vh, 440px); }
+.hp-routes .season-card { height: auto; min-height: 0; }
 .hp-routes .season-pics { padding: 16px 0; }
-.hp-routes .season-pics > span { max-width: 124px; }
+.hp-routes .season-pics > span { max-width: 170px; }
 .hp-routes .season-card::before { content: ''; position: absolute; inset: 10px; z-index: 2; border: 1px solid #e6d5ae1f; border-radius: 2px; pointer-events: none; }
 .hp-routes .season-pics img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.92); }
-/* The pictures on the left and the route's name beside them, both from the top of the card; the number below. */
+/* The pictures on the left and the route's name beside them, centred on each other. */
 @media (min-width: 801px) {
-  .hp-routes .season-pics { grid-column: 1; grid-row: 2; align-self: start; }
-  .hp-routes .season-body { grid-column: 2; grid-row: 2 / 4; align-self: start; padding: 16px 64px 6px 0; }
+  .hp-routes .season-pics { grid-column: 1; grid-row: 2; align-self: center; padding: 26px 0 8px; }
+  .hp-routes .season-body { grid-column: 2; grid-row: 2; align-self: center; padding: 26px 64px 8px 0; }
 }
-.hp-routes .season-stops .more { color: #15130d; border-color: transparent; background: #e6d5aecc; }
 
 /* ——— Spacing on smaller screens: the chapters' own padding and the gaps inside them, tightened ——— */
 @media (max-width: 1100px) {
