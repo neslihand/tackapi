@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, Stamp } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { HeroGate } from '../components/HeroGate';
 import { Manifesto, PassportVisual, SeasonStack } from '../components/HomeScenes';
 import { ArtifactAnatomy, known } from '../components/ArtifactAnatomy';
@@ -52,6 +52,8 @@ export function Home() {
   // The artifact shown from the inside: the one with the most to show (sources, a known date), today's on a tie.
   const insideArtifact = [...artifacts].sort((a, b) => (b.sourceReferences.length + Number(known(b.year))) - (a.sourceReferences.length + Number(known(a.year))))[0] ?? today;
   const found = artifacts.filter(a => progress.discovered[a.id]).length;
+  // the passport city by city: how many works each city has and how many of them are stamped, the largest first
+  const cities = [...new Set(artifacts.map(a => a.city))].map(city => { const works = artifacts.filter(a => a.city === city); return [city, works.length, works.filter(a => progress.discovered[a.id]).length] as const; }).sort((a, b) => b[1] - a[1]);
   return <div className="home-page"><HeroGate />
     <Chapter id="araclar" tone="night" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" headless title={<>{t('Keşfin', 'Tools of')} <em>{t('araçları.', 'discovery.')}</em></>}>
       <div className="hp-tools-panel"><ToolsShowcase artifacts={artifacts} /></div>
@@ -72,8 +74,8 @@ export function Home() {
         <PassportVisual artifacts={artifacts} />
         <div className="hp-passport-card">
           <p className="hp-passport-count"><strong>{pad(found)}</strong><span>/ {pad(artifacts.length)}</span><small>{t('Pasaportundaki mühür', 'Stamps in your passport')}</small></p>
-          <ol className="hp-passport-ticks" aria-hidden="true">{artifacts.map(a => <li key={a.id} className={progress.discovered[a.id] ? 'on' : ''}><Stamp size={14} /></li>)}</ol>
-          <div className="hp-actions"><Link className="hp-cta en-key" to="/pasaport"><span className="en-key-label">{t('Pasaportumu aç', 'Open my passport')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></Link><Link className="hp-link en-link" to="/basarimlar"><span>{t('Madalyonları gör', 'See the medallions')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowUpRight size={16} /></span></Link></div>
+          <ul className="hp-passport-cities">{cities.map(([city, total, got]) => <li key={city}><span>{city}</span><i aria-hidden="true"><b style={{ width: `${got / total * 100}%` }} /></i><small>{got} / {total}</small></li>)}</ul>
+          <div className="hp-actions"><Link className="hp-cta en-key" to="/pasaport"><span className="en-key-label">{t('Pasaportumu aç', 'Open my passport')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></Link><Link className="hp-cta en-key hp-cta-line" to="/basarimlar"><span className="en-key-label">{t('Madalyonları gör', 'See the medallions')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link></div>
           <small className="hp-passport-note">{t(`Yolculuğun ${kept.where} saklanır.`, `Your journey is kept ${kept.where}.`)}</small>
         </div>
       </div>

@@ -83,19 +83,38 @@
 .hp-routes .season-card :focus-visible, .hp-routes .season-link:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: -6px; }
 
 /* ——— 05 Passport (night): floating stamps beside the count of the reader's seals ——— */
-.hp-passport-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: clamp(30px, 5vw, 80px); }
+.hp-passport-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(30px, 5vw, 80px); }
 .hp-passport .passport-illustration { width: 100%; height: clamp(320px, 34vw, 460px); }
-.hp-passport .float-stamp { background: #f4efe2; }
-.hp-passport-card { padding: clamp(26px, 3vw, 40px); border-radius: 3px; color: var(--en-ivory); background: #ffffff08; box-shadow: inset 0 0 0 1px #e6d5ae33; }
+/* the stamps as paper seals in ink: an ivory disc, a fine ring in the ink's colour and a dashed one inside it */
+.hp-passport .float-stamp { gap: .35em; border: 0; background: radial-gradient(circle at 35% 30%, #fbf8f0, #efe7d6 70%); box-shadow: inset 0 0 0 4px #f4efe2, inset 0 0 0 5.5px currentColor, 0 26px 44px -22px #000d; }
+.hp-passport .float-stamp::before { content: ''; position: absolute; inset: 11%; border: 1.5px dashed currentColor; border-radius: 50%; opacity: .55; }
+.hp-passport .float-stamp span { font-family: var(--serif); font-size: 1.3em; font-weight: 600; letter-spacing: .16em; }
+.hp-passport .float-stamp i { font-family: var(--serif); font-size: 1.05em; font-style: italic; letter-spacing: .04em; opacity: .85; }
+.hp-passport-card { container-type: inline-size; padding: clamp(26px, 3vw, 44px); border-radius: 3px; color: var(--en-ivory); background: linear-gradient(160deg, #ffffff0a, #ffffff03); box-shadow: inset 0 0 0 1px #e6d5ae2e, 0 40px 80px -50px #000; }
 .hp-passport-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 0; font-family: var(--serif); }
 .hp-passport-count strong { font-size: clamp(72px, 7vw, 112px); font-weight: 300; line-height: .85; }
 .hp-passport-count span { font-size: 28px; color: #cdb68c; }
 .hp-passport-count small { flex-basis: 100%; margin-top: 8px; font-family: Inter, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--en-ivory-soft); }
-.hp-passport-ticks { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 28px; padding: 0; list-style: none; }
-.hp-passport-ticks li { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #e6d5ae59; box-shadow: inset 0 0 0 1px #e6d5ae33; }
-.hp-passport-ticks li.on { color: #15130d; background: linear-gradient(180deg, #ecdcb6, #cdb07a); box-shadow: 0 0 18px #e6d5ae55; }
+/* the passport city by city: the name, a hairline that fills in gold as its works are stamped, the count */
+.hp-passport-cities { display: grid; gap: 14px; margin: 30px 0 32px; padding: 22px 0 0; border-top: 1px solid #e6d5ae26; list-style: none; }
+.hp-passport-cities li { display: grid; grid-template-columns: 72px minmax(0, 1fr) 3.4em; align-items: center; gap: 18px; }
+.hp-passport-cities span { font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--en-ivory); }
+.hp-passport-cities i { position: relative; height: 1px; background: #e6d5ae33; }
+.hp-passport-cities b { position: absolute; top: -1px; bottom: -1px; left: 0; border-radius: 2px; background: linear-gradient(90deg, #cdb07a, #f1e5c6); box-shadow: 0 0 10px #e6d5ae66; }
+.hp-passport-cities small { font-family: var(--serif); font-size: 17px; font-style: italic; text-align: right; white-space: nowrap; color: #cdb68c; }
 .hp-passport-note { display: block; margin-top: 18px; font-size: 12px; color: var(--en-ivory-soft); }
 .hp-passport .hp-link.en-link { color: var(--en-ivory); }
+/* the passport's two ways on, side by side: open it (gold) and see the medallions (the same key, drawn in outline) */
+.hp-passport-card .hp-actions { flex-wrap: nowrap; gap: 12px; }
+.hp-passport-card .hp-actions .en-key { flex: 1 1 auto; justify-content: space-between; }
+.hp-passport-card .en-key-label { padding: 0 12px 0 16px; font-size: 11px; letter-spacing: .12em; white-space: nowrap; }
+.hp-passport-card .en-key-arrow { width: 40px; }
+.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line { color: var(--en-ivory); background: transparent; box-shadow: inset 0 0 0 1px #e6d5ae80; }
+.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line::before { display: none; }
+.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line .en-key-arrow { border-left-color: #e6d5ae40; }
+.home-page .hp-passport-card .hp-cta.en-key.hp-cta-line:hover { background: #e6d5ae14; box-shadow: inset 0 0 0 1px var(--en-gold-light); }
+/* one under the other only where the card is too narrow for both */
+@container (max-width: 400px) { .hp-passport-card .hp-actions { flex-wrap: wrap; } .hp-passport-card .hp-actions .en-key { flex-basis: 100%; } }
 .hp-passport .hp-link.en-link:hover .en-link-arrow { color: #15130d; border-color: transparent; background: var(--en-gold-light); }
 .hp-passport :focus-visible { outline-color: var(--en-gold-light); }
 

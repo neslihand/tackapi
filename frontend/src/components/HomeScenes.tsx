@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowUpRight, Compass, Stamp } from 'lucide-react';
 import type { DiscoveryArtifact } from '../lib/artifactContract';
 import type { Season } from '../data/collections';
+import { known } from '../lib/content';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 
@@ -84,13 +85,18 @@ export function Statement({ parts = STATEMENT }: { parts?: [string, boolean][] }
   })}</p>;
 }
 
-// Shopify Editions: stamps float around the passport at different depths; far ones are small, soft and slow, near
-// ones large and quick, and each turns a little as it passes.
+// Shopify Editions: stamps float around the passport, each at its own pace and turning a little as it passes. One
+// stamp for each of the collection's cities.
 const STAMP_SPOTS = [
-  { x: 12, y: 10, size: 84, depth: 0.35, turn: -14 }, { x: 82, y: 4, size: 112, depth: 1, turn: 10 },
-  { x: 90, y: 68, size: 128, depth: 1.4, turn: 14 }, { x: 4, y: 76, size: 100, depth: 0.8, turn: -6 },
-  { x: 54, y: 96, size: 74, depth: 0.3, turn: 8 }, { x: 40, y: -6, size: 66, depth: 0.5, turn: -18 },
+  { x: 80, y: 16, size: 124, depth: 0.9, turn: 10 }, { x: 74, y: 84, size: 116, depth: 1.1, turn: -8 },
+  { x: 15, y: 30, size: 104, depth: 0.6, turn: -12 }, { x: 22, y: 86, size: 96, depth: 0.8, turn: 14 },
 ];
+// A work from each city, the first whose date is known where the city has one, for the stamps around the passport.
+function cityStamps(artifacts: DiscoveryArtifact[]) {
+  const byCity = new Map<string, DiscoveryArtifact>();
+  for (const a of artifacts) { const have = byCity.get(a.city); if (!have || (!known(have.year) && known(a.year))) byCity.set(a.city, a); }
+  return [...byCity.values()].slice(0, STAMP_SPOTS.length);
+}
 export function PassportVisual({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
   const ref = useScene<HTMLDivElement>(root => {
     const scrollTrigger = { trigger: root.closest('section') ?? root, start: 'top bottom', end: 'bottom top', scrub: true };
@@ -102,10 +108,10 @@ export function PassportVisual({ artifacts }: { artifacts: DiscoveryArtifact[] }
   });
   return <div className="passport-illustration" ref={ref} aria-hidden="true">
     <div className="mini-passport"><span>{t('TÜRKİYE KÜLTÜREL MİRASI', 'CULTURAL HERITAGE OF TÜRKİYE')}</span><Compass size={72} strokeWidth={0.8} /><h3>{t('MİRAS', 'HERITAGE')}<br />{t('PASAPORTU', 'PASSPORT')}</h3><span>{t('EŞİK · KEŞİF GÜNLÜĞÜ', 'EŞİK · DISCOVERY JOURNAL')}</span></div>
-    {STAMP_SPOTS.map(({ x, y, size, depth, turn }, i) => {
-      const artifact = artifacts[i % artifacts.length];
-      return <div key={i} className={`float-stamp tone-${i % 3}${depth < 0.6 ? ' far' : ''}${depth > 1.1 ? ' near' : ''}`} data-depth={depth} data-turn={turn} style={{ left: `${x}%`, top: `${y}%`, width: size, fontSize: Math.round(size * 0.11), rotate: `${turn}deg` } as CSSProperties}>
-        <Stamp size={Math.round(size / 5)} /><span>{i === 0 ? t('İLK ADIM', 'FIRST STEP') : artifact.city.toLocaleUpperCase(locale())}</span><i>{i === 0 ? t('YOLCULUK BAŞLIYOR', 'THE JOURNEY BEGINS') : artifact.year}</i>
+    {cityStamps(artifacts).map((artifact, i) => {
+      const { x, y, size, depth, turn } = STAMP_SPOTS[i];
+      return <div key={artifact.city} className={`float-stamp tone-${i % 3}`} data-depth={depth} data-turn={turn} style={{ left: `${x}%`, top: `${y}%`, width: size, fontSize: Math.round(size * 0.1), rotate: `${turn}deg` } as CSSProperties}>
+        <Stamp size={Math.round(size / 5.5)} /><span>{artifact.city.toLocaleUpperCase(locale())}</span>{known(artifact.year) && <i>{artifact.year}</i>}
       </div>;
     })}
   </div>;
