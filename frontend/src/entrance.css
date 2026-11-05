@@ -219,13 +219,9 @@
 .navigation .desktop-nav { gap: clamp(22px, 2.8vw, 44px); padding: 0; border: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .navigation .desktop-nav::before, .navigation .desktop-nav::after { display: none; }
 .navigation .desktop-nav a { display: flex; align-items: baseline; gap: 7px; padding: 14px 0; font-size: 13.5px; letter-spacing: .01em; }
-.nav-num { font-family: var(--serif); font-size: 12.5px; font-style: italic; color: #765b38; transition: color .3s; }
-.nav-dark .nav-num { color: #cdb68c; }
 .navigation .desktop-nav a::after { bottom: 6px; left: 0; height: 1px; background: currentColor; box-shadow: none; transform: scaleX(0); transform-origin: right; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
 .navigation .desktop-nav a:hover::after, .navigation .desktop-nav a.active::after { transform: scaleX(1); transform-origin: left; }
-.navigation .desktop-nav a.active .nav-num { color: #8a6a36; }
 .nav-dark .desktop-nav a.active, .nav-dark .desktop-nav a:hover { color: #f3ecdf; }
-.nav-dark .desktop-nav a.active .nav-num { color: #e6d5ae; }
 .navigation .nav-actions { justify-self: end; gap: 12px; }
 .navigation .nav-camera { width: 42px; height: 42px; border: 1px solid #a8916e80; background: transparent; transition: border-color .3s, background .3s; }
 .navigation .nav-camera svg { transition: scale .4s cubic-bezier(.2, .7, .2, 1); }

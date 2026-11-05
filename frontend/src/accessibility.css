@@ -13,7 +13,6 @@ summary { min-height: 44px; }
 .modal { max-width: min(540px, calc(100vw - 16px)); padding: 10px; }
 .modal-content { min-width: 0; padding: 55px 28px 32px; }
 .modal-content h2 { overflow-wrap: anywhere; }
-.mobile-menu { max-height: calc(100dvh - 78px); overflow-y: auto; }
 .dust i { animation-duration: 4s; animation-iteration-count: 1; }
 .cy-lamp circle { animation-iteration-count: 1; }
 .stage-hotspot { animation-iteration-count: 2; }
