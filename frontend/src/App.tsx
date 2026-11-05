@@ -95,11 +95,9 @@ function Navigation({ route }: { route: string }) {
   return <header className={`navigation ${dark ? 'nav-dark' : ''} ${scrolled ? 'scrolled' : ''} ${tucked && !open ? 'nav-tucked' : ''}`}><Brand /><nav className="desktop-nav" aria-label={t('Ana menü', 'Main menu')}>{topLinks.map(([to, label], i) => <Link to={to} key={to} className={current(to) ? 'active' : ''} aria-current={current(to) ? 'page' : undefined}><span className="nav-num" aria-hidden="true">0{i + 1}</span><span className="nav-label">{label}</span></Link>)}</nav><div className="nav-actions"><LangSwitch className="nav-lang" /><Link to="/kamera" className="nav-camera" aria-label={t('Kamera ile keşfet', 'Discover with the camera')}><Camera size={19} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'} className="nav-camera" aria-label={account.user ? `${t('Hesabım', 'My account')}${account.user.display_name ? `: ${account.user.display_name}` : ''}` : t('Giriş yap ya da hesap aç', 'Sign in or create an account')} title={account.user ? t('Hesabım', 'My account') : t('Giriş yap', 'Sign in')}><UserRound size={19} /></Link>}<Link className="nav-passport" to="/pasaport"><Stamp size={17} /><span>{t('Miras Pasaportum', 'My Heritage Passport')}</span><small><span className="sr-only">, </span>{Object.keys(progress.discovered).length}<span className="sr-only">{t(' keşif', ' discoveries')}</span></small></Link><button className="mobile-toggle icon-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? t('Menüyü kapat', 'Close the menu') : t('Menüyü aç', 'Open the menu')}>{open ? <X /> : <Menu />}</button></div>{open && <nav id="mobile-menu" className="mobile-menu" aria-label={t('Mobil menü', 'Mobile menu')} onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); } }}>{links.map(([to, label]) => <Link key={to} to={to} className={current(to) ? 'active' : ''} aria-current={current(to) ? 'page' : undefined}>{label}<ChevronRight size={18} aria-hidden="true" /></Link>)}<Link to="/pasaport">{t('Miras Pasaportum', 'My Heritage Passport')}<Stamp size={18} /></Link><Link to="/kamera">{t('Kamera ile keşfet', 'Discover with the camera')}<Camera size={18} /></Link>{account.enabled && <Link to={account.user ? '/hesabim' : '/giris'}>{account.user ? t('Hesabım', 'My account') : t('Giriş yap', 'Sign in')}<UserRound size={18} /></Link>}<LangSwitch className="menu-lang" /></nav>}</header>;
 }
 
-// The footer, on every page: one last invitation under a row of doors, the links in three groups, the project's
+// The footer, on every page: the links in three groups, the project's
 // credits and a way back to the top.
 function Footer() {
-  const { artifacts } = useContent();
-  const { cities } = collectionStats(artifacts);
   const groups: [string, [string, string][]][] = [
     [t('Keşfet', 'Explore'), [['/kesfet', t('Eserleri Keşfet', 'Explore the Collection')], ['/harita', t('Miras Haritası', 'Heritage Map')], ['/kamera', t('Kamera ile Keşfet', 'Discover with the Camera')],
       ...(vakifApiEnabled() ? [['/makaleler', t('Okuma Odası', 'Reading Room')], ['/terimler', t('Terimler Sözlüğü', 'Glossary')]] as [string, string][] : [])]],
@@ -110,12 +108,6 @@ function Footer() {
   ];
   function top() { settleScroll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   return <footer className="footer ft" data-nav-theme="dark">
-    <div className="ft-doors" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} />)}</div>
-    <div className="ft-invite" data-curtain>
-      <p className="ft-kicker"><span>✦</span>{t('BİR SONRAKİ HİKÂYEN SENİ BEKLİYOR', 'YOUR NEXT STORY AWAITS')}</p>
-      <Link to="/kesfet" className="ft-cta">{t('Merak etmeye', 'Stay')} <em>{t('devam et.', 'curious.')}</em><span className="ft-cta-arrow" aria-hidden="true"><ArrowUpRight /></span></Link>
-      <p className="ft-count"><b>{String(artifacts.length).padStart(2, '0')}</b> {t('eser', 'works')} <span>·</span> <b>{String(cities).padStart(2, '0')}</b> {t('şehir', 'cities')} <span>·</span> <i>{t('keşfedilmeyi bekliyor', 'waiting to be discovered')}</i></p>
-    </div>
     <div className="ft-main" data-curtain>
       <div className="ft-brand"><Brand /><p>{t('Geçmişin izinde.', 'In the footsteps of the past.')}<br /><em>{t('Geleceğe birlikte.', 'Together into the future.')}</em></p><small>{t('Vakıf Katılım · Vakıf Eserleri Envanter Projesi kapsamında geliştirilen dijital keşif platformu.', 'A digital discovery platform built within Vakıf Katılım’s Waqf Works Inventory Project.')}</small></div>
       {groups.map(([title, links]) => <nav key={title} className="ft-group" aria-label={title}><h2>{title}</h2><ul>{links.map(([to, label]) => <li key={to}><Link to={to}>{label}</Link></li>)}</ul></nav>)}
