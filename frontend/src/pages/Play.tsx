@@ -104,9 +104,8 @@ export function Play({ section, query = '' }: { section?: PlaySection; query?: s
     {/* The menu: one card for each part, with where the visitor stands in it. */}
     <section className="pl-menu" data-nav-theme="dark" aria-labelledby="menu-title">
       <h2 id="menu-title" className="sr-only">{t('Etkinlikler', 'Activities')}</h2>
-      <ol>{playSections.map(([id], i) => <li key={id}><SectionLink section={id} className="pl-menu-card">
+      <ol>{playSections.map(([id]) => <li key={id}><SectionLink section={id} className="pl-menu-card">
         <span className="pl-menu-icon" aria-hidden="true">{sectionIcons[id]}</span>
-        <i aria-hidden="true">{String(i + 1).padStart(2, '0')}</i>
         <b>{sectionName(id)}</b><small>{sectionNotes()[id]}</small>
         <span className="pl-menu-status">{status[id]}</span>
         <ArrowUpRight className="pl-menu-go" size={18} aria-hidden="true" />
@@ -163,7 +162,7 @@ export function Play({ section, query = '' }: { section?: PlaySection; query?: s
 
     {section && <nav className="pl-more" data-nav-theme="dark" aria-label={t('Diğer etkinlikler', 'Other activities')}>
       <p>{t('DİĞER ETKİNLİKLER', 'OTHER ACTIVITIES')}</p>
-      <div className="pl-hero-index">{playSections.filter(([id]) => id !== section).map(([id]) => <SectionLink key={id} section={id}><i aria-hidden="true">{String(playSections.findIndex(([x]) => x === id) + 1).padStart(2, '0')}</i><b>{sectionName(id)}</b><small>{status[id]}</small></SectionLink>)}</div>
+      <div className="pl-hero-index">{playSections.filter(([id]) => id !== section).map(([id]) => <SectionLink key={id} section={id}><b>{sectionName(id)}</b><small>{status[id]}</small></SectionLink>)}</div>
     </nav>}
 
     {current && <Modal className="play-modal" title={current.title} onClose={closeGame}>{current.id === 'puzzle' ? <PuzzleGame onComplete={() => complete('puzzle')} artifactId={launch.artifactId} requestedLevel={launch.level} /> : <DetectiveGame onComplete={() => complete('detective')} requestedLevel={launch.level} />}</Modal>}
