@@ -26,7 +26,6 @@
 .ma-work > * { flex-shrink: 0; }
 .ma-art { position: relative; aspect-ratio: 4 / 3.3; overflow: hidden; border-radius: calc(14 * var(--u)); background: radial-gradient(ellipse at 50% 30%, #1d4a3c, #0a241d); }
 .ma-art img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
-.ma-art img[hidden] { display: none; }
 /* the on-site stamp: a paper seal in gold ink, as on the passport */
 .ma-stamp { position: absolute; right: calc(10 * var(--u)); bottom: calc(10 * var(--u)); display: grid; place-content: center; justify-items: center; gap: 1px; width: calc(78 * var(--u)); aspect-ratio: 1; border-radius: 50%; color: #8a6a36; background: radial-gradient(circle at 35% 30%, #fbf8f0, #efe7d6 70%); box-shadow: inset 0 0 0 calc(3 * var(--u)) #f4efe2, inset 0 0 0 calc(4.5 * var(--u)) currentColor, 0 calc(14 * var(--u)) calc(24 * var(--u)) calc(-12 * var(--u)) #000c; }
 .ma-stamp::before { content: ''; position: absolute; inset: 12%; border: 1.2px dashed currentColor; border-radius: 50%; opacity: .55; }

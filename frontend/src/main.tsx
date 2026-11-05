@@ -27,6 +27,11 @@ import './facade.css';
 import './footer.css';
 import './chrome.css';
 
+// A work whose photo is missing on the server: its picture is marked and hidden (styles.css), so the card's drawn ground
+// shows instead of the browser's broken-image icon; a later successful load (a new src) shows it again.
+document.addEventListener('error', event => { if (event.target instanceof HTMLImageElement) event.target.dataset.broken = ''; }, true);
+document.addEventListener('load', event => { if (event.target instanceof HTMLImageElement) delete event.target.dataset.broken; }, true);
+
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 // The collection comes from the backend: wait for it once, then the site runs as a read-only feed.
 // If the backend cannot be reached the page says so instead of falling back to demo data; how to start the backend

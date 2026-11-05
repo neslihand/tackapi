@@ -46,8 +46,7 @@ function Phone({ work }: { work?: { name: string; city: string; image: string; d
       <div className="ma-bar"><svg viewBox="0 0 32 42"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><b>EŞİK</b></div>
       <div className="ma-work">
         <div className="ma-art">
-          {/* without its photo the drawn ground stays, never a broken picture */}
-          {work?.image && <img src={work.image} alt="" loading="lazy" onError={e => { e.currentTarget.hidden = true; }} />}
+          {work?.image && <img src={work.image} alt="" loading="lazy" />}
           <motion.span className="ma-stamp" initial={still ? pressed : { opacity: 0, scale: 1.9, rotate: -32 }} animate={seen || still ? pressed : undefined}
             transition={{ delay: 0.45, duration: 0.4, ease: [0.2, 0.9, 0.3, 1.25] }}><b>{t('YERİNDE', 'ON SITE')}</b><i>{t('mühür', 'stamp')}</i></motion.span>
         </div>
