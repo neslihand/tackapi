@@ -95,3 +95,27 @@ body:has(.chat-panel.open) .consent-banner { display: none; }
 .explore-page .v-discover h2, .explore-page .v-eyebrow { color: #f4f1eb; }
 .explore-page .v-discover h2 em { color: #e6d5ae; }
 .explore-page .v-discover h2 small { color: #c9c5b8; }
+
+/* Hesabım: medallions, the passport's latest stamps and the favourites, each with a way on to its own page. */
+.v-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; }
+.v-head .text-link { font-size: 14px; }
+.v-section .medal-shelf { margin-top: 22px; }
+.v-stamps { display: grid; grid-template-columns: repeat(4, minmax(0, 210px)); gap: 20px; margin: 22px 0 0; padding: 0; list-style: none; }
+.v-stamps .passport-stamp { height: 100%; gap: 7px; padding: 16px 12px; }
+.v-favorites { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 22px 16px; margin: 22px 0 0; padding: 0; list-style: none; }
+.v-favorites li { position: relative; }
+.v-favorites a { display: flex; flex-direction: column; gap: 6px; color: inherit; text-decoration: none; }
+.v-favorites img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; box-shadow: 0 0 0 1px var(--line); }
+.v-favorites span { margin-top: 6px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #765b38; }
+.v-favorites strong { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.15; color: var(--teal); }
+.v-favorites a:hover strong { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.v-unfavorite { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #8b4d40; background: #fffdf8eb; box-shadow: 0 8px 18px -10px #1a1408aa; }
+.v-unfavorite:hover { color: #6e3a30; }
+@media (max-width: 640px) {
+  .v-stamps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .v-stamps .passport-stamp { gap: 5px; padding: 12px 10px; }
+  .v-stamps .passport-stamp > strong { font-size: 14px; }
+  .v-stamps .passport-stamp > span:last-child { display: none; }
+  .v-favorites { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+  .v-favorites strong { font-size: 18px; }
+}
