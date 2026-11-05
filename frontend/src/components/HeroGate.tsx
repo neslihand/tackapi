@@ -14,8 +14,6 @@ gsap.registerPlugin(ScrollTrigger);
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Share of the hero's scroll distance at which the courtyard copy is fully on screen. "Kapıyı Aç" travels here.
 const COURTYARD_AT = 0.9;
-// The index beside the door: what the platform holds, in three steps.
-const note = (): [string, string, string][] => [['I', t('Hikâyesini', 'Hear its'), t('dinle.', 'story.')], ['II', t('Haritada', 'Find it'), t('bul.', 'on the map.')], ['III', t('Pasaportuna', 'Stamp your'), t('mühürle.', 'passport.')]];
 // The carved stone facade (public/images/cephe.webp) fills the hero; its two wooden leaves are cut from the same photo
 // (kanat-sol / kanat-sag) and swing inward to 96° on a smoothstep, darkening as they turn from the light, while the
 // camera pushes into the doorway ever faster (t^2.2).
@@ -64,7 +62,6 @@ export function HeroGate() {
       });
       // Scene 1 → 2: the copy steps aside and the shade lifts off the facade, so the door stands in full light.
       timeline.to('.fc-copy', { y: -90, autoAlpha: 0, ease: 'power1.in', duration: 0.12 }, 0)
-        .to('.fc-note', { y: -60, autoAlpha: 0, ease: 'power1.in', duration: 0.1 }, 0)
         .to('.hero-bottom, .en-lantern', { autoAlpha: 0, duration: 0.1 }, 0)
         .to('.fc-shade', { opacity: 0.35, duration: 0.2 }, 0)
         .to('.en-fog', { opacity: 1, yPercent: -18, duration: 0.36 }, 0.04);
@@ -134,9 +131,7 @@ export function HeroGate() {
         <div className="en-lantern" aria-hidden="true" />
         {/* The copy stands to the left of the door, over the shade, so the door keeps the centre of the picture. */}
         <div className="fc-copy">
-          <p className="en-index">{t('Anadolu’nun vakıf mirası', 'The waqf heritage of Anatolia')}</p>
           <h1 className="fc-title"><span className="fc-line"><span>{t('Taşa yazılmış', 'Trace kindness')}</span></span> <span className="fc-line"><span>{t('iyiliklerin', 'carved')}</span></span> <span className="fc-line"><span><em>{t('izini sür.', 'in stone.')}</em></span></span></h1>
-          <div className="en-lede"><span className="en-rule" aria-hidden="true" /><p className="hero-description">{t('Camiler, çeşmeler, hanlar… Yüzyıllardır şehirlere hizmet eden vakıf eserleri, hikâyelerini anlatmak için seni bekliyor.', 'Mosques, fountains, caravanserais… The waqf works that have served our cities for centuries are waiting to tell you their stories.')}</p></div>
           {/* Two ways in: the door itself for the curious, the map for whoever already stands before a building. */}
           <div className="hero-actions">
             <button className="button gold en-key" onClick={openGate} onPointerMove={magnet} onPointerLeave={release}><span className="en-key-icon" aria-hidden="true"><KeyRound size={17} /></span><span className="en-key-label">{t('Kapıyı arala', 'Open the door')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></button>
@@ -144,7 +139,6 @@ export function HeroGate() {
           </div>
         </div>
         {/* What lies behind the door, as a small index on the other side of it. */}
-        <ol className="fc-note" aria-label={t('EŞİK’te seni neler bekliyor', 'What awaits you at EŞİK')}>{note().map(([n, text, em]) => <li key={n}><span aria-hidden="true">{n}</span>{text} <em>{em}</em></li>)}</ol>
         <div className="hero-bottom en-bar">
           <button onClick={openGate} className="scroll-invite en-scroll"><span className="en-scroll-track" aria-hidden="true"><i /></span><span className="en-scroll-text"><b>{t('Kaydır', 'Scroll')}</b><small>{t('kapı aralansın', 'and the door opens')}</small></span></button>
           <p className="hero-edition en-count"><span>{t('ANADOLU KOLEKSİYONU', 'ANATOLIAN COLLECTION')}</span><span className="en-ticks" aria-hidden="true">{artifacts.map(a => <i key={a.id} />)}</span><b>{String(artifacts.length).padStart(2, '0')} {t('eser', 'works')} · {String(new Set(artifacts.map(a => a.city)).size).padStart(2, '0')} {t('şehir', 'cities')}</b></p>

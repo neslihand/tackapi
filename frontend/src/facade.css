@@ -61,12 +61,6 @@
 .fc-copy .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: clamp(20px, 3.8svh, 40px); padding: 0; }
 .fc-copy :focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 10px; box-shadow: none; }
 
-/* A small index on the right, balancing the copy across the door: what lies behind it, in three steps. */
-.fc-note { position: absolute; right: var(--en-left); bottom: calc(96px + 10svh); z-index: 6; display: flex; flex-direction: column; gap: 14px; width: min(var(--cw), 250px); margin: 0; padding: 18px 0 0; border-top: 1px solid #e6d5ae40; list-style: none; text-shadow: 0 6px 30px #020806e6; }
-.fc-note li { display: grid; grid-template-columns: 30px 1fr; align-items: baseline; font-family: var(--serif); font-size: clamp(16px, var(--cw) / 14, 22px); white-space: nowrap; line-height: 1.2; color: var(--en-ivory); }
-.fc-note li > span { font-size: 13px; font-style: italic; letter-spacing: .04em; color: var(--en-gold); }
-.fc-note em { font-style: italic; color: var(--en-gold-light); }
-
 /* The courtyard introduces the platform, on the entrance's own deep emerald. */
 .hero-scroll.hero-facade .courtyard-scene { background: radial-gradient(ellipse 44% 62% at 73% 55%, #1c3d35 0, #12302a40 50%, transparent 74%), radial-gradient(ellipse 50% 45% at 12% 8%, #0f2a2470, transparent 70%), linear-gradient(115deg, #040d0a 0%, #07181a 48%, #0b2321 100%); }
 
@@ -90,7 +84,6 @@
   .fc-line:nth-child(3) > span { animation: pt-arrive 1.5s .9s cubic-bezier(.16, 1, .3, 1) backwards; }
   .fc-copy .hero-actions > * { animation: en-fade-up .9s 1.15s cubic-bezier(.16, 1, .3, 1) backwards; }
   .fc-copy .hero-actions > :nth-child(2) { animation-delay: 1.25s; }
-  .fc-note { animation: en-fade-up 1s 1.35s cubic-bezier(.16, 1, .3, 1) backwards; }
 }
 @keyframes fc-in { from { scale: 1.08; filter: brightness(.4) saturate(.7); } }
 
@@ -108,7 +101,7 @@
   .fc-copy { top: calc(78px + 2svh); right: 7%; bottom: calc(74px + 2svh); left: 7%; justify-content: flex-start; width: auto; }
   .fc-title { font-size: clamp(42px, 11.6vw, 92px); }
   .fc-copy .hero-actions { gap: 10px 22px; margin-top: auto; }
-  .fc-note, .hero-facade .en-lantern { display: none; }
+  .hero-facade .en-lantern { display: none; }
   .cy-mission { padding: calc(78px + 2svh) 7% 16px; }
   .hero-scroll .cy-mission h2 { flex-direction: row; font-size: clamp(32px, 9vw, 56px); }
   .cy-lead { margin-top: 14px; font-size: 14px; line-height: 1.6; }
