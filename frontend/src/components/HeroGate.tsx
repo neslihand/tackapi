@@ -86,9 +86,9 @@ export function HeroGate() {
         // Scene 3: the courtyard, on the entrance's own emerald.
         .fromTo('.cy-kitabe', { '--rule': 0 }, { '--rule': 1, ease: 'power2.out', duration: 0.14 }, 0.68)
         .to({}, { duration: 0.08 });
-      // The courtyard copy, one tween per word and per line: a staggered fromTo here sets its start state on the first
-      // target only, so the others showed until the playhead reached them, then vanished and came back.
-      gsap.utils.toArray<HTMLElement>('.cy-copy .reveal-line > span').forEach((word, i) => timeline.fromTo(word, { yPercent: 115 }, { yPercent: 0, ease: 'power3.out', duration: 0.12 }, 0.7 + i * 0.035));
+      // The courtyard's heading stands whole as soon as the courtyard shows: its words are not held back by the scroll.
+      // The lines under it, one tween per line: a staggered fromTo here sets its start state on the first target only,
+      // so the others showed until the playhead reached them, then vanished and came back.
       gsap.utils.toArray<HTMLElement>('.cy-copy .cy-fade').forEach((line, i) => timeline.fromTo(line, { y: 30, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.1, ease: 'power2.out' }, 0.78 + i * 0.03));
     });
     return () => { match.revert(); travel.current?.kill(); };
