@@ -136,7 +136,8 @@ function Screens() {
     <Stack.Screen name="ayarlar" options={{ title: t('Ayarlar', 'Settings') }} />
     <Stack.Screen name="gizlilik" options={{ title: t('Gizlilik', 'Privacy') }} />
     <Stack.Screen name="proje" options={{ title: t('Proje ve kaynaklar', 'Project and sources') }} />
-    <Stack.Screen name="karsilama" options={{ headerShown: false, presentation: 'fullScreenModal', gestureEnabled: false }} />
+    <Stack.Screen name="menu" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
+    <Stack.Screen name="karsilama"options={{ headerShown: false, presentation: 'fullScreenModal', gestureEnabled: false }} />
   </Stack>;
 }
 
