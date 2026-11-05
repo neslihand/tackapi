@@ -231,6 +231,8 @@ export default function Work() {
         {available.length > 1 && <SegmentedControl<ReadingMode> accessibilityLabel={t('Anlatım', 'Telling')} value={mode}
           onChange={choose} options={available.map(k => ({ key: k, label: labels[k] }))} />}
         <Eyebrow>{heading}</Eyebrow>
+        {/* the visitor's usual telling is missing here: said out loud, not swapped silently (master plan M03) */}
+        {!picked && !!settings.narration && settings.narration !== mode && <Text style={s.small}>{t(`Bu eserin “${labels[settings.narration]}” anlatımı henüz yok; “${labels[mode]}” açıldı.`, `This work has no “${labels[settings.narration]}” telling yet; “${labels[mode]}” is open.`)}</Text>}
         {text ? <View style={s.reading}>
           {mode === 'text' && detail.text_note && <Text style={s.small}>{detail.text_note}</Text>}
           {mode === 'brief' && <Text style={s.small}>{t('Bu özet kitaptaki bilgilerden derlendi. Kaynak:', 'This summary was compiled from the book. Source:')} {item ? sourceTitle(item.source) : detail.source.book}</Text>}

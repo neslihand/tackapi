@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Eyebrow, Title, type IconName } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { track } from '@/lib/analytics';
+import type { Item } from '@/lib/api';
 import { dailyPicks } from '@/lib/daily';
 import { t } from '@/lib/i18n';
 import { NARRATION_FOR, preferenceTiers, type Intent } from '@/lib/personal';
@@ -35,8 +36,10 @@ export default function Welcome() {
   const { change } = useSettings();
   const { prefs } = usePreferences();
   const account = useAccount();
-  // the same work as Bugün's Günün Eşiği card
-  const today = useMemo(() => dailyPicks(items, progress, new Date(), 1, preferenceTiers(prefs))[0], [items, progress, prefs]);
+  // the same work as Bugün's Günün Eşiği card; a choice that promises a telling opens a work that has it
+  const tiers = useMemo(() => preferenceTiers(prefs), [prefs]);
+  const today = useMemo(() => dailyPicks(items, progress, new Date(), 1, tiers)[0], [items, progress, tiers]);
+  const pickFor = (fit: (i: Item) => boolean) => dailyPicks(items.filter(fit), progress, new Date(), 1, tiers)[0];
 
   // skipped, chosen or left with the back button: seen either way
   useEffect(() => () => change({ onboarded: true }), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -51,7 +54,9 @@ export default function Welcome() {
     change({ onboarded: true, intent, ...(NARRATION_FOR[intent] ? { narration: NARRATION_FOR[intent] } : {}) });
     if (intent === 'nearby') leave('/kesfet?gorunum=yakin');
     else if (intent === 'play') leave('/oyna');
-    else leave(today ? `/eser/${today.slug}${intent === 'listen' ? '?dinle=1' : ''}` : undefined);
+    else if (intent === 'family') { const work = pickFor(i => Boolean(i.has_child)) ?? today; leave(work ? `/eser/${work.slug}${work.has_child ? '?anlatim=child' : ''}` : undefined); }
+    else if (intent === 'listen') { const work = pickFor(i => Boolean(i.summary?.trim())) ?? today; leave(work ? `/eser/${work.slug}?dinle=1` : undefined); }
+    else leave(today ? `/eser/${today.slug}` : undefined);
   };
 
   return <View style={[s.page, { paddingTop: insets.top + space.s, paddingBottom: insets.bottom + space.m }]}>

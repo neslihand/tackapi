@@ -69,8 +69,9 @@ function PreferenceSync() {
   return null;
 }
 
-/** Opens the first-run welcome once, only when the app starts on Bugün for someone new: a link or a notification that
- *  opens a work goes straight there, and a passport with stamps has already found its way. */
+/** Opens the first-run welcome once for someone new, the first time Bugün shows in this launch: a link that opens a work
+ *  goes straight there and the welcome meets the visitor on the way back; a launch from a notification waits for the next
+ *  one, and a passport with stamps has already found its way. */
 function WelcomeGate() {
   const { settings } = useSettings();
   const { progress, ready } = usePassport();
@@ -80,11 +81,11 @@ function WelcomeGate() {
   const [start] = useState(() => ({ path: pathname, notified: openedFromNotification() }));
   const decided = useRef(false);
   useEffect(() => {
-    if (!ready || decided.current) return;
+    if (!ready || decided.current || pathname !== '/') return;
     decided.current = true;
-    if (start.path !== '/' || start.notified) return;
+    if (start.notified) return;
     if (flags.onboarding_v2 && !settings.onboarded && !Object.keys(progress.discovered).length) router.push('/karsilama');
-  }, [ready, start, flags.onboarding_v2, settings.onboarded, progress.discovered]);
+  }, [ready, pathname, start, flags.onboarding_v2, settings.onboarded, progress.discovered]);
   return null;
 }
 
