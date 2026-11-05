@@ -21,7 +21,8 @@
 /* With no heading above it (the tools chapter opens on the work itself) there is nothing for the rule to part it from. */
 .hp-inside .sr-only + .hp-inside-plate { padding-top: 0; border-top: 0; }
 .hp-tools .sr-only + .hp-tools-panel { margin-top: 0; }
-.hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); padding: clamp(28px, 4vw, 64px); border-radius: 6px; color: #17201c; background: radial-gradient(ellipse 60% 40% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
+/* The tools sit straight on the chapter's ivory ground, not on a card of their own inside a night chapter. */
+.hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); color: #17201c; }
 .hp-tools-panel :focus-visible { outline-color: #17201c; }
 .hp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
 .hp-actions :focus-visible { outline: 2px solid currentColor; outline-offset: 8px; box-shadow: none; }
@@ -233,7 +234,6 @@
 @media (max-width: 800px) {
   .home-page .pl-chapter { padding-top: 60px; padding-bottom: 68px; }
   .hp-inside-plate { grid-template-columns: 1fr; }
-  .hp-tools-panel { margin-inline: calc(var(--pl-left) * -.5); padding: 24px 18px; }
   .home-page .pl-head { gap: 14px; margin-bottom: 32px; }
   .vs-foot { margin-top: 44px; padding-top: 24px; }
   .hp-passport-steps { margin-top: 44px; }
