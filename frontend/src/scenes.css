@@ -27,7 +27,6 @@
 .season-go { position: absolute; top: clamp(58px, 6vw, 84px); right: clamp(24px, 3.4vw, 44px); display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #7e7d7a99; border-radius: 50%; transition: transform .3s; }
 .season-link:hover .season-go { transform: translate(3px, -3px); }
 .season-dim { position: absolute; inset: 0; background: #0a1f18; opacity: 0; pointer-events: none; }
-.season-map .map-teaser { position: absolute; inset: 0; min-height: 0; border-radius: 0; box-shadow: none; }
 @media (max-width: 800px) {
   .season-stack { gap: 8vh; }
   .season-card { --top: calc(84px + var(--i) * 14px); height: auto; min-height: 420px; }
@@ -102,7 +101,6 @@
 .final-gate { color: #192f28; background: radial-gradient(ellipse at 28% 62%, #fcf9f2, #f3ede1 62%); border-bottom: 0; }
 .final-gate-copy h2 em { color: #85653a; }
 .final-gate-copy > p:not(.eyebrow) { color: #4b5448; }
-.final-gate-arch path { stroke: #a8895a; }
 .final-gate .hero-secondary { border-bottom-color: #192f2859; }
 
 /* Light between dark scenes, in the parchment of the closing threshold. */

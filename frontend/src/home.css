@@ -28,6 +28,8 @@
 .hp-inside-plate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); align-items: end; gap: 12px clamp(30px, 5vw, 90px); margin-bottom: clamp(32px, 4vw, 56px); padding-top: 22px; border-top: 1px solid #e6d5ae2e; }
 .hp-inside-plate h3 { margin: 0; font-size: clamp(28px, 2.6vw, 40px); font-weight: 400; line-height: 1.05; color: #fbf7ee; }
 .hp-inside-plate p { margin: 0; font-size: 15px; line-height: 1.75; color: #c9cfc8; }
+/* With no heading above it (the tools chapter opens on the work itself) there is nothing for the rule to part it from. */
+.hp-tools .sr-only + .hp-inside-plate { padding-top: 0; border-top: 0; }
 .hp-tools-panel { margin-top: clamp(56px, 7vw, 104px); padding: clamp(28px, 4vw, 64px); border-radius: 6px; color: #17201c; background: radial-gradient(ellipse 60% 40% at 80% 0, #fffdf8, transparent 72%), #f2ede3; }
 .hp-tools-panel :focus-visible { outline-color: #17201c; }
 .hp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
@@ -69,25 +71,7 @@
 .home-page .panorama-side { border-radius: 3px; }
 
 /* ——— 03 A second threshold: the next door through a drawn arch ——— */
-.hp-threshold { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: auto 1fr auto; align-items: center; column-gap: clamp(26px, 4vw, 70px); min-height: 100svh; padding: clamp(96px, 10vw, 140px) var(--pl-left) clamp(60px, 7vw, 100px); overflow: hidden; color: var(--en-ivory); background: radial-gradient(ellipse 34% 50% at 50% 50%, #1c3d35 0, #0c2420 50%, transparent 76%), #030a08; }
-.hp-threshold > .pl-index { grid-column: 1 / -1; margin-bottom: 30px; color: #d9c9a5; }
-.hp-arch { position: relative; grid-column: 2; grid-row: 2; width: min(320px, 24vw); aspect-ratio: 300 / 380; }
-.hp-arch-window { position: absolute; inset: 0; overflow: hidden; clip-path: polygon(6.7% 100%, 6.7% 44%, 10% 32%, 18% 21%, 30% 12%, 50% 3.2%, 70% 12%, 82% 21%, 90% 32%, 93.3% 44%, 93.3% 100%); }
-.hp-arch-reveal { position: absolute; inset: 0; display: block; overflow: hidden; }
-.hp-arch-window img { width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: 50% 40%; }
-.hp-arch .final-gate-arch { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.hp-arch .final-gate-arch path { stroke: var(--en-gold-light); }
-.hp-arch .final-gate-arch path:nth-child(2) { stroke-opacity: .35; }
-.hp-threshold-title { display: contents; margin: 0; font-family: var(--serif); }
-.hp-tw { display: block; overflow: hidden; padding: .06em .1em .14em; font-size: clamp(44px, min(4.9vw, 9svh), 104px); font-weight: 300; line-height: .95; letter-spacing: -.028em; }
-.hp-tw > span { display: block; }
-.hp-tw.a { grid-column: 1; grid-row: 2; justify-self: end; text-align: right; }
-.hp-tw.b { grid-column: 3; grid-row: 2; justify-self: start; }
-.hp-tw.b em { font-style: italic; font-weight: 400; background: linear-gradient(100deg, #f6ecd0 0%, #ddc28a 40%, #b08a4e 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.hp-threshold-foot { grid-column: 1 / -1; grid-row: 3; display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 40px; text-align: center; }
-.hp-threshold-foot p { margin: 0; font-size: 15.5px; color: var(--en-ivory-soft); }
-.hp-threshold-foot b { font-family: var(--serif); font-size: 21px; font-style: italic; font-weight: 400; color: var(--en-gold-light); }
-.hp-threshold .hp-actions { justify-content: center; }
+.hp-threshold { position: relative; padding: clamp(96px, 10vw, 140px) var(--pl-left) clamp(60px, 7vw, 100px); overflow: hidden; color: var(--en-ivory); background: radial-gradient(ellipse 34% 50% at 50% 50%, #1c3d35 0, #0c2420 50%, transparent 76%), #030a08; }
 .hp-threshold :focus-visible { outline-color: var(--en-gold-light); }
 
 /* ——— 04 Routes: night cards that pile up, each with its stops under arches ——— */
@@ -109,7 +93,6 @@
 .season-pics img { width: 100%; height: 100%; max-width: none; object-fit: cover; transition: scale 1.2s var(--pl-ease); }
 .season-link:hover .season-pics > span { translate: 0 0; }
 .season-link:hover .season-pics img { scale: 1.06; }
-.hp-routes .season-map { background: #061410 !important; }
 .hp-routes .season-card :focus-visible, .hp-routes .season-link:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: -6px; }
 
 /* ——— 05 Passport (night): floating stamps beside the count of the reader's seals ——— */
@@ -149,11 +132,6 @@
 
 /* ——— Smaller screens ——— */
 @media (max-width: 900px) {
-  .hp-threshold { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto auto; row-gap: 18px; text-align: center; }
-  .hp-arch { grid-column: 1; grid-row: 3; justify-self: center; width: min(280px, 64vw); }
-  .hp-tw.a { grid-column: 1; grid-row: 2; justify-self: center; text-align: center; }
-  .hp-tw.b { grid-column: 1; grid-row: 4; justify-self: center; }
-  .hp-threshold-foot { grid-row: 5; margin-top: 10px; }
   .hp-passport-body, .hp-exhibits { grid-template-columns: 1fr; }
   .hp-routes .season-link { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; }
   .hp-routes .season-number { grid-row: 4; }
@@ -184,11 +162,10 @@
 .hp-exhibit-arch img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.96); }
 .hp-exhibit.today .hp-exhibit-art::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 59px, #e6d5ae0d 59px 60px); pointer-events: none; }
 
-/* ——— 10 Closing: the arch's picture toned, and three more doors ——— */
-.hp-arch-window img { filter: sepia(.35) saturate(.75) contrast(1.04) brightness(.92); }
-.hp-doors { grid-column: 1 / -1; grid-row: 5; width: min(980px, 100%); justify-self: center; margin-top: clamp(40px, 5vw, 64px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
+/* ——— 10 Closing: today's discovery and three more doors ——— */
+.hp-doors { width: min(980px, 100%); margin: 0 auto; margin-top: clamp(40px, 5vw, 64px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
 /* Today's discovery, inside the threshold: today's work and the quiz as two small plates in the doors' own language. */
-.hp-today { grid-column: 1 / -1; grid-row: 4; width: min(980px, 100%); justify-self: center; margin-top: clamp(48px, 6vw, 80px); padding-top: 28px; border-top: 1px solid #e6d5ae26; }
+.hp-today { width: min(980px, 100%); margin: 0 auto; }
 .hp-today h3 { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 6px 16px; margin: 0 0 22px; font-family: var(--serif); font-size: clamp(26px, 2.2vw, 32px); font-weight: 400; text-align: center; color: var(--en-ivory); }
 .hp-today h3 span { font-family: Inter, sans-serif; font-size: 13.5px; color: var(--en-ivory-soft); }
 .hp-today ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }

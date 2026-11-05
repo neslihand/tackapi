@@ -86,7 +86,9 @@ export function PlayHero({ artifacts, children, footer }: { artifacts: Discovery
 
 // ——— Chapter: a section whose backdrop opens from an inset rounded panel to full width ———
 
-export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, children, className = '' }: { id: string; tone: 'night' | 'ivory'; n?: number; total?: number; kicker: string; titleId: string; title: ReactNode; lede: ReactNode; children: ReactNode; className?: string }) {
+export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, children, className = '', headless = false }: { id: string; tone: 'night' | 'ivory'; n?: number; total?: number; kicker: string; titleId: string; title: ReactNode; lede?: ReactNode; children: ReactNode; className?: string;
+  /** no visible heading: the section opens on its content, and the title stays for screen readers only */
+  headless?: boolean }) {
   const ref = useRef<HTMLElement>(null);
   const still = Boolean(useReducedMotion());
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start 25%'] });
@@ -99,11 +101,11 @@ export function Chapter({ id, tone, n, total = 5, kicker, titleId, title, lede, 
   return <section ref={ref} id={id} className={`pl-chapter tone-${tone} ${className}`} data-nav-theme={tone === 'night' ? 'dark' : 'light'} aria-labelledby={titleId}>
     <motion.div className="pl-backdrop" aria-hidden="true" style={still ? undefined : { clipPath }} />
     <div className="pl-chapter-inner">
-      <header className="pl-head" ref={head}>
+      {headless ? <h2 id={titleId} className="sr-only" tabIndex={-1}>{title}</h2> : <header className="pl-head" ref={head}>
         <p className="pl-index">{n !== undefined && <><span>{pad(n)}</span><i aria-hidden="true" /><span>{pad(total)}</span></>}<b>{kicker}</b></p>
         <h2 id={titleId} tabIndex={-1}><span className="pl-mask"><motion.span {...rise(0)}>{title}</motion.span></span></h2>
         <motion.div className="pl-lede" initial={still ? false : { opacity: 0, y: 10 }} animate={shown ? { opacity: 1, y: 0 } : undefined} transition={{ duration: 0.26, delay: 0.05, ease: 'easeOut' }}>{lede}</motion.div>
-      </header>
+      </header>}
       {children}
     </div>
   </section>;
