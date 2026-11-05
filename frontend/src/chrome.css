@@ -18,10 +18,8 @@
   .navigation .nav-passport > span:not(.sr-only) { display: none; }
   .navigation .nav-passport { gap: 6px; padding: 0 6px 0 12px; }
 }
-/* Below 960px five links and the actions no longer fit on one line: the links fold into the menu (as they already do
-   below 800px), and the switch moves into the menu with them. */
+/* Below 960px the links and the actions no longer fit on one line: the links fold into the side menu. */
 @media (max-width: 960px) {
   .navigation { grid-template-columns: 1fr auto; }
   .navigation .desktop-nav { display: none; }
-  .navigation .nav-actions .nav-lang { display: none; }
 }

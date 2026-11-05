@@ -229,7 +229,6 @@
 .navigation .nav-camera:hover { background: #8a6a361f; }
 .navigation .nav-camera:hover svg { scale: 1.08; }
 .nav-dark .nav-camera:hover { background: #e6d5ae1f; }
-.navigation .nav-actions .nav-lang { margin-right: 8px; }
 .navigation .nav-passport { gap: 10px; height: 42px; margin-left: 10px; padding: 0 6px 0 16px; border: 1px solid #a8916e99; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: inherit; background: transparent; box-shadow: none; transition: background .3s, border-color .3s; }
 .navigation .nav-passport svg { color: currentColor; }
 .navigation .nav-passport small { display: grid; place-items: center; min-width: 30px; height: 30px; margin-left: 2px; padding: 0 8px; border: 0; border-radius: 999px; font-size: 12px; font-weight: 700; color: #15130d; background: linear-gradient(180deg, #ecdcb6, #cdb07a); }
