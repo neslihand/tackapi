@@ -1,12 +1,13 @@
 /* ——— The language switch (LangSwitch.tsx) and the bar's room for it ———
-   A small pill of two parts, TR and EN, in the bar's colours: on light pages ink on ivory, on dark ones ivory on night.
+   A small pill of two parts, TR and EN, in the bar's colours: on light pages ink on a faint tint, on dark ones ivory on
+   a faint light, with no outline (the passport is the bar's one outlined control).
    The bar has five links now, so as it narrows it drops the link numbers first, then the passport's label. */
-.lang-switch { display: inline-flex; align-items: center; padding: 3px; border: 1px solid #8a6a3659; border-radius: 999px; background: #fffdf899; }
+.lang-switch { display: inline-flex; align-items: center; padding: 3px; border: 0; border-radius: 999px; background: #17201c0d; }
 .lang-switch button { min-width: 34px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .12em; color: #4b5448; background: none; cursor: pointer; transition: color .3s, background .3s; }
 .lang-switch button:hover { color: #17201c; }
 .lang-switch button[aria-pressed='true'] { color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); }
 .lang-switch button:focus-visible { outline: 2px solid #8a6a36; outline-offset: 2px; }
-.nav-dark .lang-switch { border-color: #e6d5ae59; background: #0614108c; }
+.nav-dark .lang-switch { background: #f3ecdf14; }
 .nav-dark .lang-switch button { color: #cfcabd; }
 .nav-dark .lang-switch button:hover { color: #f3ecdf; }
 .nav-dark .lang-switch button:focus-visible { outline-color: #e6d5ae; }

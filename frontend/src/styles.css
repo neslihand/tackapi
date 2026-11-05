@@ -17,6 +17,8 @@ button:disabled{cursor:default;opacity:.55}
 a{color:inherit;text-decoration:none}
 button{border:0;background:none}
 img{max-width:100%;display:block}
+/* a picture that could not be loaded keeps its place but shows the drawn ground behind it, never a broken-image icon (main.tsx) */
+img[data-broken]{visibility:hidden}
 svg{flex-shrink:0}
 h1,h2,h3,p{margin:0}
 h1,h2,h3{font-family:var(--serif);font-weight:500}

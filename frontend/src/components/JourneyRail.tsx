@@ -15,6 +15,8 @@ export function JourneyRail() {
   const [step, setStep] = useState(0);
   // The rail steps aside once the footer comes up, so it never sits over it.
   const [footer, setFooter] = useState(false);
+  // Like the top bar, it takes the colours of the section under it (data-nav-theme): ivory glass on light ones.
+  const [light, setLight] = useState(false);
   useEffect(() => {
     // The last section whose top has passed the middle of the screen decides the step.
     let frame = 0;
@@ -28,6 +30,8 @@ export function JourneyRail() {
       setStep(current);
       const end = document.querySelector('footer');
       setFooter(Boolean(end && end.getBoundingClientRect().top < window.innerHeight));
+      const under = document.elementsFromPoint(window.innerWidth - 30, window.innerHeight / 2).find(el => !el.closest('.journey'));
+      setLight(under?.closest('[data-nav-theme]')?.getAttribute('data-nav-theme') === 'light');
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(check); };
     check();
@@ -50,7 +54,7 @@ export function JourneyRail() {
     const el = STEPS[i][1].map(id => document.getElementById(id)).find(Boolean);
     if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
   }
-  return <nav className={`journey ${step === 0 || footer ? 'away' : ''} ${flash ? 'flash' : ''}`} aria-label={t('Sayfa yolculuğu', 'Page journey')}>
+  return <nav className={`journey ${step === 0 || footer ? 'away' : ''} ${flash ? 'flash' : ''} ${light ? 'on-light' : ''}`} aria-label={t('Sayfa yolculuğu', 'Page journey')}>
     <ol>{STEPS.map(([label], i) => <li key={i} className={i === step ? 'on' : i < step ? 'done' : ''}>
       <button onClick={() => go(i)} aria-current={i === step ? 'step' : undefined}><i aria-hidden="true" /><span>{label()}</span></button>
     </li>)}</ol>

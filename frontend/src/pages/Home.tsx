@@ -6,6 +6,7 @@ import { Chapter } from '../components/PlayScenes';
 import { DoorGallery } from '../components/DoorGallery';
 import { ToolsShowcase } from '../components/ToolsShowcase';
 import { JourneyRail } from '../components/JourneyRail';
+import { MobileAppChapter } from '../components/MobileApp';
 import { Link } from '../lib/navigation';
 import { locale, t } from '../lib/i18n';
 import { useKeptIn } from '../lib/account';
@@ -61,7 +62,7 @@ export function Home() {
   // the passport city by city: how many works each city has and how many of them are stamped, the largest first
   const cities = [...new Set(artifacts.map(a => a.city))].map(city => { const works = artifacts.filter(a => a.city === city); return [city, works.length, works.filter(a => progress.discovered[a.id]).length] as const; }).sort((a, b) => b[1] - a[1]);
   return <div className="home-page"><HeroGate />
-    <Chapter id="araclar" tone="night" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" headless title={<>{t('Keşfin', 'Tools of')} <em>{t('araçları.', 'discovery.')}</em></>}>
+    <Chapter id="araclar" tone="ivory" kicker={t('KEŞFİN ARAÇLARI', 'TOOLS OF DISCOVERY')} titleId="tools-title" className="hp-tools" headless title={<>{t('Keşfin', 'Tools of')} <em>{t('araçları.', 'discovery.')}</em></>}>
       <div className="hp-tools-panel"><ToolsShowcase artifacts={artifacts} /></div>
     </Chapter>
     <Chapter id="featured" tone="night" kicker={t('TAŞA İŞLENEN HİKÂYELER', 'STORIES CARVED IN STONE')} titleId="featured-title" className="hp-featured" title={<>{t('Bazı kapılar,', 'Some doors')} <em>{t('yüzyıllara açılır.', 'open onto centuries.')}</em></>} lede={<p>{t('Koleksiyondaki her eser, kendi hikâyesiyle seni bekliyor. Birini seç, kapısını arala.', 'Every work in the collection is waiting for you with its own story. Choose one and open its door.')}</p>}>
@@ -87,6 +88,7 @@ export function Home() {
       </div>
       <ol className="hp-passport-steps">{passportSteps().map(([title, text], i) => <li key={title}><i aria-hidden="true">{pad(i + 1)}</i><b>{title}</b><span>{text}</span></li>)}</ol>
     </Chapter>
+    <MobileAppChapter />
     <Threshold today={today} questions={Math.min(4, quizPool(quizQuestions, artifacts).length)} />
     <Manifesto />
     <JourneyRail />

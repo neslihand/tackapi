@@ -20,6 +20,7 @@ import { track } from './lib/analytics';
 import { ConsentBanner } from './vakif/ConsentBanner';
 import { SiteSearch } from './components/SiteSearch';
 import { SideMenu } from './components/SideMenu';
+import { MobileAppPage } from './components/MobileApp';
 const AccountPages = () => import('./vakif/AccountPages');
 const LoginPage = lazy(() => AccountPages().then(m => ({ default: m.LoginPage })));
 const AccountPage = lazy(() => AccountPages().then(m => ({ default: m.AccountPage })));
@@ -105,7 +106,7 @@ function Footer() {
     [t('Keşfet', 'Explore'), [['/kesfet', t('Eserleri Keşfet', 'Explore the Collection')], ['/harita', t('Miras Haritası', 'Heritage Map')], ['/kamera', t('Kamera ile Keşfet', 'Discover with the Camera')],
       ...(vakifApiEnabled() ? [['/makaleler', t('Okuma Odası', 'Reading Room')], ['/terimler', t('Terimler Sözlüğü', 'Glossary')]] as [string, string][] : [])]],
     [t('Oyna & Öğren', 'Play & Learn'), [['/oyun', t('Oyna & Öğren', 'Play & Learn')], ['/oyun/quiz', t('Bilgi Yarışması', 'Knowledge Quiz')], ['/pasaport', t('Miras Pasaportum', 'My Heritage Passport')], ['/basarimlar', t('Madalyonlar', 'Medallions')]]],
-    [t('Proje', 'Project'), [['/hakkinda', t('Proje & Kaynaklar', 'Project & Sources')], // Visitors have no use for the admin page: with the backend, works are managed in the separate admin panel, which
+    [t('Proje', 'Project'), [['/hakkinda', t('Proje & Kaynaklar', 'Project & Sources')], ['/uygulama', t('Mobil Uygulama', 'Mobile App')], // Visitors have no use for the admin page: with the backend, works are managed in the separate admin panel, which
     // asks for an admin key (/yonetim still points there for those who know it); only the browser-only demo lists it.
     ...(vakifApiEnabled() ? [['/gizlilik', t('Gizlilik ve veriler', 'Privacy and data')] as [string, string]] : [['/yonetim', t('Demo Yönetim Paneli', 'Demo Admin Panel')] as [string, string]])]],
   ];
@@ -138,7 +139,7 @@ function Router() {
   useSmoothScroll();
   useParallax(path);
   useEffect(() => {
-    const titles: Record<string, string> = { '/': t('Tarihe Açılan Kapı', 'A Door to History'), '/kesfet': t('Eserleri Keşfet', 'Explore the Collection'), '/harita': t('Miras Haritası', 'Heritage Map'), '/oyun': t('Oyna & Öğren', 'Play & Learn'), '/makaleler': t('Okuma Odası · Makaleler', 'Reading Room · Articles'), '/terimler': t('Okuma Odası · Terimler Sözlüğü', 'Reading Room · Glossary'), '/makale-yaz': t('Yazı Gönder', 'Send an Article'), '/makale/': t('Makale', 'Article'), '/oyun/oyunlar': t('Mini Oyunlar', 'Mini Games'), '/oyun/gorevler': t('Keşif Görevleri', 'Discovery Quests'), '/oyun/quiz': t('Tarihin İzinde', 'On the Trail of History'), '/oyun/bilgi-kartlari': t('Bilgi Kartları', 'Knowledge Cards'), '/oyun/kesif-defteri': t('Keşif Defteri', 'Discovery Journal'), '/basarimlar': t('Miras Madalyonları', 'Heritage Medallions'), '/pasaport': t('Miras Pasaportum', 'My Heritage Passport'), '/kamera': t('Kamera ile Keşfet', 'Discover with the Camera'), '/hakkinda': t('Proje ve Kaynaklar', 'Project and Sources'), '/yonetim': t('Demo Yönetim Paneli', 'Demo Admin Panel'), '/giris': t('Giriş yap', 'Sign in'), '/hesabim': t('Hesabım', 'My account'), '/gizlilik': t('Gizlilik ve veriler', 'Privacy and data') };
+    const titles: Record<string, string> = { '/': t('Tarihe Açılan Kapı', 'A Door to History'), '/kesfet': t('Eserleri Keşfet', 'Explore the Collection'), '/harita': t('Miras Haritası', 'Heritage Map'), '/oyun': t('Oyna & Öğren', 'Play & Learn'), '/makaleler': t('Okuma Odası · Makaleler', 'Reading Room · Articles'), '/terimler': t('Okuma Odası · Terimler Sözlüğü', 'Reading Room · Glossary'), '/makale-yaz': t('Yazı Gönder', 'Send an Article'), '/makale/': t('Makale', 'Article'), '/oyun/oyunlar': t('Mini Oyunlar', 'Mini Games'), '/oyun/gorevler': t('Keşif Görevleri', 'Discovery Quests'), '/oyun/quiz': t('Tarihin İzinde', 'On the Trail of History'), '/oyun/bilgi-kartlari': t('Bilgi Kartları', 'Knowledge Cards'), '/oyun/kesif-defteri': t('Keşif Defteri', 'Discovery Journal'), '/basarimlar': t('Miras Madalyonları', 'Heritage Medallions'), '/pasaport': t('Miras Pasaportum', 'My Heritage Passport'), '/kamera': t('Kamera ile Keşfet', 'Discover with the Camera'), '/hakkinda': t('Proje ve Kaynaklar', 'Project and Sources'), '/uygulama': t('Mobil Uygulama', 'Mobile App'),'/yonetim': t('Demo Yönetim Paneli', 'Demo Admin Panel'), '/giris': t('Giriş yap', 'Sign in'), '/hesabim': t('Hesabım', 'My account'), '/gizlilik': t('Gizlilik ve veriler', 'Privacy and data') };
     document.title = `${artifact?.name || titles[path] || (path.startsWith('/makale/') ? titles['/makale/'] : '') || t('Sayfa bulunamadı', 'Page not found')} — EŞİK`;
     if (path !== '/') document.getElementById('main')?.focus({ preventScroll: true });
     track('page_view');
@@ -157,6 +158,7 @@ function Router() {
   else if (path === '/harita') page = <MapPage key={query} query={query} />;
   else if (path === '/kamera') page = <CameraPage />;
   else if (path === '/hakkinda') page = <About />;
+  else if (path === '/uygulama') page = <MobileAppPage />;
   else if (path === '/makaleler') page = <ArticlesPage query={query} />;
   else if (path.startsWith('/makale/')) page = <ArticlePage key={path} slug={decodeURIComponent(path.slice(8))} />;
   else if (path === '/terimler') page = <GlossaryPage key={query} query={query} />;

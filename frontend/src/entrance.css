@@ -53,11 +53,10 @@
 .hero-scroll .en-lede .hero-description { max-width: 34ch; margin: 0; font-size: clamp(14.5px, 1.06vw, 16.5px); font-weight: 400; line-height: 1.72; color: var(--en-ivory-soft); text-shadow: none; }
 .hero-scroll .en-copy .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 30px; margin-top: clamp(20px, 4svh, 46px); padding-left: calc(var(--en-title) * .92); }
 
-/* Primary: an ivory-gold plate in a fine frame that tightens on hover; a sheen crosses it and the key turns. */
+/* Primary: an ivory-gold plate, no frame around it; on hover it lifts a little, a sheen crosses it and the key turns. */
 :is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key { position: relative; display: inline-flex; align-items: stretch; gap: 0; min-height: 56px; padding: 0; overflow: visible; border: 0; border-radius: 2px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #15130d; background: linear-gradient(105deg, transparent 38%, #fff8 50%, transparent 62%) no-repeat, linear-gradient(180deg, #f1e5c6, #d6bc89); background-size: 260% 100%, 100% 100%; background-position: 170% 0, 0 0; box-shadow: 0 22px 44px -24px #e6d5ae80; transition: translate .35s cubic-bezier(.2, .7, .2, 1), background-position 1s cubic-bezier(.2, .7, .2, 1), box-shadow .4s; filter: none; }
-:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key::before { content: ''; position: absolute; inset: -6px; border: 1px solid #e6d5ae55; border-radius: 4px; pointer-events: none; transition: inset .45s cubic-bezier(.2, .7, .2, 1), border-color .45s; }
-:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:hover { background-position: -70% 0, 0 0; box-shadow: 0 26px 50px -22px #e6d5aeb3; filter: none; }
-:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:hover::before { inset: -3px; border-color: var(--en-gold-light); }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key::before { content: none; }
+:is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:hover { translate: 0 -2px; background-position: -70% 0, 0 0; box-shadow: 0 26px 50px -22px #e6d5aeb3; filter: none; }
 :is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key::after { display: none; }
 :is(.hero-scroll .hero-actions .button, .hero-scroll .cy-actions .button, .play-page .pl-cta, .home-page .hp-cta, .camera-scene .cm-key).en-key:active { scale: .98; }
 .en-key-icon { display: grid; place-items: center; width: 56px; border-right: 1px solid #15130d24; }
@@ -222,13 +221,16 @@
 .navigation .desktop-nav a::after { bottom: 6px; left: 0; height: 1px; background: currentColor; box-shadow: none; transform: scaleX(0); transform-origin: right; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
 .navigation .desktop-nav a:hover::after, .navigation .desktop-nav a.active::after { transform: scaleX(1); transform-origin: left; }
 .nav-dark .desktop-nav a.active, .nav-dark .desktop-nav a:hover { color: #f3ecdf; }
-.navigation .nav-actions { justify-self: end; gap: 12px; }
-.navigation .nav-camera { width: 42px; height: 42px; border: 1px solid #a8916e80; background: transparent; transition: border-color .3s, background .3s; }
+/* The round icon buttons (search, camera, account) stand bare and take a soft ground only under the pointer, so the
+   passport is the one outlined thing in the bar. */
+.navigation .nav-actions { justify-self: end; gap: 4px; }
+.navigation .nav-camera { width: 42px; height: 42px; border: 0; background: transparent; transition: background .3s; }
 .navigation .nav-camera svg { transition: scale .4s cubic-bezier(.2, .7, .2, 1); }
-.navigation .nav-camera:hover { border-color: currentColor; background: #c3a8691a; }
-.navigation .nav-camera:hover svg { scale: 1.12; }
-.nav-dark .nav-camera { border-color: #e6d5ae59; }
-.navigation .nav-passport { gap: 10px; height: 42px; padding: 0 6px 0 16px; border: 1px solid #a8916e99; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: inherit; background: transparent; box-shadow: none; transition: background .3s, border-color .3s; }
+.navigation .nav-camera:hover { background: #8a6a361f; }
+.navigation .nav-camera:hover svg { scale: 1.08; }
+.nav-dark .nav-camera:hover { background: #e6d5ae1f; }
+.navigation .nav-actions .nav-lang { margin-right: 8px; }
+.navigation .nav-passport { gap: 10px; height: 42px; margin-left: 10px; padding: 0 6px 0 16px; border: 1px solid #a8916e99; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: inherit; background: transparent; box-shadow: none; transition: background .3s, border-color .3s; }
 .navigation .nav-passport svg { color: currentColor; }
 .navigation .nav-passport small { display: grid; place-items: center; min-width: 30px; height: 30px; margin-left: 2px; padding: 0 8px; border: 0; border-radius: 999px; font-size: 12px; font-weight: 700; color: #15130d; background: linear-gradient(180deg, #ecdcb6, #cdb07a); }
 .navigation .nav-passport:hover { border-color: #8a6a36; background: #c3a8691f; filter: none; box-shadow: none; }
