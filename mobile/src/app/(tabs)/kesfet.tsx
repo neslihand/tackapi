@@ -8,6 +8,7 @@ import { SegmentedControl } from '@/components/Controls';
 import { ExploreMap } from '@/components/explore/ExploreMap';
 import { ExploreFilters } from '@/components/explore/Filters';
 import { NearList } from '@/components/explore/NearList';
+import { NightGlow } from '@/components/brand/Gradient';
 import { Hairline } from '@/components/brand/Hairline';
 import { Button, Empty, Loading, Notice, WorkCard } from '@/components/UI';
 import type { Item } from '@/lib/api';
@@ -16,7 +17,7 @@ import { whereAmI, type Here } from '@/lib/geo';
 import { t } from '@/lib/i18n';
 import { catalogOrder } from '@/lib/personal';
 import { useContent, usePassport } from '@/lib/store';
-import { colors, serif, space, type } from '@/lib/theme';
+import { colors, fonts, serif, space, type } from '@/lib/theme';
 import { usePreferences } from '@/lib/usePreferences';
 
 type ViewKey = 'list' | 'map' | 'near';
@@ -61,16 +62,28 @@ export default function Explore() {
     <WorkCard item={item} stamped={progress.visits[item.slug] ? 'visit' : progress.discovered[item.slug] ? 'digital' : undefined} />
   </View>, [progress.visits, progress.discovered]);
 
+  const waiting = shown.filter(i => !progress.discovered[i.slug]).length;
+  const cityCount = cities.length;
   if (loading && !items.length) return <Loading />;
   if (error && !items.length) return <Empty title={t('Eserler açılamadı.', 'The works could not be opened.')} body={error}
     action={<Button label={t('Yeniden dene', 'Try again')} icon="refresh" onPress={reload} />} />;
 
+  const opening = <View style={s.opening}>
+    <NightGlow color={colors.emeraldLight} />
+    <Text style={s.kicker}>{t(`ANADOLU KOLEKSİYONU · ${items.length} ESER · ${cityCount} ŞEHİR`, `ANATOLIAN COLLECTION · ${items.length} WORKS · ${cityCount} CITIES`)}</Text>
+    <Text style={s.heading} accessibilityRole="header">{t('Merakın nereye', 'Where will your')}{'\n'}<Text style={s.headingAccent}>{t('götürür?', 'curiosity lead?')}</Text></Text>
+    <Text style={s.lede}>{t('Vakıf eserlerini şehir, tür ya da isimle ara; haritada gör, yakınındakileri bul.', 'Search the vakıf works by city, type or name; see them on the map, find the ones near you.')}</Text>
+  </View>;
   const filters = <View style={s.filters}>
     {stale && <View style={s.pad}><Notice icon="cloud-offline-outline">{t('Çevrimdışısın: cihazdaki son hâli gösteriliyor.', 'You are offline: the copy on this device is shown.')}</Notice></View>}
     <ExploreFilters filter={filter} onChange={change} cities={cities} kinds={kinds} />
     <View style={[s.pad, s.countRow]}>
-      <Text style={s.count} accessibilityLiveRegion="polite">{t(`${shown.length} eser`, `${shown.length} works`)}</Text>
+      <View style={{ gap: 2 }}>
+        <Text style={s.countKicker}>{t('KOLEKSİYON', 'COLLECTION')}</Text>
+        <Text style={s.count} accessibilityLiveRegion="polite">{t(`${shown.length} eser`, `${shown.length} works`)}</Text>
+      </View>
       <View style={s.rule}><Hairline /></View>
+      <Text style={s.waiting}>{waiting ? t(`${waiting} keşif seni bekliyor`, `${waiting} discoveries await you`) : shown.length ? t('Hepsi pasaportunda', 'All in your passport') : ''}</Text>
     </View>
     {/* the order is never personal in silence: it says so and leads to the choices behind it */}
     {shown !== found && shown.some((item, i) => item !== found[i]) && <Pressable accessibilityRole="link" onPress={() => router.push('/tercihler')} style={[s.pad, s.sorted]}>
@@ -83,7 +96,7 @@ export default function Explore() {
         options={[{ key: 'list', label: t('Liste', 'List') }, { key: 'map', label: t('Harita', 'Map') }, { key: 'near', label: t('Yakınımda', 'Near me') }]} />
     </View>
     {view === 'list' && <FlatList data={shown} keyExtractor={i => i.slug} renderItem={renderItem}
-      contentContainerStyle={{ paddingBottom: space.xl }} ListHeaderComponent={filters}
+      contentContainerStyle={{ paddingBottom: space.xl }} ListHeaderComponent={<>{opening}{filters}</>}
       ItemSeparatorComponent={Gap} initialNumToRender={8} maxToRenderPerBatch={10} windowSize={7} removeClippedSubviews
       keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag"
       refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={colors.goldText} />}
@@ -108,7 +121,14 @@ const s = StyleSheet.create({
   countRow: { flexDirection: 'row', alignItems: 'center', gap: space.m },
   rule: { flex: 1 },
   // clear but quiet: the serif number in ink, a rule running out to the edge
-  count: { fontFamily: serif, color: colors.ink, ...type.heading },
+  count: { fontFamily: serif, color: colors.ink, fontSize: 26, lineHeight: 30, fontVariant: ['lining-nums'] },
+  countKicker: { color: colors.goldText, ...type.eyebrow, fontSize: 10, lineHeight: 14 },
+  waiting: { color: colors.goldText, ...type.caption, fontFamily: fonts.sansSemi, maxWidth: 130, textAlign: 'right' },
+  opening: { overflow: 'hidden', gap: space.s, paddingHorizontal: space.gutter, paddingTop: space.l, paddingBottom: space.l, backgroundColor: colors.emerald },
+  kicker: { color: colors.gold, ...type.eyebrow, fontSize: 10, lineHeight: 14 },
+  heading: { fontFamily: serif, color: colors.ivory, fontSize: 40, lineHeight: 44 },
+  headingAccent: { fontFamily: fonts.serifItalic, color: colors.goldSoft },
+  lede: { color: colors.mist, ...type.small },
   sorted: { minHeight: 32, justifyContent: 'center' },
   sortedText: { color: colors.goldText, textDecorationLine: 'underline', ...type.small },
 });

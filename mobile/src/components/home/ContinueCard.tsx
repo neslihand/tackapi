@@ -28,13 +28,13 @@ export function ContinueCard() {
   if (!quest || !next) {
     if (!work) return null;
     return <View style={[home.pad, home.gap]}>
-      <SectionHeader title={t('Kaldığın yerden', 'Pick up where you left off')} />
+      <SectionHeader kicker={t('Devam et', 'Continue')} title={t('Kaldığın yerden', 'Pick up where you left off')} />
       <WorkCard item={work} extra={t('Henüz mühürlenmedi', 'Not stamped yet')} />
     </View>;
   }
 
   return <View style={[home.pad, home.gap]}>
-    <SectionHeader title={t('Kaldığın yerden', 'Pick up where you left off')} />
+    <SectionHeader kicker={t('Devam et', 'Continue')} title={t('Kaldığın yerden', 'Pick up where you left off')} />
     <Card style={home.gap}>
       <Eyebrow>{quest.route.kicker}</Eyebrow>
       <Text style={s.title}>{quest.route.title}</Text>
