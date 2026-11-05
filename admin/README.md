@@ -49,6 +49,8 @@ adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS
 | Şehirler | `#/sehirler` | Şehir listesi ve yeni şehir |
 | Değişiklik kaydı | `#/kayit` | Kim, ne zaman, neyi değiştirdi (önce/sonra) |
 | Görselle arama | `#/gorsel-arama` | Ziyaretçinin fotoğrafla eser bulma özelliğini dener; benzerlik puanı ve eşleşen kitap fotoğrafıyla. Bileşen `src/public/VisualSearch.tsx` ön yüze taşınabilir |
+| Yazar metinleri | `#/yazar-metinleri`, `#/yazar-metni/<id>` | Editör tarafı: yazarların kendi panelinde (`../yazar-paneli`) yazıp gönderdiği metinler; notlarla karşılaştırma, onaylama ya da yazara notla düzeltme isteme. Editör yazarın metnini değiştirmez |
+| Yazar hesapları | `#/yazarlar` | Yazar hesabı açma (geçici şifre bir kez gösterilir), şifre sıfırlama, hesabı kapatma. Yazarlar yönetim paneline giremez |
 
 Kurallar arka uçta uygulanır, panel aynı denetimleri önceden gösterir:
 - Envanter kitabından gelen eserin metni değiştirilemez.

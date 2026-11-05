@@ -12,7 +12,7 @@ export type MonumentState = 'standing' | 'ruined' | 'lost' | 'rebuilt';
 export type Page<T> = { total: number; page: number; page_size: number; items: T[] };
 export type Count = { review_status: string; n: number };
 export type Stats = { monuments: Count[]; images: Count[]; images_unassigned: number; monuments_without_image: number;
-  segmentation_pending: number; contributions_pending?: number; agent_open?: number; articles_pending?: number; terms_pending?: number;
+  segmentation_pending: number; contributions_pending?: number; agent_open?: number; articles_pending?: number; terms_pending?: number; author_submitted?: number;
   // MVP pilot seçkisi: şehir başına seçilen eser ve hedef (009 göçü yoksa boş)
   pilot?: { city: string; n: number; target: number | null }[] };
 
