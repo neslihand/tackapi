@@ -22,7 +22,7 @@ Kullanım:
 Her çalıştırmada eserin kaynakça sayfa aralığı da düzeltilmiş paragraflardan yeniden hesaplanır (panelde elle girilmiş
 aralığa dokunulmaz).
 """
-import os, sys, json, time, hashlib, argparse
+import os, sys, json, time, hashlib, argparse, threading, contextlib
 sys.path.insert(0, os.path.dirname(__file__))
 import gemini_client as G
 import textfix_db
@@ -239,6 +239,23 @@ def run(db, slug, user='reextract.py', dry_run=False):
     return res
 
 
+@contextlib.contextmanager
+def heartbeat(every=15):
+    """Uzun Gemini çağrısı sürerken birkaç saniyede bir 'hâlâ bekleniyor' yazar (betik donmuş gibi görünmesin)."""
+    stop, t0 = threading.Event(), time.time()
+
+    def beat():
+        while not stop.wait(every):
+            print(f'      … Gemini cevabı bekleniyor ({int(time.time() - t0)} sn)', flush=True)
+    th = threading.Thread(target=beat, daemon=True)
+    th.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        th.join()
+
+
 def main():
     from db import DB
     ap = argparse.ArgumentParser(description='Künyeyi düzeltilmiş metinden yeniden çıkar (eser bazında).')
@@ -251,6 +268,8 @@ def main():
     ap.add_argument('--pages-only', action='store_true', help='yalnızca kaynakça sayfalarını hesapla (Gemini çağrısı yok)')
     ap.add_argument('--pause', type=float, default=float(os.environ.get('VAKIF_NARRATE_PAUSE', '4')))
     a = ap.parse_args()
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', line_buffering=True)   # satırlar beklemeden ekrana düşsün
     if not (a.pilot or a.only):
         ap.error('--pilot ya da --only gerekli')
     db = DB(a.dsn)
@@ -271,6 +290,7 @@ def main():
             print(f'  {slug}: {old} → {new} ({note})')
         return
     if not (a.force or a.dry_run):
+        print(f'{len(slugs)} eser: daha önce bu metinle işlenmiş olanlar denetleniyor…')
         done = [s for s in slugs if up_to_date(db, s)]
         if done:
             print(f'{len(done)} eser bu metinle zaten işlenmiş, atlanıyor (yeniden işlemek için --force).')
@@ -278,13 +298,19 @@ def main():
     if not slugs:
         print('İşlenecek eser yok.')
         return
+    print(f'{len(slugs)} eser işlenecek (model {G.GEN_MODEL}; eser başına bir Gemini çağrısı, çoğu 20–90 sn).')
+    ok = failed = 0
+    t_all = time.time()
     for i, slug in enumerate(slugs):
         # öbür konsol bu eseri az önce bitirmiş olabilir: işlemeden hemen önce yeniden bak
         if i and not (a.force or a.dry_run) and up_to_date(db, slug):
             print(f'  {slug}: başka bir konsolda işlenmiş, atlanıyor')
             continue
+        print(f"[{i + 1}/{len(slugs)}] {slug}: Gemini'ye gönderildi…")
+        t0 = time.time()
         try:
-            r = run(db, slug, dry_run=a.dry_run)
+            with heartbeat():
+                r = run(db, slug, dry_run=a.dry_run)
         except G.LLMError as e:
             if '429' in str(e) or 'RESOURCE_EXHAUSTED' in str(e):
                 print(f'Kota doldu ({i} eser işlendi, {len(slugs) - i} kaldı). Daha sonra aynı komutla kaldığı yerden devam edebilirsin.')
@@ -295,15 +321,19 @@ def main():
                       f'Biraz sonra aynı komutla kaldığı yerden devam edebilirsin.')
                 return
             print(f'  ! {slug}: {str(e)[:200]}')
+            failed += 1
             continue
         except (KeyError, ValueError) as e:
             print(f'  ! {slug}: {e}')
+            failed += 1
             continue
-        print(f"  {slug}: {r['persons']} kişi, {r['events']} olay, {r['artworks']} süsleme, {r['rejected']} reddedildi"
+        ok += 1
+        print(f"  tamam ({int(time.time() - t0)} sn): {r['persons']} kişi, {r['events']} olay, {r['artworks']} süsleme, {r['rejected']} reddedildi"
               + (f" · panelde değiştirilmiş, korunan alanlar: {', '.join(r['kept_panel_fields'])}" if r.get('kept_panel_fields') else '')
               + (f"\n    özet: {r['summary']}" if a.dry_run else ''))
         if not G.FAKE:
             time.sleep(a.pause)
+    print(f'Bitti: {ok} eser işlendi, {failed} hata, {int(time.time() - t_all)} sn.')
 
 
 if __name__ == '__main__':
