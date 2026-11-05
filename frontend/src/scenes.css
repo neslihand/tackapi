@@ -4,10 +4,9 @@
 .manifesto { display: block; padding: clamp(18px, 2.6vw, 34px) 0; overflow: clip; font-size: inherit; letter-spacing: normal; }
 .marquee-track { display: flex; width: max-content; white-space: nowrap; will-change: transform; }
 .marquee-track > span { display: flex; align-items: center; }
-.marquee-row b { font-family: var(--serif); font-weight: 400; font-size: clamp(28px, 3.8vw, 60px); line-height: 1.12; color: #ece6d9; }
+.marquee-row :is(b, em) { font-family: var(--serif); font-weight: 300; font-size: clamp(34px, 4.4vw, 72px); line-height: 1.1; letter-spacing: -.02em; color: #ece6d9; }
+.marquee-row em { font-style: italic; font-weight: 400; color: #c3a869; }
 .marquee-row i { margin: 0 .55em; font-style: normal; font-size: clamp(13px, 1.3vw, 21px); color: #c3a869; }
-.marquee-row.back b { font-style: italic; color: #c3a869; }
-.marquee-row.back .marquee-track { transform: translateX(-12%); }
 
 /* Monoform: numbered season cards that pin and pile up; the last one is the map. */
 .season-stack { display: grid; gap: 12vh; margin: 0; padding: 0 0 4vh; list-style: none; }
@@ -94,7 +93,8 @@
    them stays dark, and the three no longer run together. */
 .manifesto { color: #1d2a25; background: linear-gradient(180deg, #ece5d7, #e6dece); border-block: 1px solid #8e7a5a33; }
 .marquee-row b { color: #1d2a25; }
-.marquee-row.back b { color: #85653a; }
+.marquee-row em { color: #85653a; }
+.manifesto { padding-bottom: calc(clamp(18px, 2.6vw, 34px) + 28px); }
 .marquee-row i { color: #a8895a; }
 .final-gate { color: #192f28; background: radial-gradient(ellipse at 28% 62%, #fcf9f2, #f3ede1 62%); border-bottom: 0; }
 .final-gate-copy h2 em { color: #85653a; }

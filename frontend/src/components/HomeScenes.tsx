@@ -25,19 +25,16 @@ function useScene<T extends HTMLElement>(build: (root: T) => void, deps: unknown
   return ref;
 }
 
-// Hart Studio: two rows of large words that slide in opposite directions as the page scrolls.
+// Hart Studio: one line of the five verbs drifting with the scroll, upright in ink and italic in gold by turns.
 const words = () => [t('Fark et', 'Notice'), t('Merak et', 'Wonder'), t('Öğren', 'Learn'), t('Keşfet', 'Discover'), t('Deneyimle', 'Experience')];
 export function Manifesto() {
   const ref = useScene<HTMLElement>(root => {
-    const scroll = { trigger: root, start: 'top bottom', end: 'bottom top', scrub: 0.5 };
-    gsap.fromTo(root.querySelector('.marquee-row.ahead .marquee-track'), { xPercent: -4 }, { xPercent: -28, ease: 'none', scrollTrigger: scroll });
-    gsap.fromTo(root.querySelector('.marquee-row.back .marquee-track'), { xPercent: -28 }, { xPercent: -4, ease: 'none', scrollTrigger: scroll });
+    gsap.fromTo(root.querySelector('.marquee-track'), { xPercent: -6 }, { xPercent: -30, ease: 'none', scrollTrigger: { trigger: root, start: 'top bottom', end: 'bottom top', scrub: 0.5 } });
   });
-  const row = (upper: boolean) => [0, 1, 2].map(copy => <span key={copy}>{words().map(word => <Fragment key={word}><b>{upper ? word.toLocaleUpperCase(locale()) : word}</b><i>✧</i></Fragment>)}</span>);
+  const list = words();
   return <section className="manifesto" ref={ref}>
-    <p className="sr-only">{words().join(', ')}.</p>
-    <div className="marquee-row ahead" aria-hidden="true"><div className="marquee-track">{row(true)}</div></div>
-    <div className="marquee-row back" aria-hidden="true"><div className="marquee-track">{row(false)}</div></div>
+    <p className="sr-only">{list.join(', ')}.</p>
+    <div className="marquee-row" aria-hidden="true"><div className="marquee-track">{[0, 1, 2].map(copy => <span key={copy}>{list.map((word, i) => <Fragment key={word}>{(copy * list.length + i) % 2 ? <em>{word}</em> : <b>{word}</b>}<i>✧</i></Fragment>)}</span>)}</div></div>
   </section>;
 }
 
