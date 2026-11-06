@@ -11,7 +11,6 @@ import { Field, Issues, PageHead, Status, useLoad, useToast } from '../component
 import { MonumentPicker } from '../components/MonumentPicker';
 import { PagePhotos } from '../components/PagePhotos';
 import { LocationPicker } from '../components/LocationPicker';
-import { WorkDetails } from '../components/WorkDetails';
 
 export function MonumentEdit({ slug }: { slug: string }) {
   const detail = useLoad(() => api.monument(slug), [slug]);
@@ -26,7 +25,6 @@ export function MonumentEdit({ slug }: { slug: string }) {
     </PageHead>
     <DetailsForm d={d} onSaved={detail.reload} />
     <TextSection d={d} onSaved={detail.reload} />
-    <WorkDetails slug={d.slug} />
     <Gallery d={d} onChange={detail.reload} />
     <PagePhotos d={d} onChange={detail.reload} />
     {d.artworks?.length > 0 && <ArtworkPhotos d={d} onChange={detail.reload} />}
