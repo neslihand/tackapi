@@ -106,6 +106,8 @@ def refresh(db, out=print):
     gap = row['gap'] - datetime.timedelta(minutes=3)
     db.execute('UPDATE analytics_event SET at = at + %(g)s WHERE demo', dict(g=gap))
     out(f"{row['n']} deneme olayı {gap.days} gün {gap.seconds // 3600} saat ileri kaydırıldı.")
+    if db.query("SELECT to_regclass('app_user') IS NOT NULL AS ok")[0]['ok']:
+        __import__('demo_users').shift(db, gap, out)   # deneme hesapları ve katkıları da (demo_users.py)
     return gap
 
 
