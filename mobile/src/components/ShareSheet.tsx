@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { useRef, useState, type ComponentRef } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/Typography';
+import { Medallion } from './brand/Medallion';
 import { HuntMarks, huntScore, HuntZoom } from './HuntZoom';
 import { Button, Notice } from './UI';
 import { track } from '@/lib/analytics';
@@ -18,9 +19,10 @@ const ARCH = require('../../assets/icon.png');
 
 export type Shared =
   | { kind: 'stamp'; name: string; place: string; date: string; onSpot: boolean; photo: string | null }
-  | { kind: 'medal'; name: string; description: string; metal: keyof typeof METAL }
+  | { kind: 'medal'; name: string; description: string; metal: keyof typeof METAL; id?: string }
   | { kind: 'hunt'; number: number; marks: ('right' | 'wrong')[]; solved: boolean; photo: string | null; focus: Focus };
 
+const metalWord = (m: keyof typeof METAL) => m === 'gold' ? t('ALTIN MADALYON KAZANDIM', 'I EARNED A GOLD MEDALLION') : m === 'silver' ? t('GÜMÜŞ MADALYON KAZANDIM', 'I EARNED A SILVER MEDALLION') : t('BRONZ MADALYON KAZANDIM', 'I EARNED A BRONZE MEDALLION');
 const huntTitle = (n: number) => t(`EŞİK Detay Avı #${n}`, `EŞİK Detail Hunt #${n}`);
 
 export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose: () => void }) {
@@ -73,7 +75,8 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
             <Text style={s.line}>{shared.place}</Text>
             <Text style={s.date}>{shared.date}</Text>
           </View> : <View style={s.middle}>
-            <View style={[s.disc, { backgroundColor: METAL[shared.metal] }]}><Ionicons name="medal" size={40} color={colors.emeraldDeep} /></View>
+            <Medallion metal={shared.metal} earned symbol={shared.id} size={150} />
+            <Text style={s.sealText}>{metalWord(shared.metal)}</Text>
             <Text style={s.name}>{shared.name}</Text>
             <Text style={[s.line, { textAlign: 'center' }]}>{shared.description}</Text>
           </View>}
@@ -98,7 +101,6 @@ const s = StyleSheet.create({
   middle: { alignItems: 'center', gap: 8 },
   seal: { width: 58, height: 58, borderRadius: 29, borderWidth: 2, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
   sealText: { color: colors.gold, fontSize: 11, letterSpacing: 1.8, fontWeight: '700' },
-  disc: { width: 84, height: 84, borderRadius: 42, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.goldSoft },
   number: { fontFamily: serif, color: colors.goldSoft, fontSize: 64, lineHeight: 72 },
   name: { fontFamily: serif, color: colors.goldSoft, fontSize: 27, lineHeight: 33, textAlign: 'center' },
   line: { color: colors.mist, fontSize: 14, lineHeight: 20 },

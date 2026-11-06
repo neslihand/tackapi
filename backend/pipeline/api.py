@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author
 
 log = logging.getLogger('vakif.api')
 
@@ -65,6 +65,9 @@ PUBLISHED = "m.review_status = 'published'"
 app.include_router(admin.build_router(db, MEDIA_DIR, lambda data, rel: images.save_webp(data, rel, MEDIA_DIR)))
 # Ziyaretçi uçları: hesap, pasaport, davranış olayları (visitors.py)
 app.include_router(agent.build_router(db))
+# Yazar paneli (author.py): yazarların kendi uçları /api/author, editörün onay ve hesap uçları /api/admin/author
+app.include_router(author.build_author_router(db))
+app.include_router(author.build_admin_router(db))
 visitor_router = visitors.build_router(db, MEDIA_DIR)
 app.include_router(visitor_router)
 # Makaleler ve terimler sözlüğü: herkese açık, ziyaretçi ve yönetim uçları (articles.py)
@@ -614,6 +617,7 @@ class AppFiles(StaticFiles):
 
 PANEL_DIR = static_dir('VAKIF_PANEL_DIR', os.path.join('admin', 'dist'))
 SITE_DIR = static_dir('VAKIF_SITE_DIR', os.path.join('frontend', 'dist'))
+AUTHOR_DIR = static_dir('VAKIF_AUTHOR_DIR', os.path.join('yazar-paneli', 'dist'))
 
 
 @app.get('/eser/{slug}', include_in_schema=False)
@@ -630,5 +634,7 @@ def share_page(slug: str, request: Request, lang: str = 'tr'):
 
 if PANEL_DIR:
     app.mount('/panel', AppFiles(directory=PANEL_DIR, html=True), name='panel')
+if AUTHOR_DIR:   # yazar paneli: yönetim panelinden ayrı uygulama (../yazar-paneli)
+    app.mount('/yazar', AppFiles(directory=AUTHOR_DIR, html=True), name='yazar')
 if SITE_DIR:
     app.mount('/', AppFiles(directory=SITE_DIR, html=True), name='site')

@@ -6,14 +6,16 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Medallion } from '@/components/brand/Medallion';
+import { PassportCover } from '@/components/brand/PassportCover';
 import { Card } from '@/components/Card';
 import { ProgressBar, StatPill } from '@/components/Controls';
 import { SectionHeader } from '@/components/Layout';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
-import { Button, Eyebrow, Loading, Notice, Title, WorkCard } from '@/components/UI';
+import { Button, Eyebrow, Loading, Notice, WorkCard, type IconName } from '@/components/UI';
 import { syncLabel, useAccount } from '@/lib/account';
 import type { Item, MedalTiers } from '@/lib/api';
-import { t, useLang } from '@/lib/i18n';
+import { currentLang, t, useLang } from '@/lib/i18n';
 import { useJournal } from '@/lib/journal';
 import { compareKeys, medals, type Medal } from '@/lib/passport';
 import { savePassportFile } from '@/lib/passportFile';
@@ -21,7 +23,7 @@ import { discoveryProfile } from '@/lib/personal';
 import { useQuestionCounts } from '@/lib/questions';
 import { longestDailyRun, rhythmState } from '@/lib/rhythm';
 import { useContent, useFlags, usePassport, useSettings } from '@/lib/store';
-import { colors, fonts, hit, metal, radius, serif, space, stampBook, type } from '@/lib/theme';
+import { colors, fonts, hit, radius, serif, shadow, space, stampBook, type } from '@/lib/theme';
 import { tierTracks, type Metal } from '@/lib/tiers';
 import { usePreferences } from '@/lib/usePreferences';
 
@@ -61,24 +63,32 @@ export default function Passport() {
     try { await savePassportFile(JSON.stringify(content, null, 2)); } catch (e) { setFileError(String((e as Error)?.message ?? e)); }
   }
 
+  const two = (n: number) => String(n).padStart(2, '0');
   return <ScrollView contentContainerStyle={s.page}>
-    <Card tone="dark" style={s.cover}>
-      <Eyebrow light>✦ {t('MİRAS PASAPORTUM', 'MY HERITAGE PASSPORT')}</Eyebrow>
-      <Title light accent={1}>{t('Biriktirdiğin hikâyeler', 'The stories you have gathered')}</Title>
-      <View style={s.pills}>
-        {run && <StatPill tone="dark" icon={run.periodDone ? 'flame' : 'flame-outline'} value={run.count} label={run.unit === 'week' ? t('hafta seri', 'week streak') : t('gün seri', 'day streak')} />}
-        <StatPill tone="dark" icon="book-outline" value={found.length} label={t('eser', 'works')} />
-        <StatPill tone="dark" icon="ribbon-outline" value={onSite.length} label={t('yerinde mühür', 'on the spot')} />
-        <StatPill tone="dark" icon="map-outline" value={cities} label={t('şehir', 'cities')} />
-        <StatPill tone="dark" icon="medal-outline" value={earned.length} label={t('madalyon', 'medallions')} />
-      </View>
-      <Text style={s.coverNote}>{run && best ? t(`En uzun serin: ${best} gün. `, `Your longest streak: ${best} days. `) : ''}{t('Bir yerin hikâyesini öğrendiğinde, o yer artık biraz da senindir.', 'Once you learn the story of a place, that place is a little bit yours.')}</Text>
-    </Card>
+    {/* the site's opening: a centred serif title with its gold italic half, then the three counts in large figures */}
+    <View style={s.head}>
+      <Eyebrow>{t('Senin keşif günlüğün', 'Your discovery journal')}</Eyebrow>
+      <Text accessibilityRole="header" style={s.headTitle}>{t('Biriktirdiğin', 'The stories')}{'\n'}<Text style={s.headAccent}>{t('hikâyeler.', 'you have gathered.')}</Text></Text>
+      <Text style={s.lede}>{t('Bir yerin hikâyesini öğrendiğinde, o yer artık biraz da senindir.', 'Once you learn the story of a place, that place is a little bit yours.')}</Text>
+    </View>
+    <View style={s.stats}>
+      <BigStat value={two(found.length)} label={t('Keşfedilen eser', 'Works discovered')} />
+      <View style={s.statRule} />
+      <BigStat value={two(cities)} label={t('Farklı şehir', 'Different cities')} />
+      <View style={s.statRule} />
+      <BigStat value={two(earned.length)} label={t('Kazanılan madalyon', 'Medallions earned')} />
+    </View>
+    <View style={s.pills}>
+      {run && <StatPill icon={run.periodDone ? 'flame' : 'flame-outline'} value={run.count} label={run.unit === 'week' ? t('hafta seri', 'week streak') : t('gün seri', 'day streak')} />}
+      <StatPill icon="ribbon-outline" value={onSite.length} label={t('yerinde mühür', 'on the spot')} />
+      {run && best > 0 && <StatPill icon="trophy-outline" value={best} label={t('en uzun seri', 'longest streak')} />}
+    </View>
 
     {flags.personalization && <ProfileEntry />}
 
-    <SectionHeader title={t('Mühürler', 'Stamps')} />
+    {/* the opened booklet: its green cover on top, the stamp paper under it */}
     <View style={s.book}>
+      <PassportCover owner={account.user?.display_name} />
       <View style={s.paper}>
         <View style={s.paperHead}>
           <Text style={s.paperTitle}>{t('KEŞİF MÜHÜRLERİ', 'DISCOVERY STAMPS')}</Text>
@@ -98,40 +108,52 @@ export default function Passport() {
         </> : loading && !items.length ? <Loading /> : <View style={s.empty}>
           {/* the stamps are shown with their works: wait for them before saying the passport is empty */}
           <Ionicons name="compass-outline" size={52} color={colors.goldLine} />
-          <Text style={s.emptyTitle}>{t('İlk mühür ilk hikâyeni bekliyor.', 'Your first stamp is waiting for your first story.')}</Text>
+          <Text style={s.emptyTitle}>{t('İlk mühür,', 'Your first stamp')}{'\n'}<Text style={s.emptyAccent}>{t('ilk hikâyeni bekliyor.', 'is waiting for your first story.')}</Text></Text>
           <Text style={[s.small, { textAlign: 'center' }]}>{t('Bir eserin hikâyesini okuyup bitirdiğinde ilk mührün burada olacak.', 'Finish reading a work’s story and your first stamp will be here.')}</Text>
-          <Button icon="compass-outline" label={t('İlk keşfine başla', 'Start your first discovery')} onPress={() => router.navigate('/kesfet')} />
+          <Button kind="ghost" label={t('İlk keşfine başla', 'Start your first discovery')} onPress={() => router.navigate('/kesfet')} />
         </View>}
       </View>
     </View>
     <Text style={s.small}>{t('Dijital mühürler keşfi temsil eder, fiziksel ziyaret doğrulaması değildir. Altın mühürler eserin önünde basıldı.', 'Digital stamps stand for a discovery, not a verified visit. Golden stamps were taken in front of the work.')}</Text>
-    {found.length > 0 && <Button kind="plain" icon="download-outline" label={t('Pasaportumu indir', 'Download my passport')} onPress={saveFile} />}
+    {found.length > 0 && <Button kind="ghost" icon="download-outline" label={t('Pasaportumu indir', 'Download my passport')} onPress={saveFile} />}
     {fileError && <Notice tone="warn" icon="alert-circle-outline">{fileError}</Notice>}
 
-    {nextUp.length > 0 && <>
-      <SectionHeader title={t('Sıradaki madalyonların', 'Your next medallions')} />
-      {nextUp.map(m => <Card key={m.id} style={s.next}>
-        <View style={s.nextRow} accessible accessibilityLabel={`${m.name}. ${m.description} ${Math.min(m.value, m.required)}/${m.required}`}>
-          <Disc metal={null} />
-          <View style={{ flex: 1, gap: space.xs }}>
-            <Text style={[s.name, s.left]}>{m.name}</Text>
-            <Text style={s.small}>{m.description}</Text>
-            <ProgressBar value={Math.min(m.value, m.required)} max={m.required} label={`${Math.min(m.value, m.required)} / ${m.required}`} />
-          </View>
+    {/* the medallions: the closest goals, then every coin on a shelf */}
+    <View style={s.divider} />
+    <View style={{ gap: space.xs }}>
+      <Eyebrow>{t(`${list.length} madalyondan ${earned.length} tanesi sende`, `You hold ${earned.length} of ${list.length} medallions`)}</Eyebrow>
+      <Text accessibilityRole="header" style={s.sectionTitle}>{t('Madalyonların', 'Your medallions')}</Text>
+    </View>
+    {nextUp.map(m => <Card key={m.id} style={s.next}>
+      <View style={s.nextRow} accessible accessibilityLabel={`${t('Sıradaki hedef', 'Next goal')}: ${m.name}. ${m.description} ${Math.min(m.value, m.required)}/${m.required}`}>
+        <Medallion metal={m.metal} earned={false} symbol={m.id} size={56} />
+        <View style={{ flex: 1, gap: space.xs }}>
+          <Text style={s.nextKicker}>{t('SIRADAKİ HEDEF', 'NEXT GOAL')} · {metalName(m.metal).toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en')}</Text>
+          <Text style={[s.name, s.left]}>{m.name}</Text>
+          <Text style={s.small}>{m.description}</Text>
+          <ProgressBar value={Math.min(m.value, m.required)} max={m.required} label={`${Math.min(m.value, m.required)} / ${m.required}`} />
         </View>
-      </Card>)}
-    </>}
-
-    <SectionHeader title={t(`Tüm madalyonlar · ${earned.length} / ${list.length}`, `All medallions · ${earned.length} / ${list.length}`)} />
+      </View>
+    </Card>)}
     <View style={s.grid}>{list.map(m => <MedalTile key={m.id} m={m} onShare={setShared} />)}</View>
+    <View style={s.shareHint}>
+      <Ionicons name="share-social-outline" size={16} color={colors.goldText} />
+      <Text style={s.small}>{earned.length
+        ? t('Kazandığın bir madalyona dokun; kartını Instagram, WhatsApp ya da istediğin yerde paylaş.', 'Tap a medallion you earned and share its card on Instagram, WhatsApp or anywhere you like.')
+        : t('Madalyon kazandığında kartını sosyal medyada paylaşabileceksin.', 'Once you earn a medallion you can share its card on social media.')}</Text>
+    </View>
 
     {flags.tiered_medals && !!site.medal_tiers && <Tiers tiers={site.medal_tiers} onShare={setShared} />}
 
-    <Button kind="plain" icon="book-outline" label={t('Keşif Defterim', 'My Discovery Notebook')} onPress={() => router.push('/defter')} />
-    <Button kind="plain" icon="images-outline" onPress={() => router.push('/hatira')}
-      label={memories ? t(`Hatıra Defterim (${memories})`, `My Memory Book (${memories})`) : t('Hatıra Defterim', 'My Memory Book')} />
+    {/* the visitor's own books */}
+    <View style={s.divider} />
+    <Text accessibilityRole="header" style={s.sectionTitle}>{t('Defterlerin', 'Your notebooks')}</Text>
+    <View style={s.links}>
+      <LinkRow icon="book-outline" label={t('Keşif Defterim', 'My Discovery Notebook')} note={t('İlgini çekenler, öğrendiklerin, gitmek istediklerin', 'What caught your eye, what you learned, where to go')} onPress={() => router.push('/defter')} />
+      <LinkRow icon="images-outline" label={memories ? t(`Hatıra Defterim (${memories})`, `My Memory Book (${memories})`) : t('Hatıra Defterim', 'My Memory Book')} note={t('Eserlere eklediğin fotoğraf ve notlar', 'The photos and notes you added to works')} onPress={() => router.push('/hatira')} />
+      {flags.question_follow && <QuestionsEntry />}
+    </View>
     {!!favorites.length && <><SectionHeader title={t('Favoriler', 'Favourites')} />{favorites.map(i => <WorkCard key={i.slug} item={i} />)}</>}
-    {flags.question_follow && <QuestionsEntry />}
     {account.user ? <Text style={s.small}>{t('Pasaportun hesabınla eşitleniyor.', 'Your passport is synced with your account.')} {syncLabel(account.sync, account.lastSync)}</Text>
       : <>
         <Text style={s.small}>{t('Pasaportun bu telefonda saklanır. Uygulamayı silmek onu da siler.', 'Your passport is kept on this phone. Deleting the app deletes it too.')}</Text>
@@ -154,11 +176,34 @@ function ProfileEntry() {
   </Card>;
 }
 
+/** A count in the site's large serif figures, its name in small spaced capitals under it. */
+function BigStat({ value, label }: { value: string; label: string }) {
+  return <View style={s.stat} accessible accessibilityLabel={`${Number(value)} ${label}`}>
+    <Text style={s.statValue}>{value}</Text>
+    <Text style={s.statLabel}>{label.toLocaleUpperCase(currentLang() === 'tr' ? 'tr-TR' : 'en')}</Text>
+  </View>;
+}
+
+/** A row leading to one of the visitor's books: a gold-ringed icon, the name in serif and a line about it. */
+function LinkRow({ icon, label, note, onPress, badge }: { icon: IconName; label: string; note: string; onPress: () => void; badge?: string }) {
+  return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label}${badge ? `, ${badge}` : ''}. ${note}`}
+    style={({ pressed }) => [s.linkRow, pressed && { opacity: 0.75 }]}>
+    <View style={s.linkIcon}><Ionicons name={icon} size={20} color={colors.goldText} /></View>
+    <View style={{ flex: 1, gap: 2 }}>
+      <Text style={s.linkLabel}>{label}</Text>
+      <Text style={s.small} numberOfLines={2}>{note}</Text>
+    </View>
+    {!!badge && <Text style={s.badge}>{badge}</Text>}
+    <Ionicons name="chevron-forward" size={18} color={colors.goldLine} />
+  </Pressable>;
+}
+
 /** Only once something is followed: Sorularım is not a promise to everyone. */
 function QuestionsEntry() {
   const { total, unread } = useQuestionCounts();
   if (!total) return null;
-  return <Button kind={unread ? 'gold' : 'plain'} icon="chatbubble-ellipses-outline" label={unread ? t(`Sorularım · ${unread} yeni cevap`, `My questions · ${unread} new`) : t('Sorularım', 'My questions')} onPress={() => router.push('/sorularim')} />;
+  return <LinkRow icon="chatbubble-ellipses-outline" label={t('Sorularım', 'My questions')} note={t('Eserlere sorduğun ve takip ettiğin sorular', 'The questions you asked works and follow')}
+    badge={unread ? t(`${unread} yeni cevap`, `${unread} new`) : undefined} onPress={() => router.push('/sorularim')} />;
 }
 
 /** A round stamp as on the site: burgundy and green ink in turn, slightly crooked. The golden one was taken on the spot. */
@@ -176,30 +221,24 @@ function StampMark({ item, date, index, onSpot = false }: { item: Item; date: st
   </Pressable>;
 }
 
-/** The medallion: filled with its metal once earned, otherwise grey with a lock (the metal is written next to it either way). */
-function Disc({ metal: m }: { metal: Metal | null }) {
-  return <View style={[s.disc, m ? { backgroundColor: metal[m] } : s.discLocked]}>
-    <Ionicons name={m ? 'medal' : 'lock-closed-outline'} size={20} color={m ? colors.emeraldDeep : colors.soft} />
-  </View>;
-}
-
-/** One medallion with what it asks for and how far along it is; an earned one opens its shareable card. */
+/** One coin on the shelf with its name and how far along it is. An earned one opens its shareable card; a locked one
+ *  turns over to say what it asks for. */
 function MedalTile({ m, onShare }: { m: Medal; onShare: (s: Shared) => void }) {
+  const [open, setOpen] = useState(false);
   const done = m.value >= m.required;
   const shown = Math.min(m.value, m.required);
   const status = done ? `${metalName(m.metal)} · ${t('Kazanıldı', 'Earned')}` : `${t('Kilitli', 'Locked')} · ${shown} / ${m.required}`;
-  const body = <>
-    <Disc metal={done ? m.metal : null} />
-    <Text style={s.name}>{m.name}</Text>
-    <Text style={s.status}>{m.description}</Text>
-    <Text style={s.status}>{status}{m.mobile ? ` · ${t('mobil', 'mobile')}` : ''}</Text>
-    {done && <Ionicons name="share-social-outline" size={14} color={colors.goldText} />}
-  </>;
   const label = `${m.name}. ${m.description} ${status}.`;
-  return done
-    ? <Pressable style={({ pressed }) => [s.medal, pressed && { opacity: 0.85 }]} onPress={() => onShare({ kind: 'medal', name: m.name, description: m.description, metal: m.metal })}
-      accessibilityRole="button" accessibilityLabel={`${label} ${t('Paylaşmak için dokun.', 'Tap to share.')}`}>{body}</Pressable>
-    : <View style={[s.medal, s.locked]} accessible accessibilityLabel={label}>{body}</View>;
+  return <Pressable style={({ pressed }) => [s.medal, pressed && { opacity: 0.85 }]}
+    onPress={() => done ? onShare({ kind: 'medal', name: m.name, description: m.description, metal: m.metal, id: m.id }) : setOpen(o => !o)}
+    accessibilityRole="button" accessibilityState={done ? undefined : { expanded: open }}
+    accessibilityLabel={done ? `${label} ${t('Paylaşmak için dokun.', 'Tap to share.')}` : label}>
+    <Medallion metal={m.metal} earned={done} symbol={m.id} size={86} />
+    <Text style={s.name} numberOfLines={2}>{m.name}</Text>
+    <Text style={[s.status, done && s.statusWon]}>{done ? t('Kazanıldı', 'Earned') : `${shown} / ${m.required}`}{m.mobile ? ` · ${t('mobil', 'mobile')}` : ''}</Text>
+    {open && !done && <Text style={s.medalNote}>{m.description}</Text>}
+    {done && <View style={s.sharePill}><Ionicons name="share-social-outline" size={12} color={colors.onGold} /><Text style={s.sharePillText}>{t('PAYLAŞ', 'SHARE')}</Text></View>}
+  </Pressable>;
 }
 
 /** Bronze, silver and gold, in words as well as in colour; the thresholds come from the panel. An earned row opens its
@@ -220,12 +259,12 @@ function Tiers({ tiers, onShare }: { tiers: MedalTiers; onShare: (s: Shared) => 
       body: c.master ? t('Eserlerini okudun, önünde durdun.', 'You read its works and stood before them.') : t('Bu şehirde hikâyesini okuduğun eserler.', 'Works in this city whose story you read.'),
       extra: c.master || !c.onSiteGoal ? null : t(`${c.name} Ustası için altın kademe ve ${c.onSiteGoal} yerinde mühür gerekir (${c.onSite}/${c.onSiteGoal}).`, `Master of ${c.name} takes gold and ${c.onSiteGoal} on-the-spot stamps (${c.onSite}/${c.onSiteGoal}).`) }))];
   return <>
-    <SectionHeader title={t('Kademeler', 'Tiers')} />
+    <Text accessibilityRole="header" style={s.sectionTitle}>{t('Kademeler', 'Tiers')}</Text>
     <View style={{ gap: space.s }}>{rows.map(r => {
       const status = r.metal ? metalName(r.metal) : t('Henüz başlamadı', 'Not started');
       const to = r.next ? t(`${r.value}/${r.next.at}, sıradaki ${metalName(r.next.metal)}`, `${r.value}/${r.next.at}, next ${metalName(r.next.metal)}`) : t(`${r.value}/${r.max}, son kademe`, `${r.value}/${r.max}, final tier`);
       const content = <View style={s.nextRow}>
-        <Disc metal={r.metal} />
+        <Medallion metal={r.metal ?? r.next?.metal ?? 'bronze'} earned={!!r.metal} size={52} />
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={[s.name, s.left]}>{r.name}</Text>
           <Text style={s.tierState}>{status} · {to}</Text>
@@ -244,27 +283,41 @@ function Tiers({ tiers, onShare }: { tiers: MedalTiers; onShare: (s: Shared) => 
   </>;
 }
 
+
 const s = StyleSheet.create({
-  page: { padding: space.m, gap: space.m, paddingBottom: space.xl },
-  cover: { padding: space.l, gap: space.s },
-  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s, marginTop: space.s },
-  coverNote: { color: colors.goldSoft, marginTop: space.xs, ...type.caption },
+  page: { padding: space.m, gap: space.m, paddingBottom: space.xxl },
+  head: { alignItems: 'center', gap: space.s, paddingTop: space.l, paddingHorizontal: space.s },
+  headTitle: { fontFamily: serif, color: colors.ink, textAlign: 'center', fontSize: 44, lineHeight: 48, fontVariant: ['lining-nums'] },
+  headAccent: { fontFamily: fonts.serifItalic, color: colors.goldText },
+  lede: { color: colors.soft, textAlign: 'center', ...type.body, maxWidth: 320 },
+  stats: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingVertical: space.m, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.ivoryLine },
+  stat: { flex: 1, alignItems: 'center', gap: space.xs },
+  statRule: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: colors.ivoryLine },
+  statValue: { fontFamily: serif, color: colors.goldText, fontSize: 40, lineHeight: 44, fontVariant: ['lining-nums'] },
+  statLabel: { color: colors.ink, textAlign: 'center', fontFamily: fonts.sansMedium, fontSize: 10, lineHeight: 14, letterSpacing: 1.2 },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.s },
   profile: { flexDirection: 'row', alignItems: 'center', gap: space.m },
   profileName: { fontFamily: serif, color: colors.ink, ...type.heading },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.ivoryLine, marginTop: space.l },
+  sectionTitle: { fontFamily: serif, color: colors.ink, ...type.title, fontSize: 32, lineHeight: 36 },
   next: { padding: space.m },
   nextRow: { flexDirection: 'row', alignItems: 'center', gap: space.m },
+  nextKicker: { color: colors.goldText, ...type.eyebrow, fontSize: 10, letterSpacing: 1.6 },
   left: { textAlign: 'left' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s },
-  medal: { width: '48.5%', alignItems: 'center', padding: space.m - space.xs, borderRadius: radius.m, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.goldLine, gap: space.xs },
-  locked: { backgroundColor: colors.parchment, borderColor: colors.line },
-  disc: { width: hit, height: hit, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.goldLine, alignItems: 'center', justifyContent: 'center' },
-  discLocked: { backgroundColor: colors.parchmentDeep, borderColor: colors.soft, borderStyle: 'dashed' },
-  name: { ...type.body, fontFamily: serif, color: colors.ink, textAlign: 'center' },
-  status: { color: colors.soft, textAlign: 'center', ...type.caption },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: space.l, paddingTop: space.s },
+  medal: { width: '31.5%', alignItems: 'center', gap: space.xs, minHeight: hit },
+  name: { ...type.body, fontFamily: serif, fontSize: 16, lineHeight: 19, color: colors.ink, textAlign: 'center' },
+  status: { color: colors.soft, textAlign: 'center', ...type.caption, fontFamily: fonts.sansSemi, letterSpacing: 1 },
+  statusWon: { color: colors.goldText },
+  shareHint: { flexDirection: 'row', alignItems: 'center', gap: space.s, padding: space.s + space.xs, borderRadius: radius.m, backgroundColor: colors.paper, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.ivoryLine },
+  sharePill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: space.s, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: colors.goldSoft },
+  sharePillText: { color: colors.onGold, fontFamily: fonts.sansSemi, fontSize: 9.5, letterSpacing: 1.2 },
+  medalNote: { color: colors.soft, textAlign: 'center', ...type.caption },
   tierState: { color: colors.goldText, ...type.caption, fontFamily: fonts.sansSemi },
   small: { color: colors.soft, ...type.caption },
-  book: { marginRight: 6, borderRadius: radius.s, backgroundColor: stampBook.cover, paddingRight: 5, borderWidth: 1, borderColor: stampBook.edge },
-  paper: { padding: space.m, borderRadius: radius.s, backgroundColor: stampBook.paper, borderRightWidth: 1, borderRightColor: stampBook.edge, gap: space.m },
+  book: { borderRadius: radius.s, ...shadow.card },
+  paper: { padding: space.m, backgroundColor: stampBook.paper, borderBottomLeftRadius: radius.s, borderBottomRightRadius: radius.s,
+    borderWidth: 1, borderTopWidth: 0, borderColor: stampBook.edge, borderRightWidth: 6, borderRightColor: stampBook.cover, gap: space.m },
   paperHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: space.s, borderBottomWidth: 1, borderBottomColor: colors.line },
   paperTitle: { color: colors.soft, letterSpacing: 1.8, ...type.caption },
   paperPart: { color: colors.goldText, ...type.eyebrow },
@@ -279,6 +332,12 @@ const s = StyleSheet.create({
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: space.s, borderTopWidth: 1, borderTopColor: colors.line },
   pagerKey: { width: hit, height: hit, alignItems: 'center', justifyContent: 'center' },
   pagerText: { color: colors.soft, letterSpacing: 1.6, ...type.caption },
-  empty: { alignItems: 'center', gap: space.s, paddingVertical: space.m },
-  emptyTitle: { fontFamily: serif, color: colors.ink, textAlign: 'center', ...type.heading },
+  empty: { alignItems: 'center', gap: space.s, paddingVertical: space.l },
+  emptyTitle: { fontFamily: serif, color: colors.emeraldLight, textAlign: 'center', fontSize: 30, lineHeight: 34 },
+  emptyAccent: { fontFamily: fonts.serifItalic, color: colors.goldText },
+  links: { borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.ivoryLine },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: space.m, paddingVertical: space.m, minHeight: hit, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.ivoryLine },
+  linkIcon: { width: hit, height: hit, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldLine, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paper },
+  linkLabel: { fontFamily: serif, color: colors.ink, ...type.heading, fontSize: 19 },
+  badge: { color: colors.onGold, backgroundColor: colors.goldSoft, overflow: 'hidden', borderRadius: radius.pill, paddingHorizontal: space.s, paddingVertical: 2, ...type.caption, fontFamily: fonts.sansSemi },
 });

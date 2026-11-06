@@ -186,7 +186,12 @@ class AdminTest(unittest.TestCase):
     def test_change_cover_and_bulk(self):
         imgs = self.c.get(f'/api/admin/monuments/{CAMI}', headers=NES).json()['images']
         second = next(i for i in imgs if not i['is_cover'] and i['review_status'] == 'published')
-        self.c.patch(f"/api/admin/images/{second['id']}", headers=NES, json={'is_cover': True})
+        # yeni kapak sırada eski kapaktan önce gelsin: eskiden tek UPDATE'le kapak değiştirmek bu durumda
+        # image_one_cover benzersiz indeksine takılıp 500 veriyordu
+        self.api.db.execute('UPDATE image SET sort = 999 WHERE id = %(i)s', dict(i=next(i['id'] for i in imgs if i['is_cover'])))
+        self.api.db.execute('UPDATE image SET sort = 0 WHERE id = %(i)s', dict(i=second['id']))
+        r = self.c.patch(f"/api/admin/images/{second['id']}", headers=NES, json={'is_cover': True})
+        self.assertEqual(r.status_code, 200, r.text)
         covers = [i['id'] for i in self.c.get(f'/api/admin/monuments/{CAMI}', headers=NES).json()['images'] if i['is_cover']]
         self.assertEqual(covers, [second['id']])
         draft = next(i for i in imgs if i['review_status'] == 'draft')

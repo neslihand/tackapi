@@ -144,7 +144,7 @@ class AgentTest(unittest.TestCase):
         # duyuru: taslak oluşur, yayımlanınca ve tarihi sürerken sitede görünür
         ann = self.db.query("""SELECT id FROM agent_suggestion WHERE evidence->>'occasion' = 'Cumhuriyet Bayramı'""")[0]['id']
         d = self.c.post(f'/api/admin/agent/{ann}/draft', json={'kind': 'announcement'}, headers=NES).json()
-        aid = int(self.c.post(f'/api/admin/agent/{ann}/apply', json={'kind': 'announcement', 'draft': dict(d['draft'], starts_on=None)},
+        aid = int(self.c.post(f'/api/admin/agent/{ann}/apply', json={'kind': 'announcement', 'draft': dict(d['draft'], starts_on=None, ends_on=str(dt.date.today() + dt.timedelta(days=7)))},
                               headers=NES).json()['result_ref'].split(':')[1])
         self.assertEqual(self.c.get('/api/announcements').json(), [])
         r = self.c.patch(f'/api/admin/announcements/{aid}', json={'published': True}, headers=NES)
@@ -164,7 +164,8 @@ class AgentTest(unittest.TestCase):
                                VALUES ('t:summary', 'content', 'Okunmadan bırakılıyor', 'deneme', %(m)s, '{summary}') RETURNING id""",
                             dict(m=[CAMI]))[0]['id']
         d = self.c.post(f'/api/admin/agent/{sid}/draft', json={'kind': 'summary'}, headers=NES).json()
-        self.assertEqual(d['draft'], {'summary': 'Özet TR', 'slug': CAMI})          # kayıttaki özet
+        self.assertEqual((d['draft']['summary'], d['draft']['slug']), ('Özet TR', CAMI))   # kayıttaki özet
+        self.assertEqual(d['draft']['variants'][0], 'Özet TR')
         bad = self.c.post(f'/api/admin/agent/{sid}/apply', json={'kind': 'summary', 'draft': {'slug': KONYA, 'summary': 'Başka esere yazılmamalı.'}},
                           headers=NES)
         self.assertEqual(bad.status_code, 422)
@@ -192,6 +193,33 @@ class AgentTest(unittest.TestCase):
             d = self.c.post(f'/api/admin/agent/{sid}/draft', json={'kind': 'announcement'}, headers=NES).json()
         self.assertFalse(d['ai'])
         self.assertIn('Muradiye Camii', d['draft']['body'])          # şablon, kayıttaki adlarla
+        self.assertEqual(len(d['draft']['variants']), 3)
+
+    def test_draft_variants_tone_and_internal_reason_kept_out(self):
+        sid = self.db.query("""INSERT INTO agent_suggestion(key, kind, title, detail, monuments, drafts, evidence)
+                               VALUES ('t:bounce', 'engagement', 'Ziyaretçilerin %%55''i hiç eser açmadan ayrılıyor',
+                                       'Son 30 günde 80 ziyaretçinin 44 tanesi', %(m)s, '{announcement}', '{"n": 80}')
+                               RETURNING id""", dict(m=[CAMI, KONYA]))[0]['id']
+        fake = dict(variants=[dict(angle='Ayrıntı', title='Muradiye Camii', body='Çinilerine yakından bak! Eşsiz bir yapı.', monuments=[CAMI]),
+                              dict(angle='Kısa', title='', body='boş başlık atılır', monuments=[])])
+        with mock.patch.object(A.G, 'generate', return_value=fake) as gen:
+            d = self.c.post(f'/api/admin/agent/{sid}/draft', json={'kind': 'announcement', 'tone': 'formal', 'note': 'çinilere vurgu'},
+                            headers=NES).json()
+        prompt = gen.call_args[0][0]
+        self.assertNotIn('%55', prompt)                              # iç gerekçe ziyaretçi metnine gidecek isteme girmez
+        self.assertIn('Kurumsal', prompt)
+        self.assertIn('çinilere vurgu', prompt)
+        self.assertTrue(d['ai'])
+        self.assertEqual(len(d['draft']['variants']), 1)
+        self.assertNotIn('!', d['draft']['body'])
+        self.assertTrue(any('Kalıp' in w for w in d['warnings']))
+        with mock.patch.object(A.G, 'generate', side_effect=RuntimeError('kota')):
+            d = self.c.post(f'/api/admin/agent/{sid}/draft', json={'kind': 'announcement'}, headers=NES).json()
+        text = ' '.join(v['title'] + ' ' + v['body'] for v in d['draft']['variants'])
+        self.assertNotIn('%', text)                                  # şablon da iç gerekçeyi yazmaz
+        self.assertNotIn('ziyaretçi', text.lower())
+        bad = self.c.post(f'/api/admin/agent/{sid}/draft', json={'kind': 'announcement', 'tone': 'uydurma'}, headers=NES)
+        self.assertEqual(bad.status_code, 422)
 
     def test_calendar_crud_validation(self):
         bad = self.c.post('/api/admin/calendar', json={'title': 'X günü', 'kind': 'other', 'month': 2, 'day': 31}, headers=NES)

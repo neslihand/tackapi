@@ -16,6 +16,7 @@ import { MonumentDetails, PhotoGallery } from '@/components/MonumentDetails';
 import { NotebookChips } from '@/components/Notebook';
 import { ShareSheet, type Shared } from '@/components/ShareSheet';
 import { ThreeDetails } from '@/components/ThreeDetails';
+import { StoryReader, TaleBook } from '@/components/Tellings';
 import { Button, Empty, Eyebrow, Loading, Notice, Title, type IconName } from '@/components/UI';
 import { WorkTile } from '@/components/WorkTile';
 import { useAccount } from '@/lib/account';
@@ -69,6 +70,10 @@ export default function Work() {
   const [linkShown, setLinkShown] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const memories = useJournal().of(slug);
+  // how far down the reading the visitor has scrolled (for the stars of the children's book): where the section and
+  // the book sit in the scroll view, and the deepest point seen
+  const spots = useRef({ section: 0, reading: 0, book: 0 });
+  const [deepest, setDeepest] = useState(0);
   // the digital stamp comes from reading or hearing three quarters of a telling, never from opening the page
   const story = useStoryReading({ telling: `${slug}:${mode}`, text,
     onStart: () => track('heritage_story_started', slug, { mode: modeForEvents(mode) }),
@@ -138,6 +143,7 @@ export default function Work() {
   const upper = (s: string) => s.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en');
   // the short card right under the title: city · type · date · era
   const card = item ? [item.city.name, item.kind_label, item.built.label, item.period?.name].filter((v): v is string => Boolean(v)) : [];
+  const tellingWork = { name, kind: item?.kind, kind_label: item?.kind_label, meta: card };
   const labels: Record<ReadingMode, string> = { brief: t('Özet', 'Summary'), story: t('Hikâye', 'Story'), child: t('Çocuk', 'Kids'), text: t('Kitap', 'Book') };
   const available = MODES.filter(m => textOf(m));
   const heading = mode === 'brief' ? `${t('KISA ÖZET', 'IN BRIEF')}${text ? ` · ${t(`YAKLAŞIK ${spokenSeconds(text)} SANİYE`, `ABOUT ${spokenSeconds(text)} SECONDS`)}` : ''}`
@@ -145,6 +151,7 @@ export default function Work() {
 
   function choose(id: ReadingMode) {
     setVoiced(null);
+    setDeepest(0);
     setPicked(id);
     change({ narration: id });
     track('narration_mode', slug, { mode: modeForEvents(id) });
@@ -199,7 +206,9 @@ export default function Work() {
 
   return <View style={s.screen}>
     <Stack.Screen options={{ title: name }} />
-    <ScrollView onScroll={story.onScroll} onLayout={story.onViewport} scrollEventThrottle={200}
+    <ScrollView onScroll={e => { story.onScroll(e); const { section, reading, book } = spots.current;
+        const seen = e.nativeEvent.contentOffset.y + e.nativeEvent.layoutMeasurement.height - section - reading - book;
+        if (seen > deepest + 40) setDeepest(seen); }} onLayout={story.onViewport} scrollEventThrottle={200}
       contentContainerStyle={{ paddingBottom: ACTION_BAR_HEIGHT + insets.bottom + space.l }}>
       {/* the title sits under the picture, never over it, so it shows whole on every screen size */}
       <View style={s.cover}>
@@ -227,19 +236,22 @@ export default function Work() {
         <NotebookChips slug={slug} />
       </View>
 
-      <View onLayout={story.onSection} style={s.section}>
+      <View onLayout={e => { spots.current.section = e.nativeEvent.layout.y; story.onSection(e); }} style={s.section}>
         {available.length > 1 && <SegmentedControl<ReadingMode> accessibilityLabel={t('Anlatım', 'Telling')} value={mode}
           onChange={choose} options={available.map(k => ({ key: k, label: labels[k] }))} />}
         <Eyebrow>{heading}</Eyebrow>
         {/* the visitor's usual telling is missing here: said out loud, not swapped silently (master plan M03) */}
         {!picked && !!settings.narration && settings.narration !== mode && <Text style={s.small}>{t(`Bu eserin “${labels[settings.narration]}” anlatımı henüz yok; “${labels[mode]}” açıldı.`, `This work has no “${labels[settings.narration]}” telling yet; “${labels[mode]}” is open.`)}</Text>}
-        {text ? <View style={s.reading}>
+        {text ? <View style={s.reading} onLayout={e => { spots.current.reading = e.nativeEvent.layout.y; }}>
           {mode === 'text' && detail.text_note && <Text style={s.small}>{detail.text_note}</Text>}
           {mode === 'brief' && <Text style={s.small}>{t('Bu özet kitaptaki bilgilerden derlendi. Kaynak:', 'This summary was compiled from the book. Source:')} {item ? sourceTitle(item.source) : detail.source.book}</Text>}
           {(mode === 'story' || mode === 'child') && <Text style={s.small}>{t('Bu anlatım kitaptaki bilgilere dayanarak yapay zekâyla hazırlandı; hikâyedeki atmosfer yaratıcı anlatımdır.', 'This telling was prepared with AI from the book’s information; the atmosphere of the story is creative narration.')}</Text>}
-          <View key={`${slug}:${mode}`} onLayout={story.onBlock} style={s.reading}>
-            {text.split(/\n{2,}|\n/).filter(p => p.trim()).map((p, i) => <Paragraph key={i} text={p.trim()} first={i === 0} child={mode === 'child'} />)}
-          </View>
+          {mode === 'story' ? <View key={`${slug}:story`} style={s.bleed}><StoryReader work={tellingWork} text={text} onLayout={story.onBlock} /></View>
+            : mode === 'child' ? <View key={`${slug}:child`} style={s.bleed} onLayout={e => { spots.current.book = e.nativeEvent.layout.y; }}>
+              <TaleBook work={tellingWork} text={text} seen={deepest} onLayout={story.onBlock} /></View>
+            : <View key={`${slug}:${mode}`} onLayout={story.onBlock} style={s.reading}>
+              {text.split(/\n{2,}|\n/).filter(p => p.trim()).map((p, i) => <Paragraph key={i} text={p.trim()} first={i === 0} child={false} />)}
+            </View>}
           {(mode === 'story' || mode === 'child') && !!detail.narrations[mode]?.sources.length && <View style={s.sources}>
             <Eyebrow>{t('BU ANLATIMIN KAYNAKLARI', 'SOURCES FOR THIS TELLING')}</Eyebrow>
             {detail.narrations[mode]!.sources.map((source, i) => <Text key={i} style={s.small}>{[source.book, source.pages && t(`s. ${source.pages}`, `p. ${source.pages}`)].filter(Boolean).join(', ')}</Text>)}
@@ -345,6 +357,7 @@ const s = StyleSheet.create({
   muted: { color: colors.soft, ...type.small },
   small: { color: colors.soft, ...type.caption },
   reading: { gap: space.s + 2, width: '100%', maxWidth: measure.reading, alignSelf: 'center' },
+  bleed: { marginHorizontal: -space.m, marginTop: space.s },
   paragraph: { fontFamily: serif, color: colors.ink, ...type.reading },
   childText: { fontSize: 22, lineHeight: 33 },
   initial: { ...type.dropCap, color: colors.goldText, fontFamily: fonts.serifItalic },

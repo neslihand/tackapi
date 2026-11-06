@@ -30,12 +30,12 @@ export function NearbyCard() {
   };
   if (!located) return null;
 
-  if (near.length) return <HorizontalRail title={t('Yakınında', 'Near you')} actionLabel={t('Tümü', 'See all')} onAction={() => router.push('/kesfet')}
+  if (near.length) return <HorizontalRail title={t('Yakınında', 'Near you')} kicker={t('Etrafındaki kapılar', 'Doors around you')} actionLabel={t('Tümü', 'See all')} onAction={() => router.push('/kesfet')}
     data={near} keyExtractor={n => n.item.slug} itemWidth={180}
     renderItem={({ item, m }) => <WorkTile item={item} extra={`${formatDistance(m)}${item.location?.approximate ? ` · ${t('yaklaşık', 'approx.')}` : ''}`} />} />;
 
   return <View style={[home.pad, home.gap]}>
-    <SectionHeader title={t('Yakınında', 'Near you')} />
+    <SectionHeader kicker={t('Etrafındaki kapılar', 'Doors around you')} title={t('Yakınında', 'Near you')} />
     <Card style={home.gap}>
       <Text style={home.body}>{t('Sana en yakın beş eseri gösterelim. Konumun yalnızca bu telefonda mesafe ölçmek için kullanılır, sunucuya gönderilmez.', 'We can show the five works closest to you. Your location is only used on this phone to measure distances; it is not sent to the server.')}</Text>
       {error && <Notice tone="warn" icon="alert-circle-outline">{error}</Notice>}

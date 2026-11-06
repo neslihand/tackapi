@@ -5,28 +5,37 @@ import { ActivityIndicator, Animated, FlatList, Pressable, StyleSheet, Text, Vie
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { IconName } from '@/components/UI';
 import { VerticalFill } from '@/components/brand/Gradient';
+import { currentLang } from '@/lib/i18n';
 import { usePop } from '@/lib/motion';
 import { colors, fonts, gradients, hit, motion, radius, serif, shadow, space, type } from '@/lib/theme';
 
-/** A section title with an optional "See all" link on the right. */
-export function SectionHeader({ title, actionLabel, onAction }: { title: string; actionLabel?: string; onAction?: () => void }) {
+/** A section title as on the site: a short gold rule and the kicker above (when given), the serif title, and an optional
+ *  "See all" link on the right in small gold capitals. */
+export function SectionHeader({ title, kicker, actionLabel, onAction, light }: { title: string; kicker?: string; actionLabel?: string; onAction?: () => void; light?: boolean }) {
+  const upper = (x: string) => x.toLocaleUpperCase(currentLang() === 'tr' ? 'tr-TR' : 'en');
   return <View style={styles.header}>
-    <Text accessibilityRole="header" style={styles.headerTitle}>{title}</Text>
+    <View style={styles.headerText}>
+      <View style={styles.headerKick}>
+        <View style={[styles.headerRule, light && { backgroundColor: colors.gold }]} />
+        {!!kicker && <Text style={[styles.headerKicker, light && { color: colors.goldSoft }]}>{upper(kicker)}</Text>}
+      </View>
+      <Text accessibilityRole="header" style={[styles.headerTitle, light && { color: colors.goldSoft }]}>{title}</Text>
+    </View>
     {actionLabel && onAction && <Pressable accessibilityRole="link" accessibilityLabel={actionLabel} onPress={onAction} hitSlop={8}
       style={({ pressed }) => [styles.headerLink, pressed && { opacity: 0.6 }]}>
-      <Text style={styles.headerLinkText}>{actionLabel}</Text>
-      <Ionicons name="chevron-forward" size={16} color={colors.goldText} />
+      <Text style={[styles.headerLinkText, light && { color: colors.goldSoft }]}>{upper(actionLabel)}</Text>
+      <Ionicons name="arrow-forward" size={15} color={light ? colors.goldSoft : colors.goldText} />
     </Pressable>}
   </View>;
 }
 
 /** A titled, horizontally scrolling list; each item gets the same width. */
-export function HorizontalRail<T>({ title, actionLabel, onAction, data, renderItem, keyExtractor, itemWidth = 220 }: {
-  title?: string; actionLabel?: string; onAction?: () => void;
+export function HorizontalRail<T>({ title, kicker, actionLabel, onAction, data, renderItem, keyExtractor, itemWidth = 220 }: {
+  title?: string; kicker?: string; actionLabel?: string; onAction?: () => void;
   data: readonly T[]; renderItem: (item: T, index: number) => ReactElement; keyExtractor: (item: T, index: number) => string; itemWidth?: number;
 }) {
   return <View style={styles.rail}>
-    {title && <View style={styles.railHeader}><SectionHeader title={title} actionLabel={actionLabel} onAction={onAction} /></View>}
+    {title && <View style={styles.railHeader}><SectionHeader title={title} kicker={kicker} actionLabel={actionLabel} onAction={onAction} /></View>}
     <FlatList horizontal data={data} keyExtractor={keyExtractor} showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.railList} renderItem={({ item, index }) => <View style={{ width: itemWidth }}>{renderItem(item, index)}</View>} />
   </View>;
@@ -67,10 +76,14 @@ function BarButton({ action: a }: { action: BarAction }) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.s, minHeight: hit },
-  headerTitle: { flex: 1, fontFamily: serif, color: colors.ink, ...type.heading },
-  headerLink: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: hit, minWidth: hit, justifyContent: 'flex-end' },
-  headerLinkText: { color: colors.goldText, fontWeight: '600', ...type.body },
+  header: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: space.s, minHeight: hit },
+  headerText: { flex: 1, gap: space.xs },
+  headerKick: { flexDirection: 'row', alignItems: 'center', gap: space.s },
+  headerRule: { width: 22, height: 1, backgroundColor: colors.goldLine },
+  headerKicker: { color: colors.goldText, ...type.eyebrow, fontSize: 10, lineHeight: 14 },
+  headerTitle: { fontFamily: serif, color: colors.ink, fontSize: 26, lineHeight: 30, fontVariant: ['lining-nums'] },
+  headerLink: { flexDirection: 'row', alignItems: 'center', gap: space.xs, minHeight: hit, minWidth: hit, justifyContent: 'flex-end' },
+  headerLinkText: { color: colors.goldText, ...type.button, fontSize: 11 },
   rail: { gap: space.xs },
   railHeader: { paddingHorizontal: space.m },
   railList: { paddingHorizontal: space.m, gap: space.m },

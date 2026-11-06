@@ -7,6 +7,7 @@ Kullanım:
   python demo_activity.py --write            # 400 deneme ziyareti (son 30 gün) yazar
   python demo_activity.py --write --sessions 800 --days 45 --seed 7
   python demo_activity.py --clear            # bütün deneme olaylarını siler (gerçek olaylara dokunmaz)
+  python demo_activity.py --refresh          # eski deneme verisini "şimdi"ye kaydırır (sunumdan hemen önce)
 
 Sohbet soruları ve aramalar örnek metinlerdir; gerçek ziyaretçi sorusu değildir.
 """
@@ -73,6 +74,41 @@ def plan_session(rng, persona, monuments, routes):
     return ev
 
 
+MOBILE_SHARE = 0.42
+# Türkiye saatine göre saatlik ziyaret ağırlığı (gece az, öğleden sonra ve akşam yoğun)
+HOUR_WEIGHTS = [1, .5, .3, .2, .2, .3, .6, 1.2, 2, 3, 3.6, 4, 4.4, 4.6, 4.8, 5, 5.2, 5.4, 5.8, 6.2, 6, 4.8, 3.2, 1.8]
+TR = datetime.timedelta(hours=3)
+
+
+def session_start(rng, now, days):
+    """Ziyaretin başlangıcı: son `days` günde, yeniye ağırlıklı; gün içinde Türkiye saatiyle gündüz ve akşama yoğun.
+    Bugünün henüz gelmemiş saatine düşen ziyaret son birkaç saate kayar (sunumda 'şu an' boş görünmesin)."""
+    local = now + TR
+    # yeniye ağırlıklı: site büyüyor görünür (üs > 1 → son günler daha kalabalık)
+    day = local.date() - datetime.timedelta(days=int(rng.random() ** 1.12 * days))
+    hour = rng.choices(range(24), HOUR_WEIGHTS)[0]
+    start = datetime.datetime(day.year, day.month, day.day, hour, rng.randint(0, 59), rng.randint(0, 59),
+                              tzinfo=datetime.timezone.utc) - TR
+    if start > now - datetime.timedelta(minutes=2):
+        # bugünün gelmemiş saati: çoğu daha önceki bir güne, bir kısmı son 90 dakikaya ('şu an sitede' boş kalmasın)
+        start = (now - datetime.timedelta(minutes=rng.randint(2, 90)) if rng.random() < 0.2
+                 else start - datetime.timedelta(days=1 + int(rng.random() * max(1, days - 1))))
+    return start
+
+
+def refresh(db, out=print):
+    """Deneme olaylarını en yenisi şu an olacak biçimde ileri kaydırır (sunumdan önce: veri günler önce üretildiyse
+    'son 24 saat' boş kalmasın). Aralıklar ve sıra korunur; gerçek olaylara dokunulmaz."""
+    row = db.query("SELECT now() - max(at) AS gap, count(*) AS n FROM analytics_event WHERE demo")[0]
+    if not row['n'] or row['gap'] is None or row['gap'] <= datetime.timedelta(minutes=5):
+        out('Kaydırılacak deneme olayı yok ya da veri zaten güncel.')
+        return datetime.timedelta(0)
+    gap = row['gap'] - datetime.timedelta(minutes=3)
+    db.execute('UPDATE analytics_event SET at = at + %(g)s WHERE demo', dict(g=gap))
+    out(f"{row['n']} deneme olayı {gap.days} gün {gap.seconds // 3600} saat ileri kaydırıldı.")
+    return gap
+
+
 def generate(db, sessions=400, days=30, seed=42, write=False, out=print):
     rng = random.Random(seed)
     monuments = [r['slug'] for r in db.query("""SELECT slug FROM monument WHERE review_status = 'published' AND pilot
@@ -88,11 +124,15 @@ def generate(db, sessions=400, days=30, seed=42, write=False, out=print):
     for _ in range(sessions):
         persona = rng.choices(list(PERSONAS), list(PERSONAS.values()))[0]
         mix[persona] = mix.get(persona, 0) + 1
-        start = now - datetime.timedelta(days=rng.random() ** 0.8 * days, minutes=rng.randint(0, 600))
+        start = session_start(rng, now, days)
         pool = rng.choices(monuments, weights, k=12)
         sid = str(uuid.UUID(int=rng.getrandbits(128), version=4))
+        platform = 'mobile' if rng.random() < MOBILE_SHARE else 'web'
         for t, kind, slug, path, props in plan_session(rng, persona, list(dict.fromkeys(pool)), routes):
-            rows.append((start + datetime.timedelta(seconds=t), sid, kind, slug, path, json.dumps(props, ensure_ascii=False)))
+            at = start + datetime.timedelta(seconds=t)
+            if at > now:                      # gelecekte olay olmaz
+                continue
+            rows.append((at, sid, kind, slug, path, json.dumps(dict(props, platform=platform), ensure_ascii=False)))
     out(f'{sessions} deneme ziyareti, {len(rows)} olay (son {days} gün). Profil karışımı: ' +
         ', '.join(f'{k} {v}' for k, v in sorted(mix.items(), key=lambda kv: -kv[1])))
     if not write:
@@ -124,10 +164,13 @@ def main():
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--write', action='store_true')
     ap.add_argument('--clear', action='store_true')
+    ap.add_argument('--refresh', action='store_true', help='deneme olaylarını en yenisi şimdi olacak biçimde ileri kaydırır')
     a = ap.parse_args()
     db = DB(a.dsn)
     if a.clear:
         clear(db)
+    elif a.refresh:
+        refresh(db)
     else:
         generate(db, a.sessions, a.days, a.seed, a.write)
 

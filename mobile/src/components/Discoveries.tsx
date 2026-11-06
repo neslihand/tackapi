@@ -6,6 +6,8 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from './Typography';
+import { ArchImage } from './brand/ArchImage';
+import { SectionHeader } from './Layout';
 import { Button, Eyebrow, Title } from './UI';
 import { useAccount } from '@/lib/account';
 import { analyticsSession, track, useConsent } from '@/lib/analytics';
@@ -15,7 +17,7 @@ import { discoveryProfile, suggestFor, type Lead } from '@/lib/personal';
 import { useContent, usePassport, useSettings } from '@/lib/store';
 import { usePreferences } from '@/lib/usePreferences';
 import { capitalizeReason, openableWorks, pickForYou, pickPopular, type Announcement, type ForYou as ForYouList, type Popular as PopularWork, type WeeklyDiscovery } from '@/lib/suggestions';
-import { colors, serif, space } from '@/lib/theme';
+import { colors, fonts, serif, space } from '@/lib/theme';
 
 const LIMIT = 4;
 // each block takes its own outer style, so a block with nothing to show leaves no empty frame (and no gap) behind
@@ -129,8 +131,7 @@ export function ForYou({ skip = [], style }: { skip?: readonly (string | undefin
   if (!local.length && !server.length && !prefs.interests.includes('photography')) return null;
   return <View style={[{ gap: space.s }, style]}>
     {(local.length > 0 || server.length > 0) && <>
-      <Eyebrow>{t('SENİN İÇİN', 'FOR YOU')}</Eyebrow>
-      <Title>{t('Keşfine göre sıradaki kapılar', 'Next doors for your discovery')}</Title>
+      <SectionHeader kicker={t('Senin için', 'For you')} title={t('Keşfine göre sıradaki kapılar', 'Next doors for your discovery')} />
       {!!label && <Pressable accessibilityRole="link" onPress={() => router.push('/tercihler')} style={{ minHeight: 28, justifyContent: 'center' }}><Text style={s.segment}>{label}</Text></Pressable>}
       {local.map((r, i) => <Tile key={r.item.slug} item={r.item} note={r.reason} onOpen={() => track('recommendation_click', r.item.slug, { list: 'for_you', source: 'device', rank: i + 1 })} />)}
       {server.map((r, i) => <Tile key={r.slug} item={bySlug(r.slug)!} note={r.reason && currentLang() === 'tr' ? capitalizeReason(r.reason) : t('Önerilen', 'Recommended')}
@@ -155,20 +156,22 @@ export function Popular({ style }: Outer) {
   if (!trending.length) return null;
   const locale = lang === 'en' ? 'en-GB' : 'tr-TR';
   return <View style={[{ gap: space.s }, style]}>
-    <Eyebrow>{t('EN ÇOK MERAK EDİLENLER', 'MOST WONDERED ABOUT')}</Eyebrow>
-    <Title>{t('Bu hafta en çok bakılanlar', 'Most viewed this week')}</Title>
+    <SectionHeader kicker={t('En çok merak edilenler', 'Most wondered about')} title={t('Bu hafta en çok bakılanlar', 'Most viewed this week')} />
     {trending.map((p, i) => <Tile key={p.slug} item={bySlug(p.slug)!} rank={i + 1} note={t(`${p.visitors.toLocaleString(locale)} ziyaretçi baktı`, `${p.visitors.toLocaleString(locale)} visitors looked`)}
       onOpen={() => track('recommendation_click', p.slug, { list: 'popular', rank: i + 1 })} />)}
   </View>;
 }
 
+/** A work in one of Bugün's lists, as an editorial row: the rank in large serif figures (for the popular list), the
+ *  arched photo, the city, the name and why it is here; rows are parted by a fine gold rule. */
 function Tile({ item, note, rank, onOpen }: { item: Item; note: string; rank?: number; onOpen: () => void }) {
   const photo = mediaUrl(item.image?.thumb);
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${rank ? `${rank}. ` : ''}${item.name}, ${item.city.name}. ${note}`} style={({ pressed }) => [s.tile, pressed && { opacity: .85 }]}
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${rank ? `${rank}. ` : ''}${item.name}, ${item.city.name}. ${note}`} style={({ pressed }) => [s.tile, pressed && { opacity: .8 }]}
     onPress={() => { onOpen(); router.push(`/eser/${item.slug}`); }}>
-    <View style={s.tileArt}>{!!photo && <Image source={photo} alt="" contentFit="cover" style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />}</View>
+    {!!rank && <Text style={s.rank}>{String(rank).padStart(2, '0')}</Text>}
+    <ArchImage uri={photo} size="sm" kind={item.kind} kind_label={item.kind_label} />
     <View style={{ flex: 1, gap: 2 }}>
-      <Text style={s.tileCity}>{rank ? `${rank}. · ` : ''}{item.city.name.toLocaleUpperCase('tr-TR')}</Text>
+      <Text style={s.tileCity}>{item.city.name.toLocaleUpperCase(currentLang() === 'tr' ? 'tr-TR' : 'en')} · {item.kind_label.toLocaleUpperCase(currentLang() === 'tr' ? 'tr-TR' : 'en')}</Text>
       <Text style={s.tileName} numberOfLines={2}>{item.name}</Text>
       <Text style={s.tileNote} numberOfLines={2}>{note}</Text>
     </View>
@@ -192,9 +195,9 @@ const s = StyleSheet.create({
   noticeLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.s, minHeight: 44, borderTopWidth: 1, borderTopColor: colors.line },
   noticeLinkText: { flex: 1, fontFamily: serif, fontSize: 17, color: colors.ink },
   segment: { color: colors.goldText, fontSize: 13 },
-  tile: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, borderRadius: 12, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line },
-  tileArt: { width: 68, height: 68, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.parchmentDeep },
-  tileCity: { color: colors.goldText, fontSize: 10.5, letterSpacing: 1.2, fontWeight: '600' },
+  tile: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: space.s + 2, minHeight: 44, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.ivoryLine },
+  rank: { fontFamily: serif, color: colors.goldText, fontSize: 30, lineHeight: 34, width: 38, fontVariant: ['lining-nums'] },
+  tileCity: { color: colors.goldText, fontSize: 10, letterSpacing: 1.4, fontFamily: fonts.sansSemi },
   tileName: { fontFamily: serif, fontSize: 18, lineHeight: 22, color: colors.ink },
   tileNote: { color: colors.soft, fontSize: 12, lineHeight: 17 },
 });

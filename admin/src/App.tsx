@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { BarChart3, BookA, Building2, CalendarDays, CalendarRange, ChevronRight, CircleHelp, History, Images, LayoutDashboard, LogOut, MapPinned, Megaphone, Menu, MessageCircleQuestion, MessageSquareHeart, Newspaper, Plus, Route, ScanSearch, Search, Sparkles, SplitSquareVertical, X } from 'lucide-react';
+import { BarChart3, BookA, Building2, CalendarDays, CalendarRange, ChevronRight, CircleHelp, History, Images, KeyRound, LayoutDashboard, LogOut, MapPinned, Megaphone, Menu, MessageCircleQuestion, MessageSquareHeart, Newspaper, NotebookPen, Plus, Route, ScanSearch, Search, Sparkles, SplitSquareVertical, X } from 'lucide-react';
 import { api, getToken, handleUnauthorized, setToken } from './lib/api';
 import { Link, useRoute } from './lib/navigation';
 import { Brand, ToastProvider } from './components/UI';
@@ -28,15 +28,16 @@ import { ArticlesPage } from './pages/Articles';
 import { ArticleEdit } from './pages/ArticleEdit';
 import { ArticleImport } from './pages/ArticleImport';
 import { TermsPage } from './pages/Terms';
+import { AuthorAccountsPage, AuthorWorkReview, AuthorWorksPage } from './pages/AuthorReview';
 
-type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number; questions: number } | null;
+type Pending = { images: number; segmentation: number; contributions: number; agent: number; articles: number; terms: number; questions: number; author: number } | null;
 type NavItem = { to: string; label: string; icon: ReactNode; badge?: keyof NonNullable<Pending>; badgeTitle?: string };
 
 // Menü, işin türüne göre gruplanır; uzun liste kendi içinde kaydırılır, giriş bilgisi altta sabit kalır.
 const NAV: { title: string; items: NavItem[] }[] = [
   { title: 'Genel', items: [
-    { to: '/', label: 'Pano', icon: <LayoutDashboard size={17} /> },
-    { to: '/asistan', label: 'Asistan', icon: <Sparkles size={17} />, badge: 'agent', badgeTitle: 'Asistanın açık önerisi' },
+    { to: '/', label: 'Genel bakış', icon: <LayoutDashboard size={17} /> },
+    { to: '/asistan', label: 'AI asistan', icon: <Sparkles size={17} />, badge: 'agent', badgeTitle: 'Asistanın açık önerisi' },
     { to: '/analitik', label: 'Ziyaretçi analitiği', icon: <BarChart3 size={17} /> },
   ] },
   { title: 'Koleksiyon', items: [
@@ -45,6 +46,10 @@ const NAV: { title: string; items: NavItem[] }[] = [
     { to: '/fotograflar', label: 'Fotoğraflar', icon: <Images size={17} />, badge: 'images', badgeTitle: 'Kontrol bekleyen fotoğraf' },
     { to: '/bolumleme', label: 'Bölümleme', icon: <SplitSquareVertical size={17} />, badge: 'segmentation', badgeTitle: 'Bakılacak paragraf' },
     { to: '/gorsel-arama', label: 'Görselle arama', icon: <ScanSearch size={17} /> },
+  ] },
+  { title: 'Yazar paneli', items: [
+    { to: '/yazar-metinleri', label: 'Yazar metinleri', icon: <NotebookPen size={17} />, badge: 'author', badgeTitle: 'Onay bekleyen yazar metni' },
+    { to: '/yazarlar', label: 'Yazar hesapları', icon: <KeyRound size={17} /> },
   ] },
   { title: 'Ziyaretçi içeriği', items: [
     { to: '/katkilar', label: 'Ziyaretçi katkıları', icon: <MessageSquareHeart size={17} />, badge: 'contributions', badgeTitle: 'Onay bekleyen katkı' },
@@ -71,11 +76,11 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void; pending: Pending }) {
   const { path, params } = useRoute();
   const [menuOpen, setMenuOpen] = useState(false);
-  const active = (to: string) => to === '/' ? path === '/' : path === to || path.startsWith(`${to}/`) || (to === '/eserler' && path.startsWith('/eser/')) || (to === '/makaleler' && (path.startsWith('/makale/') || path === '/makale-aktar'));
+  const active = (to: string) => to === '/' ? path === '/' : path === to || path.startsWith(`${to}/`) || (to === '/eserler' && path.startsWith('/eser/')) || (to === '/makaleler' && (path.startsWith('/makale/') || path === '/makale-aktar')) || (to === '/yazar-metinleri' && path.startsWith('/yazar-metni/'));
   const current = NAV.flatMap(g => g.items.map(i => ({ group: g.title, ...i }))).find(i => active(i.to));
   const waiting = pending ? Object.values(pending).reduce((a, b) => a + b, 0) : 0;
   let page: ReactNode;
-  if (path === '/') page = <Dashboard />;
+  if (path === '/') page = <Dashboard user={user} />;
   else if (path === '/fotograflar') page = <ImageQueue params={params} />;
   else if (path === '/eserler') page = <Monuments params={params} />;
   else if (path.startsWith('/eser/')) page = <MonumentEdit key={path} slug={decodeURIComponent(path.slice(6))} />;
@@ -98,6 +103,9 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
   else if (path === '/makale-aktar') page = <ArticleImport params={params} />;
   else if (/^\/makale\/\d+$/.test(path)) page = <ArticleEdit key={path} id={Number(path.slice(8))} />;
   else if (path === '/terimler') page = <TermsPage params={params} />;
+  else if (path === '/yazar-metinleri') page = <AuthorWorksPage />;
+  else if (/^\/yazar-metni\/\d+$/.test(path)) page = <AuthorWorkReview key={path} id={Number(path.slice(13))} />;
+  else if (path === '/yazarlar') page = <AuthorAccountsPage />;
   else page = <div className="empty">Bu sayfa bulunamadı. <Link className="text-link" to="/">Panoya dön</Link></div>;
   useEffect(() => { document.getElementById('main')?.focus({ preventScroll: true }); setMenuOpen(false); }, [path]);
   useEffect(() => {
@@ -113,8 +121,8 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
         <button className="icon-button sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Menüyü kapat"><X size={20} /></button></div>
       <nav className="sidebar-nav" aria-label="Yönetim menüsü">{NAV.map(group => <div className="nav-group" key={group.title}>
         <p className="nav-group-title">{group.title}</p>
-        {group.items.map(({ to, label, icon, badge, badgeTitle }) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined}>
-          {icon}<span>{label}</span>{badge && pending?.[badge] ? <b title={badgeTitle}>{pending[badge]}</b> : null}</Link>)}
+        {group.items.map(({ to, label, icon, badge, badgeTitle }) => <Link key={to} to={to} aria-current={active(to) ? 'page' : undefined} className={to === '/asistan' ? 'nav-ai' : undefined}>
+          {icon}<span>{label}</span>{to === '/asistan' && !(badge && pending?.[badge]) ? <i>AI</i> : null}{badge && pending?.[badge] ? <b title={badgeTitle}>{pending[badge]}</b> : null}</Link>)}
       </div>)}</nav>
       <div className="sidebar-foot"><span className="avatar" aria-hidden="true">{initials(user)}</span>
         <span className="sidebar-user"><small>Giriş yapan</small><strong>{user}</strong></span>
@@ -126,7 +134,8 @@ function Shell({ user, onLogout, pending }: { user: string; onLogout: () => void
         <button className="icon-button menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Menüyü aç" aria-controls="sidebar" aria-expanded={menuOpen}>
           <Menu size={21} />{waiting > 0 && <i className="menu-dot" aria-hidden="true" />}</button>
         <p className="crumbs">{current ? <><span>{current.group}</span><ChevronRight size={14} aria-hidden="true" /><strong>{current.label}</strong></> : <strong>Yönetim paneli</strong>}</p>
-        <span className="topbar-date">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        <span className="topbar-right"><span className="topbar-live" title="Site yayında"><i aria-hidden="true" />Site yayında</span>
+          <span className="topbar-date">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></span>
       </header>
       <main id="main" tabIndex={-1} className="content">{page}</main>
     </div>
@@ -148,7 +157,7 @@ export function App() {
     if (!user) return;
     api.stats().then(s => setPending({ images: s.images.find(c => c.review_status === 'draft')?.n ?? 0,
       segmentation: s.segmentation_pending ?? 0, contributions: s.contributions_pending ?? 0, agent: s.agent_open ?? 0,
-      articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0, questions: s.questions_pending ?? 0 })).catch(() => {});
+      articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0, questions: s.questions_pending ?? 0, author: s.author_submitted ?? 0 })).catch(() => {});
   }, [user, path]);
   useEffect(() => { document.title = 'EŞİK — Yönetim Paneli'; }, []);
   if (checking) return <div className="login" role="status"><p style={{ color: '#f4efe5' }}>Oturum denetleniyor…</p></div>;

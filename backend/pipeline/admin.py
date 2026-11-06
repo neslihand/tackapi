@@ -538,6 +538,8 @@ def build_router(db, media_dir, save_webp):
             agent_open=db.query("SELECT count(*) AS n FROM agent_suggestion WHERE status = 'open'")[0]['n']
                        if db.query("SELECT to_regclass('agent_suggestion') IS NOT NULL AS ok")[0]['ok'] else 0,
             **articles.pending_counts(db),
+            author_submitted=db.query("SELECT count(*) AS n FROM author_work WHERE status = 'submitted'")[0]['n']
+                             if db.query("SELECT to_regclass('author_work') IS NOT NULL AS ok")[0]['ok'] else 0,
             monuments_without_image=db.query("""SELECT count(*) AS n FROM monument m WHERE NOT m.is_synthetic AND NOT EXISTS
                                                 (SELECT 1 FROM image i WHERE i.monument_id = m.id
                                                    AND i.review_status = 'published')""")[0]['n'],
@@ -818,7 +820,11 @@ def build_router(db, media_dir, save_webp):
         db.execute(f"UPDATE image SET {', '.join(sets)} WHERE id = %(i)s", params)
         new_monument = params.get('m', old_monument)
         if data.get('is_cover'):
-            db.execute('UPDATE image SET is_cover = (id = %(i)s) WHERE monument_id = %(m)s', dict(i=image_id, m=new_monument))
+            # Önce eski kapak kalkar, sonra yenisi işaretlenir: tek UPDATE'te satır sırasına göre bir an iki kapak
+            # olabiliyor ve image_one_cover benzersiz indeksi (satır satır denetlenir) 500 hatası veriyordu.
+            db.execute('UPDATE image SET is_cover = false WHERE monument_id = %(m)s AND is_cover AND id <> %(i)s',
+                       dict(i=image_id, m=new_monument))
+            db.execute('UPDATE image SET is_cover = true WHERE id = %(i)s', dict(i=image_id))
             changed['is_cover'] = True
         refresh_cover(old_monument)
         refresh_cover(new_monument)
@@ -1583,6 +1589,13 @@ def build_router(db, media_dir, save_webp):
         """Veriyle gelişen döngünün panosu (insights.dashboard). demo=false deneme verisini dışarıda bırakır."""
         insights_ready()
         return insights.dashboard(db, days, demo)
+
+    @r.get('/overview')
+    def get_overview(demo: bool = True, user: str = Depends(admin_user)):
+        """Panelin ilk sayfası: son 24 saat / 7 gün, saatlik trafik, en çok bakılanlar ve canlı etkinlik akışı."""
+        insights_ready()
+        import overview
+        return overview.overview(db, demo)
 
     @r.get('/settings')
     def get_site_settings(user: str = Depends(admin_user)):
