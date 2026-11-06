@@ -13,6 +13,8 @@ export const defaultFlags = {
   mini_games: true,
   question_follow: true,
   personalization: true,
+  // the collection, search and map list only the pilot works (as on the website); closed in the panel → every published work
+  pilot_only: true,
 };
 export type Flags = typeof defaultFlags;
 

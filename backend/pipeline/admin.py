@@ -298,6 +298,7 @@ class AppFlags(Strict):
     weekly_discovery: bool | None = None
     question_follow: bool | None = None
     personalization: bool | None = None
+    pilot_only: bool | None = None          # açıkken (varsayılan) telefonda yalnızca pilot eserler listelenir
 
 
 class SettingsIn(Strict):

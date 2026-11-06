@@ -1,9 +1,10 @@
-// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. The app lists every
-// published work. Every successful GET is kept on the device, so a work opened once still opens without a connection
+// The Vakıf Eserleri backend (backend/pipeline/api.py), the same public endpoints the site uses. The app lists the pilot
+// works (every published work when the panel closes the pilot_only switch). Every successful GET is kept on the device, so a work opened once still opens without a connection
 // (the photos are kept by expo-image's disk cache).
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { currentLang, t } from './i18n';
+import { mergeFlags } from './flags';
 
 // The address typed in Ayarlar (an installed APK at the demo: the laptop's address changes with the Wi-Fi).
 let serverOverride: string | null = null;
@@ -130,11 +131,13 @@ export async function cachedGet<T>(path: string): Promise<{ data: T; stale: bool
 
 const PAGE_SIZE = 200; // the API's largest page
 
-/** Every published work, page by page; the device keeps the whole list under one key so it is never half there. */
-async function loadAllWorks(lang: string): Promise<{ data: Item[]; stale: boolean }> {
-  const key = cacheKey(`/api/monuments?all&lang=${lang}`);
+/** Every published work (only the pilot works when `pilot`), page by page; the device keeps the whole list under one key
+ * so it is never half there. */
+async function loadAllWorks(lang: string, pilot: boolean): Promise<{ data: Item[]; stale: boolean }> {
+  const only = pilot ? '&pilot=true' : '';
+  const key = cacheKey(`/api/monuments?all${only}&lang=${lang}`);
   try {
-    const page = (n: number) => request<{ total: number; items: Item[] }>(`/api/monuments?page=${n}&page_size=${PAGE_SIZE}&lang=${lang}`);
+    const page = (n: number) => request<{ total: number; items: Item[] }>(`/api/monuments?page=${n}&page_size=${PAGE_SIZE}${only}&lang=${lang}`);
     const first = await page(1);
     const rest = await Promise.all(Array.from({ length: Math.ceil(first.total / PAGE_SIZE) - 1 }, (_, i) => page(i + 2)));
     const data = [first, ...rest].flatMap(p => p.items);
@@ -150,16 +153,18 @@ async function loadAllWorks(lang: string): Promise<{ data: Item[]; stale: boolea
 
 export async function loadFeed(): Promise<Feed> {
   const lang = currentLang();
+  // the panel's "pilot works only" switch decides which list to load, so the settings come first
+  const site = await cachedGet<SiteSettings>('/api/site-settings').catch(() => ({ data: defaultSiteSettings, stale: true }));
+  const settings = site.data && ['short', 'story', 'child'].includes(site.data.default_mode) ? site.data : defaultSiteSettings;
+  const pilot = mergeFlags(settings.app_flags).pilot_only;
   // routes and written questions are optional: without them the collection still opens
-  const [list, routes, quiz, site] = await Promise.all([
-    loadAllWorks(lang),
+  const [list, routes, quiz] = await Promise.all([
+    loadAllWorks(lang, pilot),
     // routes stay on the pilot works: unfiltered, a city route lists every work in the city (372 stops in Bursa), and
     // only the pilot works have a location to walk to
     cachedGet<Season[]>('/api/routes?pilot=true').catch(() => ({ data: [] as Season[], stale: true })),
-    cachedGet<QuizQuestion[]>('/api/quiz').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
-    cachedGet<SiteSettings>('/api/site-settings').catch(() => ({ data: defaultSiteSettings, stale: true })),
+    cachedGet<QuizQuestion[]>(pilot ? '/api/quiz?pilot=true' : '/api/quiz').catch(() => ({ data: [] as QuizQuestion[], stale: true })),
   ]);
-  const settings = site.data && ['short', 'story', 'child'].includes(site.data.default_mode) ? site.data : defaultSiteSettings;
   const featured = routes.data.find(r => r.id === settings.featured_route);
   return { items: list.data, seasons: featured ? [featured, ...routes.data.filter(r => r !== featured)] : routes.data,
     quiz: quiz.data, stale: list.stale, site: settings };

@@ -160,7 +160,8 @@ function PlainTable({ title, head, rows }: { title: string; head: string[]; rows
 }
 
 const FLAG_ROWS: [string, string][] = [['onboarding_v2', 'Karşılama ekranı'], ['short_stories', 'Kısa özet'], ['three_details', 'Üç detay'], ['weekly_discovery', 'Haftanın Keşfi'], ['flexible_streak', 'Esnek ritim'],
-  ['spaced_repetition', 'Hatırla'], ['tiered_medals', 'Kademeli madalyonlar'], ['daily_hunt', 'Detay Avı'], ['mini_games', 'Mini oyunlar ve bilgi kartları'], ['question_follow', 'Soru takibi'], ['personalization', 'Kişiselleştirme (Sana göre)']];
+  ['spaced_repetition', 'Hatırla'], ['tiered_medals', 'Kademeli madalyonlar'], ['daily_hunt', 'Detay Avı'], ['mini_games', 'Mini oyunlar ve bilgi kartları'], ['question_follow', 'Soru takibi'], ['personalization', 'Kişiselleştirme (Sana göre)'],
+  ['pilot_only', 'Yalnızca pilot eserler (kapatılırsa yayındaki bütün eserler listelenir)']];
 const TIER_NAMES = ['bronz', 'gümüş', 'altın'];
 const TIER_ROWS: ['read' | 'onsite' | 'recall' | 'city_read', string][] = [['read', 'Okunan hikâye (eser sayısı)'], ['onsite', 'Yerinde mühür (eser sayısı)'],
   ['recall', 'Hatırla kartı (eser sayısı)'], ['city_read', 'Şehirde okunan (eserlerin yüzdesi)']];

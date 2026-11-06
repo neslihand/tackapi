@@ -378,7 +378,7 @@ class AppFlagsTest(Base):
 
     def test_the_panel_can_close_a_module(self):
         self.assertEqual(self.c.get('/api/site-settings').json()['app_flags'], {})
-        self.assertEqual(self.c.put('/api/admin/settings', headers=NES, json=dict(app_flags=dict(daily_hunt=False, three_details=True))).status_code, 200)
-        self.assertEqual(self.c.get('/api/site-settings').json()['app_flags'], dict(daily_hunt=False, three_details=True))
+        self.assertEqual(self.c.put('/api/admin/settings', headers=NES, json=dict(app_flags=dict(daily_hunt=False, three_details=True, pilot_only=False))).status_code, 200)
+        self.assertEqual(self.c.get('/api/site-settings').json()['app_flags'], dict(daily_hunt=False, three_details=True, pilot_only=False))
         self.assertEqual(self.c.put('/api/admin/settings', headers=NES, json=dict(app_flags=dict(bilinmeyen=False))).status_code, 422)
         self.assertEqual(self.c.put('/api/admin/settings', json=dict(app_flags=dict(daily_hunt=True))).status_code, 401)
