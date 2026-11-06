@@ -19,6 +19,8 @@ import { useAmbience } from '../lib/ambience';
 import { BriefChapter, BriefNarration, CineChapter, Hotspot, pad, shot, StoryReader, TaleChapter, TaleNarration } from '../components/StoryScenes';
 import { ArtifactSummary } from './ArtifactSummary';
 import { AskArtifact } from '../components/AskArtifact';
+import { ListenButton } from '../components/ListenButton';
+import { tellingText } from '../lib/speech';
 import { HeroGallery } from '../components/HeroGallery';
 import { chatEndpoint } from '../lib/chatApi';
 import { siteDefaultMode, vakifApiEnabled } from '../lib/vakifApi';
@@ -237,6 +239,7 @@ export function ImmersiveStory({ artifact, extras }: { artifact: Artifact; extra
       <div className="story-tools" id="story-reading">
         <div><span className="ex-medallion" aria-hidden="true"><BookOpen size={16} /></span><span>{t('Anlatım şeklini seç', 'Choose how it is told')}</span></div>
         <div className="segmented" role="group" aria-label={t('Anlatım biçimi', 'Narration style')}>{narrationModes.map(([value]) => <button key={value} className={mode === value ? 'active' : ''} aria-pressed={mode === value} onClick={() => choose(value)}>{value === 'short' && artifact.origin ? artifact.origin.shortLabel : narrationLabel(value)}</button>)}</div>
+        <ListenButton key={`${artifact.id}-${mode}`} text={tellingText(artifact, mode)} label={mode === 'short' && artifact.origin ? artifact.origin.shortLabel : narrationLabel(mode)} />
         <button className="story-sound" onClick={sound.toggle} aria-pressed={sound.on} aria-label={sound.on ? t('Ortam sesini kapat', 'Turn the ambient sound off') : t('Ortam sesini aç', 'Turn the ambient sound on')}><span className="story-save-icon" aria-hidden="true">{sound.on ? <Volume2 size={16} /> : <VolumeX size={16} />}</span><span>{t('Ses', 'Sound')}</span></button>
         <button className="story-save" onClick={() => toggleFavorite(artifact.id)} aria-pressed={favorite}><span className="story-save-icon" aria-hidden="true"><Heart size={16} fill={favorite ? 'currentColor' : 'none'} /></span><span>{t('Favori', 'Favourite')}</span></button>
         <AskArtifact artifact={artifact} mode={mode} chapter={chapter} />

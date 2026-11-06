@@ -1,5 +1,5 @@
 // Keşfet: the whole collection as a list, on the Heritage Map or by distance ("Yakınımda"), with one search and the
-// same city and type filters for all three views. It opens on the visitor's own city, with what fits them first
+// same city, building category and type filters for all three views. It opens on the visitor's own city, with what fits them first
 // (personal.ts); a link can open a work's pin (?eser=) or the near list (?gorunum=yakin). The location stays on the device.
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useDeferredValue, useMemo, useState } from 'react';
@@ -14,6 +14,7 @@ import { Button, Empty, Loading, Notice, WorkCard } from '@/components/UI';
 import type { Item } from '@/lib/api';
 import { cityOptions, filterWorks, kindOptions, searchIndex, type Filter } from '@/lib/explore';
 import { whereAmI, type Here } from '@/lib/geo';
+import { structureOptions } from '@/lib/structures';
 import { t } from '@/lib/i18n';
 import { catalogOrder } from '@/lib/personal';
 import { useContent, usePassport } from '@/lib/store';
@@ -27,7 +28,7 @@ export default function Explore() {
   const { progress } = usePassport();
   const { prefs } = usePreferences();
   const [view, setView] = useState<ViewKey>('list');
-  const [chosen, setFilter] = useState<Filter>({ query: '', city: null, kind: null });
+  const [chosen, setFilter] = useState<Filter>({ query: '', city: null, group: null, kind: null });
   // the visitor's own city until they choose a city themselves ("all cities" is a choice too)
   const [cityChosen, setCityChosen] = useState(false);
   const filter = useMemo(() => cityChosen || !prefs.on ? chosen : { ...chosen, city: prefs.homeCity }, [cityChosen, prefs.on, prefs.homeCity, chosen]);
@@ -39,7 +40,7 @@ export default function Explore() {
   const link = `${params.eser ?? ''}|${params.gorunum ?? ''}`;
   if (link !== linked) {
     setLinked(link);
-    if (params.eser) { setFocus(params.eser); setView('map'); setFilter({ query: '', city: null, kind: null }); setCityChosen(true); }
+    if (params.eser) { setFocus(params.eser); setView('map'); setFilter({ query: '', city: null, group: null, kind: null }); setCityChosen(true); }
     if (params.gorunum === 'yakin') setView('near');
     if (params.gorunum === 'liste') setView('list');
   }
@@ -53,7 +54,8 @@ export default function Explore() {
 
   const index = useMemo(() => searchIndex(items), [items]);
   const cities = useMemo(() => cityOptions(items), [items]);
-  const kinds = useMemo(() => kindOptions(items, filter.city), [items, filter.city]);
+  const groups = useMemo(() => structureOptions(items, filter.city), [items, filter.city]);
+  const kinds = useMemo(() => kindOptions(items, filter.city, filter.group), [items, filter.city, filter.group]);
   // typing stays responsive: the list follows the query a moment later
   const query = useDeferredValue(filter.query);
   const found = useMemo(() => filterWorks(items, index, { ...filter, query }), [items, index, filter, query]);
@@ -76,7 +78,7 @@ export default function Explore() {
   </View>;
   const filters = <View style={s.filters}>
     {stale && <View style={s.pad}><Notice icon="cloud-offline-outline">{t('Çevrimdışısın: cihazdaki son hâli gösteriliyor.', 'You are offline: the copy on this device is shown.')}</Notice></View>}
-    <ExploreFilters filter={filter} onChange={change} cities={cities} kinds={kinds} />
+    <ExploreFilters filter={filter} onChange={change} cities={cities} groups={groups} kinds={kinds} />
     <View style={[s.pad, s.countRow]}>
       <View style={{ gap: 2 }}>
         <Text style={s.countKicker}>{t('KOLEKSİYON', 'COLLECTION')}</Text>

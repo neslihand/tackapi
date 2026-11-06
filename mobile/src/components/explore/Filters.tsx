@@ -1,4 +1,4 @@
-// Keşfet's search box and the city and type chips, shared by the list, the map and "Yakınımda".
+// Keşfet's search box and the city, building category and type chips, shared by the list, the map and "Yakınımda".
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { FadeRight } from '@/components/brand/Gradient';
@@ -7,8 +7,8 @@ import type { Filter } from '@/lib/explore';
 import { t } from '@/lib/i18n';
 import { colors, hit, radius, space, type } from '@/lib/theme';
 
-export function ExploreFilters({ filter, onChange, cities, kinds, search = true }: {
-  filter: Filter; onChange: (f: Filter) => void; cities: [string, string][]; kinds: [string, string][]; search?: boolean;
+export function ExploreFilters({ filter, onChange, cities, groups, kinds, search = true }: {
+  filter: Filter; onChange: (f: Filter) => void; cities: [string, string][]; groups: [string, string][]; kinds: [string, string][]; search?: boolean;
 }) {
   return <View style={s.wrap}>
     {search && <View style={s.pad}><View style={s.searchBox}>
@@ -19,7 +19,8 @@ export function ExploreFilters({ filter, onChange, cities, kinds, search = true 
       {!!filter.query && <Pressable onPress={() => onChange({ ...filter, query: '' })} accessibilityRole="button" accessibilityLabel={t('Aramayı temizle', 'Clear the search')} style={s.clear}>
         <Ionicons name="close-circle" size={20} color={colors.goldLine} /></Pressable>}
     </View></View>}
-    <ChipRow options={cities} value={filter.city} all={t('Tüm şehirler', 'All cities')} onChange={city => onChange({ ...filter, city, kind: null })} />
+    <ChipRow options={cities} value={filter.city} all={t('Tüm şehirler', 'All cities')} onChange={city => onChange({ ...filter, city, group: null, kind: null })} />
+    <ChipRow options={groups} value={filter.group} all={t('Tüm yapılar', 'All buildings')} onChange={group => onChange({ ...filter, group, kind: null })} />
     <ChipRow options={kinds} value={filter.kind} all={t('Tüm türler', 'All types')} onChange={kind => onChange({ ...filter, kind })} />
   </View>;
 }

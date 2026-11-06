@@ -418,3 +418,27 @@
 .story-curtain > .story-body { overflow: clip; border-top: 1px solid #c3a86980; border-radius: 36px 36px 0 0; box-shadow: 0 -18px 40px -24px #c3a86933, 0 -30px 60px -30px #000c; }
 .story-curtain > .story-body::before, .story-curtain > .story-body::after { content: none; }
 @media (max-width: 800px) { .story-curtain > .story-body { border-radius: 24px 24px 0 0; } }
+
+/* "Dinle": the telling read aloud (components/ListenButton.tsx). The button wears the tool bar's medallion; while it
+   reads, a thin gold bar shows how far it has got and a small square stops it. */
+.story-listen { display: flex; align-items: center; gap: 10px; }
+.story-listen.playing .story-sound .story-save-icon { color: #0c241c; box-shadow: 0 0 0 1px #969491, 0 0 0 5px #c3a86940, 0 0 22px #c3a869aa; }
+.story-listen-bar { position: relative; width: 72px; height: 3px; overflow: hidden; border-radius: 3px; background: #96949166; }
+.story-listen-bar > span { position: absolute; inset: 0; background: linear-gradient(90deg, #b89e77, #c3a869); transform-origin: left; transition: transform .4s linear; }
+.story-listen-stop { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: inherit; border: 1px solid #96949199; background: transparent; }
+.story-listen-stop:hover { background: #c3a86926; }
+.mode-story .story-listen-bar { background: #ece6d933; }
+@media (prefers-reduced-motion: reduce) { .story-listen-bar > span { transition: none; } }
+@media (max-width: 560px) { .story-listen-bar { width: 48px; } }
+/* On a computer the tool bar stays one row: the telling switcher never squeezes into broken lines (the label and
+   "Esere Sor" give way first, as before), and while it reads the button keeps only its medallion (its name stays on
+   the button for screen readers) so the row hardly grows when the voice starts. */
+@media (min-width: 801px) {
+  .story-tools .segmented { flex-shrink: 0; }
+  .story-tools .segmented button { white-space: nowrap; }
+}
+@media (min-width: 801px) and (max-width: 1400px) {
+  .story-listen { gap: 8px; }
+  .story-listen-bar { width: 40px; }
+  .story-listen:not(.idle) .story-sound > span:not(.story-save-icon) { display: none; }
+}

@@ -1,23 +1,25 @@
 // Keşfet's search and filters, and the distance order used by "Yakınımda" and Bugün. Pure functions.
 import type { Item, Location } from './api';
 import { distanceM, normalize } from './passport';
+import { structureOf } from './structures';
 
 export type Placed = Item & { location: Location };
-export type Filter = { query: string; city: string | null; kind: string | null };
+/** group: the building category (structures.ts), kind: one type of work within it. */
+export type Filter = { query: string; city: string | null; group: string | null; kind: string | null };
 
 /** Each work's searchable text, normalised once so typing stays fast over the whole collection. */
 export const searchIndex = (items: readonly Item[]) =>
   new Map(items.map(i => [i.slug, normalize([i.name, ...i.alt_names, i.kind_label, i.city.name, i.district ?? ''].join(' '))]));
 
-export function filterWorks(items: readonly Item[], index: ReadonlyMap<string, string>, { query, city, kind }: Filter) {
+export function filterWorks(items: readonly Item[], index: ReadonlyMap<string, string>, { query, city, group, kind }: Filter) {
   const q = normalize(query.trim());
-  return items.filter(i => (!city || i.city.slug === city) && (!kind || i.kind === kind) && (!q || (index.get(i.slug) ?? '').includes(q)));
+  return items.filter(i => (!city || i.city.slug === city) && (!group || structureOf(i.kind) === group) && (!kind || i.kind === kind) && (!q || (index.get(i.slug) ?? '').includes(q)));
 }
 
 /** [slug, name] pairs in first-seen order, for the filter chips. */
 export const cityOptions = (items: readonly Item[]) => [...new Map(items.map(i => [i.city.slug, i.city.name]))];
-export const kindOptions = (items: readonly Item[], city: string | null) =>
-  [...new Map(items.filter(i => !city || i.city.slug === city).map(i => [i.kind, i.kind_label]))];
+export const kindOptions = (items: readonly Item[], city: string | null, group: string | null = null) =>
+  [...new Map(items.filter(i => (!city || i.city.slug === city) && (!group || structureOf(i.kind) === group)).map(i => [i.kind, i.kind_label]))];
 
 export const placed = (items: readonly Item[]) => items.filter((i): i is Placed => Boolean(i.location));
 

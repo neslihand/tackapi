@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
-import { ArrowDown, ArrowRight, ChevronDown, Compass, Heart, Hourglass, Landmark, LayoutGrid, List, Route, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, Building2, ChevronDown, Compass, Heart, Hourglass, Landmark, LayoutGrid, List, Route, Search, SlidersHorizontal, X } from 'lucide-react';
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { ArtifactCard } from '../components/ArtifactCard';
 import { Girih } from '../components/PlayArt';
@@ -9,6 +9,7 @@ import { Link } from '../lib/navigation';
 import { currentLang, t } from '../lib/i18n';
 import { eraOptions, inEra } from '../lib/eras';
 import { normalize } from '../lib/progress';
+import { STRUCTURE_GROUPS, structureOf, structureOptions } from '../lib/structures';
 import { useProgress } from '../lib/store';
 import { track } from '../lib/analytics';
 import { Discoveries } from '../vakif/Discoveries';
@@ -74,6 +75,7 @@ export function Explore({ query }: { query: string }) {
   const [search, setSearch] = useState(initial.get('q') || '');
   const [city, setCity] = useState(initial.get('city') || '');
   const [period, setPeriod] = useState(initial.get('period') || '');
+  const [structure, setStructure] = useState(initial.get('yapi') || '');
   const [category, setCategory] = useState('');
   const [seasonId, setSeasonId] = useState(initial.get('season') || '');
   const [favorites, setFavorites] = useState(false);
@@ -97,17 +99,26 @@ export function Explore({ query }: { query: string }) {
 
   const filtered = useMemo(() => {
     const pool = season ? season.artifactIds.map(id => artifacts.find(a => a.id === id)).filter(a => a !== undefined) : artifacts;
-    return pool.filter(a => normalize(`${a.name} ${a.city}`).includes(normalize(search)) && (!city || a.city === city) && inEra(period, a.period) && (!category || a.category === category) && (!favorites || progress.favorites.includes(a.id)));
-  }, [artifacts, season, search, city, period, category, favorites, progress.favorites]);
+    return pool.filter(a => normalize(`${a.name} ${a.city}`).includes(normalize(search)) && (!city || a.city === city) && inEra(period, a.period) && (!structure || structureOf(a) === structure) && (!category || a.category === category) && (!favorites || progress.favorites.includes(a.id)));
+  }, [artifacts, season, search, city, period, structure, category, favorites, progress.favorites]);
 
+  const english = currentLang() === 'en';
+  const structureGroup = STRUCTURE_GROUPS.find(g => g.id === structure);
+  const structureLabel = structureGroup ? (english ? structureGroup.en : structureGroup.tr) : structure;
+  // Choosing a category narrows the types to its own; a type outside it is let go.
+  function chooseStructure(next: string) {
+    setStructure(next);
+    if (next && category && !artifacts.some(a => a.category === category && structureOf(a) === next)) setCategory('');
+  }
   const activeFilters = [
     { label: 'Rota', value: seasonId, text: season?.title ?? seasonId, clear: () => setSeasonId('') },
     { label: t('Şehir', 'City'), value: city, text: city, clear: () => setCity('') },
     { label: t('Dönem', 'Era'), value: period, text: period, clear: () => setPeriod('') },
+    { label: t('Yapı kategorisi', 'Building category'), value: structure, text: structureLabel, clear: () => setStructure('') },
     { label: t('Eser türü', 'Type of work'), value: category, text: category, clear: () => setCategory('') },
   ].filter(filter => filter.value);
   function clear() {
-    setSearch(''); setCity(''); setPeriod(''); setCategory(''); setSeasonId(''); setFavorites(false);
+    setSearch(''); setCity(''); setPeriod(''); setStructure(''); setCategory(''); setSeasonId(''); setFavorites(false);
     resultsTitle.current?.focus({ preventScroll: true });
   }
   function showResults() {
@@ -127,6 +138,7 @@ export function Explore({ query }: { query: string }) {
   }, [search]);
   useEffect(() => { if (city) track('filter', undefined, { kind: 'city', value: city }); }, [city]);
   useEffect(() => { if (period) track('filter', undefined, { kind: 'period', value: period }); }, [period]);
+  useEffect(() => { if (structure) track('filter', undefined, { kind: 'structure', value: structure }); }, [structure]);
   useEffect(() => { if (category) track('filter', undefined, { kind: 'category', value: category }); }, [category]);
   useEffect(() => { if (seasonId) track('route_open', undefined, { route: seasonId }); }, [seasonId]);
   const seasonFound = season ? season.artifactIds.filter(id => progress.discovered[id]).length : 0;
@@ -140,7 +152,7 @@ export function Explore({ query }: { query: string }) {
     return cities.size !== 1 || !only || s.artifactIds.length !== artifacts.filter(a => a.city === only).length;
   });
   // Eras in time order, each sub-era indented under its era ("Osmanlı Dönemi" gathers all the Ottoman ones).
-  const eras = eraOptions(artifacts.map(a => a.period), currentLang() === 'en').map(o => [o.value, o.child ? ` ${o.label}` : o.label] as [string, string]);
+  const eras = eraOptions(artifacts.map(a => a.period), english).map(o => [o.value, o.child ? ` ${o.label}` : o.label] as [string, string]);
 
   return <div className="explore-page" data-nav-theme="dark">
     <Girih className="ex-girih" />
@@ -155,16 +167,17 @@ export function Explore({ query }: { query: string }) {
       <Corridor artifacts={artifacts} />
       {readOnly && <Discoveries />}
       <div className="ex-toolbar">
-        <p className="ex-toolbar-note"><em>{t('Süz', 'Filter')}</em> {ownRoutes.length ? t('şehre, döneme, rotaya ya da eser türüne göre', 'by city, era, route or type of work') : t('şehre, döneme ya da eser türüne göre', 'by city, era or type of work')}</p>
+        <p className="ex-toolbar-note"><em>{t('Süz', 'Filter')}</em> {ownRoutes.length ? t('şehre, döneme, rotaya, yapı kategorisine ya da eser türüne göre', 'by city, era, route, building category or type of work') : t('şehre, döneme, yapı kategorisine ya da eser türüne göre', 'by city, era, building category or type of work')}</p>
         <button ref={filterButton} type="button" className="ex-filter-toggle" onClick={() => setFiltersOpen(!filtersOpen)} aria-expanded={filtersOpen} aria-controls="ex-filter-panel"><SlidersHorizontal size={17} aria-hidden="true" /> {t('Filtreler', 'Filters')}{activeFilters.length > 0 && <span className="ex-filter-badge"><span className="sr-only">{t(', etkin filtre: ', ', active filters: ')}</span>{activeFilters.length}</span>}<ChevronDown size={15} aria-hidden="true" /></button>
         <button type="button" className="ex-favorites" onClick={() => setFavorites(!favorites)} aria-pressed={favorites}><Heart size={16} fill={favorites ? 'currentColor' : 'none'} aria-hidden="true" /> {t('Favorilerim', 'My favourites')} <span>{progress.favorites.length}</span></button>
       </div>
       <div id="ex-filter-panel" className="ex-filter-panel" hidden={narrow && !filtersOpen} onKeyDown={event => { if (event.key === 'Escape' && narrow) { event.preventDefault(); closeFilters(); } }}>
-        <div className={`ex-capsule ${ownRoutes.length ? '' : 'three'}`}>
+        <div className={`ex-capsule ${ownRoutes.length ? 'five' : ''}`}>
           {ownRoutes.length > 0 && <FilterSegment icon={<Route size={14} aria-hidden="true" />} label={t('Keşif rotası', 'Discovery route')} all={t('Tüm rotalar', 'All routes')} value={seasonId} onChange={setSeasonId} options={ownRoutes.map(s => [s.id, s.title])} />}
           <FilterSegment icon={<Compass size={14} aria-hidden="true" />} label={t('Şehir', 'City')} all={t('Tüm şehirler', 'All cities')} value={city} onChange={setCity} options={unique(artifacts.map(a => a.city))} />
           <FilterSegment icon={<Hourglass size={14} aria-hidden="true" />} label={t('Dönem', 'Era')} all={t('Tüm dönemler', 'All eras')} value={period} onChange={setPeriod} options={eras} />
-          <FilterSegment icon={<Landmark size={14} aria-hidden="true" />} label={t('Eser türü', 'Type of work')} all={t('Tüm türler', 'All types')} value={category} onChange={setCategory} options={unique(artifacts.map(a => a.category))} />
+          <FilterSegment icon={<Building2 size={14} aria-hidden="true" />} label={t('Yapı kategorisi', 'Building category')} all={t('Tüm yapılar', 'All buildings')} value={structure} onChange={chooseStructure} options={structureOptions(artifacts, english)} />
+          <FilterSegment icon={<Landmark size={14} aria-hidden="true" />} label={t('Eser türü', 'Type of work')} all={t('Tüm türler', 'All types')} value={category} onChange={setCategory} options={unique(artifacts.filter(a => !structure || structureOf(a) === structure).map(a => a.category))} />
         </div>
         <button type="button" className="ex-filter-done" onClick={() => closeFilters(true)}>{t(`${filtered.length} eseri göster`, `Show ${filtered.length} works`)} <ArrowRight size={16} aria-hidden="true" /></button>
       </div>
