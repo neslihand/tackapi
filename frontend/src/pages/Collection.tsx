@@ -37,7 +37,7 @@ export function PassportStamp({ artifact, at, index }: { artifact: DiscoveryArti
 }
 
 // The treasury: an orbit of all medals around the next goal, then the vitrine, tier by tier (bronze, silver, gold).
-const tiers = () => [['bronze', 'I', t('Bronz kademe', 'Bronze tier'), t('İlk adımların izi', 'The trace of your first steps')], ['silver', 'II', t('Gümüş kademe', 'Silver tier'), t('Merakın derinleşir', 'Your curiosity deepens')], ['gold', 'III', t('Altın kademe', 'Gold tier'), t('Mirasın koruyucusu', 'Guardian of the heritage')]] as const;
+const tiers = () => [['bronze', 'I', t('Bronz kademe', 'Bronze tier'), t('İlk adımların izi', 'The trace of your first steps')], ['silver', 'II', t('Gümüş kademe', 'Silver tier'), t('Merakın derinleşir', 'Your curiosity deepens')], ['gold', 'III', t('Altın kademe', 'Gold tier'), t('Mirasın koruyucusu', 'Guardian of heritage')]] as const;
 
 function MedalCard({ a, onInspect }: { a: Achievement; onInspect: () => void }) {
   const unlocked = a.value >= a.required;

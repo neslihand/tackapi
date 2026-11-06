@@ -54,7 +54,7 @@ export function Discoveries({ limit = 4 }: { limit?: number }) {
         : <><p className="dc-kicker">{t('Koleksiyondan', 'From the collection')}</p>
           <h2 id="popular">{t('Bu hafta', 'Featured')} <em>{t('öne çıkanlar', 'this week')}</em></h2></>}</header>
       <ul className="dc-row">{trending.map((p, i) => <li key={p.slug}>
-        <Card artifact={find(p.slug)!} rank={busy ? i + 1 : undefined} note={p.visitors >= POPULAR_MIN_VISITORS ? t(`${p.visitors.toLocaleString('tr-TR')} ziyaretçi baktı`, `${p.visitors.toLocaleString('en-GB')} visitors looked`) : undefined}
+        <Card artifact={find(p.slug)!} rank={busy ? i + 1 : undefined} note={p.visitors >= POPULAR_MIN_VISITORS ? t(`${p.visitors.toLocaleString('tr-TR')} ziyaretçi baktı`, `${p.visitors.toLocaleString('en-GB')} ${p.visitors === 1 ? 'visitor' : 'visitors'} viewed it`) : undefined}
           onOpen={() => track('recommendation_click', p.slug, { list: 'popular', rank: i + 1 })} /></li>)}</ul></section>}
   </div>;
 }

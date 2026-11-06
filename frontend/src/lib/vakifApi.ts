@@ -47,7 +47,7 @@ export function toRecord(item: VakifItem): ArtifactRecord {
   const where = [item.district, item.city.name].filter(Boolean).join(', ');
   return {
     id: item.slug, slug: item.slug, name: item.name, city: item.city.name,
-    period: item.period?.name ?? 'Dönemi belirtilmemiş', category: item.kind_label,
+    period: item.period?.name ?? t('Dönemi belirtilmemiş', 'Era not given'), category: item.kind_label,
     // The card needs a sentence; without the book's summary it says only what the record states.
     description: item.summary?.trim() || `${where}: ${item.kind_label.toLocaleLowerCase('tr-TR')}.`,
     year: item.built.label, architect: makers(item),

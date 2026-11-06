@@ -14,8 +14,8 @@ export function ReadingCards() {
     <View style={[home.pad, s.band]}>
       <NightGlow color={colors.emeraldLight} />
       <Eyebrow light>✦ {t('Okuma Odası', 'Reading Room')}</Eyebrow>
-      <Text style={s.title} accessibilityRole="header">{t('Şehirlerin hafızası,', 'The memory of cities,')}{'\n'}<Text style={s.accent}>{t('vakfın dili.', 'the language of the vakıf.')}</Text></Text>
-      <Row icon="newspaper-outline" label={t('Makaleler', 'Articles')} note={t('Şehir tarihleri ve vakıf kültürü üzerine yazılar', 'Writing on city histories and vakıf culture')} onPress={() => router.push('/okuma')} />
+      <Text style={s.title} accessibilityRole="header">{t('Şehirlerin hafızası,', 'The memory of cities,')}{'\n'}<Text style={s.accent}>{t('vakfın dili.', 'the language of the waqf.')}</Text></Text>
+      <Row icon="newspaper-outline" label={t('Makaleler', 'Articles')} note={t('Şehir tarihleri ve vakıf kültürü üzerine yazılar', 'Writing on city histories and waqf culture')} onPress={() => router.push('/okuma')} />
       <Row icon="book-outline" label={t('Terimler sözlüğü', 'Glossary')} note={t('Kitaplardaki eski sözcüklerin anlamı', 'What the old words in the books mean')} onPress={() => router.push('/okuma?bolum=terimler')} />
     </View>
     <View style={s.end}>

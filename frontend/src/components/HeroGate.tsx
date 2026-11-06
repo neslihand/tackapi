@@ -27,7 +27,7 @@ function DoorLeaf({ side }: { side: 'left' | 'right' }) {
 }
 
 // The platform in three verbs, after the inventory project's aim: keep the culture alive, record it, hand it on.
-const pillars = () => [t('Yaşat', 'Keep alive'), t('Kaydet', 'Record'), t('Aktar', 'Hand on')];
+const pillars = () => [t('Yaşat', 'Keep alive'), t('Kaydet', 'Record'), t('Aktar', 'Pass on')];
 
 // Behind the door: a stone arcade a little way in, standing against a warm stone light that turns to the emerald night
 // as the camera passes through the door, then through the arcade's middle arch, into the courtyard.
@@ -127,7 +127,7 @@ export function HeroGate() {
         <div className="en-lantern" aria-hidden="true" />
         {/* The copy stands to the left of the door, over the shade, so the door keeps the centre of the picture. */}
         <div className="fc-copy">
-          <h1 className="fc-title"><span className="fc-line"><span>{t('Taşa yazılmış', 'Trace kindness')}</span></span> <span className="fc-line"><span>{t('iyiliklerin', 'carved')}</span></span> <span className="fc-line"><span><em>{t('izini sür.', 'in stone.')}</em></span></span></h1>
+          <h1 className="fc-title"><span className="fc-line"><span>{t('Vakıf Tarihine', 'A door')}</span></span> <span className="fc-line"><span>{t('açılan', 'to waqf')}</span></span> <span className="fc-line"><span><em>{t('kapı.', 'history.')}</em></span></span></h1>
           {/* Two ways in: the door itself for the curious, the map for whoever already stands before a building. */}
           <div className="hero-actions">
             <button className="button gold en-key" onClick={openGate} onPointerMove={magnet} onPointerLeave={release}><span className="en-key-icon" aria-hidden="true"><KeyRound size={17} /></span><span className="en-key-label">{t('Kapıyı arala', 'Open the door')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></button>

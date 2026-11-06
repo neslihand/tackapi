@@ -10,7 +10,7 @@ export const DAILY_DAYS = 7;
 export function teaser(item: Item) {
   const text = item.summary?.trim();
   if (!text) return t(`${item.city.name}'da bir ${item.kind_label.toLocaleLowerCase('tr-TR')}. Kapısını aç, hikâyesini oku.`,
-    `A ${item.kind_label.toLowerCase()} in ${item.city.name}. Open its door and read its story.`);
+    `${/^[aeiou]/i.test(item.kind_label) ? 'An' : 'A'} ${item.kind_label.toLowerCase()} in ${item.city.name}. Open its door and read its story.`);
   // sentences are joined until the line says something: 'Hz.', 'H. 1264' or 's. 12' alone is not a sentence
   let first = '';
   for (const part of text.match(/[^.!?]+[.!?]*\s*/g) ?? [text]) {

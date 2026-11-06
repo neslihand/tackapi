@@ -231,7 +231,7 @@ export default function Work() {
         {location?.approximate && <Text style={s.small}>{t('Konum otomatik bulundu ve henüz doğrulanmadı; yaklaşık bir alanı gösterir.', 'The location was found automatically and is not yet verified; it marks an approximate area.')}</Text>}
         <Animated.View style={[s.status, statusPop]}><Chip icon={status.icon} label={status.label} accessibilityLabel={`${t('Mühür durumu', 'Stamp')}: ${status.label}`} /></Animated.View>
         {!location && <Text style={s.small}>{t('Bu eserin konumu henüz yok; yerinde mühür açılmaz.', 'This work has no location yet, so there is no on-the-spot stamp.')}</Text>}
-        {!discovered && <Text style={s.small}>{t('Bir anlatımın dörtte üçünü okuyunca ya da dinleyince dijital mührün kendiliğinden basılır.', 'Read or hear three quarters of a telling and your digital stamp is taken by itself.')}</Text>}
+        {!discovered && <Text style={s.small}>{t('Bir anlatımın dörtte üçünü okuyunca ya da dinleyince dijital mührün kendiliğinden basılır.', 'Read or listen to three quarters of a telling and your digital stamp is added automatically.')}</Text>}
         {stale && <Notice icon="cloud-offline-outline">{t('Çevrimdışısın: bu eserin cihazda saklanan hâli gösteriliyor.', 'You are offline: the copy of this work kept on the device is shown.')}</Notice>}
         <NotebookChips slug={slug} />
       </View>

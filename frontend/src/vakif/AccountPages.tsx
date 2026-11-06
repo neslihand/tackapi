@@ -168,7 +168,7 @@ export function AccountPage() {
   return <Scene className="visitor-scene"><div className="page-shell v-page">
     <p className="eyebrow">{t('HESABIM', 'MY ACCOUNT')}</p>
     <h1>{t('Merhaba', 'Hello')}{user.display_name ? `, ${user.display_name}` : ''}.</h1>
-    <p className="v-lede">{user.email} · {t(`Pasaportunda ${Object.keys(progress.discovered).length} mühür, ${progress.favorites.length} favori var; her cihazda aynı.`, `Your passport holds ${Object.keys(progress.discovered).length} stamps and ${progress.favorites.length} favourites, the same on every device.`)}</p>
+    <p className="v-lede">{user.email} · {t(`Pasaportunda ${Object.keys(progress.discovered).length} mühür, ${progress.favorites.length} favori var; her cihazda aynı.`, `Your passport holds ${Object.keys(progress.discovered).length} ${Object.keys(progress.discovered).length === 1 ? 'stamp' : 'stamps'} and ${progress.favorites.length} ${progress.favorites.length === 1 ? 'favourite' : 'favourites'}, the same on every device.`)}</p>
     <section className="v-section" aria-labelledby="v-medals">
       <div className="v-head"><h2 id="v-medals">{t('Madalyonlarım', 'My medallions')}</h2><Link className="text-link" to="/basarimlar">{t('Madalyon odasını aç', 'Open the medal room')} <ArrowUpRight size={16} aria-hidden="true" /></Link></div>
       <p className="v-note">{t(`${medals.length} madalyondan ${earned} tanesi sende.`, `You hold ${earned} of ${medals.length} medallions.`)}</p>

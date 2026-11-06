@@ -51,7 +51,7 @@ export default function SignIn() {
       <Eyebrow>✦ {t('HESAP', 'ACCOUNT')}</Eyebrow>
       <Title>{mode === 'login' ? t('Tekrar hoş geldin.', 'Welcome back.') : t('Pasaportunu her yerde taşı.', 'Carry your passport everywhere.')}</Title>
       <Text style={s.body}>{t('Web sitesindeki hesabınla aynıdır. Mühürlerin, madalyonların ve serin telefonla sitede birleşir.', 'It is the same account as on the website. Your stamps, medallions and streak are joined between the phone and the site.')}
-        {found ? t(` Bu telefondaki ${found} keşif hesabına eklenecek.`, ` The ${found} discoveries on this phone will be added to the account.`) : ''}</Text>
+        {found ? t(` Bu telefondaki ${found} keşif hesabına eklenecek.`, ` The ${found} ${found === 1 ? 'discovery' : 'discoveries'} on this phone will be added to the account.`) : ''}</Text>
 
       <View style={s.tabs} accessibilityRole="tablist">{([['login', t('Giriş yap', 'Sign in')], ['register', t('Hesap aç', 'Create account')]] as const).map(([id, label]) =>
         <Pressable key={id} onPress={() => { setMode(id); setError(null); }} accessibilityRole="tab" accessibilityState={{ selected: mode === id }} style={[s.tab, mode === id && s.tabOn]}>

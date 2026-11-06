@@ -55,7 +55,7 @@ export default function MyWriting() {
         <View style={s.actions}>
           {a.status === 'published' ? <Action label={t('Oku', 'Read')} onPress={() => router.push(`/makale/${a.slug}`)} />
             : <Action label={a.status === 'rejected' ? t('Düzelt ve yeniden gönder', 'Correct and send again') : t('Düzenle', 'Edit')} onPress={() => router.push(`/yazi?duzenle=${a.id}`)} />}
-          <Action danger label={confirm === key ? (a.status === 'published' ? t('Yayından kalkıp silinecek, emin misin?', 'It will be taken down and deleted; sure?') : t('Geri çekmek için yeniden dokun', 'Tap again to withdraw')) : t('Geri çek', 'Withdraw')}
+          <Action danger label={confirm === key ? (a.status === 'published' ? t('Yayından kalkıp silinecek, emin misin?', 'It will be taken down and deleted. Are you sure?') : t('Geri çekmek için yeniden dokun', 'Tap again to withdraw')) : t('Geri çek', 'Withdraw')}
             onPress={() => withdraw(key, () => writingApi.withdraw(a.id))} />
         </View>
       </View>;

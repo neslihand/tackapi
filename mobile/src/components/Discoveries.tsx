@@ -157,7 +157,7 @@ export function Popular({ style }: Outer) {
   const locale = lang === 'en' ? 'en-GB' : 'tr-TR';
   return <View style={[{ gap: space.s }, style]}>
     <SectionHeader kicker={t('En çok merak edilenler', 'Most wondered about')} title={t('Bu hafta en çok bakılanlar', 'Most viewed this week')} />
-    {trending.map((p, i) => <Tile key={p.slug} item={bySlug(p.slug)!} rank={i + 1} note={t(`${p.visitors.toLocaleString(locale)} ziyaretçi baktı`, `${p.visitors.toLocaleString(locale)} visitors looked`)}
+    {trending.map((p, i) => <Tile key={p.slug} item={bySlug(p.slug)!} rank={i + 1} note={t(`${p.visitors.toLocaleString(locale)} ziyaretçi baktı`, `${p.visitors.toLocaleString(locale)} ${p.visitors === 1 ? 'visitor' : 'visitors'} viewed it`)}
       onOpen={() => track('recommendation_click', p.slug, { list: 'popular', rank: i + 1 })} />)}
   </View>;
 }

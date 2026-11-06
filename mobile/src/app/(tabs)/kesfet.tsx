@@ -74,7 +74,7 @@ export default function Explore() {
     <NightGlow color={colors.emeraldLight} />
     <Text style={s.kicker}>{t(`ANADOLU KOLEKSİYONU · ${items.length} ESER · ${cityCount} ŞEHİR`, `ANATOLIAN COLLECTION · ${items.length} WORKS · ${cityCount} CITIES`)}</Text>
     <Text style={s.heading} accessibilityRole="header">{t('Merakın nereye', 'Where will your')}{'\n'}<Text style={s.headingAccent}>{t('götürür?', 'curiosity lead?')}</Text></Text>
-    <Text style={s.lede}>{t('Vakıf eserlerini şehir, tür ya da isimle ara; haritada gör, yakınındakileri bul.', 'Search the vakıf works by city, type or name; see them on the map, find the ones near you.')}</Text>
+    <Text style={s.lede}>{t('Vakıf eserlerini şehir, tür ya da isimle ara; haritada gör, yakınındakileri bul.', 'Search the waqf works by city, type or name; see them on the map, find the ones near you.')}</Text>
   </View>;
   const filters = <View style={s.filters}>
     {stale && <View style={s.pad}><Notice icon="cloud-offline-outline">{t('Çevrimdışısın: cihazdaki son hâli gösteriliyor.', 'You are offline: the copy on this device is shown.')}</Notice></View>}

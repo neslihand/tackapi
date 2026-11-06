@@ -174,7 +174,7 @@ function ContentReady() {
   // Do not mount progress or pages that require a selected artifact until the
   // read collection is valid and nonempty. In particular, do not erase stamps.
   if (issues.length) return <main className="page-shell empty-state" role="alert"><h1>{t('Eserler açılamadı.', 'The works could not be opened.')}</h1><p>{t('Koleksiyon verisi okunamadı. Lütfen veri kaynağını kontrol ederek yeniden dene.', 'The collection data could not be read. Please check the data source and try again.')}</p></main>;
-  if (!artifacts.length) return <main className="page-shell empty-state" role="status"><h1>Koleksiyon henüz boş.</h1><p>Eserler eklendiğinde burada keşfedebileceksin.</p></main>;
+  if (!artifacts.length) return <main className="page-shell empty-state" role="status"><h1>{t('Koleksiyon henüz boş.', 'The collection is empty for now.')}</h1><p>{t('Eserler eklendiğinde burada keşfedebileceksin.', 'Once works are added, you can discover them here.')}</p></main>;
   return <AccountProvider><ProgressProvider key={progressStorageKey}><Router /></ProgressProvider></AccountProvider>;
 }
 

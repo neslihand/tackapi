@@ -201,7 +201,7 @@ export function DetectiveGame({ onComplete, requestedLevel }: { onComplete: () =
         <p className="mg-kicker">{t('DOSYA ÇÖZÜLDÜ', 'FILE SOLVED')} · {upper(levelName(level))} · {t(`${revealed}. İPUCUNDA`, `AT CLUE ${revealed}`)}</p>
         <h3 id="detective-result" ref={result} tabIndex={-1}>{round.mystery.name}</h3>
         {round.mystery.image !== PLACEHOLDER_IMAGE && <img className="mg-result-image" src={round.mystery.image} alt={imageAlt(round.mystery)} />}
-        <Outcome scored={scored} unit={t('adım', 'steps')} summary={t(`${revealed}. ipucunda ${wrong.length ? `${wrong.length} yanlış tahminle` : 'hatasız'} çözdün: toplam ${scored.result} adım.`, `You solved it at clue ${revealed} ${wrong.length ? `with ${wrong.length} wrong guesses` : 'without a mistake'}: ${scored.result} steps in all.`)} />
+        <Outcome scored={scored} unit={t('adım', 'steps')} summary={t(`${revealed}. ipucunda ${wrong.length ? `${wrong.length} yanlış tahminle` : 'hatasız'} çözdün: toplam ${scored.result} adım.`, `You solved it at clue ${revealed} ${wrong.length ? `with ${wrong.length} wrong ${wrong.length === 1 ? 'guess' : 'guesses'}` : 'without a mistake'}: ${scored.result} steps in all.`)} />
         <p>{round.mystery.chapters[0]?.short ?? round.mystery.description}</p>
         <div className="mg-actions">
           <Link className="mg-button primary" to={`/eser/${round.mystery.slug}`}>{t('Hikâyeyi oku', 'Read the story')} <ArrowUpRight size={17} aria-hidden="true" /></Link>
