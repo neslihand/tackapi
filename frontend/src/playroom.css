@@ -47,11 +47,10 @@
 
 .pl-hero-foot { position: absolute; right: 0; bottom: 0; left: 0; z-index: 21; display: flex; align-items: stretch; padding: 0 var(--pl-left); border-top: 1px solid #e6d5ae24; background: linear-gradient(180deg, transparent, #020806cc); }
 .pl-hero-index { display: grid; flex: 1; grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.pl-hero-index a { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-content: start; padding: 20px 18px 24px; color: var(--en-ivory); border-left: 1px solid #e6d5ae1a; transition: background .4s; }
+.pl-hero-index a { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 12px; align-content: start; padding: 20px 18px 24px; color: var(--en-ivory); border-left: 1px solid #e6d5ae1a; transition: background .4s; }
 .pl-hero-index a::before { content: ''; position: absolute; top: -1px; right: 0; left: 0; height: 1px; background: var(--en-gold-light); transform: scaleX(0); transform-origin: left; transition: transform .6s var(--pl-ease); }
 .pl-hero-index a:hover { background: #e6d5ae0a; }
 .pl-hero-index a:hover::before, .pl-hero-index a:focus-visible::before { transform: scaleX(1); }
-.pl-hero-index i { grid-row: 1 / span 2; font-family: var(--serif); font-size: 26px; font-style: italic; line-height: 1; color: var(--en-gold-light); }
 .pl-hero-index b { font-size: 13.5px; font-weight: 600; }
 .pl-hero-index small { margin-top: 2px; font-size: 12px; color: var(--en-ivory-soft); }
 .pl-hero-index a:focus-visible { outline-offset: -4px; }
@@ -301,11 +300,6 @@
   .pl-kicker { gap: 10px; font-size: 9.5px; letter-spacing: .16em; white-space: nowrap; }
   .pl-kicker > i { width: 20px; }
   .pl-title-b { font-size: clamp(64px, 19vw, 100px); }
-  .pl-hero-index { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .pl-hero-index a { grid-template-columns: 1fr; justify-items: center; padding: 14px 4px 16px; text-align: center; }
-  /* The names stay readable to screen readers; only the numbers show. */
-  .pl-hero-index b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .pl-hero-index i { grid-row: auto; font-size: 22px; }
   .pl-scroll { display: none; }
   .pl-head h2 { font-size: clamp(40px, 11vw, 64px); }
   .pl-file { inset: 5% 4%; }
@@ -336,7 +330,6 @@
 .pl-menu-card:hover { transform: translateY(-4px); background: linear-gradient(180deg, #e6d5ae14, #ffffff05); box-shadow: inset 0 0 0 1px #e6d5ae80, 0 24px 40px -28px #000; }
 .pl-menu-card:focus-visible { outline: 2px solid var(--en-gold-light); outline-offset: 4px; }
 .pl-menu-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 10px; color: #15130d; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3c4, #e6d5ae 55%, #c7a96b); box-shadow: 0 0 0 4px #e6d5ae1f; }
-.pl-menu-card > i { position: absolute; top: 22px; right: 22px; font-family: var(--serif); font-size: 22px; font-style: italic; color: #e6d5ae99; }
 .pl-menu-card b { font-family: var(--serif); font-size: 26px; font-weight: 400; line-height: 1.1; }
 .pl-menu-card small { font-size: 13.5px; color: var(--en-ivory-soft); }
 .pl-menu-status { align-self: end; margin-top: 14px; padding-top: 12px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #d9c9a5; border-top: 1px solid #e6d5ae24; }
@@ -354,10 +347,7 @@
 .pl-more .pl-hero-index { grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #e6d5ae24; }
 @media (max-width: 800px) {
   .pl-more .pl-hero-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* the names stay here, unlike in the opening's compact index */
-  .pl-more .pl-hero-index a { grid-template-columns: auto minmax(0, 1fr); justify-items: start; padding: 14px 10px 16px; text-align: left; }
-  .pl-more .pl-hero-index b { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
-  .pl-more .pl-hero-index i { grid-row: 1 / span 2; }
+  .pl-more .pl-hero-index a { padding: 14px 10px 16px; }
   .pl-menu-card { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .pl-menu-card, .pl-menu-go { transition: none; } .pl-menu-card:hover { transform: none; } }

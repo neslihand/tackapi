@@ -55,7 +55,7 @@ function Plate({ spec, artifact, px, py, scroll, still, index }: { spec: PlateSp
         ? <svg className="pl-plate-art" viewBox="0 0 140 100" preserveAspectRatio="xMidYMid slice"><image href={artifact.image} width="140" height="100" preserveAspectRatio="xMidYMid slice" /><path d={PIECE} className="pl-hole" /></svg>
         : <img className="pl-plate-art" src={artifact.image} alt="" draggable={false} loading={index < 3 ? 'eager' : 'lazy'} />}
       {spec.kind === 'lens' && <><img className="pl-plate-art pl-lens-sharp" src={artifact.image} alt="" draggable={false} /><span className="pl-lens-ring" /></>}
-      <span className="pl-plate-label">{pad(index + 1)} · {artifact.city.toLocaleUpperCase('tr-TR')}</span>
+      <span className="pl-plate-label">{artifact.city.toLocaleUpperCase('tr-TR')}</span>
     </div>
     {spec.kind === 'missing' && <motion.svg className="pl-piece" viewBox={`${PIECE_BOX.x} ${PIECE_BOX.y} ${PIECE_BOX.w} ${PIECE_BOX.h}`} style={{ width: `${(PIECE_BOX.w / 140) * 100}%` }}
       animate={still ? undefined : { y: [0, -10, 0], rotate: [-14, -8, -14] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}>

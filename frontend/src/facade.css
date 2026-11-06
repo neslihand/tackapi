@@ -71,9 +71,10 @@
 .cy-lead { max-width: 48ch; text-wrap: balance; margin: clamp(18px, 3.6svh, 40px) 0 0; font-size: clamp(15px, 1.12vw, 17.5px); line-height: 1.75; text-align: center; color: #efe9dc; text-shadow: 0 2px 18px #020806, 0 0 40px #020806b3; }
 .cy-lead b { font-weight: 600; color: var(--en-gold-light); }
 .cy-mission .cy-label { position: static; width: min(100%, 1180px); margin-top: clamp(32px, 7svh, 80px); grid-template-columns: minmax(0, 1fr) auto; }
-.cy-pillars { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px clamp(28px, 3.6vw, 60px); margin: 0; padding: 0; list-style: none; }
-.cy-pillars li { display: flex; align-items: baseline; gap: 10px; }
-.cy-pillars span { font-family: var(--serif); font-size: 14px; font-style: italic; color: var(--en-gold); }
+/* the three verbs on one line, a small gold star between them */
+.cy-pillars { display: flex; flex-wrap: wrap; align-items: center; gap: 10px clamp(18px, 2.2vw, 34px); margin: 0; padding: 0; list-style: none; }
+.cy-pillars li { display: flex; align-items: center; gap: clamp(18px, 2.2vw, 34px); }
+.cy-pillars li + li::before { content: '✦'; font-size: 11px; color: var(--en-gold); }
 .cy-pillars b { font-family: var(--serif); font-size: clamp(22px, 1.8vw, 28px); font-weight: 400; color: #fbf7ee; }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -105,7 +106,7 @@
   .hero-scroll .cy-mission h2 { flex-direction: row; font-size: clamp(32px, 9vw, 56px); }
   .cy-lead { margin-top: 14px; font-size: 14px; line-height: 1.6; }
   .cy-mission .cy-label { grid-template-columns: 1fr; gap: 16px; padding-top: 16px; }
-  .cy-pillars { gap: 8px 24px; }
+  .cy-pillars, .cy-pillars li { gap: 8px 16px; }
   .fc-shade { background: radial-gradient(ellipse 60% 40% at 50% 62%, transparent 0, transparent 50%, #04130f66 100%), linear-gradient(180deg, #04130ff2 0%, #04130fc7 24%, #04130f33 42%, transparent 52%, transparent 66%, #04130fcc 84%, #04130ff7 100%); }
 }
 

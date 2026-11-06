@@ -152,7 +152,7 @@ export function HeroGate() {
           </div>
           <p className="cy-fade cy-lead">{t('Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli.', 'Mosques, fountains, caravanserais and madrasas that have served our cities for centuries; each one an act of kindness set in stone.')}</p>
           <div className="cy-label">
-            <ol className="cy-pillars cy-fade">{pillars().map((verb, i) => <li key={verb}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><b>{verb}</b></li>)}</ol>
+            <ol className="cy-pillars cy-fade">{pillars().map(verb => <li key={verb}><b>{verb}</b></li>)}</ol>
             <div className="cy-actions cy-fade"><Link className="button gold en-key" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span className="en-key-label">{t('Koleksiyonu keşfet', 'Explore the collection')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hero-secondary en-link" to="/hakkinda" onPointerMove={magnet} onPointerLeave={release}><span>{t('Projeyi tanı', 'About the project')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
           </div>
         </div>

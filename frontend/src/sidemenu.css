@@ -1,32 +1,55 @@
 /* ——— Side menu (SideMenu.tsx) and the button that opens it at the left of the top bar ———
-   A parchment drawer from the left: the brand at the top, every page in three groups between hairlines, each with its
-   icon, the page being read on a gold pill, and the language switch at the foot. */
+   A light drawer from the left, set like an app's side bar: the brand, a search field, every page in three named
+   groups (rounded rows, each icon on its own tile, the page being read on a gold tile), and the visitor's account with
+   the language at the foot. */
 .navigation > .nav-start { justify-self: start; }
 .nav-start { display: flex; align-items: center; gap: clamp(8px, 1.2vw, 16px); min-width: 0; }
 .nav-menu { display: grid; flex: none; place-items: center; width: 44px; height: 44px; margin-left: -10px; border: 0; border-radius: 50%; color: inherit; background: none; cursor: pointer; transition: background .3s; }
 .nav-menu:hover { background: #c3a8691f; }
 .nav-menu:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; box-shadow: none; }
 
-.side-menu { position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; width: min(340px, 88vw); max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; overflow: hidden; border: 0; color: #17201c; background: #f6f2ea; box-shadow: 30px 0 80px -30px #000a; }
+.side-menu { position: fixed; inset: 0 auto 0 0; display: flex; flex-direction: column; width: min(352px, 90vw); max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; overflow: hidden; border: 0; font-family: Inter, sans-serif; color: #17201c; background: #fbf9f4; box-shadow: 1px 0 0 #8a6a3626, 40px 0 90px -40px #000c; }
 .side-menu:not([open]) { display: none; }
-.side-menu::backdrop { background: #020806a6; backdrop-filter: blur(3px); }
+.side-menu::backdrop { background: #020806a6; backdrop-filter: blur(4px); }
 .side-menu[open] { animation: sm-in .42s cubic-bezier(.2, .7, .2, 1); }
-.sm-head { display: flex; flex: none; align-items: center; gap: 10px; height: 82px; padding: 0 20px 0 14px; border-bottom: 1px solid #8a6a3626; }
+.side-menu :is(a, button):focus-visible { outline: 2px solid #8a6a36; outline-offset: 2px; box-shadow: none; }
+
+/* the brand and the way out */
+.sm-head { display: flex; flex: none; align-items: center; gap: 8px; height: 72px; padding: 0 18px 0 10px; }
 .sm-head .brand { color: #17201c; }
-.sm-head .brand > span { font-size: 30px; }
-.sm-close { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; color: #17201c; background: none; cursor: pointer; transition: background .3s; }
-.sm-close:hover { background: #8a6a361a; }
-.sm-body { flex: 1; overflow-y: auto; padding: 4px 14px 4px 0; overscroll-behavior: contain; }
-.sm-body ul { margin: 0; padding: 10px 0; list-style: none; }
-.sm-body ul + ul { border-top: 1px solid #8a6a3626; }
-.sm-body a { display: flex; align-items: center; gap: 18px; min-height: 48px; padding: 0 18px 0 26px; border-radius: 0 999px 999px 0; font-size: 15px; font-weight: 500; color: #17201c; text-decoration: none; transition: background .25s, color .25s; }
-.sm-body a > span { display: grid; flex: none; place-items: center; width: 22px; color: #5b6359; transition: color .25s; }
-.sm-body a > span svg { width: 20px; height: 20px; stroke-width: 1.6; }
-.sm-body a:hover { background: #8a6a3614; }
+.sm-head .brand > span { font-size: 28px; }
+.sm-close { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; color: #17201c; background: none; cursor: pointer; transition: background .25s; }
+.sm-close:hover { background: #17201c0d; }
+
+/* the search, drawn as a field; it opens the site's search */
+.sm-search { display: flex; flex: none; align-items: center; gap: 10px; height: 44px; margin: 0 18px 14px; padding: 0 10px 0 14px; border: 1px solid #17201c1f; border-radius: 12px; font: inherit; font-size: 14px; text-align: left; color: #5b6359; background: #fff; cursor: text; transition: border-color .25s, box-shadow .25s; }
+.sm-search:hover { border-color: #8a6a3680; box-shadow: 0 6px 18px -12px #8a6a3680; }
+.sm-search > span { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sm-search kbd { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border: 1px solid #17201c24; border-radius: 6px; font: 600 11px Inter, sans-serif; color: #5b6359; background: #f6f2ea; }
+
+/* every page, in three named groups */
+/* the list fades out at its foot, so a list longer than the screen shows that it scrolls */
+.sm-body { flex: 1; overflow-y: auto; padding: 6px 12px 28px; overscroll-behavior: contain; scrollbar-width: thin; mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); }
+.sm-group + .sm-group { margin-top: 6px; padding-top: 6px; border-top: 1px solid #17201c12; }
+.sm-label { margin: 8px 12px 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #8a6a36; }
+.sm-body ul { margin: 0; padding: 0; list-style: none; }
+.sm-body a { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 10px 0 8px; border-radius: 12px; font-size: 14.5px; font-weight: 500; color: #17201c; text-decoration: none; transition: background .2s, color .2s; }
+.sm-body a > span { display: grid; flex: none; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #5b6359; transition: background .2s, color .2s; }
+.sm-body a > span svg { width: 18px; height: 18px; stroke-width: 1.7; }
+.sm-body a:hover { background: #17201c0a; }
 .sm-body a:hover > span { color: #8a6a36; }
-.sm-body a.on { font-weight: 600; color: #5b4520; background: linear-gradient(90deg, #e6d6b4, #eee4d0); }
-.sm-body a.on > span { color: #8a6a36; }
-.side-menu :is(a, button):focus-visible { outline: 2px solid #17201c; outline-offset: -2px; box-shadow: none; }
-.sm-foot { flex: none; padding: 16px 26px 22px; border-top: 1px solid #8a6a3626; }
+.sm-body a.on { font-weight: 600; background: #efe5cf; }
+.sm-body a.on > span { color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); box-shadow: 0 4px 10px -6px #8a6a36; }
+
+/* the visitor and the language */
+.sm-foot { display: flex; flex: none; align-items: center; gap: 10px; padding: 12px 14px 16px 12px; border-top: 1px solid #17201c14; background: #f6f2ea; }
+.sm-account { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; padding: 8px; border-radius: 12px; color: inherit; text-decoration: none; transition: background .2s; }
+.sm-account:hover, .sm-account.on { background: #17201c0d; }
+.sm-account > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.sm-account b { overflow: hidden; font-size: 14px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.sm-account small { overflow: hidden; font-size: 12px; white-space: nowrap; text-overflow: ellipsis; color: #5b6359; }
+.sm-avatar { display: grid; flex: none; place-items: center; width: 38px; height: 38px; border-radius: 50%; font-size: 15px; font-weight: 600; color: #15130d; background: linear-gradient(180deg, #f1e5c6, #d6bc89); box-shadow: 0 0 0 3px #fbf9f4, 0 0 0 4px #c7a96b80; }
+.sm-foot .lang-switch { flex: none; margin-left: auto; }
+
 @keyframes sm-in { from { translate: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .side-menu[open] { animation: none; } }
