@@ -721,7 +721,7 @@ python agent.py --list             # açık öneriler
   Davranış önerilerinde deneme verisi de hesaba girdiyse "Deneme verisi dahil" yazılır.
 - **Taslak yalnızca istenince yazılır** (Gemini, tek çağrı, `VAKIF_AGENT_MODEL`, varsayılan hafif model). Model
   yalnızca önerideki eserlerin künyesini, kitaptaki olaylarını ve metninin başını görür. Kaynakta olmayan yıl içeren
-  cümle çıkarılır, doğrulanamayan adlar uyarı olur, yalnızca verilen eserler seçilebilir. Yapay zekâ yanıt vermezse
+  cümle çıkarılır, yalnızca verilen eserler seçilebilir. Yapay zekâ yanıt vermezse
   (ya da `VAKIF_FAKE_LLM=1`) kayıttaki bilgiden şablon taslak hazırlanır.
 - **Hiçbir şey onaysız yayınlanmaz.** Yönetici taslağı düzenleyip uygular: rota yayında olmayan rota, duyuru yayında
   olmayan "Gündem" kaydı olarak oluşur (yayına `#/rotalar`, `#/gundem`'den alınır); özet eser kartına yazılır ve o eserin

@@ -612,8 +612,6 @@ def _verify(text, support, fallback, warnings):
         fixed, removed = rag.drop_years(text, check['unsupported_years'])
         text = fallback if fixed == rag.NO_INFO['tr'] else fixed
         warnings.append(f"Kaynakta olmayan yıl ({', '.join(check['unsupported_years'])}) içeren {removed} cümle çıkarıldı.")
-    if check['unsupported_names']:
-        warnings.append(f"Kaynakta doğrulanamayan adlar ({', '.join(check['unsupported_names'][:4])}): uygulamadan önce kontrol edin.")
     return text
 
 
