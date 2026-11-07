@@ -18,12 +18,13 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 type Tool = { id: string; name: string; title: ReactNode; text: string; tags: string[]; to: string; cta: string; scene: (artifacts: DiscoveryArtifact[]) => ReactNode };
 
-// Where the collection's cities lie on the schematic map (/images/turkiye-gece.svg, 1200 × 600), in percent of its width
-// and height: the city's coordinates scaled to the map's outline, moved onto the land where the outline is simplified
-// (İstanbul and Antakya fall just off its coast). A city not listed here gets no pin.
+// Where the collection's cities lie on the night map (/images/turkiye-gece.svg, 1200 × 600), in percent of its width and
+// height. The outline is Natural Earth's 1:10m border drawn equirectangular with its standard parallel at 39° N (lon
+// 25.66–44.81° fills x 70–1130, the northernmost point sits at y 66); the pins are the cities' own coordinates in the same
+// projection. A city not listed here gets no pin.
 const CITY_PINS: Record<string, [number, number]> = {
-  bursa: [21, 32], konya: [36.5, 55], hatay: [53.4, 64.7], antakya: [53.4, 64.7], istanbul: [19.2, 25], edirne: [9.4, 16.2],
-  sivas: [57.2, 35.8], izmir: [12.8, 51], ankara: [38.2, 34],
+  bursa: [21.5, 33.8], konya: [37.3, 61.2], hatay: [54.3, 81], antakya: [54.3, 81], istanbul: [21.1, 24], edirne: [10, 16],
+  sivas: [58.2, 38.9], izmir: [12.7, 54.6], ankara: [39, 36.7],
 };
 
 function MapScene({ artifacts }: { artifacts: DiscoveryArtifact[] }) {
