@@ -51,6 +51,8 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 
 export function track(type: string, slug?: string, props?: Record<string, unknown>) {
   if (!vakifApiEnabled() || consent() !== 'granted' || typeof window === 'undefined') return;
+  // the panel's preview of a work (vakif/PreviewWork.tsx) is not a visit
+  if (window.location.hash.startsWith('#/onizleme/')) return;
   queue.push({ type, ...(slug ? { slug } : {}), path: window.location.hash.slice(1).split('?')[0] || '/', ...(props ? { props } : {}) });
   if (queue.length >= 40) flush();
   else if (!timer) timer = setTimeout(flush, FLUSH_MS);

@@ -25,8 +25,6 @@ import './public.css';
  * çağrılmaz). Favori, pasaport mührü ve "Esere Sor" sitenin kendi araçlarıdır.
  */
 export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
-  const { artifacts } = useContent();
-  const { progress, markDiscovered, toggleFavorite, notify } = useProgress();
   const [detail, setDetail] = useState<PublicDetail | null>(null);
   const [error, setError] = useState('');
   const item = vakifItem(artifact.slug) as PublicItem | undefined;
@@ -37,11 +35,18 @@ export function VakifStory({ artifact }: { artifact: DiscoveryArtifact }) {
     fetchMonument<PublicDetail>(artifact.slug).then(d => { if (alive) setDetail(d); }, e => { if (alive) setError((e as Error).message); });
     return () => { alive = false; };
   }, [artifact.slug]);
+  if (error || !item) return <div className="page-shell empty-state" role="alert"><h1>{t('Eser açılamadı.', 'The work could not be opened.')}</h1><p>{error || t('Bu eserin bilgisi bulunamadı.', 'No information was found for this work.')}</p><Link className="button dark" to="/kesfet">{t('Eserlere dön', 'Back to the collection')}</Link></div>;
+  if (!detail) return <div className="page-shell loading-state" role="status">{t(`${artifact.name} hazırlanıyor…`, `Preparing ${artifact.name}…`)}</div>;
+  return <VakifWork artifact={artifact} item={item} detail={detail} />;
+}
+
+/** The work's page once its record is here; the panel's preview draws the same page (PreviewWork.tsx). */
+export function VakifWork({ artifact, item, detail }: { artifact: DiscoveryArtifact; item: PublicItem; detail: PublicDetail }) {
+  const { artifacts } = useContent();
+  const { progress, markDiscovered, toggleFavorite, notify } = useProgress();
   const stamped = Boolean(progress.discovered[artifact.id]);
   const favorite = progress.favorites.includes(artifact.id);
   const next = artifacts[(artifacts.findIndex(a => a.id === artifact.id) + 1) % artifacts.length];
-  if (error || !item) return <div className="page-shell empty-state" role="alert"><h1>{t('Eser açılamadı.', 'The work could not be opened.')}</h1><p>{error || t('Bu eserin bilgisi bulunamadı.', 'No information was found for this work.')}</p><Link className="button dark" to="/kesfet">{t('Eserlere dön', 'Back to the collection')}</Link></div>;
-  if (!detail) return <div className="page-shell loading-state" role="status">{t(`${artifact.name} hazırlanıyor…`, `Preparing ${artifact.name}…`)}</div>;
   const immersive = toImmersive(item, detail);
   if (immersive) return <ImmersiveStory artifact={immersive}
     extras={<><section className="vakif-extras pv" aria-label={t('Eserin tarihçesi, süslemeleri ve konumu', 'The work’s history, decoration and location')}><div className="pv-body"><MonumentSections item={item} detail={detail} lang={currentLang()} gallery={false} /></div></section>

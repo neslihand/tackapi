@@ -24,10 +24,11 @@ export const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 't
 /** '16. yüzyıl' / '16th century'. */
 export const centuryName = (n: number) => t(`${n}. yüzyıl`, `${ordinal(n)} century`);
 
-export function setLang(lang: Lang) {
+/** persist: false switches for this page only (the panel's preview), leaving the visitor's saved choice as it was. */
+export function setLang(lang: Lang, persist = true) {
   if (lang === current) return;
   current = lang;
-  try { localStorage.setItem(KEY, lang); } catch { /* storage closed: this visit only */ }
+  if (persist) try { localStorage.setItem(KEY, lang); } catch { /* storage closed: this visit only */ }
   document.documentElement.lang = lang;
   listeners.forEach(listener => listener(lang));
 }
