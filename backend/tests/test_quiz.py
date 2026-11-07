@@ -58,11 +58,15 @@ class QuizApiTest(unittest.TestCase):
     def test_site_and_panel_mounts_come_after_the_api(self):
         # Yeni FastAPI sürümlerinde include_router'ın eklediği nesnelerin 'path' alanı yok; '' sitenin mount yoluyla karışmasın.
         paths = [getattr(r, 'path', None) for r in self.api.app.routes]
-        for mount, folder in (('', self.api.SITE_DIR), ('/panel', self.api.PANEL_DIR)):
+        for mount, folder in (('', self.api.SITE_DIR), ('/yonetim', self.api.PANEL_DIR), ('/yazar', self.api.AUTHOR_DIR)):
             if folder:
                 self.assertGreater(paths.index(mount), paths.index('/api/quiz'))
         if self.api.SITE_DIR:
             self.assertIn('text/html', self.c.get('/').headers['content-type'])
+        # panelin eski adresi yenisine, sonda '/' olmayan panel adresi '/'li hâline gider
+        self.assertEqual(self.c.get('/panel/', follow_redirects=False).headers['location'], '/yonetim/')
+        self.assertEqual(self.c.get('/yonetim', follow_redirects=False).headers['location'], '/yonetim/')
+        self.assertEqual(self.c.get('/yazar', follow_redirects=False).headers['location'], '/yazar/')
         self.assertEqual(self.c.get('/api/cities').headers['content-type'], 'application/json')
 
     def test_built_files_cache_by_name_and_responses_are_compressed(self):

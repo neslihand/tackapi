@@ -998,7 +998,7 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_GEOCODE_UA` | `vakif-eserleri-hackathon/0.1 (…)` | `geocode.py`'nin Nominatim'e gönderdiği User-Agent (iletişim bilgisi eklenebilir) |
 | `VAKIF_GEOCODE_URL` | `https://nominatim.openstreetmap.org/search` | Başka bir Nominatim sunucusu |
 | `VAKIF_SITE_DIR` | `../frontend/dist` | Derlenmiş site; varsa `/` altında sunulur (tek adresten demo), `off` kapatır |
-| `VAKIF_PANEL_DIR` | `../admin/dist` | Derlenmiş yönetim paneli; varsa `/panel/` altında sunulur, `off` kapatır |
+| `VAKIF_PANEL_DIR` | `../admin/dist` | Derlenmiş yönetim paneli; varsa `/yonetim/` altında sunulur, `off` kapatır |
 | `VAKIF_VISUAL_MIN` | `0.70` (yerel), `0.75` (Gemini) | Görselle aramada eser önermek için en düşük benzerlik (`visual_search.py --eval` önerisine göre ayarlanmalı) |
 | `VAKIF_VISUAL_MARGIN` | `0.03` | En iyi aday ikinciden en az bu kadar önde olmalı |
 | `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |

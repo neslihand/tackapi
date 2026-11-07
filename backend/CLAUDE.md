@@ -295,7 +295,7 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
    sayfası (kitap metni ve kayıtlı anlatımlar 4 bölüme ayrılır, yeni üretim yok: `frontend/src/vakif/immersive.ts`)
    geri geldi. Ön yüzün mevcut özelliklerini geliştiriciye sormadan kaldırma. Üç anlatım da (kitap metni dahil)
    bölünmeden, başlıksız gösterilir. **Demo tek adresten:** iki uygulama `npm run build`, sonra uvicorn site `/` ve
-   panel `/panel/` altında sunar (`api.py` sonu). Yazılı yarışma soruları: göç `014_quiz.sql` (gerçek veritabanında
+   panel `/yonetim/` altında sunar (`api.py` sonu). Yazılı yarışma soruları: göç `014_quiz.sql` (gerçek veritabanında
    henüz uygulanmadı), `quiz.py`, `GET /api/quiz`, panelde `#/sorular`. Göç 013 gerçek veritabanında uygulandı,
    `visual_search.py --eval` çalıştırıldı (28 Ekim 2026). Kalan işler: `docs/on-yuz-baglanti-plani.md`.
 2. **`ingest.py` (28 Ekim 2026):** `--remove-book KITAP --yes` kitabın bütün satırlarını (embedding ve panel emeği dahil)

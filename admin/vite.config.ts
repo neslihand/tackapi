@@ -5,9 +5,9 @@ import react from '@vitejs/plugin-react';
 const backend = process.env.VAKIF_API_URL ?? 'http://127.0.0.1:8000';
 const proxy = { '/api': backend, '/media': backend };
 
-// Derlenen panel arka uçta /panel/ altında sunulur (tek adresten demo, api.py); geliştirmede kök adreste çalışır.
+// Derlenen panel arka uçta /yonetim/ altında sunulur (tek adresten demo, api.py); geliştirmede kök adreste çalışır.
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/panel/' : '/',
+  base: command === 'build' ? '/yonetim/' : '/',
   plugins: [react()],
   server: { port: 5174, strictPort: true, proxy },
   preview: { port: 4174, strictPort: true, proxy },

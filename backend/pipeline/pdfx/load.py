@@ -36,7 +36,7 @@ CITY_ORDER = ['bursa', 'konya', 'hatay']
 LOADABLE = ('waiting', 'retry')
 BACKUP = os.path.join(ROOT, 'data', 'backup', 'pdfx')
 ROUNDS = os.path.join(OUT, 'rounds')
-PANEL = '/panel/#/eser/'
+PANEL = '/yonetim/#/eser/'
 RENAME_MAX = 0.6        # elle bağlanan kayıtta ad benzerliği bunun altındaysa ad başka esere aittir
 RETIRE_ID = re.compile(r'\(([bkh]\d-\d{4}(?:-hz\d+)?)')
 

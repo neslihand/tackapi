@@ -49,7 +49,7 @@ Geliştirme sunucusu `/api` ve `/media` isteklerini `http://127.0.0.1:8000` adre
 | `npm test` | Birim testleri (`node --test`) |
 
 **Tek adresten demo:** `npm run build` sonrası uvicorn yazar panelini `http://127.0.0.1:8000/yazar/` adresinde sunar
-(site `/`, yönetim paneli `/panel/`). Klasör başka yerdeyse `VAKIF_AUTHOR_DIR`, kapatmak için `VAKIF_AUTHOR_DIR=off`.
+(site `/`, yönetim paneli `/yonetim/`). Klasör başka yerdeyse `VAKIF_AUTHOR_DIR`, kapatmak için `VAKIF_AUTHOR_DIR=off`.
 
 ## Dosyalar
 | Dosya | İçerik |

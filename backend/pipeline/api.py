@@ -24,8 +24,9 @@ VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
 VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında sunulur; 'off' kapatır
-VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/panel/' altında sunulur; 'off' kapatır
-                    Tek adresten demo: önce iki uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
+VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/yonetim/' altında sunulur; 'off' kapatır
+VAKIF_AUTHOR_DIR:   derlenmiş yazar paneli (varsayılan ../yazar-paneli/dist) '/yazar/' altında sunulur; 'off' kapatır
+                    Tek adresten demo: önce üç uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
 """
 import os, sys, re, time, json, hashlib, logging, threading, mimetypes
 from collections import defaultdict, deque
@@ -33,7 +34,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -593,7 +594,7 @@ async def visual_search_endpoint(request: Request, file: UploadFile = File(...),
 
 
 # ------------------------------------------------------------------------------------------- tek adresten site
-# Derlenmiş site '/' ve yönetim paneli '/panel/' altında: demo tek sunucu ve tek adresle açılır. /api ve /media bu
+# Derlenmiş site '/', yönetim paneli '/yonetim/' ve yazar paneli '/yazar/' altında: demo tek sunucu ve tek adresle açılır. /api ve /media bu
 # bağlamalardan önce tanımlandığı için etkilenmez. Klasör yoksa (derlenmemişse) bağlanmaz; geliştirmede Vite kullanılır.
 ROOT_DIR = os.path.join(os.path.dirname(__file__), '..', '..')
 
@@ -632,8 +633,22 @@ def share_page(slug: str, request: Request, lang: str = 'tr'):
     return HTMLResponse(html, headers={'Cache-Control': 'no-cache'})
 
 
+@app.get('/panel', include_in_schema=False)
+@app.get('/panel/{rest:path}', include_in_schema=False)
+def old_panel(rest: str = ''):
+    """Panelin eski adresi: kayıtlı bağlantılar /yonetim/'e gider (adresteki #/... tarayıcıda korunur)."""
+    return RedirectResponse(f'/yonetim/{rest}')
+
+
+@app.get('/yonetim', include_in_schema=False)
+@app.get('/yazar', include_in_schema=False)
+def panel_slash(request: Request):
+    """Adres çubuğuna sonda '/' olmadan yazılan panel adresi (mount yalnızca '/yonetim/...' ile eşleşir)."""
+    return RedirectResponse(f'{request.url.path}/')
+
+
 if PANEL_DIR:
-    app.mount('/panel', AppFiles(directory=PANEL_DIR, html=True), name='panel')
+    app.mount('/yonetim', AppFiles(directory=PANEL_DIR, html=True), name='panel')
 if AUTHOR_DIR:   # yazar paneli: yönetim panelinden ayrı uygulama (../yazar-paneli)
     app.mount('/yazar', AppFiles(directory=AUTHOR_DIR, html=True), name='yazar')
 if SITE_DIR:

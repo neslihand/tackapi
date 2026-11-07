@@ -77,7 +77,7 @@ export GEMINI_API_KEY="<varsa Gemini anahtarı>"
 python -m uvicorn api:app --app-dir pipeline --host 127.0.0.1 --port 8000
 ```
 - Site: <http://127.0.0.1:8000/>
-- Yönetim paneli: <http://127.0.0.1:8000/panel/> (giriş: panel anahtarının `:` işaretinden sonraki kısmı)
+- Yönetim paneli: <http://127.0.0.1:8000/yonetim/> (giriş: panel anahtarının `:` işaretinden sonraki kısmı)
 
 Gemini anahtarı yoksa site yine açılır; yalnızca "Esere Sor" cevap vermez.
 
