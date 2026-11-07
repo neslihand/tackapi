@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Camera as CameraIcon, ImagePlus, ScanLine, ArrowUpRight, X, Check, ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { Camera as CameraIcon, ImagePlus, ArrowUpRight, X, Check, ChevronDown, ShieldCheck } from 'lucide-react';
 import { useContent } from '../lib/contentStore';
 import { Girih } from '../components/PlayArt';
 import { Link } from '../lib/navigation';
@@ -8,16 +8,7 @@ import { demoRecognition } from '../lib/recognition';
 import { findByPhoto, vakifApiEnabled, type VisualResult } from '../lib/vakifApi';
 import { track } from '../lib/analytics';
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
-// One numbered step of the flow; its number turns into a tick once the step is done.
-function Step({ no, title, done, now, children }: { no: number; title: string; done: boolean; now: boolean; children: ReactNode }) {
-  return <li className={`cm-step${done ? ' done' : ''}${now ? ' now' : ''}`}>
-    <span className="cm-no" aria-hidden="true">{done ? <Check size={17} strokeWidth={2.2} /> : pad(no)}</span>
-    <h2>{title}{done && <span className="sr-only">{t(' (tamamlandı)', ' (done)')}</span>}</h2>
-    <div className="cm-body">{children}</div>
-  </li>;
-}
+const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export function Camera() {
   const { artifacts } = useContent();
@@ -33,6 +24,7 @@ export function Camera() {
   const [error, setError] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [requesting, setRequesting] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const alive = useRef(true);
@@ -41,6 +33,14 @@ export function Camera() {
   useEffect(() => { if (streaming && video.current && stream.current) video.current.srcObject = stream.current; }, [streaming]);
   function stop() { stream.current?.getTracks().forEach(t => t.stop()); stream.current = null; setStreaming(false); }
   function accept(file: Blob) { setBlob(file); setPreview(URL.createObjectURL(file)); setResult(''); setFound(null); setError(''); stop(); }
+  function clear() { setPreview(''); setBlob(null); setResult(''); setFound(null); }
+  // a file from the picker or dropped on the page: a JPEG, PNG or WebP photo under 10 MB
+  function take(file: File | undefined) {
+    if (!file) return;
+    if (!TYPES.includes(file.type) || file.size > 10 * 1024 * 1024) { setError(t('10 MB altında JPEG, PNG veya WebP fotoğraf seç.', 'Choose a JPEG, PNG or WebP photo under 10 MB.')); return; }
+    accept(file);
+  }
+  const drop = { onDragOver: (e: DragEvent) => { e.preventDefault(); setDragging(true); }, onDragLeave: () => setDragging(false), onDrop: (e: DragEvent) => { e.preventDefault(); setDragging(false); take(e.dataTransfer.files[0]); } };
   async function search() {
     if (!blob) return;
     setBusy(true); setError(''); setFound(null); setResult('');
@@ -71,26 +71,28 @@ export function Camera() {
     canvas.toBlob(file => { if (file && alive.current) accept(file); }, 'image/jpeg', 0.85);
   }
   const artifact = artifacts.find(a => a.id === result);
-  const current = !blob ? 0 : api ? (found ? -1 : 2) : !selected ? 1 : !artifact ? 2 : -1;
   const state = streaming ? t('Canlı', 'Live') : busy ? t('Karşılaştırılıyor', 'Comparing') : artifact ? (api ? t('Eşleşme', 'Match') : t('Demo eşleşme', 'Demo match')) : found ? t('Sonuç', 'Result') : preview ? t('Kare hazır', 'Frame ready') : t('Vizör bekliyor', 'Viewfinder waiting');
   // Only monuments in the collection on show (the pilot selection) are offered as candidates.
   const candidates = !found || artifact ? [] : found.candidates.flatMap(c => { const a = artifacts.find(x => x.id === c.slug); return a ? [{ ...c, artifact: a }] : []; }).slice(0, 3);
+  // the flow at a glance: what is done, what comes now
+  const steps: [string, boolean][] = api
+    ? [[t('Görsel ekle', 'Add a picture'), Boolean(blob)], [t('Eseri bul', 'Find the work'), Boolean(found)]]
+    : [[t('Görsel ekle', 'Add a picture'), Boolean(blob)], [t('Eser seç', 'Choose a work'), Boolean(selected)], [t('Hikâyeyi gör', 'See the story'), Boolean(artifact)]];
+  const upload = (label: string) => <input type="file" accept={TYPES.join(',')} aria-label={label} onChange={e => { take(e.target.files?.[0]); e.target.value = ''; }} />;
   return <div className="camera-scene" data-nav-theme="dark">
     <Girih className="cm-girih" />
     <div className="page-shell cm-page">
       <header className="cm-head">
-        <p className="cm-index">{t('Bak, merak et, keşfet', 'Look, wonder, discover')}</p>
-        <h1 className="cm-title"><span className="cm-line"><span>{t('Bir kareden', 'From one frame')}</span></span> <span className="cm-line"><em>{t('bir hikâyeye.', 'to a story.')}</em></span></h1>
+        <p className="cm-index">{t('Kamera ile keşfet', 'Discover with the camera')}</p>
+        <h1 className="cm-title">{t('Bir kareden', 'From one frame')} <em>{t('bir hikâyeye.', 'to a story.')}</em></h1>
         <p className="cm-lede">{api ? t('Yapının fotoğrafını çek ya da yükle; envanter kitaplarındaki fotoğraflarla karşılaştırıp hangi eser olduğunu bulalım.', 'Take or upload a photo of the building; we compare it with the photos in the inventory books and find which work it is.') : t('Kamera veya fotoğrafla başlayan keşif akışını deneyimle.', 'Try the discovery flow that starts with the camera or a photo.')}</p>
       </header>
-      {api ? <div className="cm-notice"><ScanLine size={20} aria-hidden="true" /><strong>{t('Fotoğrafla eser bulma', 'Finding a work by photo')}</strong><p>{t('Fotoğrafın yalnızca karşılaştırma için sunucuya gönderilir ve saklanmaz. Emin olamadığımızda tek bir eser söylemeyiz, en çok benzeyenleri gösteririz.', 'Your photo is sent to the server only to be compared, and is not kept. When we are not sure, we do not name one work; we show the closest ones.')}</p></div>
-        : <div className="cm-notice"><ScanLine size={20} aria-hidden="true" /><strong>{t('Demo Tanıma Deneyimi', 'Demo Recognition')}</strong><p>{t('Bu sürüm görüntü analizi yapmaz. Sonuç, aşağıda senin seçtiğin örnek esere göre gösterilir. Fotoğrafın cihazından ayrılmaz.', 'This version does not analyse pictures. The result follows the sample work you choose below. Your photo does not leave your device.')}</p></div>}
       <div className="cm-layout">
-        {/* The viewfinder: corner marks and an arch to frame the building in; thirds while the camera is live. */}
-        <div className={`cm-finder${streaming ? ' live' : preview ? ' framed' : ''}${artifact ? ' matched' : ''}`}>
+        {/* The viewfinder: corner marks and an arch to frame the building in; thirds while the camera is live. A photo can be dropped on it too. */}
+        <div className={`cm-finder${streaming ? ' live' : preview ? ' framed' : ''}${artifact ? ' matched' : ''}${dragging ? ' dragging' : ''}`} {...(streaming ? {} : drop)}>
           {streaming ? <video ref={video} autoPlay playsInline muted aria-label={t('Canlı kamera önizlemesi', 'Live camera preview')} />
             : preview ? <img src={preview} alt={t('Yüklediğin fotoğrafın önizlemesi', 'Preview of the photo you uploaded')} onError={() => { setError(t('Görsel okunamadı. JPEG, PNG veya WebP biçiminde başka bir fotoğraf seç.', 'The picture could not be read. Choose another photo in JPEG, PNG or WebP.')); setBlob(null); setPreview(''); }} />
-            : <div className="cm-empty"><p className="cm-empty-title">{t('Merak ettiğin yapıyı', 'Frame the building')}<br /><em>{t('kadrajına al.', 'you wonder about.')}</em></p><p className="cm-empty-note">{t('Fotoğraf ekle veya kameranı aç.', 'Add a photo or open your camera.')}</p></div>}
+            : <div className="cm-empty"><p className="cm-empty-title">{t('Merak ettiğin yapıyı', 'Frame the building')}<br /><em>{t('kadrajına al.', 'you wonder about.')}</em></p></div>}
           <span className="cm-guide" aria-hidden="true">
             <i /><i /><i /><i />
             <span className="cm-thirds" />
@@ -102,36 +104,44 @@ export function Camera() {
           </span>
           <p className="cm-readout" aria-hidden="true"><i />{state}</p>
           {streaming && <><button type="button" className="cm-close" onClick={stop} aria-label={t('Kamerayı kapat', 'Close the camera')}><X size={18} /></button><button type="button" className="cm-shutter" onClick={capture} aria-label={t('Fotoğraf çek', 'Take a photo')} /></>}
-          {!streaming && preview && <button type="button" className="cm-close" onClick={() => { setPreview(''); setBlob(null); setResult(''); setFound(null); }} aria-label={t('Fotoğrafı kaldır', 'Remove the photo')}><X size={18} /></button>}
+          {!streaming && preview && <button type="button" className="cm-close" onClick={clear} aria-label={t('Fotoğrafı kaldır', 'Remove the photo')}><X size={18} /></button>}
         </div>
-        <ol className="cm-steps">
-          <Step no={1} title={t('Bir görsel ekle', 'Add a picture')} done={Boolean(blob)} now={current === 0}>
-            <div className="cm-actions">
-              <button type="button" className="button en-key cm-key" onClick={start} disabled={requesting}><span className="en-key-icon" aria-hidden="true"><CameraIcon size={17} /></span><span className="en-key-label">{requesting ? t('Kamera izni bekleniyor…', 'Waiting for camera permission…') : t('Kamerayı aç', 'Open the camera')}</span></button>
-              <label className="en-link cm-link cm-upload"><span>{t('Fotoğraf yükle', 'Upload a photo')}</span><span className="en-link-arrow" aria-hidden="true"><ImagePlus size={16} /></span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { const file = e.target.files?.[0]; if (!file) return; if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) { setError(t('10 MB altında JPEG, PNG veya WebP fotoğraf seç.', 'Choose a JPEG, PNG or WebP photo under 10 MB.')); e.target.value = ''; return; } accept(file); e.target.value = ''; }} /></label>
-            </div>
-            <small>{t('JPEG, PNG veya WebP · En fazla 10 MB', 'JPEG, PNG or WebP · Up to 10 MB')}</small>
-            {error && <p className="cm-error" role="alert">{error}</p>}
-          </Step>
-          {!api && <Step no={2} title={t('Demo için eseri sen seç', 'Choose the work for the demo')} done={Boolean(selected)} now={current === 1}>
-            <label className="cm-select"><span className="cm-label">{t('Örnek eser', 'Sample work')}</span><select value={selected} onChange={e => { setSelected(e.target.value); setResult(''); }}><option value="">{t('Örnek eser seç…', 'Choose a sample work…')}</option>{artifacts.map(a => <option value={a.id} key={a.id}>{a.name}</option>)}</select><ChevronDown size={18} aria-hidden="true" /></label>
-          </Step>}
-          <Step no={api ? 2 : 3} title={api ? t('Hangi eser olduğunu bul', 'Find which work it is') : t('Hikâyesini bul', 'Find its story')} done={api ? Boolean(found) : Boolean(artifact)} now={current === 2}>
-            {api ? <button type="button" className="button en-key cm-key cm-show" disabled={!blob || busy} aria-describedby={!blob ? 'cm-show-hint' : undefined} onClick={search}><span className="en-key-label">{busy ? t('Kitap fotoğraflarıyla karşılaştırılıyor…', 'Comparing with the book photos…') : t('Eseri bul', 'Find the work')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></button>
-              : <button type="button" className="button en-key cm-key cm-show" disabled={!blob || !selected} aria-describedby={!blob || !selected ? 'cm-show-hint' : undefined} onClick={async () => { if (!blob) return; const response = await demoRecognition.recognize(blob, selected); if (alive.current) setResult(response.artifactId); }}><span className="en-key-label">{t('Seçtiğim eseri göster', 'Show the work I chose')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></button>}
-            {(!blob || (!api && !selected)) && <p className="cm-hint" id="cm-show-hint">{!blob ? t('Önce bir görsel ekle.', 'Add a picture first.') : t('Şimdi bir örnek eser seç.', 'Now choose a sample work.')}</p>}
-            {artifact && <div className="cm-result" role="status">
-              <span className="cm-result-media"><img src={artifact.image} alt="" /></span>
-              <span className="cm-result-copy"><small>{api ? t('Fotoğraftaki eser büyük olasılıkla bu', 'The work in the photo is most likely this one') : `${t('Seçimine dayalı demo sonucu', 'Demo result from your choice')} · N° ${pad(artifacts.indexOf(artifact) + 1)}`}</small><h3>{artifact.name}</h3><p>{artifact.city} · {artifact.period}</p><Link className="cm-result-link" to={`/eser/${artifact.slug}`}>{t('Hikâyesine git', 'Go to its story')} <ArrowUpRight size={16} aria-hidden="true" /></Link></span>
+        <section className="cm-panel" aria-labelledby="cm-panel-title">
+          <h2 id="cm-panel-title" className="cm-panel-title">{api ? t('Fotoğrafla eser bul', 'Find a work by photo') : t('Demo tanıma', 'Demo recognition')}</h2>
+          <ol className="cm-progress" aria-label={t('Adımlar', 'Steps')}>{steps.map(([label, done], i) => {
+            const now = !done && steps.slice(0, i).every(([, d]) => d);
+            return <li key={label} className={done ? 'done' : now ? 'now' : ''}><i aria-hidden="true">{done && <Check size={12} strokeWidth={3} />}</i>{label}{done && <span className="sr-only">{t(' (tamamlandı)', ' (done)')}</span>}</li>;
+          })}</ol>
+          {!preview ? <label className={`cm-drop${dragging ? ' dragging' : ''}`} {...drop}>
+            <span className="cm-drop-icon" aria-hidden="true"><ImagePlus size={22} /></span>
+            <b>{t('Fotoğrafı buraya bırak', 'Drop a photo here')}</b>
+            <span>{t('ya da ', 'or ')}<u>{t('bilgisayarından seç', 'choose one from your device')}</u></span>
+            <small>{t('JPEG, PNG veya WebP · en fazla 10 MB', 'JPEG, PNG or WebP · up to 10 MB')}</small>
+            {upload(t('Fotoğraf yükle', 'Upload a photo'))}
+          </label>
+            : <div className="cm-picked"><span className="cm-picked-thumb" aria-hidden="true"><img src={preview} alt="" /></span>
+              <span className="cm-picked-copy"><b>{t('Fotoğraf hazır', 'Photo ready')}</b><small>{artifact || found ? t('Başka bir fotoğrafla yeniden dene', 'Try again with another photo') : t('Şimdi eseri bulalım', 'Now let us find the work')}</small></span>
+              <label className="cm-picked-change">{t('Değiştir', 'Change')}{upload(t('Başka bir fotoğraf seç', 'Choose another photo'))}</label>
+              <button type="button" className="cm-picked-remove" onClick={clear} aria-label={t('Fotoğrafı kaldır', 'Remove the photo')}><X size={16} /></button>
             </div>}
-            {found && !artifact && (candidates.length ? <div role="status"><p className="cm-hint">{t('Emin olamadık. Fotoğrafına en çok benzeyen eserler:', 'We are not sure. The works closest to your photo:')}</p>
-              {candidates.map(c => <div className="cm-result" key={c.slug}>
-                <span className="cm-result-media"><img src={c.photo} alt="" /></span>
-                <span className="cm-result-copy"><small>{t('Benzeyen kitap fotoğrafı', 'A similar book photo')}</small><h3>{c.artifact.name}</h3><p>{c.artifact.city} · {c.artifact.period}</p><Link className="cm-result-link" to={`/eser/${c.artifact.slug}`}>{t('Bu mu? Hikâyesine git', 'Is this it? Go to its story')} <ArrowUpRight size={16} aria-hidden="true" /></Link></span>
-              </div>)}</div>
-              : <p className="cm-hint" role="status">{t('Fotoğrafa benzeyen bir eser bulamadık. Yapının tamamını gösteren, net bir fotoğrafla yeniden dene.', 'We found no work like the photo. Try again with a sharp photo that shows the whole building.')}</p>)}
-          </Step>
-        </ol>
+          {!streaming && <button type="button" className="cm-camera" onClick={start} disabled={requesting}><CameraIcon size={18} aria-hidden="true" /><span>{requesting ? t('Kamera izni bekleniyor…', 'Waiting for camera permission…') : preview ? t('Kamerayla yeniden çek', 'Take it again with the camera') : t('Kamerayı aç', 'Open the camera')}</span></button>}
+          {error && <p className="cm-error" role="alert">{error}</p>}
+          {!api && <label className="cm-select"><span className="cm-label">{t('Örnek eser', 'Sample work')}</span><select value={selected} onChange={e => { setSelected(e.target.value); setResult(''); }}><option value="">{t('Örnek eser seç…', 'Choose a sample work…')}</option>{artifacts.map(a => <option value={a.id} key={a.id}>{a.name}</option>)}</select><ChevronDown size={18} aria-hidden="true" /></label>}
+          {api ? <button type="button" className="button en-key cm-key cm-show" disabled={!blob || busy} aria-describedby={!blob ? 'cm-show-hint' : undefined} onClick={search}><span className="en-key-label">{busy ? t('Kitap fotoğraflarıyla karşılaştırılıyor…', 'Comparing with the book photos…') : t('Eseri bul', 'Find the work')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></button>
+            : <button type="button" className="button en-key cm-key cm-show" disabled={!blob || !selected} aria-describedby={!blob || !selected ? 'cm-show-hint' : undefined} onClick={async () => { if (!blob) return; const response = await demoRecognition.recognize(blob, selected); if (alive.current) setResult(response.artifactId); }}><span className="en-key-label">{t('Seçtiğim eseri göster', 'Show the work I chose')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></button>}
+          {(!blob || (!api && !selected)) && <p className="cm-hint" id="cm-show-hint">{!blob ? t('Önce bir görsel ekle.', 'Add a picture first.') : t('Şimdi bir örnek eser seç.', 'Now choose a sample work.')}</p>}
+          {artifact && <div className="cm-result" role="status">
+            <span className="cm-result-media"><img src={artifact.image} alt="" /></span>
+            <span className="cm-result-copy"><small>{api ? t('Fotoğraftaki eser büyük olasılıkla bu', 'The work in the photo is most likely this one') : t('Seçimine dayalı demo sonucu', 'Demo result from your choice')}</small><h3>{artifact.name}</h3><p>{artifact.city} · {artifact.period}</p><Link className="cm-result-link" to={`/eser/${artifact.slug}`}>{t('Hikâyesine git', 'Go to its story')} <ArrowUpRight size={16} aria-hidden="true" /></Link></span>
+          </div>}
+          {found && !artifact && (candidates.length ? <div className="cm-results" role="status"><p className="cm-hint">{t('Emin olamadık. Fotoğrafına en çok benzeyen eserler:', 'We are not sure. The works closest to your photo:')}</p>
+            {candidates.map(c => <div className="cm-result" key={c.slug}>
+              <span className="cm-result-media"><img src={c.photo} alt="" /></span>
+              <span className="cm-result-copy"><small>{t('Benzeyen kitap fotoğrafı', 'A similar book photo')}</small><h3>{c.artifact.name}</h3><p>{c.artifact.city} · {c.artifact.period}</p><Link className="cm-result-link" to={`/eser/${c.artifact.slug}`}>{t('Bu mu? Hikâyesine git', 'Is this it? Go to its story')} <ArrowUpRight size={16} aria-hidden="true" /></Link></span>
+            </div>)}</div>
+            : <p className="cm-hint" role="status">{t('Fotoğrafa benzeyen bir eser bulamadık. Yapının tamamını gösteren, net bir fotoğrafla yeniden dene.', 'We found no work like the photo. Try again with a sharp photo that shows the whole building.')}</p>)}
+          <p className="cm-privacy"><ShieldCheck size={16} aria-hidden="true" />{api ? t('Fotoğrafın yalnızca karşılaştırma için sunucuya gönderilir ve saklanmaz. Emin olamadığımızda tek bir eser söylemeyiz, en çok benzeyenleri gösteririz.', 'Your photo is sent to the server only to be compared, and is not kept. When we are not sure, we do not name one work; we show the closest ones.') : t('Bu sürüm görüntü analizi yapmaz. Sonuç, seçtiğin örnek esere göre gösterilir. Fotoğrafın cihazından ayrılmaz.', 'This version does not analyse pictures. The result follows the sample work you choose. Your photo does not leave your device.')}</p>
+        </section>
       </div>
     </div>
   </div>;
