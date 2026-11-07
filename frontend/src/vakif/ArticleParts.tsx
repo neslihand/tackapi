@@ -29,9 +29,11 @@ export function CoverArt({ kind, title }: { kind: ArticleKind; title: string }) 
 }
 
 export function ArticleCard({ a, wide = false }: { a: ArticleItem; wide?: boolean }) {
+  // a cover whose file is missing on this server (uploaded on another machine) falls back to the drawn cover
+  const [broken, setBroken] = useState(false);
   return <article className={`rr-card ${wide ? 'wide' : ''}`}>
     <Link to={`/makale/${a.slug}`} className="rr-card-link" aria-label={`${a.title} — ${a.kind_label}`}>
-      <span className="rr-card-cover">{a.cover ? <img src={wide ? a.cover.src : a.cover.thumb} alt="" loading={wide ? 'eager' : 'lazy'} /> : <CoverArt kind={a.kind} title={a.title} />}</span>
+      <span className="rr-card-cover">{a.cover && !broken ? <img src={wide ? a.cover.src : a.cover.thumb} alt="" loading={wide ? 'eager' : 'lazy'} onError={() => setBroken(true)} /> : <CoverArt kind={a.kind} title={a.title} />}</span>
       <span className="rr-card-text">
         <span className="rr-kicker">{a.kind_label}{a.city ? <> · {a.city.name}</> : null}{a.featured && wide ? <> · <em>{t('Öne çıkan', 'Featured')}</em></> : null}</span>
         <strong lang={a.lang}>{a.title}</strong>

@@ -30,6 +30,7 @@ export default function Article() {
   const [child, setChild] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [linkShown, setLinkShown] = useState<string | null>(null);
+  const [coverBroken, setCoverBroken] = useState(false);   // the file missing on the server: the drawn cover instead
   // moved directly: the whole text is not drawn again for every scrolled pixel
   const [read] = useState(() => new Animated.Value(0));
   const page = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -77,7 +78,7 @@ export default function Article() {
     setLinkShown(await shareLink(a!.title, url).catch(() => url));
     track('share_initiated', undefined, { content_type: 'article', article: slug });
   }
-  const cover = mediaUrl(a.cover?.src);
+  const cover = coverBroken ? null : mediaUrl(a.cover?.src);
   const headings = blocks.filter(b => b.type === 'h');
   const pages = a.source?.pages ? (a.source.pages[0] === a.source.pages[1] ? t(`s. ${a.source.pages[0]}`, `p. ${a.source.pages[0]}`) : t(`s. ${a.source.pages[0]}–${a.source.pages[1]}`, `pp. ${a.source.pages[0]}–${a.source.pages[1]}`)) : '';
   // the editor's note is Turkish; in English the book, section and pages are put together instead
@@ -88,7 +89,7 @@ export default function Article() {
   return <View style={{ flex: 1 }}>
     <Stack.Screen options={{ title: a.kind_label }} />
     <ScrollView ref={page} onScroll={onScroll} scrollEventThrottle={32} contentContainerStyle={{ paddingBottom: space.xl * 2 }}>
-      {cover ? <Image source={cover} style={s.cover} contentFit="cover" transition={250} accessibilityLabel={a.cover?.alt || a.title} /> : <CoverArt kind={a.kind} title={a.title} style={s.cover} />}
+      {cover ? <Image source={cover} style={s.cover} contentFit="cover" transition={250} onError={() => setCoverBroken(true)} accessibilityLabel={a.cover?.alt || a.title} /> : <CoverArt kind={a.kind} title={a.title} style={s.cover} />}
       <View style={s.hero}>
         <Eyebrow light>{a.kind_label.toLocaleUpperCase('tr-TR')}{a.city ? ` · ${a.city.name.toLocaleUpperCase('tr-TR')}` : ''}</Eyebrow>
         <Title light>{a.title}</Title>

@@ -2,7 +2,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/components/Typography';
 import { Button, Eyebrow, Title } from './UI';
@@ -35,10 +35,12 @@ export function CoverArt({ kind, title, style }: { kind: ArticleKind; title: str
 }
 
 export function ArticleCard({ a, wide = false }: { a: ArticleItem; wide?: boolean }) {
-  const cover = mediaUrl(wide ? a.cover?.src : a.cover?.thumb);
+  // a cover whose file is missing on the server (uploaded on another machine) falls back to the drawn cover
+  const [broken, setBroken] = useState(false);
+  const cover = broken ? null : mediaUrl(wide ? a.cover?.src : a.cover?.thumb);
   return <Pressable onPress={() => router.push(`/makale/${a.slug}`)} accessibilityRole="button" accessibilityLabel={`${a.title}, ${a.kind_label}, ${t(`${a.reading_minutes} dakika okuma`, `${a.reading_minutes} minute read`)}`}
     style={({ pressed }) => [s.card, wide && s.cardWide, pressed && { opacity: 0.85 }]}>
-    {cover ? <Image source={cover} alt="" style={wide ? s.coverWide : s.cover} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
+    {cover ? <Image source={cover} alt="" style={wide ? s.coverWide : s.cover} contentFit="cover" transition={200} onError={() => setBroken(true)} accessibilityIgnoresInvertColors />
       : <CoverArt kind={a.kind} title={a.title} style={wide ? s.coverWide : s.cover} />}
     <View style={s.body}>
       <Text style={s.kicker}>{a.kind_label.toLocaleUpperCase('tr-TR')}{a.city ? ` · ${a.city.name.toLocaleUpperCase('tr-TR')}` : ''}{a.featured && wide ? ` · ${t('ÖNE ÇIKAN', 'FEATURED')}` : ''}</Text>
