@@ -35,12 +35,13 @@ export function CoverArt({ kind, title, style }: { kind: ArticleKind; title: str
 }
 
 export function ArticleCard({ a, wide = false }: { a: ArticleItem; wide?: boolean }) {
-  // a cover whose file is missing on the server (uploaded on another machine) falls back to the drawn cover
-  const [broken, setBroken] = useState(false);
-  const cover = broken ? null : mediaUrl(wide ? a.cover?.src : a.cover?.thumb);
+  // a cover missing on the server (uploaded on another machine, or copied without its small copy) tries the full photo,
+  // then falls back to the drawn cover
+  const [tries, setTries] = useState(0);
+  const cover = [...new Set((wide ? [a.cover?.src] : [a.cover?.thumb, a.cover?.src]).map(mediaUrl))].filter(Boolean)[tries] ?? null;
   return <Pressable onPress={() => router.push(`/makale/${a.slug}`)} accessibilityRole="button" accessibilityLabel={`${a.title}, ${a.kind_label}, ${t(`${a.reading_minutes} dakika okuma`, `${a.reading_minutes} minute read`)}`}
     style={({ pressed }) => [s.card, wide && s.cardWide, pressed && { opacity: 0.85 }]}>
-    {cover ? <Image source={cover} alt="" style={wide ? s.coverWide : s.cover} contentFit="cover" transition={200} onError={() => setBroken(true)} accessibilityIgnoresInvertColors />
+    {cover ? <Image key={cover} source={cover} alt="" style={wide ? s.coverWide : s.cover} contentFit="cover" transition={200} onError={() => setTries(n => n + 1)} accessibilityIgnoresInvertColors />
       : <CoverArt kind={a.kind} title={a.title} style={wide ? s.coverWide : s.cover} />}
     <View style={s.body}>
       <Text style={s.kicker}>{a.kind_label.toLocaleUpperCase('tr-TR')}{a.city ? ` · ${a.city.name.toLocaleUpperCase('tr-TR')}` : ''}{a.featured && wide ? ` · ${t('ÖNE ÇIKAN', 'FEATURED')}` : ''}</Text>
