@@ -28,6 +28,7 @@ VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında 
 VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/yonetim/' altında sunulur; 'off' kapatır
 VAKIF_AUTHOR_DIR:   derlenmiş yazar paneli (varsayılan ../yazar-paneli/dist) '/yazar/' altında sunulur; 'off' kapatır
                     Tek adresten demo: önce üç uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
+VAKIF_SECURITY_HEADERS: 'off' güvenlik başlıklarını (içerik politikası vb.) kapatır; bkz. security.py
 """
 import os, sys, re, time, json, hashlib, logging, threading, mimetypes
 from collections import defaultdict, deque
@@ -42,7 +43,7 @@ from typing import Literal
 import envfile  # noqa: F401  ayarlar kökteki .env'den, aşağıdaki modüller okumadan önce
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author, security
 
 log = logging.getLogger('vakif.api')
 
@@ -55,6 +56,8 @@ app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST', 'PATCH', 'PUT',
 # JS, CSS, HTML ve JSON sıkıştırılır (ana JS 682 KB → 224 KB); fotoğraf ve fontlar zaten sıkışık olduğu için atlanır.
 # Seviye 6, 9 ile aynı boyutu daha az işlemciyle verir.
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
+# En dışta: güvenlik başlıkları (içerik politikası, çerçeve, nosniff) ve 25 MB gövde sınırı (security.py)
+app.add_middleware(security.Guard)
 db = DB()
 
 # Fotoğraflar: images.py'nin ürettiği WebP dosyaları (media/<file>, küçükleri media/thumbs/<file>).

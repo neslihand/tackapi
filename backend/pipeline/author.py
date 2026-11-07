@@ -452,6 +452,7 @@ def build_author_router(db):
     st = Store(db)
     r = APIRouter(prefix='/api/author', tags=['yazar paneli'])
     login_limit = Limiter(8, 600)          # IP ve e-posta başına 10 dakikada 8 deneme
+    spray_limit = Limiter(30, 600)         # IP başına 10 dakikada 30 deneme: aynı şifreyi çok hesapta denemeye karşı
 
     def author(authorization: str | None = Header(None)):
         """Bearer oturum anahtarı → yazar hesabı. Kapatılmış hesap ya da süresi dolmuş oturum 401."""
@@ -486,8 +487,9 @@ def build_author_router(db):
     def login(body: LoginIn, request: Request):
         st.ready()
         email = U.normalize_email(body.email)
-        login_limit.check(f"{request.client.host if request.client else '-'}|{email}",
-                          'Çok fazla deneme yapıldı. Birkaç dakika sonra yeniden deneyin.')
+        ip = request.client.host if request.client else '-'
+        spray_limit.check(ip, 'Çok fazla deneme yapıldı. Birkaç dakika sonra yeniden deneyin.')
+        login_limit.check(f'{ip}|{email}', 'Çok fazla deneme yapıldı. Birkaç dakika sonra yeniden deneyin.')
         rows = db.query('SELECT id, password_hash, active FROM author_account WHERE email = %(e)s', dict(e=email))
         if not rows or not U.verify_password(body.password, rows[0]['password_hash']):
             raise HTTPException(401, 'E-posta ya da şifre hatalı.')

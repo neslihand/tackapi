@@ -860,13 +860,32 @@ Hata kodları:
 
 Hız sınırı süreç içinde tutulur. Birden çok süreçle ya da vekil sunucu arkasında çalışırken sınırı vekil sunucuda uygula.
 
+### Güvenlik denetimleri
+| Platform | Denetim | Yer |
+|---|---|---|
+| Arka uç | Güvenlik başlıkları: site ve panellerde içerik politikası (yalnızca kendi betikleri; dış adres olarak harita karoları ve varsa `VITE_CHAT_API_URL`), aynı adres dışından çerçeveye alınmama, `nosniff`, `Referrer-Policy`, kamera ve konum yalnızca kendi sayfalarında; `/api` çerçevelenmez, hesap/yönetim/yazar yanıtları saklanmaz (`no-store`); `/media` betiksiz | `security.py` |
+| Arka uç | 25 MB'tan büyük istek gövdesi okunmadan `413` | `security.py` |
+| Arka uç | Deneme sınırları: sohbet ve görselle arama (IP), ziyaretçi girişi/kaydı (IP), yazar girişi (IP + e-posta ve yalnızca IP), yönetici anahtarı (farklı yanlış anahtar sayısı), Detay Avı tahmini, katkı ve olay gönderimi | `api.py`, `visitors.py`, `author.py`, `admin.py` |
+| Arka uç | Şifreler scrypt ile; oturum anahtarlarının veritabanında yalnızca özeti; ziyaretçi oturumu httpOnly + SameSite=Lax çerez (HTTPS'te Secure); anahtar karşılaştırması sabit süreli | `users.py`, `visitors.py`, `admin.py` |
+| Arka uç | Yüklenen fotoğraf: boyut, tür ve piksel sınırı (görsel bombası), yeniden kodlanıp EXIF'i (konum) atılır, adı rastgele | `admin.py`, `visitors.py`, `articles.py` |
+| Arka uç | Gövdeler katı şemalı (`extra='forbid'`, uzunluk sınırları); SQL parametreli; taslak eser ve fotoğraf herkese açık uçlarda görünmez | bütün uçlar |
+| Site | Kullanıcı ya da veritabanı metni HTML olarak yazılmaz (React; harita ipuçları düz metin); sohbetteki bağlantılar yalnızca kaynak listesindeki adresler ve yayındaki eserler | `frontend/src` |
+| Yönetim ve yazar paneli | Anahtar/oturum yalnızca o sekmede (`sessionStorage`); önizleme anahtarı yalnızca sitenin adresine `postMessage` ile verilir, site yalnızca panelin adresinden kabul eder | `admin/src/lib/api.ts`, `frontend/src/vakif/PreviewWork.tsx` |
+| Mobil | Oturum anahtarı telefonun anahtar zincirinde (`expo-secure-store`); harita sayfası başka adrese gidemez, bağlantılar tarayıcıda açılır; Leaflet bütünlük özetiyle (SRI) yüklenir | `mobile/src/lib/secret.ts`, `mobile/src/components/HeritageMap.tsx` |
+
+Kalan riskler: hız sınırları tek süreçte tutulur (vekil sunucu arkasında `request.client` vekilin adresidir); `/docs`
+herkese açıktır (yalnızca uç listesini gösterir); site HTTPS'i kendisi sağlamaz, yayında önüne TLS sonlandıran bir vekil
+konmalıdır.
+
 ### Yönetim API'si (`/api/admin/*`, `pipeline/admin.py`)
 Kimlik doğrulama için kişi başına bir anahtar tanımlanır (anahtar en az 16 karakter), kökteki `.env` dosyasında:
 ```bash
 VAKIF_ADMIN_TOKENS=neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>
 ```
 İstekler `Authorization: Bearer <anahtar>` başlığı taşır. Değişken tanımlı değilse yönetim uçları `503` döner.
-Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablosuna yazılır.
+Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablosuna yazılır. Bir adresten 15 dakikada 20 farklı
+yanlış anahtar denenirse o adres bir süre `429` alır (aynı eski anahtarın tekrarı tek deneme sayılır). Adı ya da
+`123456` gibi kolay bir dizi içeren anahtar için uvicorn başlarken uyarı yazar.
 
 | Yöntem | Uç nokta | Amaç |
 |---|---|---|
@@ -987,6 +1006,7 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_CHAT_TRIES` | `2` | Sohbette geçici Gemini hatalarında deneme sayısı (betikler 5 dener) |
 | `VAKIF_LLM_TIMEOUT` | `300` | Gemini isteği zaman aşımı (sn); API için 60 gibi daha kısa bir değer önerilir |
 | `VAKIF_ADMIN_TOKENS` | — | Yönetim API'si anahtarları: `ad:anahtar,ad2:anahtar2` (anahtar ≥ 16 karakter) |
+| `VAKIF_SECURITY_HEADERS` | açık | `off` ise güvenlik başlıkları (içerik politikası vb.) gönderilmez; gövde sınırı yine çalışır (§9, `security.py`) |
 | `VAKIF_NARRATE_PAUSE` | `4` | `narrations.py` çağrıları arası bekleme (sn) |
 | `VAKIF_NARRATE_MODEL` | (cevap modeli) | Kayıtlı anlatımların modeli (`narrations.py` ve paneldeki "Anlatımı üret") |
 | `VAKIF_VISUAL_BACKEND` | `local` | Görselle arama modeli: `local` (DINOv2, bilgisayarda) ya da `gemini` (`gemini-embedding-2`) |

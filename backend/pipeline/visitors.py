@@ -18,7 +18,7 @@
   GET    /api/popular?days=7                  en çok merak edilenler ve trend
   GET    /api/site-settings                   varsayılan anlatım biçimi, öne çıkan rota (veriden ya da elle)
 
-Oturum: httpOnly çerez (esik_oturum), 30 gün; veritabanında anahtarın yalnızca özeti tutulur. Mobil uygulama
+Oturum: httpOnly çerez (esik_oturum; HTTPS'te Secure), 30 gün; veritabanında anahtarın yalnızca özeti tutulur. Mobil uygulama
 giriş/kayıtta token=true gönderir, anahtarı yanıttan alır ve `Authorization: Bearer <anahtar>` ile kullanır. Durum değiştiren
 uçlar yalnızca JSON kabul eder (başka sitelerden form gönderimiyle tetiklenemez) ve çerez SameSite=Lax'tır.
 """
@@ -233,12 +233,13 @@ def build_router(db, media_dir):
                    dict(u=uid, p=json.dumps(merged, ensure_ascii=False)))
         return merged
 
-    def start_session(response, uid):
+    def start_session(response, uid, request):
         token = U.new_token()
         db.execute(f"""INSERT INTO user_session(token_hash, user_id, expires_at)
                        VALUES (%(h)s, %(u)s, now() + interval '{U.SESSION_DAYS} days')""", dict(h=U.token_hash(token), u=uid))
         db.execute('UPDATE app_user SET last_seen_at = now() WHERE id = %(u)s', dict(u=uid))
-        response.set_cookie(COOKIE, token, max_age=U.SESSION_DAYS * 86400, httponly=True, samesite='lax', path='/')
+        response.set_cookie(COOKIE, token, max_age=U.SESSION_DAYS * 86400, httponly=True, samesite='lax', path='/',
+                            secure=request.url.scheme == 'https')   # yerel demo http; yayında HTTPS ise yalnızca şifreli bağlantıda gider
         return token
 
     def signed_in(body, token, user, progress):
@@ -278,7 +279,7 @@ def build_router(db, media_dir):
                        dict(e=email, h=U.hash_password(body.password), n=p.get('display_name'), a=p.get('age_range'),
                             c=p.get('home_city'), pu=p.get('purposes') or [], i=p.get('interests') or [],
                             v=U.CONSENT_VERSION))[0]['id']
-        token = start_session(response, uid)
+        token = start_session(response, uid, request)
         merged = save_progress(uid, body.progress)
         return signed_in(body, token, public(db.query('SELECT * FROM app_user WHERE id = %(u)s', dict(u=uid))[0]), merged)
 
@@ -289,7 +290,7 @@ def build_router(db, media_dir):
         rows = db.query('SELECT * FROM app_user WHERE email = %(e)s AND deleted_at IS NULL', dict(e=U.normalize_email(body.email)))
         if not rows or not U.verify_password(body.password, rows[0]['password_hash']):
             raise HTTPException(401, 'E-posta ya da şifre hatalı.')
-        token = start_session(response, rows[0]['id'])
+        token = start_session(response, rows[0]['id'], request)
         return signed_in(body, token, public(rows[0]), save_progress(rows[0]['id'], body.progress))
 
     @r.post('/auth/logout', status_code=204)

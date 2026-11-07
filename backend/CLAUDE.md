@@ -60,6 +60,11 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
   7 Kasım 2026), panelde ayrı bir eser sayfası kopyası tutulmaz.
   Herkese açık liste kartı ve eser sayfası verisi `api.py`'de tek yerde üretilir (`ITEM_SELECT`/`list_item`,
   `monument_detail`); önizleme ile site aynı veriyi gösterir, bu eşitlik testle korunur.
+- **Güvenlik (7 Kasım 2026):** `security.py` bütün yanıtlara güvenlik başlıkları (site ve panellerde içerik politikası:
+  yalnızca kendi betikleri, dış adres olarak OSM karoları ve varsa `VITE_CHAT_API_URL`; yalnızca aynı adresten çerçeve) ve
+  25 MB gövde sınırı ekler; `VAKIF_SECURITY_HEADERS=off` başlıkları kapatır. Yeni bir dış kaynak (CDN, font, görsel
+  sunucusu) eklenirse `page_policy`'ye de yazılmalı, yoksa tarayıcı engeller. Yönetici anahtarında farklı yanlış anahtar
+  sayısına göre kilit (`admin.GUESS_N`). Platform platform denetim listesi: README §9 "Güvenlik denetimleri".
 - **API:** Herkese açık uçlar (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`, `/media`) yalnızca
   `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
   `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).

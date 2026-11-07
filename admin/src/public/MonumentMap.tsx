@@ -9,6 +9,8 @@ export const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıcıları';
 export const MAP_COLOR = '#0d2528';
 export const MAP_ACCENT = '#c49a55';
+// Leaflet, ipucuna verilen metni HTML olarak yazar: eser adı düz metin düğümü olarak verilir, içindeki işaretler çalışmaz.
+const plain = (text: string) => Object.assign(document.createElement('span'), { textContent: text });
 
 /** Ziyaretçi eser sayfasındaki harita. Doğrulanmamış konum nokta olarak değil, belirsizlik dairesiyle gösterilir. */
 export function MonumentMap({ location, name, lang }: { location: PublicLocation; name: string; lang: Lang }) {
@@ -23,7 +25,7 @@ export function MonumentMap({ location, name, lang }: { location: PublicLocation
       L.circle(center, { radius: location.radius_m, color: MAP_ACCENT, weight: 2, fillColor: MAP_ACCENT, fillOpacity: 0.18, dashArray: '6 6' })
         .bindTooltip(s.mapApprox).addTo(map);
     } else {
-      L.circleMarker(center, { radius: 9, color: '#fff', weight: 3, fillColor: MAP_COLOR, fillOpacity: 1 }).bindTooltip(name).addTo(map);
+      L.circleMarker(center, { radius: 9, color: '#fff', weight: 3, fillColor: MAP_COLOR, fillOpacity: 1 }).bindTooltip(plain(name)).addTo(map);
     }
     return () => { map.remove(); };
   }, [location.lat, location.lon, location.approximate, location.radius_m, name, s.mapApprox]);
