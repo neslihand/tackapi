@@ -127,7 +127,7 @@ export function HeroGate() {
         <div className="en-lantern" aria-hidden="true" />
         {/* The copy stands to the left of the door, over the shade, so the door keeps the centre of the picture. */}
         <div className="fc-copy">
-          <h1 className="fc-title"><span className="fc-line"><span>{t('Vakıf Tarihine', 'A door')}</span></span> <span className="fc-line"><span>{t('açılan', 'to waqf')}</span></span> <span className="fc-line"><span><em>{t('kapı.', 'history.')}</em></span></span></h1>
+          <h1 className="fc-title"><span className="fc-line"><span>{t('Vakıf tarihine', 'A door to')}</span></span> <span className="fc-line"><span>{t('açılan', 'waqf')} <em>{t('kapı.', 'history.')}</em></span></span></h1>
           {/* Two ways in: the door itself for the curious, the map for whoever already stands before a building. */}
           <div className="hero-actions">
             <button className="button gold en-key" onClick={openGate} onPointerMove={magnet} onPointerLeave={release}><span className="en-key-icon" aria-hidden="true"><KeyRound size={17} /></span><span className="en-key-label">{t('Kapıyı arala', 'Open the door')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></button>
