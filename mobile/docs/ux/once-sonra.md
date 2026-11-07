@@ -47,3 +47,25 @@ P2–P10a görevlerinde alınan ayrıntılı durum görüntüleri (boş, çevrim
 | 4. Detay Avı, iki tahminde | [başlangıç](sonra/demo-4a-detay-avi.png), [bir yanlış](sonra/demo-4b-bir-yanlis.png), [buldun](sonra/demo-4c-buldun.png), [adsız paylaşım](sonra/demo-4d-paylasim.png) |
 | 5. Hatırla, 3 kart | [Bugün kartı](sonra/demo-5a-bugun-hatirla.png), [kart](sonra/demo-5b-hatirla-kart.png), [cevap](sonra/demo-5c-hatirla-cevap.png), [özet](sonra/demo-5d-hatirla-ozet.png) |
 | 6. Pasaport | [seri ve izin günü](sonra/demo-6a-pasaport.png), [madalyonlar](sonra/demo-6b-madalyonlar.png) |
+
+## Tablet (7 Kasım)
+
+Tablette içerik kenardan kenara uzuyordu: düğmeler 1.000 px'lik çubuklara dönüşüyor, simge bir uçta, yazı ortada kalıyordu.
+Artık uygulamanın tamamı (başlık, ekranlar, sekme çubuğu) `measure.app` (680) genişliğinde ortalanıyor, iki yan gece
+zemini. Expo web, Türkçe; telefon (390) görünümü değişmedi.
+
+| Ekran | Önce | Sonra |
+|---|---|---|
+| Bugün, 1024 × 1366 | <img src="tablet/once-1024-bugun.png" width="220"> | <img src="tablet/sonra-1024-bugun.png" width="220"> |
+| Oyna, 768 × 1024 | <img src="tablet/once-768-oyna.png" width="220"> | <img src="tablet/sonra-768-oyna.png" width="220"> |
+
+## Dar telefon (7 Kasım)
+
+Dar telefonlarda (320–375 px) yan yana butonların yazısı iki satıra kırılıyor, 320 px'te butondan taşıyordu; uzun buton
+yazıları tek kelimesi alt satıra düşerek bölünüyordu. Artık 400 px altında buton harfleri biraz daha sık duruyor, sığmayan
+uzun yazı bir kademe daha sıklaşıyor, yan yana butonlar (`ButtonRow`) yazı sığmayınca alt alta geçiyor.
+
+| Ekran | Önce | Sonra |
+|---|---|---|
+| Tara, 320 × 640 | <img src="telefon/once-320-tara.png" width="180"> | <img src="telefon/sonra-320-tara.png" width="180"> |
+| Bugün, 360 × 740 | <img src="telefon/once-360-bugun.png" width="180"> | <img src="telefon/sonra-360-bugun.png" width="180"> |

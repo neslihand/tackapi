@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AnswerOption } from '@/components/Controls';
 import { Text } from '@/components/Typography';
-import { Button, Empty, Eyebrow, Loading } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading } from '@/components/UI';
 import { track } from '@/lib/analytics';
 import { t } from '@/lib/i18n';
 import { completeActivity } from '@/lib/playSession';
@@ -82,15 +82,17 @@ export default function Quiz() {
     {chosen !== null && <View style={s.explain} accessibilityLiveRegion="polite">
       <Text style={s.explainHead}>{chosen === q.answer ? t('Doğru!', 'Right!') : t('Bu sefer olmadı.', 'Not this time.')}</Text>
       <Text style={s.explainText}>{q.explanation}</Text>
-      <View style={{ flexDirection: 'row', gap: space.s }}>
-        <Button style={{ flex: 1 }} label={index + 1 < questions.length ? t('Sonraki soru', 'Next question') : t('Sonucu gör', 'See the result')} icon="arrow-forward" onPress={next} />
-        <Button kind="plain" icon="book-outline" label={t('Eser', 'Work')} onPress={() => router.push(`/eser/${q.artifactId}`)} />
-      </View>
+      <ButtonRow>
+        <Button fit style={s.lead} label={index + 1 < questions.length ? t('Sonraki soru', 'Next question') : t('Sonucu gör', 'See the result')} icon="arrow-forward" onPress={next} />
+        <Button fit kind="plain" icon="book-outline" label={t('Eser', 'Work')} onPress={() => router.push(`/eser/${q.artifactId}`)} />
+      </ButtonRow>
     </View>}
   </ScrollView>;
 }
 
 const s = StyleSheet.create({
+  // the main action takes more of the row than the small link beside it
+  lead: { flexGrow: 2 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.parchmentDeep, borderWidth: 1, borderColor: colors.goldLine },

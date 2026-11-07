@@ -107,13 +107,19 @@ export const type = {
   // spaced capitals; the text is upper-cased with toLocaleUpperCase, never textTransform (Turkish i/İ)
   eyebrow: { fontFamily: fonts.sansSemi, fontSize: 11, lineHeight: 16, letterSpacing: 2.2 },
   button: { fontFamily: fonts.sansSemi, fontSize: 12, lineHeight: 16, letterSpacing: 2 },
+  // the same capitals a little closer on a narrow phone (under compactWidth), and closer still when a long label would
+  // not fit on one line in its button; only then may it break onto a second line
+  buttonCompact: { letterSpacing: 1.2 },
+  buttonTight: { letterSpacing: 0.6 },
   // the large gold italic first letter of a reading (set on its own line part, not measured around the text)
   brand: { fontFamily: fonts.serif, fontSize: 22, lineHeight: 26, letterSpacing: 2 },   // the logo word, .09em
   dropCap: { fontFamily: fonts.serifItalic, fontSize: 56, lineHeight: 56, fontVariant: lining },
 };
 
-// The reading column never runs wider than this (about 60–70 characters at the reading size).
-export const measure = { reading: 640 };
+// The reading column never runs wider than this (about 60–70 characters at the reading size). On a tablet or a wide
+// window the whole app (header, screens, tab bar) stands in a centred column of `app`, so buttons and cards keep the
+// phone's proportions instead of stretching edge to edge; the sides show the night ground.
+export const measure = { reading: 640, app: 680 };
 
 // Arched pictures: small (a list row) and medium; large takes the full width at this height ratio, up to archMaxHeight.
 export const arch = { sm: { width: 56, height: 72 }, md: { width: 120, height: 156 }, lgRatio: 1.25, lgMax: 270 };

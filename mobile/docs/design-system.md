@@ -130,6 +130,16 @@ i/İ'yi bozduğu için **kullanılmaz**.
 Okuma ölçüsü: `measure.reading = 640` (≈ 60–70 karakter @19px). Telefonda ekran zaten dar; geniş ekranda (tablet, web
 önizleme) metin sütunu bu genişlikte ortalanır.
 
+Uygulama sütunu: `measure.app = 680`. Tablette ve geniş pencerede uygulamanın tamamı (başlık, ekranlar, sekme çubuğu)
+bu genişlikte ortalanır, iki yan gece zemini (`emeraldDeep`) olur (`app/_layout.tsx`); düğme ve kartlar telefondaki
+oranını korur. Ekran içinde genişliğe göre boyut hesaplanacaksa `useWindowDimensions().width` değil
+`useAppWidth()` (`lib/layout.ts`) kullanılır. iOS tam ekran modalı (menü, karşılama) ve `Modal` ile açılan alt
+pencereler uygulama sütununun dışında çizildiği için kendi içeriklerini `measure.app` ile sınırlar.
+
+Dar telefon: 400 px altında (`compactWidth`) düğme harfleri `type.buttonCompact` aralığıyla durur; yazı düğmeye yine
+sığmıyorsa `type.buttonTight` kullanılır, ancak o da yetmezse yazı iki satıra iner. Yan yana düğmeler `ButtonRow` içinde
+`fit` ile yazılır: yazılar yan yana sığmayınca (dar telefon, uzun çeviri) alt alta, tam genişlikte dururlar.
+
 ---
 
 ## 3. Boşluk, köşe, gölge, dokunma

@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/Typography';
-import { Button, Empty, Eyebrow, Loading, Notice } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading, Notice } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { t } from '@/lib/i18n';
 import { colors, serif, space } from '@/lib/theme';
@@ -38,10 +38,10 @@ export default function MyWriting() {
   if (!articles) return <Loading />;
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }} refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.goldText} />}>
     <Eyebrow>✦ {t('YAZILARIM VE ÖNERİLERİM', 'MY WRITING AND SUGGESTIONS')}</Eyebrow>
-    <View style={{ flexDirection: 'row', gap: space.s }}>
-      <Button style={{ flex: 1 }} icon="create-outline" label={t('Yazı gönder', 'Send an article')} onPress={() => router.push('/yazi')} />
-      <Button style={{ flex: 1 }} kind="plain" icon="book-outline" label={t('Terim öner', 'Suggest a term')} onPress={() => router.push('/terim-oner')} />
-    </View>
+    <ButtonRow>
+      <Button fit icon="create-outline" label={t('Yazı gönder', 'Send an article')} onPress={() => router.push('/yazi')} />
+      <Button fit kind="plain" icon="book-outline" label={t('Terim öner', 'Suggest a term')} onPress={() => router.push('/terim-oner')} />
+    </ButtonRow>
     {error && <Notice tone="warn" icon="alert-circle-outline">{error}</Notice>}
     {!articles.length && !terms.length && <Text style={s.small}>{t('Henüz yazı ya da terim önerin yok.', 'You have no articles or term suggestions yet.')}</Text>}
 

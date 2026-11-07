@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Children, type ComponentProps, type ReactNode } from 'react';
+import { Children, useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { ArchImage } from '@/components/brand/ArchImage';
 import { DoorLoader } from '@/components/brand/DoorLoader';
 import { VerticalFill } from '@/components/brand/Gradient';
 import { mediaUrl, type Item } from '@/lib/api';
 import { currentLang, t } from '@/lib/i18n';
+import { buttonWidth, isCompact, useAppWidth } from '@/lib/layout';
 import { buzz } from '@/lib/motion';
 import { colors, control, fonts, gradients, hit, motion, radius, serif, shadow, space, type } from '@/lib/theme';
 
@@ -32,20 +33,27 @@ export function Title({ children, light, size = 'title', accent }: { children: R
 
 /** The web's gold key (.en-key) and its quiet siblings. gold: the one primary action of a screen, a gold plate with an
  *  icon bay; dark / plain: secondary, a thin gold frame on a clear ground; ghost: underlined capitals and a round arrow.
- *  `light` when the button sits on night green. */
-export function Button({ label, icon, onPress, kind = 'dark', disabled, busy, light, accessibilityLabel, style }: {
+ *  `light` when the button sits on night green; `fit` inside a ButtonRow. On a narrow phone the capitals and the
+ *  label's padding come a little closer, so a long label keeps to one line. */
+export function Button({ label, icon, onPress, kind = 'dark', disabled, busy, light, accessibilityLabel, style, fit }: {
   label: string; icon?: IconName; onPress: () => void; kind?: 'dark' | 'gold' | 'plain' | 'ghost'; disabled?: boolean; busy?: boolean;
-  light?: boolean; accessibilityLabel?: string; style?: StyleProp<ViewStyle>;
+  light?: boolean; accessibilityLabel?: string; style?: StyleProp<ViewStyle>; fit?: boolean;
 }) {
   const primary = kind === 'gold', ghost = kind === 'ghost';
+  const compact = isCompact(useAppWidth());
+  // the button's own width once drawn: a label that would not fit on one line at the usual spacing is set closer
+  const [room, setRoom] = useState(0);
+  const bay = Boolean(icon || busy);
+  const tight = !ghost && room > 0 && buttonWidth(upper(label), { icon: bay, primary, compact }) > room;
   const fg = primary ? colors.onGold : ghost ? (light ? colors.goldSoft : colors.goldText) : light ? colors.goldSoft : colors.ink;
   const rule = primary ? colors.onGoldRule : light ? colors.nightLine : colors.ivoryLine;
   const press = () => { buzz('light'); onPress(); };
   const lead = busy ? <ActivityIndicator color={fg} /> : icon ? <Ionicons name={icon} size={18} color={primary ? fg : light ? colors.goldSoft : colors.goldText} /> : null;
   return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ disabled: disabled || busy, busy }}
-    disabled={disabled || busy} onPress={press}
+    disabled={disabled || busy} onPress={press} onLayout={ghost ? undefined : e => setRoom(e.nativeEvent.layout.width)}
     style={({ pressed }) => [ghost ? styles.ghost : [styles.button, { minHeight: primary ? control.primary : control.secondary }],
       primary && styles.primary, !primary && !ghost && { borderColor: light ? colors.nightStroke : colors.goldLine },
+      fit && { flexGrow: 1, flexShrink: 1, flexBasis: buttonWidth(upper(label), { icon: bay, primary, compact }) },
       (disabled || busy) && { opacity: 0.5 }, pressed && styles.pressed, style]}>
     {primary && <><View pointerEvents="none" style={styles.frame} /><View style={styles.plate}><VerticalFill colors={gradients.gold} /></View></>}
     {ghost ? <>
@@ -53,9 +61,15 @@ export function Button({ label, icon, onPress, kind = 'dark', disabled, busy, li
       <View style={[styles.ghostCircle, { borderColor: light ? colors.nightStroke : colors.goldLine }]}>{lead ?? <Ionicons name="arrow-forward" size={16} color={fg} />}</View>
     </> : <>
       {lead && <><View style={[styles.bay, { width: primary ? control.primary : control.secondary }]}>{lead}</View><View style={[styles.rule, { backgroundColor: rule }]} /></>}
-      <Text style={[styles.buttonText, { color: fg }, lead ? styles.labelAfterBay : null]}>{upper(label)}</Text>
+      <Text style={[styles.buttonText, compact && styles.buttonTextCompact, tight && styles.buttonTextTight, { color: fg }, lead ? styles.labelAfterBay : null]}>{upper(label)}</Text>
     </>}
   </Pressable>;
+}
+
+/** Buttons side by side, each given `fit`. When their labels would not fit on one line next to each other (a narrow
+ *  phone, a longer translation) they stand one under the other at full width instead of breaking the labels. */
+export function ButtonRow({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  return <View style={[styles.buttonRow, style]}>{children}</View>;
 }
 
 export function Notice({ children, icon = 'information-circle-outline', tone = 'info' }: { children: ReactNode; icon?: IconName; tone?: 'info' | 'warn' }) {
@@ -125,7 +139,10 @@ export const styles = StyleSheet.create({
   bay: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
   rule: { alignSelf: 'stretch', width: StyleSheet.hairlineWidth },
   buttonText: { flexShrink: 1, textAlign: 'center', paddingHorizontal: space.m, paddingVertical: space.s, ...type.button },
+  buttonTextCompact: { ...type.buttonCompact, paddingHorizontal: space.s + space.xs },
+  buttonTextTight: type.buttonTight,
   labelAfterBay: { flex: 1, paddingLeft: space.s },
+  buttonRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s },
   pressed: { opacity: motion.pressOpacity, transform: [{ scale: motion.pressScale }] },
   ghost: { flexDirection: 'row', alignItems: 'center', gap: space.s, minHeight: hit, alignSelf: 'flex-start' },
   ghostText: { paddingHorizontal: 0, textDecorationLine: 'underline' },

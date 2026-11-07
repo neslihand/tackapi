@@ -5,13 +5,14 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/Typography';
 import { gameStyles as g, LevelPicker, Outcome, useGameLevel, useStatusLine, type Scored } from '@/components/Games';
 import { Button, Empty, Loading } from '@/components/UI';
 import { mediaUrl, type Item } from '@/lib/api';
 import { inPlace, isGameLevel, levelName, minSwaps, nextLevel, pickNext, puzzleSize, puzzleStars, scramble, type GameLevel } from '@/lib/games';
 import { t } from '@/lib/i18n';
+import { useAppWidth } from '@/lib/layout';
 import { completeActivity } from '@/lib/playSession';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
@@ -42,7 +43,7 @@ function Game({ pictured, requested, requestedLevel }: { pictured: Item[]; reque
   const [preview, setPreview] = useState(false);
   const [scored, setScored] = useState<Scored | null>(null);
   const [message, say] = useStatusLine();
-  const window = useWindowDimensions();
+  const screen = useAppWidth();
   if (!work) return null;
 
   const { size, order, least } = board;
@@ -53,7 +54,7 @@ function Game({ pictured, requested, requestedLevel }: { pictured: Item[]; reque
   const uri = mediaUrl(work.image!.src);
   // the photo's own shape, kept between square and 4:3 so every level still has pieces a finger can hit
   const shape = Math.min(4 / 3, Math.max(1, (work.image!.width ?? 4) / (work.image!.height ?? 3)));
-  const inner = Math.min(window.width - OUTER, MAX_WIDTH) - FRAME * 2;
+  const inner = Math.min(screen - OUTER, MAX_WIDTH) - FRAME * 2;
   const gap = solved ? 0 : size === 5 ? 2 : 3;
   const width = (inner - gap * (size - 1)) / size, height = (inner / shape - gap * (size - 1)) / size;
 

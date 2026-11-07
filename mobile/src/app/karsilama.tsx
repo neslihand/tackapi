@@ -15,7 +15,7 @@ import { dailyPicks } from '@/lib/daily';
 import { t } from '@/lib/i18n';
 import { NARRATION_FOR, preferenceTiers, type Intent } from '@/lib/personal';
 import { useContent, usePassport, useSettings } from '@/lib/store';
-import { colors, hit, radius, serif, space, type } from '@/lib/theme';
+import { colors, hit, measure, radius, serif, space, type } from '@/lib/theme';
 import { usePreferences } from '@/lib/usePreferences';
 
 function choiceText(c: Intent): { icon: IconName; title: string; body: string } {
@@ -104,7 +104,8 @@ const s = StyleSheet.create({
   skip: { minWidth: hit, minHeight: hit, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.s },
   skipText: { color: colors.goldSoft, fontWeight: '600', textDecorationLine: 'underline', ...type.body },
   scroll: { flex: 1 },
-  body: { flexGrow: 1, justifyContent: 'center', gap: space.l, paddingVertical: space.m },
+  // iOS draws a full-screen modal over the whole window, outside the app's column: the choices keep to it on a tablet
+  body: { flexGrow: 1, justifyContent: 'center', width: '100%', maxWidth: measure.app, alignSelf: 'center', gap: space.l, paddingVertical: space.m },
   hero: { alignItems: 'center', gap: space.s },
   logo: { width: '30%', aspectRatio: 600 / 760 },
   note: { color: colors.parchment, ...type.body },
@@ -115,5 +116,5 @@ const s = StyleSheet.create({
   optionText: { flex: 1, gap: 2 },
   optionTitle: { fontFamily: serif, color: colors.ink, ...type.heading },
   optionBody: { color: colors.soft, ...type.caption },
-  actions: { gap: space.s },
+  actions: { width: '100%', maxWidth: measure.app, alignSelf: 'center', gap: space.s },
 });

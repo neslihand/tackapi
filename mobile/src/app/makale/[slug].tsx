@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Switch, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Text } from '@/components/Typography';
 import { ArticleCard, CoverArt, TermSheet } from '@/components/Reading';
-import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { track } from '@/lib/analytics';
 import { ApiError, apiBase, mediaUrl } from '@/lib/api';
 import { currentLang, t, useLang } from '@/lib/i18n';
@@ -105,10 +105,10 @@ export default function Article() {
             <Text style={s.tocText}>{h.text}</Text><Ionicons name="arrow-down" size={15} color={colors.goldLine} />
           </Pressable>)}
         </View>}
-        <View style={s.actions}>
-          <Button style={{ flex: 1 }} kind="plain" icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'} label={speaking ? t('Durdur', 'Stop') : t('Sesli dinle', 'Listen')} onPress={listen} />
-          <Button style={{ flex: 1 }} kind="plain" icon="link-outline" label={t('Paylaş', 'Share')} onPress={share} />
-        </View>
+        <ButtonRow>
+          <Button fit kind="plain" icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'} label={speaking ? t('Durdur', 'Stop') : t('Sesli dinle', 'Listen')} onPress={listen} />
+          <Button fit kind="plain" icon="link-outline" label={t('Paylaş', 'Share')} onPress={share} />
+        </ButtonRow>
         {linkShown && <Notice icon="link-outline"><Text selectable>{linkShown}</Text></Notice>}
       </View>
 
@@ -176,7 +176,6 @@ const s = StyleSheet.create({
   toc: { padding: space.m, borderRadius: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, gap: 2 },
   tocRow: { flexDirection: 'row', alignItems: 'center', gap: space.s, minHeight: 44 },
   tocText: { flex: 1, fontFamily: serif, fontSize: 18, color: colors.ink },
-  actions: { flexDirection: 'row', gap: space.s },
   small: { color: colors.soft, fontSize: 12, lineHeight: 17 },
   h: { fontFamily: serif, fontSize: 26, lineHeight: 31, color: colors.ink, marginTop: space.s },
   p: { fontFamily: serif, fontSize: 18, lineHeight: 28, color: colors.ink },

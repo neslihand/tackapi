@@ -9,7 +9,7 @@ import { Button, Eyebrow, Title } from './UI';
 import { mediaUrl } from '@/lib/api';
 import { currentLang, t } from '@/lib/i18n';
 import { capitalize, type ArticleItem, type ArticleKind, type GlossaryTerm } from '@/lib/reading';
-import { colors, overlay, serif, space } from '@/lib/theme';
+import { colors, measure, overlay, serif, space } from '@/lib/theme';
 
 const KIND_COLOR = { city_history: '#255747', heritage: '#765b38', culture: '#3e4f6b' };
 
@@ -87,7 +87,7 @@ const s = StyleSheet.create({
   summary: { color: colors.soft, fontSize: 13, lineHeight: 18 },
   meta: { color: colors.soft, fontSize: 12, marginTop: 2 },
   backdrop: { flex: 1, backgroundColor: overlay.backdrop, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
+  sheet: { width: '100%', maxWidth: measure.app, alignSelf: 'center', backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
   sheetHead: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   term: { fontFamily: serif, fontSize: 22, color: colors.ink, flex: 1 },
   termEn: { fontSize: 16, color: colors.soft, fontStyle: 'italic' },
