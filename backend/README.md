@@ -159,18 +159,14 @@ pip install -r requirements.txt
 
 ### Ortam değişkenleri
 
-**Linux / macOS:**
+Bütün ayarlar deponun kökündeki tek `.env` dosyasındadır (arka uç, site, yönetim paneli, yazar paneli ve mobil ortak).
+Örnekten kopyalayıp doldur:
 ```bash
-export DATABASE_URL=postgresql://kullanici:sifre@localhost:5432/vakif
-export GEMINI_API_KEY=...
+cp ../.env.example ../.env     # DATABASE_URL, GEMINI_API_KEY, VAKIF_ADMIN_TOKENS…
 ```
-
-**Windows (PowerShell):**
-```powershell
-$env:DATABASE_URL = "postgresql://kullanici:sifre@localhost:5432/vakif"
-$env:GEMINI_API_KEY = "..."
-# Kalıcı yapmak için: setx DATABASE_URL "..."  (yeni pencerede geçerli olur)
-```
+uvicorn ve `pipeline/` betikleri dosyayı kendiliğinden okur (`pipeline/envfile.py`); `export` ya da `$env:` gerekmez.
+Kabukta verilen değer dosyadakinin önüne geçer; başka bir dosya için `VAKIF_ENV_FILE=<yol>`, okumamak için
+`VAKIF_ENV_FILE=off`. Testler gerçek `.env`'i okumaz.
 
 ### Uçtan uca çalıştırma
 
@@ -865,9 +861,9 @@ Hata kodları:
 Hız sınırı süreç içinde tutulur. Birden çok süreçle ya da vekil sunucu arkasında çalışırken sınırı vekil sunucuda uygula.
 
 ### Yönetim API'si (`/api/admin/*`, `pipeline/admin.py`)
-Kimlik doğrulama için kişi başına bir anahtar tanımlanır (anahtar en az 16 karakter):
-```powershell
-$env:VAKIF_ADMIN_TOKENS = "neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>"
+Kimlik doğrulama için kişi başına bir anahtar tanımlanır (anahtar en az 16 karakter), kökteki `.env` dosyasında:
+```bash
+VAKIF_ADMIN_TOKENS=neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>
 ```
 İstekler `Authorization: Bearer <anahtar>` başlığı taşır. Değişken tanımlı değilse yönetim uçları `503` döner.
 Panelden yapılan her değişiklik kim yaptığıyla birlikte `admin_log` tablosuna yazılır.
@@ -999,6 +995,8 @@ $env:VAKIF_ECO="0";   python eval_rag.py --out ..\data\eval_zengin.json
 | `VAKIF_GEOCODE_URL` | `https://nominatim.openstreetmap.org/search` | Başka bir Nominatim sunucusu |
 | `VAKIF_SITE_DIR` | `../frontend/dist` | Derlenmiş site; varsa `/` altında sunulur (tek adresten demo), `off` kapatır |
 | `VAKIF_PANEL_DIR` | `../admin/dist` | Derlenmiş yönetim paneli; varsa `/yonetim/` altında sunulur, `off` kapatır |
+| `VAKIF_AUTHOR_DIR` | `../yazar-paneli/dist` | Derlenmiş yazar paneli; varsa `/yazar/` altında sunulur, `off` kapatır |
+| `VAKIF_ENV_FILE` | `../.env` (depo kökü) | Ayarların okunduğu dosya; `off` okumaz. Kabukta tanımlı değişken dosyadakinin önüne geçer |
 | `VAKIF_VISUAL_MIN` | `0.70` (yerel), `0.75` (Gemini) | Görselle aramada eser önermek için en düşük benzerlik (`visual_search.py --eval` önerisine göre ayarlanmalı) |
 | `VAKIF_VISUAL_MARGIN` | `0.03` | En iyi aday ikinciden en az bu kadar önde olmalı |
 | `VAKIF_PDF_DIR` | `~/OneDrive/Belgeler/Kok&Kod/kaynak_pdfs` | Envanter kitabı PDF'lerinin klasörü (`images.py`) |

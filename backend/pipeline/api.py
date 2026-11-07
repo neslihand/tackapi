@@ -20,6 +20,7 @@ Uç noktalar
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
+Ayarlar deponun kökündeki .env dosyasından kendiliğinden okunur (envfile.py; bütün değişkenler: ../../.env.example).
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite ve mobilin Expo web geliştirme sunucuları)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
@@ -38,6 +39,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
+import envfile  # noqa: F401  ayarlar kökteki .env'den, aşağıdaki modüller okumadan önce
 from db import DB
 import gemini_client as G
 import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author

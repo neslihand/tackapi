@@ -10,6 +10,7 @@ Model seçimleri (Ekim 2026 itibarıyla Gemini API belgelerine göre):
   LITE_MODEL  = gemini-3.5-flash-lite (sorgu analizi ve yeniden sıralama gibi ucuz işler)
 """
 import os, json, hashlib, math, re, time
+import envfile  # noqa: F401  kökteki .env (GEMINI_API_KEY ve model ayarları)
 
 EMBED_MODEL = os.environ.get('VAKIF_EMBED_MODEL', 'gemini-embedding-2')
 EMBED_DIM = int(os.environ.get('VAKIF_EMBED_DIM', '1536'))

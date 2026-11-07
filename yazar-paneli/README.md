@@ -39,7 +39,7 @@ npm install
 npm run dev        # http://127.0.0.1:5177
 ```
 Geliştirme sunucusu `/api` ve `/media` isteklerini `http://127.0.0.1:8000` adresine yönlendirir; başka adres için
-`VAKIF_API_URL`.
+kökteki `.env`'de `VAKIF_API_PROXY` (site ve yönetim paneliyle ortak).
 
 | Komut | Ne yapar |
 |---|---|

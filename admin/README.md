@@ -14,9 +14,9 @@ Ziyaretçi uygulamasından (`../frontend`) **ayrı** bir uygulamadır ve arka uc
   `src/styles.css`'in başındaki blokta toplanmıştır.
 
 ## Çalıştırma
-Önce arka ucu başlatın (`backend/README.md` §4). Yönetim uçları için anahtarlar tanımlı olmalı:
+Önce arka ucu başlatın (`backend/README.md` §4). Yönetim uçları için anahtarlar kökteki `.env` dosyasında tanımlı
+olmalı (`VAKIF_ADMIN_TOKENS=neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>`; bkz. `../.env.example`):
 ```powershell
-$env:VAKIF_ADMIN_TOKENS = "neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>"
 python -m uvicorn api:app --port 8000
 ```
 Ardından bu klasörde:
@@ -25,7 +25,7 @@ npm install
 npm run dev        # http://127.0.0.1:5174
 ```
 Geliştirme sunucusu `/api` ve `/media` isteklerini `http://127.0.0.1:8000` adresine yönlendirir. Arka uç başka bir
-adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS ayarı gerekmez.
+adresteyse kökteki `.env`'de `VAKIF_API_PROXY` ile verin (site ve yazar paneliyle ortak). Aynı kökenden çalıştığı için CORS ayarı gerekmez.
 
 | Komut | Ne yapar |
 |---|---|

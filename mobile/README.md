@@ -8,8 +8,11 @@ EŞİK — Tarihe Açılan Kapı'nın React Native (Expo SDK 58, Expo Router) uy
 ```bash
 cd mobile
 npm install
-cp .env.example .env   # EXPO_PUBLIC_API_URL: bilgisayarın yerel ağ adresi, ör. http://192.168.1.20:8000
 ```
+
+Ayarlar deponun kökündeki tek `.env` dosyasında (`../.env.example`'dan kopyalanır). Uygulama oradan yalnızca
+`EXPO_PUBLIC_` ile başlayanları alır (`app.config.js`): `EXPO_PUBLIC_API_URL` bilgisayarın yerel ağ adresi olmalı,
+ör. `http://192.168.1.20:8000`. Değeri değiştirdikten sonra Expo'yu yeniden başlat.
 
 Telefon arka uca bilgisayarın yerel ağ adresinden ulaşır; arka ucu bütün arayüzlerde dinlet:
 

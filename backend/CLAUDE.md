@@ -20,7 +20,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 ## Çalışma ortamı (geliştirici)
 - **Windows + PowerShell, Python 3.10** (Microsoft Store sürümü).
   - Komutları `python -m uvicorn`, `python -m pip` biçiminde çalıştır.
-  - Ortam değişkenleri `$env:X="..."` ile tanımlanır ve yalnızca o pencerede geçerlidir.
+  - Ortam değişkenleri deponun kökündeki tek `.env` dosyasındadır (`../.env.example`); uvicorn ve betikler onu
+    `pipeline/envfile.py` ile kendiliğinden okur, site, paneller ve mobil de aynı dosyayı kullanır. `$env:X="..."`
+    yalnızca o pencerede dosyadaki değerin önüne geçer.
 - Yerel PostgreSQL; `vector` ve `pg_trgm` eklentileri kurulu. Sürücü `psycopg` 3. Değerler sunucu tarafında bağlandığı
   için **boş olabilen SQL parametrelerine tip ver** (`%(x)s::text`), yoksa `AmbiguousParameter` hatası alırsın.
 - **Dosya kodlaması:** Windows varsayılanı cp1254'tür (bu makinede Python UTF-8 modu kapalı). Her `open()` ve metin
