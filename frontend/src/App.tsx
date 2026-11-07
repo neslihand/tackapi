@@ -20,6 +20,7 @@ import { ConsentBanner } from './vakif/ConsentBanner';
 import { SiteSearch } from './components/SiteSearch';
 import { SideMenu } from './components/SideMenu';
 import { MobileAppPage } from './components/MobileApp';
+import { AppPromo } from './components/AppPromo';
 const AccountPages = () => import('./vakif/AccountPages');
 const LoginPage = lazy(() => AccountPages().then(m => ({ default: m.LoginPage })));
 const AccountPage = lazy(() => AccountPages().then(m => ({ default: m.AccountPage })));
@@ -172,7 +173,7 @@ function Router() {
   else if (path === '/gizlilik' && vakifApiEnabled()) page = <PrivacyPage />;
   else if (preview) page = <PreviewWork key={path} slug={decodeURIComponent(path.slice(10))} query={query} />;
   else page = <Scene><div className="empty-state page-shell"><p className="eyebrow">{t('404 · BU KAPI HENÜZ AÇILMADI', '404 · THIS DOOR IS NOT OPEN YET')}</p><h1>{t('Başka bir iz sürelim.', 'Let us follow another trail.')}</h1><Link className="button dark" to="/kesfet">{t('Eserlere dön', 'Back to the collection')} <ArrowRight size={17} /></Link></div></Scene>;
-  return <><a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>{t('İçeriğe geç', 'Skip to content')}</a><Navigation route={path} /><main id="main" tabIndex={-1}><Suspense fallback={<div className="page-shell loading-state" role="status">{t('Keşif haritan hazırlanıyor…', 'Preparing your discovery…')}</div>}>{page}</Suspense></main><Footer />{!preview && <ConsentBanner />}<div className={`toast ${toast ? 'visible' : ''}`} role="status" aria-live="polite">{toast && <><Check size={18} /><span>{toast}</span></>}</div>{!storageAvailable && <div className="storage-warning" role="status">{t('Tarayıcı kaydı kapalı; ilerlemen bu oturumda tutuluyor.', 'Browser storage is off; your progress is kept for this visit only.')}</div>}</>;
+  return <><a href="#main" className="skip-link" onClick={e => { e.preventDefault(); document.getElementById('main')?.focus(); }}>{t('İçeriğe geç', 'Skip to content')}</a><Navigation route={path} /><main id="main" tabIndex={-1}><Suspense fallback={<div className="page-shell loading-state" role="status">{t('Keşif haritan hazırlanıyor…', 'Preparing your discovery…')}</div>}>{page}</Suspense></main><Footer />{!preview && <><ConsentBanner /><AppPromo route={path} /></>}<div className={`toast ${toast ? 'visible' : ''}`} role="status" aria-live="polite">{toast && <><Check size={18} /><span>{toast}</span></>}</div>{!storageAvailable && <div className="storage-warning" role="status">{t('Tarayıcı kaydı kapalı; ilerlemen bu oturumda tutuluyor.', 'Browser storage is off; your progress is kept for this visit only.')}</div>}</>;
 }
 function ContentReady() {
   const { artifacts, issues, progressStorageKey } = useContent();

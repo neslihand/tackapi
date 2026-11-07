@@ -73,7 +73,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', sync);
   }, [progressStorageKey]);
   return <Context.Provider value={{ progress, toast, storageAvailable, notify,
-    markDiscovered: id => { if (known.current.some(a => a.id === id)) { track('stamp', id); setProgress(p => discover(p, id)); } },
+    markDiscovered: id => { if (known.current.some(a => a.id === id)) { track('stamp', id); setProgress(p => discover(p, id)); window.dispatchEvent(new Event(STAMPED_EVENT)); } },
     toggleFavorite: id => { if (known.current.some(a => a.id === id)) { track('favorite', id, { on: !latest.current.favorites.includes(id) }); setProgress(p => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter(f => f !== id) : [...p.favorites, id] })); } },
     finishQuiz: score => { track('quiz_finish', undefined, { score }); setProgress(p => ({ ...p, quiz: { completed: p.quiz.completed + 1, best: Math.max(p.quiz.best, score) } })); },
     answerCorrect: id => { if (known.current.some(a => a.id === id)) setProgress(p => p.answered.includes(id) ? p : { ...p, answered: [...p.answered, id] }); },
@@ -92,4 +92,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     },
   }}>{children}</Context.Provider>;
 }
+// fired when the visitor stamps a work, for what follows that moment (components/AppPromo.tsx)
+export const STAMPED_EVENT = 'esik:stamped';
+
 export function useProgress() { const context = useContext(Context); if (!context) throw new Error('ProgressProvider gerekli.'); return context; }

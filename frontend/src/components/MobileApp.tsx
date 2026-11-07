@@ -13,19 +13,21 @@ import '../mobileapp.css';
 // The mobile app (../mobile, Expo): what the phone adds to the site and where to get it, as a chapter of the home page
 // and as its own page (/uygulama). The Android build is an APK from EAS (mobile/README.md); its address comes from
 // VITE_MOBILE_APK_URL. Until there is one the section says the app is on its way instead of offering a download.
-const apkUrl = () => String(import.meta.env?.VITE_MOBILE_APK_URL ?? '').trim();
+export const apkUrl = () => String(import.meta.env?.VITE_MOBILE_APK_URL ?? '').trim();
 
 const title = () => <>{t('Eşik,', 'The threshold,')} <em>{t('cebinde.', 'in your pocket.')}</em></>;
 const lede = () => t('Sitede kapıyı ekrandan aralarsın; uygulamayla kapının önünde durursun. Bir eserin yanına gittiğinde pasaportun mühürlenir, hikâyesini yürürken dinlersin.', 'On the site you open the door from a screen; with the app you stand before it. Reach a work and your passport is stamped; listen to its story as you walk.');
 
-// Only what the phone brings and the site cannot: the app's own features (mobile/docs/mobil-plan.md §1).
-const features = (): [ReactNode, string, string][] => [
-  [<Stamp />, t('Yerinde mühür', 'On-site stamp'), t('Bir eserin yaklaşık 150 metre yakınına geldiğinde pasaportuna altın bir “yerinde” mühür basılır.', 'Come within about 150 metres of a work and a gold “on site” stamp is pressed into your passport.')],
-  [<Navigation />, t('Yakınımdaki eşikler', 'Thresholds near me'), t('Sana en yakın eserler, uzaklıkları ve telefonunun haritasıyla yol tarifi.', 'The works nearest you, how far away they are and directions in your phone’s map app.')],
-  [<Route />, t('Rota yürüyüşü', 'Route walk'), t('Bir keşif sezonunu durak durak yürü; vardığında mühür kendiliğinden basılır.', 'Walk a discovery season stop by stop; the stamp is pressed as you arrive.')],
-  [<Headphones />, t('Sesli rehber', 'Audio guide'), t('Anlatımları telefonun sesi okur; gezerken ekrana bakmadan dinlersin.', 'Your phone reads the narrations aloud, so you can listen as you walk without looking at the screen.')],
-  [<WifiOff />, t('Çevrimdışı okuma', 'Offline reading'), t('Açtığın eserler ve indirdiğin rotalar telefonunda kalır; çekmeyen bir avluda da okursun.', 'The works you open and the routes you download stay on your phone, so you can read in a courtyard with no signal.')],
-  [<BellRing />, t('Günün eşiği', 'Threshold of the day'), t('Her sabah bir eser ve kitabından kısa bir cümle bildirim olarak gelir.', 'Every morning a work and a short line from its book arrive as a notification.')],
+// Only what the phone brings and the site cannot: the app's own features (mobile/docs/mobil-plan.md §1). The keys pick
+// the few the app's card (AppPromo.tsx) names.
+export type AppFeature = 'stamp' | 'near' | 'route' | 'audio' | 'offline' | 'daily';
+export const features = (): [AppFeature, ReactNode, string, string][] => [
+  ['stamp', <Stamp />, t('Yerinde mühür', 'On-site stamp'), t('Bir eserin yaklaşık 150 metre yakınına geldiğinde pasaportuna altın bir “yerinde” mühür basılır.', 'Come within about 150 metres of a work and a gold “on site” stamp is pressed into your passport.')],
+  ['near', <Navigation />, t('Yakınımdaki eşikler', 'Thresholds near me'), t('Sana en yakın eserler, uzaklıkları ve telefonunun haritasıyla yol tarifi.', 'The works nearest you, how far away they are and directions in your phone’s map app.')],
+  ['route', <Route />, t('Rota yürüyüşü', 'Route walk'), t('Bir keşif sezonunu durak durak yürü; vardığında mühür kendiliğinden basılır.', 'Walk a discovery season stop by stop; the stamp is pressed as you arrive.')],
+  ['audio', <Headphones />, t('Sesli rehber', 'Audio guide'), t('Anlatımları telefonun sesi okur; gezerken ekrana bakmadan dinlersin.', 'Your phone reads the narrations aloud, so you can listen as you walk without looking at the screen.')],
+  ['offline', <WifiOff />, t('Çevrimdışı okuma', 'Offline reading'), t('Açtığın eserler ve indirdiğin rotalar telefonunda kalır; çekmeyen bir avluda da okursun.', 'The works you open and the routes you download stay on your phone, so you can read in a courtyard with no signal.')],
+  ['daily', <BellRing />, t('Günün eşiği', 'Threshold of the day'), t('Her sabah bir eser ve kitabından kısa bir cümle bildirim olarak gelir.', 'Every morning a work and a short line from its book arrive as a notification.')],
 ];
 
 // the app's five tabs (mobile/src/app/(tabs)/_layout.tsx), the first one open, and the reading modes of its work screen
@@ -62,7 +64,7 @@ function Phone({ work }: { work?: { name: string; city: string; image: string; d
 
 // The download address as a QR code, for a visitor reading on a computer: the dark modules as one path on ivory, inside
 // the four-module quiet zone the standard asks for (uqr's border, part of `size`).
-function QrCode({ value, label }: { value: string; label: string }) {
+export function QrCode({ value, label }: { value: string; label: string }) {
   const { size, data } = useMemo(() => encode(value, { ecc: 'M', border: 4 }), [value]);
   const modules = data.flatMap((row, y) => row.map((dark, x) => dark ? `M${x} ${y}h1v1h-1z` : '')).join('');
   return <svg className="ma-qr-code" viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label} shapeRendering="crispEdges">
@@ -81,7 +83,7 @@ function MobileAppBody() {
   return <div className="ma-body">
     <Phone work={work} />
     <div className="ma-side">
-      <ul className="ma-features">{features().map(([icon, name, text]) => <li key={name}><span aria-hidden="true">{icon}</span><div><b>{name}</b><p>{text}</p></div></li>)}</ul>
+      <ul className="ma-features">{features().map(([, icon, name, text]) => <li key={name}><span aria-hidden="true">{icon}</span><div><b>{name}</b><p>{text}</p></div></li>)}</ul>
       <div className="ma-get">
         {/* on a computer the phone reads the address from the screen; on a phone the button is the way (the code is hidden) */}
         {url && <figure className="ma-qr"><QrCode value={url} label={t('Android uygulamasını indirme bağlantısının QR kodu', 'QR code for the Android app download link')} />

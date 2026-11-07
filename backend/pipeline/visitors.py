@@ -45,6 +45,8 @@ EVENT_TYPES = {
     'route_started', 'route_completed', 'knowledge_recalled', 'rhythm_changed',
     # paylaşım: başlatıldı, bağlantı siteye ya da uygulamaya geçti (paylaşım sayfasının kendisi kayıt tutmaz)
     'share_initiated', 'share_opened',
+    # site: mobil uygulama kartı gösterildi ya da ne yapıldı (action: shown|open|download|later|never; trigger: stamp|passport)
+    'app_promo',
     # mobil: çevrimdışı rota paketi indirildi ve yerine yazıldı; bildirim türü kapatıldı
     'offline_package_downloaded', 'notification_opt_out',
     # mobil: Detay Avı
