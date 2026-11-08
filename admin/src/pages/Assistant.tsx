@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AlertTriangle, ArrowUpRight, CalendarClock, Check, ClipboardCopy, Clock, EyeOff, FileText, Gauge, HeartPulse, History, Layers, Megaphone,
+import { ArrowUpRight, CalendarClock, Check, ClipboardCopy, Clock, EyeOff, FileText, Gauge, HeartPulse, History, Layers, Megaphone,
   RefreshCw, RotateCcw, Route, Sparkles, Wand2, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { formatDate } from '../lib/format';
@@ -59,7 +59,7 @@ export function AssistantPage({ params }: { params: URLSearchParams }) {
   const items = (d?.items ?? []).filter(s => filter === 'all' || s.kind === filter);
   const urgent = (d?.items ?? []).filter(s => s.priority >= 70).length;
   const pick = (k: AgentKind | 'all') => { setFilter(k); replaceQuery('/asistan', { durum: tab === 'closed' ? 'kapanan' : null, tur: k === 'all' ? null : k }); };
-  const mode = !d ? '' : d.fake ? 'Deneme modu: taslaklar kayıttaki bilgiden şablonla yazılır' : d.model ? `Taslak modeli: ${d.model}` : '';
+  const mode = d?.fake ? 'Deneme modu: taslaklar kayıttaki bilgiden şablonla yazılır' : '';
 
   return <div className="as">
     <header className="as-hero">
@@ -247,9 +247,6 @@ function DraftStudio({ s, kind, initial, onClose, onApplied }: { s: AgentSuggest
     {writing && !draft && <div className="as-writing" role="status"><span /><span /><span /> Asistan kitaptaki bilgiyi okuyup yazıyor…</div>}
 
     {draft && <div className={`as-studio-body ${writing ? 'dim' : ''}`}>
-      <p className="as-source"><span>{draft.ai ? <><Sparkles size={13} aria-hidden="true" /> Yapay zekâ taslağı{draft.model ? ` · ${draft.model}` : ''}</> : <><FileText size={13} aria-hidden="true" /> Kayıttaki bilgiden şablon (yapay zekâ kullanılmadı)</>}</span>
-        <span>Düzenleyip uygula; uygulamadan sitede bir şey değişmez.</span></p>
-      {draft.warnings.length > 0 && <ul className="as-warnings">{draft.warnings.map(w => <li key={w}><AlertTriangle size={14} aria-hidden="true" />{w}</li>)}</ul>}
       {vs.length > 1 && <div className="as-variants" role="tablist" aria-label="Seçenekler">
         {vs.map((v, i) => <button key={i} role="tab" aria-selected={variant === i} onClick={() => choose(i)}>
           <small>{v.angle || `Seçenek ${i + 1}`}</small><span>{v.title}</span></button>)}</div>}
