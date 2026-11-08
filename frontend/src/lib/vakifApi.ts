@@ -112,12 +112,20 @@ export function toVakifChat(request: ChatRequest) {
 export const stripCitations = (text: string) =>
   text.replace(/\s*\[(?:[SFT]\d*)(?:\s*,\s*[SFT]\d*)*\]/g, '').replace(/[ \t]+([.,;:!?])/g, '$1').trim();
 
+/** The sources the answer cites ([S2], [S1, F0]): the backend sends every passage it gave the model, and for one work
+ * those are much the same whatever the question. Sources without refs (older answers) are all kept. */
+export function citedSources<T extends { ref?: string }>(answer: string, sources: T[]): T[] {
+  if (!sources.some(s => typeof s.ref === 'string')) return sources;
+  const cited = new Set([...answer.matchAll(/\[([SFT]\d*(?:\s*,\s*[SFT]\d*)*)\]/g)].flatMap(m => m[1].split(',').map(r => r.trim())));
+  return sources.filter(s => s.ref !== undefined && cited.has(s.ref));
+}
+
 export function fromVakifChat(data: unknown): { answer: string; sources: { title: string }[] } | null {
   if (typeof data !== 'object' || data === null || typeof (data as { answer?: unknown }).answer !== 'string') return null;
-  const { answer, sources } = data as { answer: string; sources?: { book?: string; pages?: string }[] };
+  const { answer, sources } = data as { answer: string; sources?: { ref?: string; book?: string; pages?: string }[] };
   // rag.fmt_pages already writes 's. 75–76'; a bare range gets the prefix
   const pages = (p?: string) => p && (/^s\.\s/.test(p) ? (currentLang() === 'en' ? p.replace(/^s\./, 'p.') : p) : `${t('s.', 'p.')} ${p}`);
-  const titles = [...new Set((Array.isArray(sources) ? sources : []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
+  const titles = [...new Set(citedSources(answer, Array.isArray(sources) ? sources : []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
   return { answer: stripCitations(answer), sources: titles.map(title => ({ title })) };
 }
 
