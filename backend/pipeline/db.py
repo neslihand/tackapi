@@ -3,6 +3,7 @@
 VAKIF_VECTOR=pgvector (varsayılan) | array  → embedding sütunu tipi (test ortamında real[])
 """
 import os, json, subprocess, re, threading, atexit
+import envfile  # noqa: F401  kökteki .env (DATABASE_URL vb.)
 
 VECTOR_MODE = os.environ.get('VAKIF_VECTOR', 'pgvector')
 

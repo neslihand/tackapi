@@ -16,7 +16,7 @@ import { SeasonCard } from '@/components/home/SeasonCard';
 import { home } from '@/components/home/styles';
 import { TodayHeader } from '@/components/home/TodayHeader';
 import { TravelCard } from '@/components/home/TravelCard';
-import { Button, Empty, Eyebrow, Loading, Notice } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading, Notice } from '@/components/UI';
 import { setConsent, useConsent } from '@/lib/analytics';
 import { dailyPicks } from '@/lib/daily';
 import { t } from '@/lib/i18n';
@@ -52,10 +52,10 @@ export default function Today() {
       <Eyebrow>✦ {t('KULLANIM VERİSİ', 'USAGE DATA')}</Eyebrow>
       <Text style={s.consentTitle}>{t('Keşfini birlikte geliştirelim mi?', 'Shall we improve your discovery together?')}</Text>
       <Text style={home.body}>{t('İzin verirsen hangi eserlere baktığını ve nasıl keşfettiğini adın ve IP adresin olmadan kaydederiz. Konumun gönderilmez. Kararını Ayarlar’dan değiştirebilirsin.', 'With your permission we record which works you look at and how you discover them, without your name or IP address. Your location is not sent. You can change your mind in Settings.')}</Text>
-      <View style={s.row}>
-        <Button kind="gold" label={t('İzin ver', 'Allow')} style={s.half} onPress={() => setConsent('granted')} />
-        <Button kind="plain" label={t('Hayır, teşekkürler', 'No, thank you')} style={s.half} onPress={() => setConsent('denied')} />
-      </View>
+      <ButtonRow>
+        <Button fit kind="gold" label={t('İzin ver', 'Allow')} onPress={() => setConsent('granted')} />
+        <Button fit kind="plain" label={t('Hayır, teşekkürler', 'No, thank you')} onPress={() => setConsent('denied')} />
+      </ButtonRow>
     </View>,
     forYou: <ForYou skip={[today?.slug, pick?.item.slug]} style={home.pad} />,
     travel: <TravelCard />,
@@ -83,6 +83,4 @@ const s = StyleSheet.create({
   night: { gap: space.l, paddingTop: space.m, paddingBottom: space.xl, backgroundColor: colors.emerald },
   consent: { gap: space.s, padding: space.m, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.goldLine, borderRadius: 3 },
   consentTitle: { fontFamily: serif, color: colors.ink, ...type.heading },
-  row: { flexDirection: 'row', gap: space.s, flexWrap: 'wrap' },
-  half: { flex: 1, paddingHorizontal: space.s },
 });

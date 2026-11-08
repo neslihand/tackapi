@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/Typography';
-import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { track } from '@/lib/analytics';
 import { t } from '@/lib/i18n';
@@ -59,11 +59,11 @@ function QuestionCard({ q, fresh, onRemoved }: { q: Ticket; fresh: boolean; onRe
     {!!q.answer && <View style={{ gap: space.xs }}><Text style={s.answer}>{q.answer}</Text>{!!q.answer_source && <Text style={s.small}>{t('Kaynak', 'Source')}: {q.answer_source}</Text>}</View>}
     {!!q.note && <Text style={s.answer}>{q.note}</Text>}
     {problem && <Notice tone="warn" icon="alert-circle-outline">{problem}</Notice>}
-    <View style={s.row}>
-      <Button style={{ flex: 1 }} kind="plain" icon="arrow-forward" label={t('Eseri aç', 'Open the work')} onPress={() => router.push(`/eser/${q.monument}`)} />
-      {confirm ? <Button style={{ flex: 1 }} kind="plain" icon="trash-outline" label={t('Evet, bırak', 'Yes, stop')} onPress={remove} />
-        : <Button style={{ flex: 1 }} kind="plain" icon="close" label={t('Takibi bırak', 'Stop following')} onPress={() => setConfirm(true)} />}
-    </View>
+    <ButtonRow>
+      <Button fit kind="plain" icon="arrow-forward" label={t('Eseri aç', 'Open the work')} onPress={() => router.push(`/eser/${q.monument}`)} />
+      {confirm ? <Button fit kind="plain" icon="trash-outline" label={t('Evet, bırak', 'Yes, stop')} onPress={remove} />
+        : <Button fit kind="plain" icon="close" label={t('Takibi bırak', 'Stop following')} onPress={() => setConfirm(true)} />}
+    </ButtonRow>
   </View>;
 }
 
@@ -73,5 +73,4 @@ const s = StyleSheet.create({
   question: { fontFamily: serif, fontSize: 21, lineHeight: 26, color: colors.ink },
   answer: { color: colors.ink, fontSize: 15, lineHeight: 23 },
   small: { color: colors.soft, fontSize: 13, lineHeight: 19 },
-  row: { flexDirection: 'row', gap: space.s },
 });

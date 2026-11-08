@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { currentLang, t } from './i18n';
 import { mergeFlags } from './flags';
+import { citedSources } from './citations';
 
 // The address typed in Ayarlar (an installed APK at the demo: the laptop's address changes with the Wi-Fi).
 let serverOverride: string | null = null;
@@ -181,13 +182,13 @@ export const stripCitations = (text: string) =>
   text.replace(/\s*\[(?:[SFT]\d*)(?:\s*,\s*[SFT]\d*)*\]/g, '').replace(/[ \t]+([.,;:!?])/g, '$1').trim();
 
 export async function askWork(slug: string, question: string, mode: ChatMode, history: ChatTurn[]) {
-  const data = await request<{ answer: string; no_info?: boolean; sources?: { book?: string; pages?: string }[] }>('/api/chat', {
+  const data = await request<{ answer: string; no_info?: boolean; sources?: { ref?: string; book?: string; pages?: string }[] }>('/api/chat', {
     method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ slug, question: question.trim().slice(0, 1000), mode, lang: currentLang(),
       history: history.slice(-20).map(m => ({ role: m.role, content: m.content.slice(0, 4000) })) }),
   });
   const pages = (p?: string) => p && (/^s\.\s/.test(p) ? p : `s. ${p}`);
-  const sources = [...new Set((data.sources ?? []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
+  const sources = [...new Set(citedSources(data.answer, data.sources ?? []).map(s => [s.book, pages(s.pages)].filter(Boolean).join(', ')).filter(Boolean))];
   return { answer: stripCitations(data.answer), sources, noInfo: Boolean(data.no_info) };
 }
 

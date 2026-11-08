@@ -5,8 +5,9 @@
 // An approximate (not yet verified) location is drawn as an uncertainty circle, never as an exact pin.
 // The browser build uses HeritageMap.web.tsx.
 import { useEffect, useRef, useState, type ComponentType, type Ref } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { WebView as RNWebView, type WebViewMessageEvent, type WebViewProps } from 'react-native-webview';
+import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
 import { Notice } from './UI';
 import { t } from '@/lib/i18n';
 import { colors } from '@/lib/theme';
@@ -24,6 +25,8 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewp
 <style>html,body,#map{height:100%;margin:0;background:${colors.parchmentDeep}}.leaflet-control-attribution{font-size:10px}</style></head>
 <body><div id="map"></div><script>
 var send = function (m) { window.ReactNativeWebView.postMessage(JSON.stringify(m)); };
+// Leaflet writes a string tooltip as HTML: the work's name goes in as a text node, so markup in it never runs
+var plain = function (text) { var el = document.createElement('span'); el.textContent = text; return el; };
 var map = L.map('map', { zoomControl: false }).setView([39.2, 33.5], 6);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
@@ -39,7 +42,7 @@ window.esik = { show: function (d) {
       ? L.circle([p.lat, p.lon], { radius: p.radius || 350, color: c, weight: on ? 3 : 1.5, dashArray: '5 5', fillColor: c, fillOpacity: on ? .35 : .18 })
       : L.circleMarker([p.lat, p.lon], { radius: on ? 11 : 8, color: on ? '${colors.goldText}' : '#fff', weight: on ? 3 : 2, fillColor: c, fillOpacity: 1 });
     mark.on('click', function (e) { L.DomEvent.stopPropagation(e); send({ type: 'select', slug: p.slug }); });
-    mark.bindTooltip(p.name, { direction: 'top', offset: [0, -6] });
+    mark.bindTooltip(plain(p.name), { direction: 'top', offset: [0, -6] });
     mark.addTo(layer); bounds.push([p.lat, p.lon]);
   });
   if (d.here) L.circleMarker([d.here.lat, d.here.lon], { radius: 7, color: '#fff', weight: 3, fillColor: '#2f6fd6', fillOpacity: 1 }).addTo(me);
@@ -48,6 +51,16 @@ window.esik = { show: function (d) {
 } };
 send({ type: 'ready' });
 </script></body></html>`;
+
+const PAGE_URL = 'https://esik.local/';
+
+// The map page never navigates: a tapped link (the OpenStreetMap credit) opens in the phone's browser, and no other
+// page can load inside the map and reach the app's message bridge
+function stayOnMap(req: ShouldStartLoadRequest) {
+  if (req.url === PAGE_URL || req.url.startsWith('about:')) return true;
+  if (req.url.startsWith('https://')) Linking.openURL(req.url).catch(() => {});
+  return false;
+}
 
 export function HeritageMap({ pins, here, selected, onSelect }: MapProps) {
   const web = useRef<WebViewHandle>(null);
@@ -76,7 +89,7 @@ export function HeritageMap({ pins, here, selected, onSelect }: MapProps) {
   }
 
   return <View style={s.wrap} accessibilityLabel={t('Miras haritası', 'Heritage map')}>
-    <WebView ref={web} source={{ html: PAGE, baseUrl: 'https://esik.local/' }} originWhitelist={['*']} onMessage={message}
+    <WebView ref={web} source={{ html: PAGE, baseUrl: PAGE_URL }} originWhitelist={['*']} onMessage={message} onShouldStartLoadWithRequest={stayOnMap}
       onError={() => setFailed(true)} style={s.map} javaScriptEnabled domStorageEnabled setSupportMultipleWindows={false} />
     {failed && <View style={s.over}><Notice tone="warn" icon="cloud-offline-outline">{t('Harita yüklenemedi; internet bağlantısı gerekiyor. Liste görünümünü kullanabilirsin.', 'The map could not load; it needs an internet connection. You can use the list view.')}</Notice></View>}
   </View>;

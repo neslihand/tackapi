@@ -24,7 +24,7 @@ import { preferenceTiers } from '@/lib/personal';
 import { quizPool } from '@/lib/quiz';
 import { nextRecallDay } from '@/lib/recall';
 import { ContentProvider, PassportProvider, SettingsProvider, useContent, useFlags, usePassport, useSettings } from '@/lib/store';
-import { colors, serif, space, type } from '@/lib/theme';
+import { colors, measure, serif, space, type } from '@/lib/theme';
 import { usePreferences } from '@/lib/usePreferences';
 
 setupNotifications();
@@ -163,14 +163,19 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <NotificationSync />
       <PreferenceSync />
-      <DemoStrip><Screens /></DemoStrip>
-      <WelcomeGate />
-      <MedalCelebration />
+      {/* on a tablet or wide window the app stands in a centred column (measure.app) on the night ground */}
+      <View style={s.stage}><View style={s.column}>
+        <DemoStrip><Screens /></DemoStrip>
+        <WelcomeGate />
+        <MedalCelebration />
+      </View></View>
     </JournalProvider></AccountProvider></PassportProvider></ContentProvider></SettingsProvider></LangProvider>
   </SafeAreaProvider>;
 }
 
 const s = StyleSheet.create({
+  stage: { flex: 1, backgroundColor: colors.emeraldDeep },
+  column: { flex: 1, width: '100%', maxWidth: measure.app, alignSelf: 'center', overflow: 'hidden' },
   fill: { flex: 1, backgroundColor: colors.parchment },
   strip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, paddingBottom: space.xs, paddingHorizontal: space.m, backgroundColor: colors.emeraldDeep },
   stripText: { color: colors.goldSoft, fontWeight: '700', letterSpacing: 1, ...type.caption },

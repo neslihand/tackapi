@@ -29,9 +29,13 @@ export function CoverArt({ kind, title }: { kind: ArticleKind; title: string }) 
 }
 
 export function ArticleCard({ a, wide = false }: { a: ArticleItem; wide?: boolean }) {
+  // a cover missing on this server (uploaded on another machine, or copied without its small copy) tries the full photo,
+  // then falls back to the drawn cover
+  const [tries, setTries] = useState(0);
+  const src = (a.cover ? [...new Set(wide ? [a.cover.src] : [a.cover.thumb, a.cover.src])] : [])[tries];
   return <article className={`rr-card ${wide ? 'wide' : ''}`}>
     <Link to={`/makale/${a.slug}`} className="rr-card-link" aria-label={`${a.title} — ${a.kind_label}`}>
-      <span className="rr-card-cover">{a.cover ? <img src={wide ? a.cover.src : a.cover.thumb} alt="" loading={wide ? 'eager' : 'lazy'} /> : <CoverArt kind={a.kind} title={a.title} />}</span>
+      <span className="rr-card-cover">{src ? <img key={src} src={src} alt="" loading={wide ? 'eager' : 'lazy'} onError={() => setTries(n => n + 1)} /> : <CoverArt kind={a.kind} title={a.title} />}</span>
       <span className="rr-card-text">
         <span className="rr-kicker">{a.kind_label}{a.city ? <> · {a.city.name}</> : null}{a.featured && wide ? <> · <em>{t('Öne çıkan', 'Featured')}</em></> : null}</span>
         <strong lang={a.lang}>{a.title}</strong>

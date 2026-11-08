@@ -20,7 +20,9 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 ## Çalışma ortamı (geliştirici)
 - **Windows + PowerShell, Python 3.10** (Microsoft Store sürümü).
   - Komutları `python -m uvicorn`, `python -m pip` biçiminde çalıştır.
-  - Ortam değişkenleri `$env:X="..."` ile tanımlanır ve yalnızca o pencerede geçerlidir.
+  - Ortam değişkenleri deponun kökündeki tek `.env` dosyasındadır (`../.env.example`); uvicorn ve betikler onu
+    `pipeline/envfile.py` ile kendiliğinden okur, site, paneller ve mobil de aynı dosyayı kullanır. `$env:X="..."`
+    yalnızca o pencerede dosyadaki değerin önüne geçer.
 - Yerel PostgreSQL; `vector` ve `pg_trgm` eklentileri kurulu. Sürücü `psycopg` 3. Değerler sunucu tarafında bağlandığı
   için **boş olabilen SQL parametrelerine tip ver** (`%(x)s::text`), yoksa `AmbiguousParameter` hatası alırsın.
 - **Dosya kodlaması:** Windows varsayılanı cp1254'tür (bu makinede Python UTF-8 modu kapalı). Her `open()` ve metin
@@ -54,9 +56,15 @@ oldukları için `raw/` ve türetilmiş veriler git'te yok.
 - **Yönetim paneli:** `../admin` (ayrı React + Vite uygulaması, ön yüzle aynı teknoloji ve görsel dil; 5174 portu, `/api` ve
   `/media` için 8000'e vekil). Ön yüzle birleştirme, ön yüz geliştiricisi (Fatmanur) izin verince yapılacak; o zamana
   kadar `../frontend` dosyalarına dokunma. Panelde "Sitede nasıl görünür?" önizlemesi var (`/api/admin/preview/{slug}`);
-  `admin/src/public/` içindeki eser sayfası ve kart bileşenleri yalnızca API'ye bağlı, birleştirmede ön yüze taşınabilir.
+  sayfayı sitenin kendisi çizer (`#/onizleme/<slug>`, `frontend/src/vakif/PreviewWork.tsx`, panelde çerçeve içinde;
+  7 Kasım 2026), panelde ayrı bir eser sayfası kopyası tutulmaz.
   Herkese açık liste kartı ve eser sayfası verisi `api.py`'de tek yerde üretilir (`ITEM_SELECT`/`list_item`,
   `monument_detail`); önizleme ile site aynı veriyi gösterir, bu eşitlik testle korunur.
+- **Güvenlik (7 Kasım 2026):** `security.py` bütün yanıtlara güvenlik başlıkları (site ve panellerde içerik politikası:
+  yalnızca kendi betikleri, dış adres olarak OSM karoları ve varsa `VITE_CHAT_API_URL`; yalnızca aynı adresten çerçeve) ve
+  25 MB gövde sınırı ekler; `VAKIF_SECURITY_HEADERS=off` başlıkları kapatır. Yeni bir dış kaynak (CDN, font, görsel
+  sunucusu) eklenirse `page_policy`'ye de yazılmalı, yoksa tarayıcı engeller. Yönetici anahtarında farklı yanlış anahtar
+  sayısına göre kilit (`admin.GUESS_N`). Platform platform denetim listesi: README §9 "Güvenlik denetimleri".
 - **API:** Herkese açık uçlar (`/api/cities`, `/api/monuments`, `/api/monuments/{slug}`, `POST /api/chat`, `/media`) yalnızca
   `review_status = 'published'` olan eser ve fotoğrafları gösterir. Yönetim uçları `/api/admin/*` (`admin.py`,
   `VAKIF_ADMIN_TOKENS`). CORS izinli adresleri `VAKIF_CORS_ORIGINS` (varsayılan Vite: `localhost:5173`).
@@ -295,7 +303,7 @@ Hackathon finali 7–8 Kasım 2026'da, geliştiricinin kendi bilgisayarında can
    sayfası (kitap metni ve kayıtlı anlatımlar 4 bölüme ayrılır, yeni üretim yok: `frontend/src/vakif/immersive.ts`)
    geri geldi. Ön yüzün mevcut özelliklerini geliştiriciye sormadan kaldırma. Üç anlatım da (kitap metni dahil)
    bölünmeden, başlıksız gösterilir. **Demo tek adresten:** iki uygulama `npm run build`, sonra uvicorn site `/` ve
-   panel `/panel/` altında sunar (`api.py` sonu). Yazılı yarışma soruları: göç `014_quiz.sql` (gerçek veritabanında
+   panel `/yonetim/` altında sunar (`api.py` sonu). Yazılı yarışma soruları: göç `014_quiz.sql` (gerçek veritabanında
    henüz uygulanmadı), `quiz.py`, `GET /api/quiz`, panelde `#/sorular`. Göç 013 gerçek veritabanında uygulandı,
    `visual_search.py --eval` çalıştırıldı (28 Ekim 2026). Kalan işler: `docs/on-yuz-baglanti-plani.md`.
 2. **`ingest.py` (28 Ekim 2026):** `--remove-book KITAP --yes` kitabın bütün satırlarını (embedding ve panel emeği dahil)

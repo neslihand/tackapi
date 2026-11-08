@@ -11,7 +11,7 @@ import type { IconName } from '@/components/UI';
 import { useAccount } from '@/lib/account';
 import { currentLang, t, useLang } from '@/lib/i18n';
 import { useFlags } from '@/lib/store';
-import { colors, fonts, hit, radius, serif, space, type } from '@/lib/theme';
+import { colors, fonts, hit, measure, radius, serif, space, type } from '@/lib/theme';
 
 type Row = { to: string; label: string; note?: string; icon: IconName };
 const upper = (s: string) => s.toLocaleUpperCase(currentLang() === 'tr' ? 'tr-TR' : 'en');
@@ -82,7 +82,7 @@ export default function Menu() {
             <Ionicons name={r.icon} size={20} color={on ? colors.onGold : colors.goldSoft} />
             <View style={{ flex: 1 }}>
               <Text style={[s.label, on && s.labelOn]}>{r.label}</Text>
-              {!!r.note && <Text style={[s.note, on && s.noteOn]} numberOfLines={1}>{r.note}</Text>}
+              {!!r.note && <Text style={[s.note, on && s.noteOn]} numberOfLines={2}>{r.note}</Text>}
             </View>
             <Ionicons name="arrow-forward" size={16} color={on ? colors.onGold : colors.nightStroke} />
           </Pressable>;
@@ -104,7 +104,8 @@ const s = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.s, paddingVertical: space.s,
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.nightLine },
   close: { width: hit, height: hit, alignItems: 'center', justifyContent: 'center' },
-  body: { paddingHorizontal: space.gutter, paddingTop: space.l, gap: space.l },
+  // iOS draws a full-screen modal over the whole window, outside the app's column: the menu keeps to it on a tablet
+  body: { width: '100%', maxWidth: measure.app, alignSelf: 'center', paddingHorizontal: space.gutter, paddingTop: space.l, gap: space.l },
   motto: { fontFamily: fonts.serifItalic, color: colors.goldSoft, fontSize: 30, lineHeight: 34 },
   group: { gap: space.xs },
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: space.s, marginBottom: space.xs },

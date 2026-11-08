@@ -8,6 +8,7 @@ import { Atmosphere, magnet, release } from './Atmosphere';
 import { settleScroll } from '../lib/motion';
 import { Link } from '../lib/navigation';
 import { t } from '../lib/i18n';
+import { vakifApiEnabled } from '../lib/vakifApi';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,6 +28,10 @@ function DoorLeaf({ side }: { side: 'left' | 'right' }) {
 }
 
 // The platform in three verbs, after the inventory project's aim: keep the culture alive, record it, hand it on.
+// "Projeyi tanı": the reading room's article on the inventory project (written in the panel; the browser-only demo,
+// which has no articles, opens the about page instead)
+const PROJECT_ARTICLE = '/makale/vakif-eserleri-envanter-projesi';
+
 const pillars = () => [t('Yaşat', 'Keep alive'), t('Kaydet', 'Record'), t('Aktar', 'Pass on')];
 
 // Behind the door: a stone arcade a little way in, standing against a warm stone light that turns to the emerald night
@@ -127,7 +132,7 @@ export function HeroGate() {
         <div className="en-lantern" aria-hidden="true" />
         {/* The copy stands to the left of the door, over the shade, so the door keeps the centre of the picture. */}
         <div className="fc-copy">
-          <h1 className="fc-title"><span className="fc-line"><span>{t('Vakıf Tarihine', 'A door')}</span></span> <span className="fc-line"><span>{t('açılan', 'to waqf')}</span></span> <span className="fc-line"><span><em>{t('kapı.', 'history.')}</em></span></span></h1>
+          <h1 className="fc-title"><span className="fc-line"><span>{t('Vakıf tarihine', 'A door to')}</span></span> <span className="fc-line"><span>{t('açılan', 'waqf')} <em>{t('kapı.', 'history.')}</em></span></span></h1>
           {/* Two ways in: the door itself for the curious, the map for whoever already stands before a building. */}
           <div className="hero-actions">
             <button className="button gold en-key" onClick={openGate} onPointerMove={magnet} onPointerLeave={release}><span className="en-key-icon" aria-hidden="true"><KeyRound size={17} /></span><span className="en-key-label">{t('Kapıyı arala', 'Open the door')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowRight size={17} /></span></button>
@@ -150,10 +155,10 @@ export function HeroGate() {
             <p className="cy-index cy-fade">{t('Vakıf Katılım · Vakıf Eserleri Envanter Projesi', 'Vakıf Katılım · Waqf Works Inventory Project')}</p>
             <h2 tabIndex={-1}>{t('Kadim bir kültür,', 'An ancient culture,').split(' ').map((word, i) => <Fragment key={`a${i}`}>{i > 0 && ' '}<span className="reveal-line"><span>{word}</span></span></Fragment>)} {t('yaşayan bir hafıza.', 'a living memory.').split(' ').map((word, i) => <Fragment key={`b${i}`}>{i > 0 && ' '}<span className="reveal-line"><span><em>{word}</em></span></span></Fragment>)}</h2>
           </div>
-          <p className="cy-fade cy-lead">{t('Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli.', 'Mosques, fountains, caravanserais and madrasas that have served our cities for centuries; each one an act of kindness set in stone.')}</p>
+          <p className="cy-fade cy-lead">{t('Yüzyıllardır şehirlere hizmet eden camiler, çeşmeler, hanlar ve medreseler; her biri bir iyiliğin taşa işlenmiş hâli.', 'Mosques, fountains, caravanserais and madrasas that have served our cities for centuries; each one an act of kindness set in stone.')} {t('Bu mirası şehir şehir kayda geçiren Vakıf Eserleri Envanter Projesi, ', 'The Waqf Works Inventory Project, which records this heritage city by city, is carried out by ')}<b>Vakıf Katılım</b>{t(' tarafından yürütülüyor.', '.')}</p>
           <div className="cy-label">
             <ol className="cy-pillars cy-fade">{pillars().map(verb => <li key={verb}><b>{verb}</b></li>)}</ol>
-            <div className="cy-actions cy-fade"><Link className="button gold en-key" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span className="en-key-label">{t('Koleksiyonu keşfet', 'Explore the collection')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hero-secondary en-link" to="/hakkinda" onPointerMove={magnet} onPointerLeave={release}><span>{t('Projeyi tanı', 'About the project')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
+            <div className="cy-actions cy-fade"><Link className="button gold en-key" to="/kesfet" onPointerMove={magnet} onPointerLeave={release}><span className="en-key-label">{t('Koleksiyonu keşfet', 'Explore the collection')}</span><span className="en-key-arrow" aria-hidden="true"><ArrowUpRight size={17} /></span></Link><Link className="hero-secondary en-link" to={vakifApiEnabled() ? PROJECT_ARTICLE : '/hakkinda'} onPointerMove={magnet} onPointerLeave={release}><span>{t('Projeyi tanı', 'About the project')}</span><span className="en-link-arrow" aria-hidden="true"><ArrowRight size={16} /></span></Link></div>
           </div>
         </div>
       </div>

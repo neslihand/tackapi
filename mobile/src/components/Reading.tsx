@@ -2,14 +2,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/components/Typography';
 import { Button, Eyebrow, Title } from './UI';
 import { mediaUrl } from '@/lib/api';
 import { currentLang, t } from '@/lib/i18n';
 import { capitalize, type ArticleItem, type ArticleKind, type GlossaryTerm } from '@/lib/reading';
-import { colors, overlay, serif, space } from '@/lib/theme';
+import { colors, measure, overlay, serif, space } from '@/lib/theme';
 
 const KIND_COLOR = { city_history: '#255747', heritage: '#765b38', culture: '#3e4f6b' };
 
@@ -35,10 +35,13 @@ export function CoverArt({ kind, title, style }: { kind: ArticleKind; title: str
 }
 
 export function ArticleCard({ a, wide = false }: { a: ArticleItem; wide?: boolean }) {
-  const cover = mediaUrl(wide ? a.cover?.src : a.cover?.thumb);
+  // a cover missing on the server (uploaded on another machine, or copied without its small copy) tries the full photo,
+  // then falls back to the drawn cover
+  const [tries, setTries] = useState(0);
+  const cover = [...new Set((wide ? [a.cover?.src] : [a.cover?.thumb, a.cover?.src]).map(mediaUrl))].filter(Boolean)[tries] ?? null;
   return <Pressable onPress={() => router.push(`/makale/${a.slug}`)} accessibilityRole="button" accessibilityLabel={`${a.title}, ${a.kind_label}, ${t(`${a.reading_minutes} dakika okuma`, `${a.reading_minutes} minute read`)}`}
     style={({ pressed }) => [s.card, wide && s.cardWide, pressed && { opacity: 0.85 }]}>
-    {cover ? <Image source={cover} alt="" style={wide ? s.coverWide : s.cover} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
+    {cover ? <Image key={cover} source={cover} alt="" style={wide ? s.coverWide : s.cover} contentFit="cover" transition={200} onError={() => setTries(n => n + 1)} accessibilityIgnoresInvertColors />
       : <CoverArt kind={a.kind} title={a.title} style={wide ? s.coverWide : s.cover} />}
     <View style={s.body}>
       <Text style={s.kicker}>{a.kind_label.toLocaleUpperCase('tr-TR')}{a.city ? ` · ${a.city.name.toLocaleUpperCase('tr-TR')}` : ''}{a.featured && wide ? ` · ${t('ÖNE ÇIKAN', 'FEATURED')}` : ''}</Text>
@@ -87,7 +90,7 @@ const s = StyleSheet.create({
   summary: { color: colors.soft, fontSize: 13, lineHeight: 18 },
   meta: { color: colors.soft, fontSize: 12, marginTop: 2 },
   backdrop: { flex: 1, backgroundColor: overlay.backdrop, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
+  sheet: { width: '100%', maxWidth: measure.app, alignSelf: 'center', backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
   sheetHead: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   term: { fontFamily: serif, fontSize: 22, color: colors.ink, flex: 1 },
   termEn: { fontSize: 16, color: colors.soft, fontStyle: 'italic' },

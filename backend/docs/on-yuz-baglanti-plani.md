@@ -3,15 +3,15 @@
 Kapsam: şimdilik yalnızca **pilot eserler** (`monument.pilot = true`). Ön yüz `../frontend` (React + Vite).
 
 ## Nasıl açılır?
-**Demo (tek adres, tek sunucu):** site `http://127.0.0.1:8000/`, yönetim paneli `http://127.0.0.1:8000/panel/`.
+**Demo (tek adres, tek sunucu):** site `http://127.0.0.1:8000/`, yönetim paneli `http://127.0.0.1:8000/yonetim/`.
 ```powershell
 cd ..\frontend; npm run build      # site → frontend/dist
-cd ..\admin;    npm run build      # panel → admin/dist (base /panel/)
+cd ..\admin;    npm run build      # panel → admin/dist (base /yonetim/)
 cd ..\backend;  python -m uvicorn api:app --app-dir pipeline --port 8000
 ```
 `api.py` derlenmiş klasörleri bulursa kendiliğinden bağlar (`VAKIF_SITE_DIR`, `VAKIF_PANEL_DIR` ile başka klasör,
 `off` ile kapatılır). Site ya da panelde değişiklik yapınca yeniden `npm run build` gerekir; uvicorn yeniden
-başlatılmasa da yeni dosyaları sunar. Sitedeki "Yönetim Paneli" bağlantısı derlemede `/panel/`'e gider
+başlatılmasa da yeni dosyaları sunar. Sitedeki "Yönetim Paneli" bağlantısı derlemede `/yonetim/`'e gider
 (`frontend/.env.production`).
 
 **Geliştirme (iki sunucu):** arka uç yukarıdaki gibi; ön yüz `frontend` klasöründe `npm run dev`. `.env` içinde
@@ -42,7 +42,7 @@ Bu iş için arka uçta yapılan küçük değişiklikler: `/api/monuments`'a `p
 ## Hazır olmayanlar: arka uç planı (öncelik sırasıyla)
 
 ### 1. Tek adresten demo — YAPILDI (28 Ekim 2026)
-Site `/`, panel `/panel/` altında uvicorn'dan sunulur (yukarıdaki "Nasıl açılır?"). Test: `tests/test_quiz.py`.
+Site `/`, panel `/yonetim/` altında uvicorn'dan sunulur (yukarıdaki "Nasıl açılır?"). Test: `tests/test_quiz.py`.
 
 ### 2. Mimar / usta / bânî — YAPILDI (28 Ekim 2026)
 Liste öğesinde `architect`, `builder`, `patron` (kitapta geçiş sırasıyla, virgülle; `monument_person`). Sitede

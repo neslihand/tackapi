@@ -20,12 +20,15 @@ Uç noktalar
   POST /api/chat   {"slug": "...", "question": "...", "mode": "standard|child|story", "lang": "tr|en", "history": [...]}
   POST /api/visual-search   multipart: file (JPEG/PNG/WebP ≤10 MB), lang → {confident, match, candidates}
 
+Ayarlar deponun kökündeki .env dosyasından kendiliğinden okunur (envfile.py; bütün değişkenler: ../../.env.example).
 VAKIF_CORS_ORIGINS: virgülle ayrılmış izinli ön yüz adresleri (varsayılan: Vite ve mobilin Expo web geliştirme sunucuları)
 VAKIF_CHAT_RATE:    IP başına sohbet sınırı, 'istek/saniye' (varsayılan 10/60)
 VAKIF_ADMIN_TOKENS: yönetim uçları için 'ad:token,ad2:token2' (token en az 16 karakter); yoksa /api/admin kapalı
 VAKIF_SITE_DIR:     derlenmiş site (varsayılan ../frontend/dist) '/' altında sunulur; 'off' kapatır
-VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/panel/' altında sunulur; 'off' kapatır
-                    Tek adresten demo: önce iki uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
+VAKIF_PANEL_DIR:    derlenmiş yönetim paneli (varsayılan ../admin/dist) '/yonetim/' altında sunulur; 'off' kapatır
+VAKIF_AUTHOR_DIR:   derlenmiş yazar paneli (varsayılan ../yazar-paneli/dist) '/yazar/' altında sunulur; 'off' kapatır
+                    Tek adresten demo: önce üç uygulamayı 'npm run build' ile derle, sonra uvicorn'u başlat.
+VAKIF_SECURITY_HEADERS: 'off' güvenlik başlıklarını (içerik politikası vb.) kapatır; bkz. security.py
 """
 import os, sys, re, time, json, hashlib, logging, threading, mimetypes
 from collections import defaultdict, deque
@@ -33,13 +36,14 @@ sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Literal
+import envfile  # noqa: F401  ayarlar kökteki .env'den, aşağıdaki modüller okumadan önce
 from db import DB
 import gemini_client as G
-import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author
+import rag, admin, images, textfix_db, narrations, visual_search, geocode, routes, quiz, visitors, agent, articles, share, hunt, details, weekly, questions, author, security
 
 log = logging.getLogger('vakif.api')
 
@@ -52,6 +56,8 @@ app.add_middleware(CORSMiddleware, allow_methods=['GET', 'POST', 'PATCH', 'PUT',
 # JS, CSS, HTML ve JSON sıkıştırılır (ana JS 682 KB → 224 KB); fotoğraf ve fontlar zaten sıkışık olduğu için atlanır.
 # Seviye 6, 9 ile aynı boyutu daha az işlemciyle verir.
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
+# En dışta: güvenlik başlıkları (içerik politikası, çerçeve, nosniff) ve 25 MB gövde sınırı (security.py)
+app.add_middleware(security.Guard)
 db = DB()
 
 # Fotoğraflar: images.py'nin ürettiği WebP dosyaları (media/<file>, küçükleri media/thumbs/<file>).
@@ -593,7 +599,7 @@ async def visual_search_endpoint(request: Request, file: UploadFile = File(...),
 
 
 # ------------------------------------------------------------------------------------------- tek adresten site
-# Derlenmiş site '/' ve yönetim paneli '/panel/' altında: demo tek sunucu ve tek adresle açılır. /api ve /media bu
+# Derlenmiş site '/', yönetim paneli '/yonetim/' ve yazar paneli '/yazar/' altında: demo tek sunucu ve tek adresle açılır. /api ve /media bu
 # bağlamalardan önce tanımlandığı için etkilenmez. Klasör yoksa (derlenmemişse) bağlanmaz; geliştirmede Vite kullanılır.
 ROOT_DIR = os.path.join(os.path.dirname(__file__), '..', '..')
 
@@ -632,8 +638,22 @@ def share_page(slug: str, request: Request, lang: str = 'tr'):
     return HTMLResponse(html, headers={'Cache-Control': 'no-cache'})
 
 
+@app.get('/panel', include_in_schema=False)
+@app.get('/panel/{rest:path}', include_in_schema=False)
+def old_panel(rest: str = ''):
+    """Panelin eski adresi: kayıtlı bağlantılar /yonetim/'e gider (adresteki #/... tarayıcıda korunur)."""
+    return RedirectResponse(f'/yonetim/{rest}')
+
+
+@app.get('/yonetim', include_in_schema=False)
+@app.get('/yazar', include_in_schema=False)
+def panel_slash(request: Request):
+    """Adres çubuğuna sonda '/' olmadan yazılan panel adresi (mount yalnızca '/yonetim/...' ile eşleşir)."""
+    return RedirectResponse(f'{request.url.path}/')
+
+
 if PANEL_DIR:
-    app.mount('/panel', AppFiles(directory=PANEL_DIR, html=True), name='panel')
+    app.mount('/yonetim', AppFiles(directory=PANEL_DIR, html=True), name='panel')
 if AUTHOR_DIR:   # yazar paneli: yönetim panelinden ayrı uygulama (../yazar-paneli)
     app.mount('/yazar', AppFiles(directory=AUTHOR_DIR, html=True), name='yazar')
 if SITE_DIR:

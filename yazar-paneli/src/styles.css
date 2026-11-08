@@ -568,6 +568,8 @@ button.author-ref:hover{background:var(--gold);color:var(--teal)}.author-ref.bad
 .author-source .author-note-actions{position:absolute;top:8px;right:8px}
 .author-sources>.button{margin-bottom:12px}.author-sources>.admin-help{margin-bottom:12px}
 .author-draft{position:sticky;top:80px;display:flex;flex-direction:column;gap:12px;padding:20px 22px;border:1px solid var(--line);background:#fffdf8;border-radius:var(--radius);box-shadow:var(--shadow-sm);max-height:calc(100vh - 100px);overflow:auto}
+/* the column scrolls as a whole: its parts keep their height (a long draft used to be squeezed and spill over the buttons) */
+.author-draft>*{flex-shrink:0}
 .author-draft-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
 .author-draft-head h2{display:inline-flex;align-items:center;gap:8px;font-size:24px}.author-draft-head small{font-size:12px;color:var(--muted)}
 .author-generate{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.author-generate .button{margin-left:auto}

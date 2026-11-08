@@ -120,6 +120,8 @@ export function ArticlePage({ slug }: { slug: string }) {
 }
 
 function Reader({ a, terms }: { a: ArticleDetail; terms: GlossaryTerm[] }) {
+  const [coverBroken, setCoverBroken] = useState(false);   // the file missing on this server: the drawn cover instead
+  const cover = coverBroken ? null : a.cover;
   const { artifacts } = useContent();
   const [child, setChild] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -158,8 +160,8 @@ function Reader({ a, terms }: { a: ArticleDetail; terms: GlossaryTerm[] }) {
   const sourceText = a.source && (currentLang() === 'en' && a.source.book ? composed : a.source.note || composed);
   return <Scene className="rr-scene rr-reading">
     <div className="rr-progress" aria-hidden="true"><i style={{ transform: `scaleX(${progress})` }} /></div>
-    <header className={`rr-hero ${a.cover ? 'has-cover' : ''}`} data-nav-theme="dark">
-      {a.cover ? <img className="rr-hero-img" src={a.cover.src} alt={a.cover.alt} /> : <CoverArt kind={a.kind} title={a.title} />}
+    <header className={`rr-hero ${cover ? 'has-cover' : ''}`} data-nav-theme="dark">
+      {cover ? <img className="rr-hero-img" src={cover.src} alt={cover.alt} onError={() => setCoverBroken(true)} /> : <CoverArt kind={a.kind} title={a.title} />}
       <div className="rr-hero-text page-shell">
         <Link className="rr-back" to="/makaleler"><ArrowLeft size={15} aria-hidden="true" /> {t('Makaleler', 'Articles')}</Link>
         <p className="rr-kicker">{a.kind_label}{a.city ? <> · {a.city.name}</> : null}</p>

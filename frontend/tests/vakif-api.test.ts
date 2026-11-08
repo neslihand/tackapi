@@ -59,6 +59,14 @@ test('Cevaptaki kaynak işaretleri çıkarılır, kaynaklar kitap ve sayfa olara
   assert.equal(fromVakifChat({ detail: 'hata' }), null);
 });
 
+test('Kaynak listesinde yalnızca cevabın andığı parçalar görünür', () => {
+  const sources = [{ ref: 'S1', book: 'Bursa III', pages: 's. 183–184' }, { ref: 'S2', book: 'Bursa III', pages: 's. 186' }, { ref: 'S3', book: 'Konya I', pages: 's. 328' }];
+  assert.deepEqual(fromVakifChat({ answer: 'Cami 1390’da yapıldı [S2]. Minaresi tek şerefelidir [S1, F0].', sources })?.sources,
+    [{ title: 'Bursa III, s. 183–184' }, { title: 'Bursa III, s. 186' }]);
+  assert.deepEqual(fromVakifChat({ answer: 'Kaynaklarımızda bu konuda bilgi yok.', sources })?.sources, []);
+  assert.deepEqual(fromVakifChat({ answer: 'Yalnızca künyeden [F0][T].', sources })?.sources, []);
+});
+
 test('MİMAR / USTA: önce mimarlar, yoksa ustalar; bânî hiçbir zaman mimar diye gösterilmez', () => {
   assert.equal(makers({ architect: 'Hacı İvaz Paşa, Ali Neccâr', builder: 'Usta' }), 'Hacı İvaz Paşa, Ali Neccâr');
   assert.equal(makers({ architect: null, builder: 'Ali Usta' }), 'Ali Usta');

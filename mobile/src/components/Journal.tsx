@@ -9,7 +9,7 @@ import { Text, TextInput } from '@/components/Typography';
 import { Button, Notice } from './UI';
 import { t } from '@/lib/i18n';
 import { NOTE_MAX, pickPhoto, useJournal, type Memory } from '@/lib/journal';
-import { colors, overlay, serif, space } from '@/lib/theme';
+import { colors, measure, overlay, serif, space } from '@/lib/theme';
 
 export function MemoryCard({ m, workName }: { m: Memory; workName?: string }) {
   const { remove } = useJournal();
@@ -86,7 +86,7 @@ const s = StyleSheet.create({
   remove: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-end', paddingTop: 4 },
   removeText: { color: colors.soft, fontSize: 12 },
   backdrop: { flex: 1, backgroundColor: overlay.backdrop, justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
+  sheet: { width: '100%', maxWidth: measure.app, alignSelf: 'center', backgroundColor: colors.parchment, padding: space.l, gap: space.s + 2, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderTopWidth: 2, borderColor: colors.gold },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: serif, fontSize: 22, color: colors.ink },
   preview: { width: '100%', height: 180, borderRadius: 12, backgroundColor: colors.parchmentDeep },

@@ -286,7 +286,7 @@ function DraftPanel({ d, busy, setBusy, run, locked, showNote, sources }: { d: W
   const words = wordsOf(text);
   return <section className="author-draft" aria-label="Taslak">
     <div className="author-draft-head"><h2><Sparkles size={18} /> Eser hakkında: taslak</h2>
-      {draft && <small>{draft.ai ? `Yapay zekâ taslağı${draft.model ? ` (${draft.model})` : ''}` : draft.length ? 'Notların birleştirilmiş hâli (yapay zekâsız)' : 'Yazar sürümü'} · {draft.created_by} · {formatDate(draft.created_at)}</small>}</div>
+      {draft && <small>{draft.ai ? 'Yapay zekâ taslağı' : draft.length ? 'Notların birleştirilmiş hâli (yapay zekâsız)' : 'Yazar sürümü'} · {draft.created_by} · {formatDate(draft.created_at)}</small>}</div>
 
     <div className="author-generate">
       <div className="segmented" role="group" aria-label="Uzunluk">{(Object.keys(LENGTH_LABELS) as DraftLength[]).map(l =>

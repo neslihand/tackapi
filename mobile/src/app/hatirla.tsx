@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/Card';
 import { AnswerOption, ProgressBar } from '@/components/Controls';
-import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { track } from '@/lib/analytics';
 import { mediaUrl, sourceTitle } from '@/lib/api';
 import { t, useLang } from '@/lib/i18n';
@@ -104,10 +104,10 @@ export default function Recall() {
       {!shown ? <Button kind="gold" icon="eye-outline" label={t('Cevabı göster', 'Show the answer')} onPress={() => setShown(true)} /> : <>
         <Text style={s.definition} accessibilityLiveRegion="polite">{term.definition}</Text>
         {term.definition_lang !== lang && <Text style={s.small}>{term.definition_lang === 'tr' ? t('Tanım Türkçe.', 'Definition in Turkish.') : t('Tanım İngilizce.', 'Definition in English.')}</Text>}
-        {!result && <View style={s.pair}>
-          <Button kind="gold" icon="checkmark" label={t('Biliyordum', 'I knew it')} style={s.half} onPress={() => record('right', null)} />
-          <Button kind="plain" icon="close" label={t('Bilmiyordum', 'I didn’t know')} style={s.half} onPress={() => record('forgot', null)} />
-        </View>}
+        {!result && <ButtonRow>
+          <Button fit kind="gold" icon="checkmark" label={t('Biliyordum', 'I knew it')} onPress={() => record('right', null)} />
+          <Button fit kind="plain" icon="close" label={t('Bilmiyordum', 'I didn’t know')} onPress={() => record('forgot', null)} />
+        </ButtonRow>}
       </>}
     </Card>}
 
@@ -120,11 +120,11 @@ export default function Recall() {
       {!!question?.explanation && <Text style={s.feedbackText}>{question.explanation}</Text>}
       {item && <Text style={s.small}>{t('Kaynak', 'Source')}: {sourceTitle(item.source)}</Text>}
       {result.due && <Text style={s.small}>{t(`Bu kartı ${when(daysUntil(result.due))} yeniden göreceksin.`, `You’ll see this card again ${when(daysUntil(result.due))}.`)}</Text>}
-      <View style={s.pair}>
-        <Button icon="arrow-forward" label={index + 1 < cards.length ? t('Sonraki kart', 'Next card') : t('Bitir', 'Finish')} style={s.half} onPress={advance} />
-        {card.kind === 'work' && <Button kind="plain" icon="book-outline" label={t('Eser', 'Work')} onPress={() => router.push(`/eser/${card.slug}`)} />}
-        {card.kind === 'term' && <Button kind="plain" icon="book-outline" label={t('Terim', 'Term')} onPress={() => router.push(`/terim/${card.slug}`)} />}
-      </View>
+      <ButtonRow>
+        <Button fit icon="arrow-forward" label={index + 1 < cards.length ? t('Sonraki kart', 'Next card') : t('Bitir', 'Finish')} style={s.lead} onPress={advance} />
+        {card.kind === 'work' && <Button fit kind="plain" icon="book-outline" label={t('Eser', 'Work')} onPress={() => router.push(`/eser/${card.slug}`)} />}
+        {card.kind === 'term' && <Button fit kind="plain" icon="book-outline" label={t('Terim', 'Term')} onPress={() => router.push(`/terim/${card.slug}`)} />}
+      </ButtonRow>
     </View>}
   </ScrollView>;
 }
@@ -159,10 +159,10 @@ function Summary({ results, bySlug }: { results: Result[]; bySlug: (slug: string
           {r.due && <Text style={s.small}>{when(daysUntil(r.due))}</Text>}
         </View>)}
       </View>
-      <View style={s.pair}>
-        <Button icon="home-outline" label={t('Bugün’e dön', 'Back to Today')} style={s.half} onPress={goHome} />
-        {missed && <Button kind="plain" icon="book-outline" label={t('Eseri aç', 'Open the work')} style={s.half} onPress={() => router.push(`/eser/${missed.card.slug}`)} />}
-      </View>
+      <ButtonRow>
+        <Button fit icon="home-outline" label={t('Bugün’e dön', 'Back to Today')} onPress={goHome} />
+        {missed && <Button fit kind="plain" icon="book-outline" label={t('Eseri aç', 'Open the work')} onPress={() => router.push(`/eser/${missed.card.slug}`)} />}
+      </ButtonRow>
     </Card>
   </ScrollView>;
 }
@@ -178,8 +178,8 @@ const s = StyleSheet.create({
   en: { color: colors.soft, fontStyle: 'italic', marginTop: -space.s, ...type.body },
   definition: { fontFamily: serif, color: colors.ink, ...type.reading },
   small: { color: colors.soft, ...type.caption },
-  pair: { flexDirection: 'row', gap: space.s, flexWrap: 'wrap' },
-  half: { flex: 1, paddingHorizontal: space.s },
+  // the main action takes more of the row than the small link beside it
+  lead: { flexGrow: 2 },
   feedback: { padding: space.m, gap: space.s, borderRadius: radius.m, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, borderLeftWidth: 3, borderLeftColor: colors.gold },
   feedbackHead: { flexDirection: 'row', alignItems: 'center', gap: space.s },
   feedbackTitle: { flex: 1, fontWeight: '700', color: colors.ink, ...type.body },

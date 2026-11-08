@@ -31,8 +31,8 @@ media/
 data/images.jsonl
 data/geocode_cache.json
 
-# Veritabanı yedeği (pg_dump; telifli metinleri içerir)
-vakif.dump
+# Veritabanı yedekleri (pg_dump; telifli metinleri, hesapların e-posta ve şifre özetlerini içerir)
+*.dump
 
 # macOS
 .DS_Store

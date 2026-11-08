@@ -82,7 +82,7 @@ Yönetim panelinde "Yazar paneli" başlığı altında iki sayfa var:
 | Editör sayfaları | `admin/src/pages/AuthorReview.tsx` | `#/yazar-metinleri`, `#/yazar-metni/<id>`, `#/yazarlar`. |
 | Testler | `backend/tests/test_author.py`, `yazar-paneli/tests/` | Yetki ayrımı, hesap akışı, notlar, taslak denetimi, editör onayı. |
 
-Tek adresten demo: `npm run build` (admin ve yazar paneli) sonrası uvicorn site `/`, yönetim paneli `/panel/`,
+Tek adresten demo: `npm run build` (admin ve yazar paneli) sonrası uvicorn site `/`, yönetim paneli `/yonetim/`,
 yazar paneli `/yazar/` adreslerinde sunulur. Yapay zekâ modeli `VAKIF_AUTHOR_MODEL` ile değiştirilebilir (varsayılan sohbet modeli).
 
 ## Durum ve kalan işler

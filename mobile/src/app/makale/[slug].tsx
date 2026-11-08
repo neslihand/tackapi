@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Switch, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Text } from '@/components/Typography';
 import { ArticleCard, CoverArt, TermSheet } from '@/components/Reading';
-import { Button, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
+import { Button, ButtonRow, Empty, Eyebrow, Loading, Notice, Title } from '@/components/UI';
 import { track } from '@/lib/analytics';
 import { ApiError, apiBase, mediaUrl } from '@/lib/api';
 import { currentLang, t, useLang } from '@/lib/i18n';
@@ -30,6 +30,7 @@ export default function Article() {
   const [child, setChild] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [linkShown, setLinkShown] = useState<string | null>(null);
+  const [coverBroken, setCoverBroken] = useState(false);   // the file missing on the server: the drawn cover instead
   // moved directly: the whole text is not drawn again for every scrolled pixel
   const [read] = useState(() => new Animated.Value(0));
   const page = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -77,7 +78,7 @@ export default function Article() {
     setLinkShown(await shareLink(a!.title, url).catch(() => url));
     track('share_initiated', undefined, { content_type: 'article', article: slug });
   }
-  const cover = mediaUrl(a.cover?.src);
+  const cover = coverBroken ? null : mediaUrl(a.cover?.src);
   const headings = blocks.filter(b => b.type === 'h');
   const pages = a.source?.pages ? (a.source.pages[0] === a.source.pages[1] ? t(`s. ${a.source.pages[0]}`, `p. ${a.source.pages[0]}`) : t(`s. ${a.source.pages[0]}–${a.source.pages[1]}`, `pp. ${a.source.pages[0]}–${a.source.pages[1]}`)) : '';
   // the editor's note is Turkish; in English the book, section and pages are put together instead
@@ -88,7 +89,7 @@ export default function Article() {
   return <View style={{ flex: 1 }}>
     <Stack.Screen options={{ title: a.kind_label }} />
     <ScrollView ref={page} onScroll={onScroll} scrollEventThrottle={32} contentContainerStyle={{ paddingBottom: space.xl * 2 }}>
-      {cover ? <Image source={cover} style={s.cover} contentFit="cover" transition={250} accessibilityLabel={a.cover?.alt || a.title} /> : <CoverArt kind={a.kind} title={a.title} style={s.cover} />}
+      {cover ? <Image source={cover} style={s.cover} contentFit="cover" transition={250} onError={() => setCoverBroken(true)} accessibilityLabel={a.cover?.alt || a.title} /> : <CoverArt kind={a.kind} title={a.title} style={s.cover} />}
       <View style={s.hero}>
         <Eyebrow light>{a.kind_label.toLocaleUpperCase('tr-TR')}{a.city ? ` · ${a.city.name.toLocaleUpperCase('tr-TR')}` : ''}</Eyebrow>
         <Title light>{a.title}</Title>
@@ -105,10 +106,10 @@ export default function Article() {
             <Text style={s.tocText}>{h.text}</Text><Ionicons name="arrow-down" size={15} color={colors.goldLine} />
           </Pressable>)}
         </View>}
-        <View style={s.actions}>
-          <Button style={{ flex: 1 }} kind="plain" icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'} label={speaking ? t('Durdur', 'Stop') : t('Sesli dinle', 'Listen')} onPress={listen} />
-          <Button style={{ flex: 1 }} kind="plain" icon="link-outline" label={t('Paylaş', 'Share')} onPress={share} />
-        </View>
+        <ButtonRow>
+          <Button fit kind="plain" icon={speaking ? 'stop-circle-outline' : 'volume-high-outline'} label={speaking ? t('Durdur', 'Stop') : t('Sesli dinle', 'Listen')} onPress={listen} />
+          <Button fit kind="plain" icon="link-outline" label={t('Paylaş', 'Share')} onPress={share} />
+        </ButtonRow>
         {linkShown && <Notice icon="link-outline"><Text selectable>{linkShown}</Text></Notice>}
       </View>
 
@@ -176,7 +177,6 @@ const s = StyleSheet.create({
   toc: { padding: space.m, borderRadius: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line, gap: 2 },
   tocRow: { flexDirection: 'row', alignItems: 'center', gap: space.s, minHeight: 44 },
   tocText: { flex: 1, fontFamily: serif, fontSize: 18, color: colors.ink },
-  actions: { flexDirection: 'row', gap: space.s },
   small: { color: colors.soft, fontSize: 12, lineHeight: 17 },
   h: { fontFamily: serif, fontSize: 26, lineHeight: 31, color: colors.ink, marginTop: space.s },
   p: { fontFamily: serif, fontSize: 18, lineHeight: 28, color: colors.ink },

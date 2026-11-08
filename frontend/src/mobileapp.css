@@ -91,3 +91,43 @@
 @media (max-width: 620px) { .ma-features { grid-template-columns: minmax(0, 1fr); } .ma-key { flex: 1 1 100%; justify-content: center; } .ma-qr { display: none; } }
 @media (prefers-reduced-motion: reduce) { .ma-wave b { animation: none; } .ma-key { transition: none; } .ma-key:hover { translate: none; } }
 @media (forced-colors: active) { .ma-phone, .ma-soon { border: 1px solid CanvasText; } }
+
+/* ——— The app's card (components/AppPromo.tsx) ———
+   For a visitor who keeps coming back: a small card in the bottom-left corner in the consent banner's night green and
+   gold, never over the page's middle. On a phone it sits along the bottom, kept short (title, the three features, the
+   two choices in a row), and the chat button rises above it. */
+.app-promo { position: fixed; left: 20px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 150; width: min(372px, calc(100vw - 40px)); padding: 20px 22px 18px; color: #f4f1eb; background: #0c241c; border: 1px solid #c3a86966; box-shadow: 0 30px 60px -28px #000; animation: app-promo-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes app-promo-in { from { opacity: 0; transform: translateY(18px); } }
+.app-promo-close { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 40px; height: 40px; color: #dcd8cc; border-radius: 50%; }
+.app-promo-close:hover { color: #fff; background: #ffffff14; }
+.app-promo-kicker { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .16em; color: #e6d5ae; }
+.app-promo h2 { margin: 0 34px 8px 0; font-family: var(--serif); font-size: 23px; font-weight: 400; line-height: 1.2; }
+.app-promo h2 em { color: #e6d5ae; }
+.app-promo-text { margin: 0; font-size: 14px; line-height: 1.6; color: #dcd8cc; }
+.app-promo-features { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 16px; padding: 0; list-style: none; }
+.app-promo-features li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 8px; font-size: 12.5px; color: #f4f1eb; border: 1px solid #c3a86959; border-radius: 99px; }
+.app-promo-features svg { width: 15px; height: 15px; color: #e6d5ae; }
+.app-promo-get { display: flex; align-items: center; gap: 16px; }
+.app-promo-qr { flex: none; margin: 0; width: 92px; text-align: center; }
+.app-promo-qr .ma-qr-code { display: block; width: 92px; height: 92px; }
+.app-promo-qr figcaption { margin-top: 6px; font-size: 11px; line-height: 1.35; color: #c9c4b6; }
+.app-promo-actions { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 8px; }
+.app-promo-actions .button { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.app-promo-never { padding: 6px 0; font-size: 13px; color: #c9c4b6; text-decoration: underline; text-underline-offset: 3px; }
+.app-promo-never:hover { color: #f4f1eb; }
+/* out of the way while the chat is open */
+body:has(.chat-panel.open) .app-promo { display: none; }
+@media (max-width: 640px) {
+  .app-promo { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); width: auto; padding: 14px 14px 12px; }
+  .app-promo-close { top: 4px; right: 4px; }
+  .app-promo-kicker { margin-bottom: 6px; }
+  .app-promo h2 { margin-bottom: 0; font-size: 19px; }
+  .app-promo-text { display: none; }
+  .app-promo-features { gap: 5px; margin: 10px 0 12px; }
+  .app-promo-features li { gap: 5px; padding: 4px 9px 4px 7px; font-size: 12px; }
+  .app-promo-features svg { width: 13px; height: 13px; }
+  .app-promo-actions { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+  .app-promo-actions .button { min-height: 46px; padding: 0 18px; font-size: 14.5px; }
+}
+@media (prefers-reduced-motion: reduce) { .app-promo { animation: none; } }
+@media (forced-colors: active) { .app-promo, .app-promo-features li { border: 1px solid CanvasText; } }

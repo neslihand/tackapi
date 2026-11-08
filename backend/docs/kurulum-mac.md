@@ -54,30 +54,32 @@ python -m pip install -r requirements.txt
 python -m pip install -r requirements-vision.txt   # kamerayla eser tanıma (ilk çalışmada model bir kez iner)
 ```
 
-## 6. Site ve paneli derle
+## 6. Ayarlar
+Bütün ayarlar deponun kökündeki tek `.env` dosyasında; arka uç, site, paneller ve mobil onu kendiliğinden okur:
 ```bash
-cd ../frontend
+cd ..                      # depo kökü
 cp .env.example .env
-npm install
-npm run build
+```
+`.env`'de şunları doldur:
+- `DATABASE_URL=postgresql://localhost/vakif`
+- `VAKIF_ADMIN_TOKENS=fatmanur:<Neslihan'ın verdiği anahtar>`
+- `GEMINI_API_KEY=<varsa Gemini anahtarı>`
 
-cd ../admin
-npm install
-npm run build
+## 7. Site ve panelleri derle
+```bash
+cd frontend && npm install && npm run build && cd ..
+cd admin && npm install && npm run build && cd ..
+cd yazar-paneli && npm install && npm run build && cd ..
 ```
 
-## 7. Çalıştır
-Her yeni uçbirim penceresinde `backend` klasöründe şunları çalıştır:
+## 8. Çalıştır
 ```bash
-cd ../backend
-source .venv/bin/activate
-export DATABASE_URL="postgresql://localhost/vakif"
-export VAKIF_ADMIN_TOKENS="fatmanur:<Neslihan'ın verdiği anahtar>"
-export GEMINI_API_KEY="<varsa Gemini anahtarı>"
-python -m uvicorn api:app --app-dir pipeline --host 127.0.0.1 --port 8000
+cd backend
+.venv/bin/python -m uvicorn api:app --app-dir pipeline --host 127.0.0.1 --port 8000
 ```
 - Site: <http://127.0.0.1:8000/>
-- Yönetim paneli: <http://127.0.0.1:8000/panel/> (giriş: panel anahtarının `:` işaretinden sonraki kısmı)
+- Yönetim paneli: <http://127.0.0.1:8000/yonetim> (giriş: panel anahtarının `:` işaretinden sonraki kısmı)
+- Yazar paneli: <http://127.0.0.1:8000/yazar>
 
 Gemini anahtarı yoksa site yine açılır; yalnızca "Esere Sor" cevap vermez.
 

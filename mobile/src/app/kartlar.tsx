@@ -5,11 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Text } from '@/components/Typography';
-import { Button, Empty, Loading } from '@/components/UI';
+import { Button, ButtonRow, Empty, Loading } from '@/components/UI';
 import { mediaUrl, type Item } from '@/lib/api';
 import { t } from '@/lib/i18n';
+import { useAppWidth } from '@/lib/layout';
 import { flipCard, usePlaySession } from '@/lib/playSession';
 import { useContent } from '@/lib/store';
 import { colors, serif, space } from '@/lib/theme';
@@ -22,14 +23,14 @@ const DRAWN = 2;
 export default function Cards() {
   const { items, loading } = useContent();
   const session = usePlaySession();
-  const window = useWindowDimensions();
+  const width = useAppWidth();
   const [active, setActive] = useState(0);
   const deck = useRef<ComponentRef<typeof ScrollView>>(null);
   if (loading && !items.length) return <Loading />;
   if (!items.length) return <Empty title={t('Bu koleksiyonda henüz bilgi kartı yok.', 'There are no knowledge cards in this collection yet.')} />;
 
   const n = items.length;
-  const page = window.width;
+  const page = width;
   const seen = items.filter(i => session.flipped.includes(i.slug)).length;
   const current = items[Math.min(active, n - 1)];
   function go(index: number) {
@@ -109,10 +110,10 @@ function Card({ item, number, front, width }: { item: Item; number: number; fron
           <Text style={s.fact}>{item.name}, {item.city.name}</Text>
         </View>
       </ScrollView>
-      <View style={{ flexDirection: 'row', gap: space.s }}>
-        <Button style={{ flex: 1 }} icon="book-outline" label={t('Keşfet', 'Explore')} onPress={() => router.push(`/eser/${item.slug}`)} />
-        {!!item.location && <Button style={{ flex: 1 }} kind="plain" icon="map-outline" label={t('Haritada', 'On the map')} onPress={() => router.navigate(`/kesfet?eser=${encodeURIComponent(item.slug)}`)} />}
-      </View>
+      <ButtonRow>
+        <Button fit icon="book-outline" label={t('Keşfet', 'Explore')} onPress={() => router.push(`/eser/${item.slug}`)} />
+        {!!item.location && <Button fit kind="plain" icon="map-outline" label={t('Haritada', 'On the map')} onPress={() => router.navigate(`/kesfet?eser=${encodeURIComponent(item.slug)}`)} />}
+      </ButtonRow>
       <Button kind="plain" icon="return-up-back-outline" label={t('Öne dön', 'Back to the front')} onPress={() => turn(false)} />
     </View>}
   </Animated.View>;

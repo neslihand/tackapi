@@ -4,10 +4,10 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Card } from '@/components/Card';
 import { Text } from '@/components/Typography';
-import { Button, Eyebrow, Notice, Title } from '@/components/UI';
+import { Button, ButtonRow, Eyebrow, Notice, Title } from '@/components/UI';
 import { findByPhoto, mediaUrl, type VisualResult } from '@/lib/api';
 import { t } from '@/lib/i18n';
 import { useContent } from '@/lib/store';
@@ -43,10 +43,10 @@ export default function Camera() {
     <Eyebrow>✦ {t('KAMERA İLE KEŞFET', 'DISCOVER WITH THE CAMERA')}</Eyebrow>
     <Title>{t('Önündeki yapı hangi eser?', 'Which work is in front of you?')}</Title>
     <Text style={s.body}>{t('Yapının fotoğrafını çek; envanter kitabındaki fotoğraflarla karşılaştırıp hangi eser olduğunu bulmaya çalışırız.', 'Take a photo of the building; we compare it with the photos in the inventory book and try to find which work it is.')}</Text>
-    <View style={{ flexDirection: 'row', gap: space.s }}>
-      <Button style={{ flex: 1 }} icon="camera" label={t('Fotoğraf çek', 'Take a photo')} onPress={() => pick('camera')} busy={busy} />
-      <Button style={{ flex: 1 }} kind="plain" icon="images-outline" label={t('Galeriden', 'From gallery')} onPress={() => pick('library')} disabled={busy} />
-    </View>
+    <ButtonRow>
+      <Button fit icon="camera" label={t('Fotoğraf çek', 'Take a photo')} onPress={() => pick('camera')} busy={busy} />
+      <Button fit kind="plain" icon="images-outline" label={t('Galeriden', 'From gallery')} onPress={() => pick('library')} disabled={busy} />
+    </ButtonRow>
     <Notice icon="lock-closed-outline">{t('Fotoğrafın yalnızca karşılaştırma için gönderilir ve saklanmaz.', 'Your photo is sent only for the comparison and is not stored.')}</Notice>
     {photo && <Image source={photo} style={s.preview} contentFit="cover" accessibilityLabel={t('Çektiğin fotoğraf', 'Your photo')} />}
     {error && <Notice tone="warn" icon="alert-circle-outline">{error}</Notice>}

@@ -14,9 +14,9 @@ Ziyaretçi uygulamasından (`../frontend`) **ayrı** bir uygulamadır ve arka uc
   `src/styles.css`'in başındaki blokta toplanmıştır.
 
 ## Çalıştırma
-Önce arka ucu başlatın (`backend/README.md` §4). Yönetim uçları için anahtarlar tanımlı olmalı:
+Önce arka ucu başlatın (`backend/README.md` §4). Yönetim uçları için anahtarlar kökteki `.env` dosyasında tanımlı
+olmalı (`VAKIF_ADMIN_TOKENS=neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>`; bkz. `../.env.example`):
 ```powershell
-$env:VAKIF_ADMIN_TOKENS = "neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>"
 python -m uvicorn api:app --port 8000
 ```
 Ardından bu klasörde:
@@ -25,7 +25,7 @@ npm install
 npm run dev        # http://127.0.0.1:5174
 ```
 Geliştirme sunucusu `/api` ve `/media` isteklerini `http://127.0.0.1:8000` adresine yönlendirir. Arka uç başka bir
-adresteyse `VAKIF_API_URL` ile verin. Aynı kökenden çalıştığı için CORS ayarı gerekmez.
+adresteyse kökteki `.env`'de `VAKIF_API_PROXY` ile verin (site ve yazar paneliyle ortak). Aynı kökenden çalıştığı için CORS ayarı gerekmez.
 
 | Komut | Ne yapar |
 |---|---|
@@ -77,28 +77,32 @@ Kitap metni değişmez; kararlar paragraf numarasıyla ayrı tutulur ve her an g
 - Her karardan sonra sohbet dizini yenilenir; bildirimde kaç parçanın yenilendiği yazar.
 
 ## Önizleme: "Sitede nasıl görünür?"
-Eser düzenleme sayfasındaki düğmeyle ya da eser listesindeki "Önizle" bağlantısıyla açılır. Panel kabuğu olmadan,
-ziyaretçinin göreceği gibi tam genişlikte gösterilir.
+Eser düzenleme sayfasındaki düğmeyle ya da eser listesindeki "Önizle" bağlantısıyla açılır. Sayfayı **sitenin kendisi**
+çizer: panel, sitenin önizleme sayfasını (`#/onizleme/<slug>`, `frontend/src/vakif/PreviewWork.tsx`) bir çerçevede
+gösterir. Böylece önizleme her zaman sitenin güncel tasarımıdır; ayrı bir kopya tutulmaz. Site, kaydı panelin
+anahtarıyla önizleme ucundan alır: tek adreste (`/yonetim/`) anahtarı aynı sekmeden okur, geliştirmede (5174 → 5173)
+panel anahtarı yalnızca sitenin adresine `postMessage` ile verir. Sitenin adresi `VITE_SITE_URL` (kökteki `.env`;
+derlenmiş sürümde `/`). Önizleme sayfası ziyaret sayılmaz, analitik olayı göndermez.
 - **Aynı veri:** Önizleme ucu (`GET /api/admin/preview/{slug}`), herkese açık liste kartı ve eser sayfasıyla birebir
   aynı veriyi döndürür (arka uçta testle güvence altında). Tek fark, taslak eserlerde de çalışmasıdır.
-- **Görünüm seçenekleri:** Masaüstü ya da mobil; mobil, 390 piksellik gerçek bir çerçevede çizildiği için sayfanın mobil
-  kuralları gerçekten devreye girer. Türkçe ya da İngilizce. "Onay bekleyen fotoğrafları da göster" seçeneği açılınca,
+- **Görünüm seçenekleri:** Masaüstü ya da mobil; mobil, 390 piksellik gerçek bir çerçevede çizildiği için sitenin mobil
+  kuralları gerçekten devreye girer (uygulamanın kendisi değil, sitenin telefondaki hâli). Türkçe ya da İngilizce; dil
+  yalnızca önizlemede değişir, tarayıcıdaki site dili seçimine dokunmaz. "Onay bekleyen fotoğrafları da göster" seçeneği açılınca,
   fotoğraflar onaylanırsa sayfanın nasıl görüneceği gösterilir; bu fotoğraflar "onay bekliyor" etiketi taşır.
 - **Yayın öncesi kontrol:** Kapak fotoğrafı, Türkçe özet ve kaynak metin zorunlu olarak işaretlenir. Sohbet dizini,
   tarih, koordinat, bekleyen fotoğraf ve İngilizce ad/özet isteğe bağlıdır. Eksik varsa "Yayına al" önce uyarır.
-- **Keşfet listesindeki kart:** Kontrol listesinin yanında, eserin listede nasıl görüneceği gösterilir.
+- **Keşfet listesindeki kart:** Kontrol listesinin yanında, sitenin Keşfet sayfasındaki kartı (`gorunum=kart`).
 - **Anlatım:** "Detaylı Anlatım" kitaptaki paragrafların tamamını gösterir; yapay zekâ kullanılmaz.
   "Hikâyeleştirerek" ve "Çocuklar İçin" önceden üretilip kaydedilmiş metinlerdir (`narration` tablosu). Ziyaretçi
-  tıkladığında yeni cevap üretilmez. Önizlemede hazırlanmamış anlatım için "Anlatımı üret", hazır olan için "Yeniden
-  üret" düğmesi çıkar (her basış tek bir Gemini çağrısıdır; taslak eserde de çalışır). Doğrulanamayan yıl ya da ad
+  tıkladığında yeni cevap üretilmez. Kontrol listesinin altındaki "Anlatımlar" bölümünde hazırlanmamış anlatım için
+  "Anlatımı üret", hazır olan için "Yeniden üret" düğmesi çıkar (her basış tek bir Gemini çağrısıdır; taslak eserde de çalışır). Doğrulanamayan yıl ya da ad
   varsa ya da eserin metni anlatımdan sonra değiştiyse kontrol panelinde uyarı görünür. Yazım hatası gibi küçük
   düzeltmeler için "Metni düzenle" metni elle değiştirmeyi sağlar (yapay zekâ çağrılmaz); elle düzeltilmiş anlatımda
   "Yeniden üret" önce onay ister. Anlatım düz metindir (kaynak
   işareti yok); yararlanılan kaynaklar metnin altında kitap ve sayfa olarak listelenir.
 
-`src/public/` klasöründeki `MonumentView` (eser sayfası) ve `MonumentCard` (liste kartı) bileşenleri yalnızca API
-verisine bağlıdır ve ön yüzün görsel dilini (`.story-*`, `.artifact-*`) izler. Birleştirmede ön yüzün API'den beslenen
-eser sayfası olarak doğrudan taşınabilirler. Sohbet bileşene dışarıdan fonksiyon olarak verilir.
+`src/public/` klasöründeki `MonumentCard` görselle arama sayfasının (`#/gorsel-arama`) sonuç kartıdır; önizleme artık
+bu klasördeki bileşenleri kullanmaz.
 
 ## Erişilebilirlik
 - Bütün işlemler klavyeyle yapılabilir. "İçeriğe geç" bağlantısı ve görünür odak halkası vardır.

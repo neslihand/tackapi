@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { Text } from '@/components/Typography';
 import { ProfileInputs, useProfileOptions } from '@/components/ProfileInputs';
-import { Button, Eyebrow, Notice, Title } from '@/components/UI';
+import { Button, ButtonRow, Eyebrow, Notice, Title } from '@/components/UI';
 import { syncLabel, useAccount, type ProfileFields } from '@/lib/account';
 import { setConsent, useConsent } from '@/lib/analytics';
 import { contributionsApi, type MyContribution } from '@/lib/contributions';
@@ -107,10 +107,10 @@ export default function Account() {
       <Text style={s.body}>{t('E-postan, profilin, sunucudaki pasaportun, katkıların ve yazıların silinir. Bu geri alınamaz.', 'Your email, profile, the passport on the server, your contributions and articles are deleted. This cannot be undone.')}</Text>
       {confirm ? <>
         <Notice tone="warn" icon="warning-outline">{t('Emin misin? Hesabın kalıcı olarak silinecek.', 'Are you sure? Your account will be deleted for good.')}</Notice>
-        <View style={{ flexDirection: 'row', gap: space.s }}>
-          <Button style={{ flex: 1 }} kind="plain" label={t('Vazgeç', 'Cancel')} onPress={() => setConfirm(false)} />
-          <Button light style={{ flex: 1, backgroundColor: colors.danger, borderColor: colors.danger }} icon="trash-outline" label={t('Evet, sil', 'Yes, delete')} busy={busy} onPress={() => run(account.remove)} />
-        </View>
+        <ButtonRow>
+          <Button fit kind="plain" label={t('Vazgeç', 'Cancel')} onPress={() => setConfirm(false)} />
+          <Button fit light style={{ backgroundColor: colors.danger, borderColor: colors.danger }} icon="trash-outline" label={t('Evet, sil', 'Yes, delete')} busy={busy} onPress={() => run(account.remove)} />
+        </ButtonRow>
       </> : <Button kind="plain" icon="trash-outline" label={t('Hesabımı sil', 'Delete my account')} onPress={() => setConfirm(true)} />}
     </View>
   </ScrollView>;

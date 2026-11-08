@@ -12,10 +12,11 @@ Kurallar:
 - Panelde değiştirilen fotoğraf 'edited' işaretlenir; load_images.py onu bir daha değiştirmez.
 - Eserle ilgili her değişiklik o eserin sohbet önbelleğini temizler.
 """
-import os, re, io, json, hmac, hashlib, logging
+import os, re, io, json, hmac, hashlib, logging, threading, time
+from collections import defaultdict
 from datetime import date, timedelta
 from typing import Literal
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, UploadFile, File, Form, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, UploadFile, File, Form, Response
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 import gemini_client as G
 from db import vec_literal, VEC_CAST
@@ -35,12 +36,23 @@ UPLOAD_TYPES = {'JPEG', 'PNG', 'WEBP'}
 UPLOAD_PIXELS = 50_000_000  # küçük dosyalı dev görsel (görsel bombası) açılmadan reddedilir
 
 
+EASY = ('123456', '654321', 'qwerty', 'password', 'sifre', 'şifre', 'admin', 'yonetici', 'yönetici')
+
+
+def guessable(name, token):
+    low = token.lower()
+    return name.strip().lower() in low or any(x in low for x in EASY) or len(set(low)) < 8
+
+
 def load_tokens(warn=False):
     out = {}
     for pair in filter(None, (p.strip() for p in os.environ.get('VAKIF_ADMIN_TOKENS', '').split(','))):
         name, _, token = pair.partition(':')
         if name and len(token) >= 16:
             out[token] = name.strip()
+            if warn and guessable(name, token):
+                print(f"UYARI: '{name.strip()}' yönetici anahtarı tahmin edilebilir (adı ya da kolay bir dizi içeriyor); "
+                      f"rastgele bir anahtar önerilir: python -c \"import secrets; print(secrets.token_urlsafe(24))\"", flush=True)
         elif warn:
             print(f"UYARI: '{name}' yönetici anahtarı yok sayıldı: anahtar en az 16 karakter olmalı "
                   f"(üretmek için: python -c \"import secrets; print(secrets.token_urlsafe(24))\")", flush=True)
@@ -49,14 +61,47 @@ def load_tokens(warn=False):
     return out
 
 
-def admin_user(authorization: str | None = Header(None)):
+# Anahtar tahmini: bir adresten GUESS_WINDOW içinde GUESS_N farklı yanlış anahtar denenince o adres, en eski deneme
+# pencereden çıkana kadar doğru anahtarla da giremez. Aynı eski anahtarı tekrar tekrar gönderen sekme (anahtar
+# değişmiş, panel açık kalmış) tek deneme sayılır; yönetici kendini kilitlemez.
+GUESS_N, GUESS_WINDOW = 20, 15 * 60
+_guesses: dict[str, dict[str, float]] = defaultdict(dict)   # adres → {yanlış anahtarın özeti: son denenme}
+_guess_lock = threading.Lock()
+
+
+def _guess_check(ip, now):
+    with _guess_lock:
+        seen = _guesses.get(ip)
+        if not seen:
+            return
+        for key in [k for k, at in seen.items() if now - at > GUESS_WINDOW]:
+            del seen[key]
+        if len(seen) >= GUESS_N:
+            retry = int(GUESS_WINDOW - (now - min(seen.values()))) + 1
+            raise HTTPException(429, 'Çok fazla yanlış anahtar denendi. Birkaç dakika sonra yeniden deneyin.',
+                                headers={'Retry-After': str(retry)})
+
+
+def _guess_note(ip, given, now):
+    with _guess_lock:
+        _guesses[ip][hashlib.sha256(given.encode()).hexdigest()[:16]] = now
+        if len(_guesses) > 10_000:   # eski adresleri unut
+            for k in [k for k, v in _guesses.items() if all(now - at > GUESS_WINDOW for at in v.values())]:
+                del _guesses[k]
+
+
+def admin_user(request: Request, authorization: str | None = Header(None)):
     tokens = load_tokens()
     if not tokens:
         raise HTTPException(503, 'Yönetim paneli kapalı: VAKIF_ADMIN_TOKENS tanımlı değil.')
+    ip, now = request.client.host if request.client else '-', time.monotonic()
+    _guess_check(ip, now)
     given = (authorization or '').removeprefix('Bearer ').strip()
     for token, name in tokens.items():
         if given and hmac.compare_digest(given.encode(), token.encode()):
             return name
+    if given:
+        _guess_note(ip, given, now)
     raise HTTPException(401, 'Geçersiz ya da eksik yönetici anahtarı.', headers={'WWW-Authenticate': 'Bearer'})
 
 
