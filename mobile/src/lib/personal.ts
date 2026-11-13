@@ -26,7 +26,7 @@ function fits(item: Item, interest: string) {
   return interest === 'decoration' ? Boolean(item.has_artworks) : interest === 'stories' ? Boolean(item.has_story) : interest === 'kids' ? Boolean(item.has_child) : false;
 }
 
-/** What Günün Eşiği looks for, the closest fit first: the visitor's city and interests together, then the city, then the interests. */
+/** What Günün Kapısı looks for, the closest fit first: the visitor's city and interests together, then the city, then the interests. */
 export function preferenceTiers(prefs: Preferences): ((item: Item) => boolean)[] {
   if (!prefs.on) return [];
   const inCity = (item: Item) => prefs.homeCity === item.city.slug;
@@ -122,7 +122,7 @@ export function homeOrder(prefs: Preferences): HomeBlock[] {
 }
 
 export type HomeCardKey = 'lead' | 'continue' | 'ask' | 'weekly' | 'agenda' | 'hunt' | 'recall' | 'consent' | 'forYou' | 'travel' | 'nearby' | 'season' | 'popular' | 'reading';
-// the blocks above as Bugün's cards; Günün Eşiği is always in the night band at the top, so `today` has none here
+// the blocks above as Bugün's cards; Günün Kapısı is always in the night band at the top, so `today` has none here
 const HOME_CARDS: Record<HomeBlock, HomeCardKey[]> = {
   lead: ['lead'], ask: ['ask'], weekly: ['weekly'], agenda: ['agenda'], today: [], status: ['hunt', 'recall', 'consent'],
   forYou: ['forYou'], routes: ['travel', 'nearby', 'season'], popular: ['popular'], reading: ['reading'],

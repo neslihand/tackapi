@@ -190,7 +190,7 @@ export function DetectiveGame({ onComplete, requestedLevel }: { onComplete: () =
     <p className="mg-intro">{t('Dosyadaki eser hangisi? İpuçlarını sırayla aç, hazır olduğunda tahminini yap. Yanlış bir tahmin oyunu bitirmez; ne kadar az ipucu ve tahminle çözersen o kadar çok yıldız kazanırsın.', 'Which work is in the file? Open the clues one by one and make your guess when you are ready. A wrong guess does not end the game; the fewer clues and guesses you need, the more stars you earn.')}</p>
     {!round ? <p className="mg-intro" role="status">{t('Bu seviyede ipucu çıkarılabilecek bir eser yok. Daha kolay bir seviye seçebilirsin.', 'No work has enough clues for this level. You can choose an easier level.')}</p> : <div className="mg-dossier">
       <div className="mg-file">
-        <p className="mg-file-head"><span>{t('EŞİK • GİZLİ DOSYA', 'EŞİK • SECRET FILE')}</span><span>{t(`${revealed} / ${round.clues.length} ipucu açık`, `${revealed} / ${round.clues.length} clues open`)}</span></p>
+        <p className="mg-file-head"><span>{t('TAÇKAPI • GİZLİ DOSYA', 'TAÇKAPI • SECRET FILE')}</span><span>{t(`${revealed} / ${round.clues.length} ipucu açık`, `${revealed} / ${round.clues.length} clues open`)}</span></p>
         <ol className="mg-clues">{round.clues.map((clue, i) => i < revealed
           ? <li key={i} className="open" ref={el => { clues.current[i] = el; }} tabIndex={-1}><span>{t('İPUCU', 'CLUE')} {i + 1} · {clue.label}</span><p>{clue.text}</p></li>
           : <li key={i} className="locked"><LockKeyhole size={16} aria-hidden="true" /><span>{t('İPUCU', 'CLUE')} {i + 1} · {t('Kilitli', 'Locked')}</span></li>)}

@@ -24,8 +24,8 @@ async function collect(response: () => Response | Promise<Response>, signal = ne
 }
 
 test('Sohbet geçmişi eser ve koleksiyon başına ayrı anahtarda tutulur', () => {
-  assert.equal(chatStorageKey('suleymaniye', false), 'esik:chat:v1:suleymaniye');
-  assert.equal(chatStorageKey('suleymaniye', true), 'esik:chat:feed:v1:suleymaniye');
+  assert.equal(chatStorageKey('suleymaniye', false), 'tackapi:chat:v1:suleymaniye');
+  assert.equal(chatStorageKey('suleymaniye', true), 'tackapi:chat:feed:v1:suleymaniye');
   assert.notEqual(chatStorageKey('suleymaniye', false), chatStorageKey('selimiye', false));
 });
 

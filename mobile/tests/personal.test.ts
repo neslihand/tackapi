@@ -101,7 +101,7 @@ test('İlk kart vaat ettiğini verebilen eseri seçer', () => {
   assert.equal(leadWork(items, empty, noPreferences, items[0]), undefined);                       // tanınmayan kişiye yok
   assert.equal(leadWork(items, empty, withPrefs({ intent: 'listen' }), items[0])!.item.slug, 'c-medrese');
   assert.equal(leadWork(items, empty, withPrefs({ on: false, intent: 'listen' }), items[0]), undefined);
-  // aynı eser iki kez gösterilmez: Keşfet ilk kartın ve Günün Eşiği'nin eserini listeden çıkarır
+  // aynı eser iki kez gösterilmez: Keşfet ilk kartın ve Günün Kapısı'nın eserini listeden çıkarır
   assert.deepEqual(names(suggestFor(items, empty, withPrefs({ homeCity: 'konya' }), 4, ['c-medrese', undefined])), ['d-turbe']);
 });
 
@@ -127,7 +127,7 @@ test('Hesaptaki şehir ve amaç', () => {
   assert.equal(intentFromProfile([], []), null);
 });
 
-test('Günün Eşiği önce kişinin şehrinden gelir, yeterince eser yoksa bütün koleksiyondan', () => {
+test('Günün Kapısı önce kişinin şehrinden gelir, yeterince eser yoksa bütün koleksiyondan', () => {
   const day = new Date('2026-11-02T10:00:00');
   const many = [...items, work('f', 'Konya', 'bath'), work('g', 'Bursa', 'bath')];
   const inKonya = preferenceTiers(withPrefs({ homeCity: 'konya' }));

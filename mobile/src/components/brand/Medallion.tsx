@@ -41,7 +41,7 @@ export function Medallion({ metal, earned, symbol, size = 96 }: { metal: CoinMet
       <Circle cx="50" cy="50" r="43" fill="none" stroke={tone.dark} strokeWidth="1.6" strokeDasharray="0.1 3" strokeLinecap="round" />
       <Circle cx="50" cy="50" r="38" fill={`url(#f${id})`} stroke={tone.dark} strokeWidth="0.8" />
       <SvgText fill={tone.dark} fontSize="6.4" fontFamily={fonts.sansSemi} letterSpacing="1.1">
-        <TextPath href={`#a${id}`} startOffset="50%" textAnchor="middle">{t('EŞİK · ANADOLU MİRASI', 'EŞİK · ANATOLIAN HERITAGE')}</TextPath>
+        <TextPath href={`#a${id}`} startOffset="50%" textAnchor="middle">{t('TAÇKAPI · ANADOLU MİRASI', 'TAÇKAPI · ANATOLIAN HERITAGE')}</TextPath>
       </SvgText>
     </Svg>
     <View style={StyleSheet.absoluteFill}>

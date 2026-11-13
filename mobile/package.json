@@ -1,5 +1,5 @@
 {
-  "name": "esik-mobil",
+  "name": "tackapi-mobil",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
@@ -52,5 +52,5 @@
     "test": "node --experimental-strip-types --no-warnings --import ./tests/register.mjs --test tests/*.test.ts"
   },
   "private": true,
-  "description": "EŞİK — Tarihe Açılan Kapı, mobil uygulama"
+  "description": "TAÇKAPI — Tarihe Açılan Kapı, mobil uygulama"
 }

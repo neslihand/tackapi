@@ -1,5 +1,5 @@
 // Which medallions the visitor has already been told about, so a newly earned one is celebrated once (and offered for
-// sharing) and never again. The list is kept apart from the passport (MedalCelebration, esik:medals-seen:v1): the
+// sharing) and never again. The list is kept apart from the passport (MedalCelebration, tackapi:medals-seen:v1): the
 // backend's clean_progress would drop an unknown field.
 
 /** The earned medallions not yet celebrated, in the order given, and the list to keep. The very first time (nothing

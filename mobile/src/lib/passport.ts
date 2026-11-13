@@ -1,4 +1,4 @@
-// The heritage passport. The shape is the site's Progress (frontend/src/lib/progress.ts, key esik:passport:v1), so
+// The heritage passport. The shape is the site's Progress (frontend/src/lib/progress.ts, key tackapi:passport:v1), so
 // an account can later merge both; the phone adds two fields the site does not have:
 //   visits: works stamped on the spot (the phone was near the work), {slug: {date, approximate}}
 //   days:   the local days (YYYY-MM-DD) with at least one discovery, for the discovery streak
@@ -31,7 +31,7 @@ export type Progress = {
   read: Record<string, string>;
   hunt: Record<string, HuntState>;
 };
-export const STORAGE_KEY = 'esik:passport:v1';
+export const STORAGE_KEY = 'tackapi:passport:v1';
 export const emptyProgress = (): Progress => ({ version: 1, discovered: {}, favorites: [], quiz: { completed: 0, best: 0 },
   games: { puzzle: {}, detective: {} }, answered: [], visits: {}, days: [], notebook: {}, recall: {}, read: {}, hunt: {} });
 
@@ -255,7 +255,7 @@ export function medals(p: Progress, items: { slug: string; city: { slug: string 
     { id: 'detective', name: t('Dosya Çözücü', 'File Solver'), description: t('Üç farklı eserin gizli dosyasını çöz.', 'Crack the secret files of three different works.'), required: 3, value: Object.keys(p.games.detective).length, metal: 'silver' },
     { id: 'sharp', name: t('Keskin Göz', 'Sharp Eye'), description: t('Zor seviyede bir yapbozu ve bir dosyayı tamamla.', 'Complete a puzzle and a file at the hard level.'), required: 2, value: hardOne(p.games.puzzle) + hardOne(p.games.detective), metal: 'gold' },
     { id: 'witness', name: t('Yerinde Tanık', 'On-the-Spot Witness'), description: t('Bir eserin önünde durup yerinde mühür bas.', 'Stand in front of a work and take its on-the-spot stamp.'), required: 1, value: visits, metal: 'bronze', mobile: true },
-    { id: 'pilgrim', name: t('Eşik Gezgini', 'Threshold Walker'), description: t('Beş eseri yerinde ziyaret et.', 'Visit five works on the spot.'), required: 5, value: visits, metal: 'gold', mobile: true },
+    { id: 'pilgrim', name: t('Kapı Gezgini', 'Gate Walker'), description: t('Beş eseri yerinde ziyaret et.', 'Visit five works on the spot.'), required: 5, value: visits, metal: 'gold', mobile: true },
     { id: 'companion', name: t('Yol Arkadaşı', 'Travel Companion'), description: t('Yedi gün art arda en az bir eser keşfet.', 'Discover at least one work seven days in a row.'), required: 7, value: best, metal: 'silver', mobile: true },
   ];
 }

@@ -1,4 +1,4 @@
-# EŞİK Mobil — Önce / Sonra
+# TAÇKAPI Mobil — Önce / Sonra
 
 7 Kasım sprintinin ekran karşılaştırması.
 
@@ -25,11 +25,11 @@
 
 | Ekran | Sonra | Ne |
 |---|---|---|
-| Bugün (üst) | <img src="sonra/10-bugun-ust.png" width="180"> | Yeni ana sayfa: selam ve seri, Günün Eşiği (dinle / aç), Detay Avı; kaydırmadan üç eylem. |
+| Bugün (üst) | <img src="sonra/10-bugun-ust.png" width="180"> | Yeni ana sayfa: selam ve seri, Günün Kapısı (dinle / aç), Detay Avı; kaydırmadan üç eylem. |
 | Bugün (alt) | <img src="sonra/10b-bugun-alt.png" width="180"> | Yakınında, Keşif Sezonu rotası, Okuma Odası ve sözlük kısayolları. |
 | Karşılama 1 | <img src="sonra/11-karsilama-1.png" width="180"> | Değer önerisi tek cümlede; atlanabilir. |
 | Karşılama 2 | <img src="sonra/11-karsilama-2.png" width="180"> | "Nasıl keşfetmek istersin?" seçimi; anlatımı ve Bugün'ün sırasını belirler. |
-| Karşılama 3 | <img src="sonra/11-karsilama-3.png" width="180"> | Günün Eşiği hazır; doğrudan açılır. |
+| Karşılama 3 | <img src="sonra/11-karsilama-3.png" width="180"> | Günün Kapısı hazır; doğrudan açılır. |
 | Detay Avı | <img src="sonra/12-detay-avi.png" width="180"> | Günlük yakın çekim bulmacası; dört şık, her yanlışta görüntü açılır. |
 | Hatırla (boş) | <img src="sonra/13-hatirla-bos.png" width="180"> | Keşif yokken ne yapılacağını söyleyen boş durum. |
 | Rota yürüyüşü | <img src="sonra/14-rota.png" width="180"> | Çevrimdışı paket, sıradaki durak kartı, sıradaki durak listede yazıyla da belirtiliyor. |
@@ -42,7 +42,7 @@ P2–P10a görevlerinde alınan ayrıntılı durum görüntüleri (boş, çevrim
 | Adım | Görüntüler |
 |---|---|
 | 1. İlk açılış → Hikâye dinle → Bugün | [karşılama 1](sonra/11-karsilama-1.png), [2](sonra/11-karsilama-2.png), [3](sonra/11-karsilama-3.png), [Bugün](sonra/demo-1-bugun.png) |
-| 2. Günün Eşiği → dinle → eser → Çocuk | [dinle](sonra/demo-2a-dinle.png), [Günün Eşiği eseri](sonra/demo-2b-gunun-esigi-eser.png), [Çocuk anlatımı](sonra/demo-2c-eser-cocuk.png) |
+| 2. Günün Kapısı → dinle → eser → Çocuk | [dinle](sonra/demo-2a-dinle.png), [Günün Kapısı eseri](sonra/demo-2b-gunun-esigi-eser.png), [Çocuk anlatımı](sonra/demo-2c-eser-cocuk.png) |
 | 3. Demo konumu → Yerinde mühürle | [Sunum](sonra/15-ayarlar-sunum.png), [mühürden önce](sonra/demo-3a-yerinde-muhurle.png), [altın mühür](sonra/demo-3b-altin-muhur.png), [paylaşım kartı](sonra/demo-3c-paylasim-karti.png) |
 | 4. Detay Avı, iki tahminde | [başlangıç](sonra/demo-4a-detay-avi.png), [bir yanlış](sonra/demo-4b-bir-yanlis.png), [buldun](sonra/demo-4c-buldun.png), [adsız paylaşım](sonra/demo-4d-paylasim.png) |
 | 5. Hatırla, 3 kart | [Bugün kartı](sonra/demo-5a-bugun-hatirla.png), [kart](sonra/demo-5b-hatirla-kart.png), [cevap](sonra/demo-5c-hatirla-cevap.png), [özet](sonra/demo-5d-hatirla-ozet.png) |

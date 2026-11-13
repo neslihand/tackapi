@@ -87,7 +87,7 @@ export const writingApi = {
 };
 
 // the unsent article is kept on the device while it is written
-const DRAFT_KEY = 'esik:article-draft:v1';
+const DRAFT_KEY = 'tackapi:article-draft:v1';
 export async function readDraft(): Promise<Draft | null> {
   try { const raw = await AsyncStorage.getItem(DRAFT_KEY); return raw ? { ...EMPTY_DRAFT, ...JSON.parse(raw) } : null; } catch { return null; }
 }

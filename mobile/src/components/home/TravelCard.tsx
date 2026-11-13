@@ -18,7 +18,7 @@ import { colors, hit, serif, space, type } from '@/lib/theme';
 import { cityHere, cityRoutes, travelHidden, trSuffix, type TravelDismissed } from '@/lib/travel';
 import { home } from './styles';
 
-const KEY = 'esik:travel:v1';
+const KEY = 'tackapi:travel:v1';
 
 export function TravelCard() {
   const { items, seasons } = useContent();

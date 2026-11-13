@@ -159,7 +159,7 @@ export function App() {
       segmentation: s.segmentation_pending ?? 0, contributions: s.contributions_pending ?? 0, agent: s.agent_open ?? 0,
       articles: s.articles_pending ?? 0, terms: s.terms_pending ?? 0, questions: s.questions_pending ?? 0, author: s.author_submitted ?? 0 })).catch(() => {});
   }, [user, path]);
-  useEffect(() => { document.title = 'EŞİK — Yönetim Paneli'; }, []);
+  useEffect(() => { document.title = 'TAÇKAPI — Yönetim Paneli'; }, []);
   if (checking) return <div className="login" role="status"><p style={{ color: '#f4efe5' }}>Oturum denetleniyor…</p></div>;
   // Önizleme panel kabuğu olmadan, ziyaretçinin göreceği gibi tam genişlikte açılır
   const preview = path.startsWith('/onizleme/');

@@ -422,7 +422,7 @@ CREATE TABLE quiz_question (
 );
 CREATE INDEX quiz_question_monument ON quiz_question (monument_id);
 
--- Ziyaretçi hesapları, katkılar ve davranış olayları ("Veriyle Gelişen Döngü", docs/kullanici-ve-analitik-plani.md).
+-- Ziyaretçi hesapları, katkılar ve davranış olayları ("Veriyle Gelişen Döngü", docs/backend/kullanici-ve-analitik-plani.md).
 -- Kişisel veri en azdır: ad-soyad ve doğum tarihi yok; profil bilgileri isteğe bağlıdır. IP saklanmaz.
 
 -- Hesap: e-posta + şifre (scrypt özeti). Hesap silinince kişisel alanlar boşaltılır, deleted_at dolar.

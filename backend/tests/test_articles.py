@@ -207,7 +207,7 @@ class ArticlesApiTest(unittest.TestCase):
         self.assertEqual((en['lang'], en['title'], en['summary'], en['city']['name'], en['kind_label']),
                          ('en', 'Waqf Architecture in Konya', 'In English.', 'Konya', 'Foundation works'))
         tr_only = self.c.get(f"/api/articles/{a['slug']}", params={'lang': 'en'}).json()
-        self.assertEqual((tr_only['lang'], tr_only['title'], tr_only['byline']), ('tr', 'Bursa’nın Kuruluşu', 'EŞİK editors'))
+        self.assertEqual((tr_only['lang'], tr_only['title'], tr_only['byline']), ('tr', 'Bursa’nın Kuruluşu', 'TAÇKAPI editors'))
         related = [x['slug'] for x in self.c.get(f"/api/articles/{a['slug']}").json()['related']]
         self.assertEqual(sorted(related), sorted([b['slug'], c['slug']]))
 

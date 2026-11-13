@@ -4,7 +4,7 @@ import { normalize } from './progress.ts';
 import { t } from './i18n.ts';
 
 // Local admin edits live in the browser only. Each key replaces the matching base list as a whole.
-export const CONTENT_KEY = 'esik:content:v1';
+export const CONTENT_KEY = 'tackapi:content:v1';
 export const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 export type Content = { artifacts: Artifact[]; quizQuestions: QuizQuestion[]; seasons: Season[] };
 export type ContentOverrides = Partial<Content>;

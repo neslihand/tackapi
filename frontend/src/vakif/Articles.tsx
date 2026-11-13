@@ -107,7 +107,7 @@ export function ArticlePage({ slug }: { slug: string }) {
     if (!enabled) return;
     let alive = true;
     setA(null); setError('');
-    articlesApi.get(slug).then(r => { if (!alive) return; setA(r); document.title = `${r.title} — EŞİK`; track('article_view', undefined, { article: slug, kind: r.kind }); },
+    articlesApi.get(slug).then(r => { if (!alive) return; setA(r); document.title = `${r.title} — TAÇKAPI`; track('article_view', undefined, { article: slug, kind: r.kind }); },
       e => alive && setError((e as Error).message));
     loadGlossary().then(list => alive && setTerms(list));
     return () => { alive = false; };

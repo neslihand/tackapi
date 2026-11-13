@@ -1,7 +1,7 @@
-# EŞİK Mobil
+# TAÇKAPI Mobil
 
-EŞİK — Tarihe Açılan Kapı'nın React Native (Expo SDK 58, Expo Router) uygulaması. Web sitesiyle aynı arka ucu
-(`../backend/pipeline/api.py`) kullanır. Özellik planı ve aşamalar: [docs/mobil-plan.md](docs/mobil-plan.md).
+TAÇKAPI — Tarihe Açılan Kapı'nın React Native (Expo SDK 58, Expo Router) uygulaması. Web sitesiyle aynı arka ucu
+(`../backend/pipeline/api.py`) kullanır. Özellik planı ve aşamalar: [docs/mobil-plan.md](mobil-plan.md).
 
 ## Kurulum
 
@@ -56,7 +56,7 @@ Modüller panelden kapatılabilir (`#/analitik`, `lib/flags.ts`). Yeni göçlerd
 
 ## Paylaşım bağlantısı
 
-"Bu eseri paylaş" bağlantısı `<sunucu>/eser/<slug>` olur; adres Ayarlar'daki sunucudan ya da `EXPO_PUBLIC_API_URL`'den gelir. Demoda yerel ağ adresi olduğundan bağlantı yalnızca aynı ağdan açılır. `esik://` geçişi geliştirme derlemesi ister, Expo Go'da çalışmaz. Universal link için gerekenler: `../audit/current-state.md`.
+"Bu eseri paylaş" bağlantısı `<sunucu>/eser/<slug>` olur; adres Ayarlar'daki sunucudan ya da `EXPO_PUBLIC_API_URL`'den gelir. Demoda yerel ağ adresi olduğundan bağlantı yalnızca aynı ağdan açılır. `tackapi://` geçişi geliştirme derlemesi ister, Expo Go'da çalışmaz. Universal link için gerekenler: `../audit/current-state.md`.
 
 ## Kurulabilir APK (demo için)
 
@@ -97,7 +97,7 @@ npx expo-doctor
 - `src/app/` ekranlar (Expo Router): `(tabs)/` Keşfet, Yakınımda, Kamera, Pasaport; `eser/[slug]` eser;
   `sor/[slug]` Esere Sor; `ayarlar`.
 - `src/lib/api.ts` arka uç istemcisi ve çevrimdışı kopya; `passport.ts` pasaport, seri, madalyonlar;
-  `notify.ts` Günün Eşiği ve seri hatırlatması; `geo.ts` konum; `speech.ts` sesli rehber; `store.tsx` durum.
+  `notify.ts` Günün Kapısı ve seri hatırlatması; `geo.ts` konum; `speech.ts` sesli rehber; `store.tsx` durum.
 
 Not: Proje OneDrive klasöründe olduğu için `node_modules` eşitlenirken Metro bazen "UNKNOWN: unknown error, open"
 hatası verebilir; komutu yeniden çalıştırmak ya da OneDrive'da `mobile/node_modules` için eşitlemeyi duraklatmak çözer.

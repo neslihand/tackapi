@@ -1,4 +1,4 @@
--- Ziyaretçi hesapları, katkılar ve davranış olayları ("Veriyle Gelişen Döngü", docs/kullanici-ve-analitik-plani.md).
+-- Ziyaretçi hesapları, katkılar ve davranış olayları ("Veriyle Gelişen Döngü", docs/backend/kullanici-ve-analitik-plani.md).
 -- Kişisel veri en azdır: ad-soyad ve doğum tarihi yok; profil bilgileri isteğe bağlıdır. IP saklanmaz.
 
 -- Hesap: e-posta + şifre (scrypt özeti). Hesap silinince kişisel alanlar boşaltılır, deleted_at dolar.

@@ -29,7 +29,7 @@ export function PassportCover({ owner }: { owner?: string | null }) {
       <Text style={s.motto}>{t('Merakla başlayan\nbir ömürlük yolculuk.', 'A lifelong journey\nthat starts with curiosity.')}</Text>
       {!!owner && <Text style={s.owner} numberOfLines={1}>{owner}</Text>}
     </View></View>
-    <Text style={s.small}>{upper(t('EŞİK · Dijital keşif günlüğü', 'EŞİK · Digital discovery journal'))}</Text>
+    <Text style={s.small}>{upper(t('TAÇKAPI · Dijital keşif günlüğü', 'TAÇKAPI · Digital discovery journal'))}</Text>
   </View>;
 }
 

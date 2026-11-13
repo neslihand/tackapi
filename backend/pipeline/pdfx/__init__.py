@@ -1,4 +1,4 @@
-"""PDF'ten doğrudan eser çıkarımı (plan: docs/pdf-cikarim-plani.md).
+"""PDF'ten doğrudan eser çıkarımı (plan: docs/backend/pdf-cikarim-plani.md).
 
 Modüller `pipeline` klasöründen çalıştırılır: `python -m pdfx.layout`, `python -m pdfx.toc`,
 `python -m pdfx.cityqueue`, `python -m pdfx.anchor`, `python -m pdfx.text`, `python -m pdfx.gold`,

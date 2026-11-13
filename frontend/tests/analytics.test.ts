@@ -17,7 +17,7 @@ test('İzin verilmeden ziyaretçi kimliği üretilmez; izin geri alınınca kiml
   assert.equal(sessionId(), sid);                         // aynı tarayıcıda aynı kimlik
   setConsent('denied');
   assert.equal(sessionId(), null);
-  assert.equal(store.get('esik:sid:v1'), undefined);
+  assert.equal(store.get('tackapi:sid:v1'), undefined);
   setConsent('granted');
   assert.notEqual(sessionId(), sid);                      // yeniden izin: yeni kimlik
 });

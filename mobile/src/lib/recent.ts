@@ -2,7 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Progress } from './passport';
 
-const KEY = 'esik:recent:v1';
+const KEY = 'tackapi:recent:v1';
 const KEPT = 10;
 
 export const pushRecent = (list: readonly string[], slug: string) => [slug, ...list.filter(s => s !== slug)].slice(0, KEPT);

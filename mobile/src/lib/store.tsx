@@ -144,11 +144,11 @@ export function usePassport() {
 // ------------------------------------------------------------------------------------------------ settings
 // server: the backend address typed in Ayarlar ('' = the built-in one)
 // onboarded: the first screen was answered or skipped; rhythm: daily, weekly or no streak at all;
-// notifyOpenedAt: when a notification was last opened, or Günün Eşiği turned on (notifyPlan.ts counts from there)
+// notifyOpenedAt: when a notification was last opened, or Günün Kapısı turned on (notifyPlan.ts counts from there)
 // homeCity, interests, personalize: "Sana göre" (personal.ts); personalAsked: the offer on Keşfet was answered
 export type { Intent };
 export type Settings = { homeCity: string | null; interests: string[]; personalize: boolean; personalAsked: boolean; dailyWork: boolean; dailyHour: number; streakReminder: boolean; recallReminder: boolean; notifyOpenedAt: number; gameLevel: Partial<Record<GameKind, GameLevel>>; server: string; narration: ReadingMode | null; onboarded: boolean; intent: Intent | null; rhythm: Rhythm };
-const SETTINGS_KEY = 'esik:settings:v1';
+const SETTINGS_KEY = 'tackapi:settings:v1';
 const defaults: Settings = { homeCity: null, interests: [], personalize: true, personalAsked: false, dailyWork: false, dailyHour: 9, streakReminder: false, recallReminder: false, notifyOpenedAt: 0, gameLevel: {}, server: '', narration: null, onboarded: false, intent: null, rhythm: 'daily' };
 const SettingsContext = createContext<{ settings: Settings; ready: boolean; change: (s: Partial<Settings>) => void } | null>(null);
 

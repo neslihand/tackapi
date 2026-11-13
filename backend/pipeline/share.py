@@ -3,7 +3,7 @@
 Site adres çubuğunda # kullandığı için (/#/eser/...) önizleme botları sitenin eser sayfasını göremez; bu sayfa sunucuda
 üretilir. Yalnızca yayındaki eserin herkese açık kaydını gösterir. Betik ve çerez yok, ziyaret kaydedilmez.
 
-Fotoğraf yok: kullanım ve paylaşım hakları kayıtlı değil (audit/permission-matrix.md). og:image, görseli başka sitelere de
+Fotoğraf yok: kullanım ve paylaşım hakları kayıtlı değil (docs/audit/permission-matrix.md). og:image, görseli başka sitelere de
 dağıtacağı için haklar netleşmeden eklenmemeli.
 """
 import re
@@ -56,7 +56,7 @@ def source_line(source):
 
 def _document(lang, title, description, body, url=None):
     meta = [f'<meta property="og:{k}" content="{escape(v)}">' for k, v in
-            (('title', title), ('description', description), ('type', 'article'), ('site_name', 'EŞİK'), ('url', url)) if v]
+            (('title', title), ('description', description), ('type', 'article'), ('site_name', 'TAÇKAPI'), ('url', url)) if v]
     return f"""<!doctype html>
 <html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0f2f26"><title>{escape(title)}</title>
@@ -75,19 +75,19 @@ def page(item, lang, url, site):
     facts = ' · '.join(x for x in (item['kind_label'], built) if x)
     other, other_label = words['other']
     site_link = f'<a class="button" href="/#/eser/{slug}?ref=share">{escape(words["site"])}</a>' if site else ''
-    body = f"""<p class="brand">✦ EŞİK · {escape(words['tagline'])}</p>
+    body = f"""<p class="brand">✦ TAÇKAPI · {escape(words['tagline'])}</p>
 <h1>{escape(item['name'])}</h1>
 <p class="where">{escape(where)}</p>
 <p class="where">{escape(facts)}</p>
 {f'<p class="summary">{escape(summary)}</p>' if summary else ''}
 <p class="source">{escape(words['source'])}: {escape(source_line(item['source']))}</p>
-<div class="actions"><a class="button main" href="esik://eser/{slug}?ref=share">{escape(words['app'])}</a>{site_link}</div>
+<div class="actions"><a class="button main" href="tackapi://eser/{slug}?ref=share">{escape(words['app'])}</a>{site_link}</div>
 <p class="hint">{escape(words['hint'])}</p>
 <a class="lang" href="?lang={other}" lang="{other}">{other_label}</a>"""
-    return _document(lang, f"{item['name']} · EŞİK", first_sentence(summary) or where, body, url)
+    return _document(lang, f"{item['name']} · TAÇKAPI", first_sentence(summary) or where, body, url)
 
 
 def missing(lang, site):
     words = TEXT[lang]
     link = f'<div class="actions"><a class="button" href="/#/kesfet">{escape(words["home"])}</a></div>' if site else ''
-    return _document(lang, 'EŞİK', words['gone'], f'<p class="brand">✦ EŞİK · {escape(words["tagline"])}</p><h1>{escape(words["gone"])}</h1>{link}')
+    return _document(lang, 'TAÇKAPI', words['gone'], f'<p class="brand">✦ TAÇKAPI · {escape(words["tagline"])}</p><h1>{escape(words["gone"])}</h1>{link}')

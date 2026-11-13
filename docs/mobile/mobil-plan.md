@@ -1,18 +1,18 @@
-# EŞİK Mobil — Plan
+# TAÇKAPI Mobil — Plan
 
-EŞİK'in web sitesi eserleri **kaynağa dayanarak** tanıtır, merakı pasaport, madalyon ve oyunlarla sürdürür. Mobil
+TAÇKAPI'nın web sitesi eserleri **kaynağa dayanarak** tanıtır, merakı pasaport, madalyon ve oyunlarla sürdürür. Mobil
 uygulama aynı arka ucu (`backend/pipeline/api.py`) kullanır, yönetim paneli dışındaki web özelliklerini taşır ve
 telefonun sunduğu dört şeyden yararlanır: **konum, bildirim, çevrimdışı kullanım, cihaz üstü ses/kamera.**
 
-Yol gösteren ilke: eşik metaforu. Web'de kapıyı ekrandan açarsın; mobilde kapının **önünde** durursun.
+Yol gösteren ilke: kapı metaforu. Web'de kapıyı ekrandan açarsın; mobilde kapının **önünde** durursun.
 
 ## 1. Mobile özel özellikler
 
 | # | Özellik | Ne yapar | Neden (bağlılık / süreklilik / etkileşim) | Aşama |
 |---|---------|----------|------------------------------------------|-------|
 | A | **Yerinde Mühür** | Eserin yakınındayken (doğrulanmış konumda ~150 m; yaklaşık konumda belirsizlik dairesi + 150 m) pasaporta altın "yerinde" mühür basılır. Dijital mühürden ayrı sayılır. | Web pasaportu "fiziksel ziyareti doğrulamaz". Mobil bu boşluğu kapatır: ekrandaki keşfi gerçek ziyarete bağlar. | 1 ✅ |
-| B | **Yakınımdaki Eşikler** | Konuma göre en yakın eserler, mesafe ve telefonun harita uygulamasıyla yol tarifi. | Başvuruda vaat edilen "Yakınımdakiler". Gezerken uygulamayı açma sebebi. | 1 ✅ |
-| C | **Günün Eşiği** bildirimi | Her sabah (yerel, sunucusuz) bir eser ve kitaptan kısa bir cümle. Dokununca eser açılır. Bir haftalık içerik önceden kurulur, internet gerekmez. | Uygulamaya her gün küçük bir dönüş nedeni. "Bunu biliyor muydun?" vaadinin mobil hali. | 1 ✅ |
+| B | **Yakınımdaki Kapılar** | Konuma göre en yakın eserler, mesafe ve telefonun harita uygulamasıyla yol tarifi. | Başvuruda vaat edilen "Yakınımdakiler". Gezerken uygulamayı açma sebebi. | 1 ✅ |
+| C | **Günün Kapısı** bildirimi | Her sabah (yerel, sunucusuz) bir eser ve kitaptan kısa bir cümle. Dokununca eser açılır. Bir haftalık içerik önceden kurulur, internet gerekmez. | Uygulamaya her gün küçük bir dönüş nedeni. "Bunu biliyor muydun?" vaadinin mobil hali. | 1 ✅ |
 | D | **Keşif Serisi** | Her gün en az bir eser mühürlemek seriyi sürdürür. Seri tehlikedeyse akşam tek, nazik bir hatırlatma (kapatılabilir). 7 günde "Yol Arkadaşı" madalyonu. | Süreklilik. Bildirim yalnızca gerektiğinde gider, rahatsız etmez. | 1 ✅ |
 | E | **Sesli Rehber** | Detaylı anlatım, hikâye ve çocuk anlatımı cihazın sesiyle (TTS, çevrimdışı, ücretsiz) okunur. Gezerken telefona bakmadan dinlenir. | Şartname 5.1.4 (görme engelli erişimi) ve gezi deneyimi. Gemini kotası harcamaz. | 1 ✅ |
 | F | **Çevrimdışı okuma** | Açılan her eser (metin, anlatım, fotoğraf) ve koleksiyon cihazda saklanır; internet yokken son hali gösterilir. | Cami avlusunda, kırsalda çekim zayıf olabilir. | 1 ✅ (otomatik önbellek) · 2 ✅ rota paketi indirme |
@@ -22,7 +22,7 @@ Yol gösteren ilke: eşik metaforu. Web'de kapıyı ekrandan açarsın; mobilde 
 | J | **Mühür kartı paylaşımı** | Kazanılan mühür/madalyon görsel kart olarak sistem paylaşım menüsüyle. | Doğal yayılım. | 2 ✅ |
 | K | **Yakınlık bildirimi** | (İzin verilirse) bir eserin yakınından geçince "Bu kapının ardında bir hikâye var". Arka plan konumu + geofence. | En güçlü "yerinde" an; ama izin ve pil hassas olduğu için sona bırakıldı. | 3 |
 | L | **Gündem / Sezon bildirimi** | Panelde yayımlanan duyurular ve yeni Keşif Sezonları push ile. | Yönetim paneli ile mobil arasında canlı bağ. | 3 |
-| M | **Ana ekran widget'ı** | "Günün Eşiği" ana ekranda. | Uygulamayı açmadan temas. | 3 |
+| M | **Ana ekran widget'ı** | "Günün Kapısı" ana ekranda. | Uygulamayı açmadan temas. | 3 |
 
 Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarında kullanılır.
 
@@ -62,8 +62,8 @@ Dokunsal geri bildirim (mühür basılınca titreşim) bütün mühür anlarınd
   push ve widget için aşama 3'te geliştirme derlemesi (`eas build --profile development`) gerekir.
 - `src/lib/api.ts` arka uç istemcisi; her başarılı yanıt `AsyncStorage`'a yazılır, ağ yoksa son hali döner.
   Fotoğrafları `expo-image` disk önbelleği tutar.
-- `src/lib/progress.tsx` pasaport. Biçim web'deki `Progress` ile aynı (`esik:passport:v1`) + `visits`, `days`.
-- `src/lib/notify.ts` yerel bildirimler (Günün Eşiği, seri hatırlatması). Sunucu gerekmez.
+- `src/lib/progress.tsx` pasaport. Biçim web'deki `Progress` ile aynı (`tackapi:passport:v1`) + `visits`, `days`.
+- `src/lib/notify.ts` yerel bildirimler (Günün Kapısı, seri hatırlatması). Sunucu gerekmez.
 - Kaynak kuralı mobilde de geçerli: yapay zekâ cevaplarında kaynak listesi, düşük güvenli kamera sonucunda tek
   eser söylenmez, yaklaşık konum "yaklaşık" diye yazılır.
 

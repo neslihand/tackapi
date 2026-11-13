@@ -16,7 +16,7 @@ part türleri:
   parcel_list   – Hatay'daki bölüm sonu ada/parsel listeleri (ilçe bilgisi için ayrıştırılır)
 """
 
-# PDF'ten doğrudan çıkarım (pdfx/, plan: docs/pdf-cikarim-plani.md). Fontlar `python -m pdfx.layout --fonts KITAP`
+# PDF'ten doğrudan çıkarım (pdfx/, plan: docs/backend/pdf-cikarim-plani.md). Fontlar `python -m pdfx.layout --fonts KITAP`
 # dökümüyle doğrulandı (2 Kasım 2026). toc_pages: içindekiler sayfaları, 0 tabanlı PDF sayfa dizini (ilk, son).
 # roles: sırayla denenir, ilk uyan kazanır (pdfx/layout.py → span_role). lang: tr | en | weight | detect.
 _BRANDON_ROLES = [

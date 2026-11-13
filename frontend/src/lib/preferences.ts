@@ -7,7 +7,7 @@ export type NarrationMode = typeof narrationModes[number][0];
 /** A narration mode's name in the current language. */
 export const narrationLabel = (mode: NarrationMode) => mode === 'story' ? t('Hikâyeleştirerek', 'As a story') : mode === 'child' ? t('Çocuklar İçin', 'For children') : t('Kısa ve Öz', 'Short and clear');
 
-const KEY = 'esik:narration:v1';
+const KEY = 'tackapi:narration:v1';
 const isMode = (value: unknown): value is NarrationMode => narrationModes.some(([mode]) => mode === value);
 
 export function useNarrationMode(fallback: NarrationMode) {
@@ -22,7 +22,7 @@ export function useNarrationMode(fallback: NarrationMode) {
 }
 
 // The last level chosen in each mini game, e.g. { "puzzle": "orta" }. A level given by a link wins for this visit.
-const LEVEL_KEY = 'esik:games:level:v1';
+const LEVEL_KEY = 'tackapi:games:level:v1';
 function savedLevels(): Record<string, unknown> {
   try { const data = JSON.parse(localStorage.getItem(LEVEL_KEY) ?? '{}'); return typeof data === 'object' && data !== null && !Array.isArray(data) ? data : {}; } catch { return {}; }
 }

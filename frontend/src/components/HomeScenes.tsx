@@ -104,7 +104,7 @@ export function PassportVisual({ artifacts }: { artifacts: DiscoveryArtifact[] }
     });
   });
   return <div className="passport-illustration" ref={ref} aria-hidden="true">
-    <div className="mini-passport"><span>{t('TÜRKİYE KÜLTÜREL MİRASI', 'CULTURAL HERITAGE OF TÜRKİYE')}</span><Compass size={72} strokeWidth={0.8} /><h3>{t('MİRAS', 'HERITAGE')}<br />{t('PASAPORTU', 'PASSPORT')}</h3><span>{t('EŞİK · KEŞİF GÜNLÜĞÜ', 'EŞİK · DISCOVERY JOURNAL')}</span></div>
+    <div className="mini-passport"><span>{t('TÜRKİYE KÜLTÜREL MİRASI', 'CULTURAL HERITAGE OF TÜRKİYE')}</span><Compass size={72} strokeWidth={0.8} /><h3>{t('MİRAS', 'HERITAGE')}<br />{t('PASAPORTU', 'PASSPORT')}</h3><span>{t('TAÇKAPI · KEŞİF GÜNLÜĞÜ', 'TAÇKAPI · DISCOVERY JOURNAL')}</span></div>
     {cityStamps(artifacts).map((artifact, i) => {
       const { x, y, size, depth, turn } = STAMP_SPOTS[i];
       return <div key={artifact.city} className={`float-stamp tone-${i % 3}`} data-depth={depth} data-turn={turn} style={{ left: `${x}%`, top: `${y}%`, width: size, fontSize: Math.round(size * 0.1), rotate: `${turn}deg` } as CSSProperties}>

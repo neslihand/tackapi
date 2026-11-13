@@ -20,6 +20,6 @@ export function huntDate(day: string) {
 /** The line that can be shared: the date and the pattern of tries. Never the work, the city, the options or the answer. */
 export function huntShareText(day: string, attempts: number, solved: boolean, maxAttempts: number) {
   const marks = Array.from({ length: maxAttempts }, (_, i) => i < attempts - (solved ? 1 : 0) ? '○' : solved && i === attempts - 1 ? '●' : '·').join('');
-  const head = `${t('EŞİK Detay Avı', 'EŞİK Detail Hunt')} · ${huntDate(day)}`;
+  const head = `${t('TAÇKAPI Detay Avı', 'TAÇKAPI Detail Hunt')} · ${huntDate(day)}`;
   return `${head}\n${marks}\n${solved ? t(`${attempts}. denemede buldum.`, `Found it on try ${attempts}.`) : t('Bu kez bulamadım.', 'Not this time.')}`;
 }

@@ -93,7 +93,7 @@ export function Play({ section, query = '' }: { section?: PlaySection; query?: s
   return <div className={`play-page playroom ${section ? 'pl-solo' : ''}`}>
     {!section ? <>
     <PlayHero artifacts={artifacts} footer={null}>
-      <p className="pl-kicker">{t('Oyna & Öğren · Eşik Atölyesi', 'Play & Learn · The Eşik Workshop')}</p>
+      <p className="pl-kicker">{t('Oyna & Öğren · Kapı Atölyesi', 'Play & Learn · The Gate Workshop')}</p>
       <h1 id="play-title" className="pl-title"><span className="pl-title-a">{t('Tarihi sadece keşfetme.', 'Do not just discover history.')}</span><em className="pl-title-b">{t('Onunla oyna.', 'Play with it.')}</em></h1>
       <p className="pl-intro">{t('Parçaları birleştir, ipuçlarını takip et, bir soruyla yeni bir kapı aç. Geçmişle kendi hikâyeni kur.', 'Put the pieces together, follow the clues, open a new door with a question. Build your own story with the past.')}</p>
       <div className="pl-actions">

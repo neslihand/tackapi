@@ -21,9 +21,9 @@ function useHandKeyToSite(onCardHeight: (height: number) => void) {
   useEffect(() => {
     const answer = (e: MessageEvent) => {
       if (e.origin !== siteOrigin()) return;
-      if (e.data?.type === 'esik:preview-height' && typeof e.data.height === 'number') onCardHeight(Math.min(900, Math.max(200, e.data.height)));
-      if (e.data?.type !== 'esik:preview-ready') return;
-      (e.source as Window | null)?.postMessage({ type: 'esik:preview-token', token: getToken() }, siteOrigin());
+      if (e.data?.type === 'tackapi:preview-height' && typeof e.data.height === 'number') onCardHeight(Math.min(900, Math.max(200, e.data.height)));
+      if (e.data?.type !== 'tackapi:preview-ready') return;
+      (e.source as Window | null)?.postMessage({ type: 'tackapi:preview-token', token: getToken() }, siteOrigin());
     };
     window.addEventListener('message', answer);
     return () => window.removeEventListener('message', answer);
@@ -42,7 +42,7 @@ export function PreviewPage({ slug, params }: { slug: string; params: URLSearchP
   useHandKeyToSite(setCardHeight);
   const data = useLoad(() => api.preview(slug, lang, drafts), [slug, lang, drafts, version]);
   useEffect(() => { replaceQuery(`/onizleme/${encodeURIComponent(slug)}`, { lang: lang === 'en' ? 'en' : null, drafts: drafts ? 1 : null, cihaz: mobile ? 'mobil' : null }); }, [slug, lang, drafts, mobile]);
-  useEffect(() => { document.title = `Önizleme: ${data.data?.item.name ?? slug} — EŞİK`; }, [data.data, slug]);
+  useEffect(() => { document.title = `Önizleme: ${data.data?.item.name ?? slug} — TAÇKAPI`; }, [data.data, slug]);
   const p = data.data;
   // Hikâye ve çocuk anlatımı bir kez üretilip kaydedilir; ziyaretçi sayfası yalnızca kayıtlı metni gösterir
   async function generate(mode: NarrationMode) {

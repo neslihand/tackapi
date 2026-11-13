@@ -1,15 +1,15 @@
-# EŞİK Mobil — 7 Kasım Sprinti: UX yenileme ve büyüme özellikleri
+# TAÇKAPI Mobil — 7 Kasım Sprinti: UX yenileme ve büyüme özellikleri
 
 Hazırlanma: 1 Kasım 2026 · Final: 7–8 Kasım 2026 · Kaynak: "Büyüme ve Kullanıcı Bağlılığı Stratejisi" dokümanı
 
-**Sunumda anlatılacak hikâye:** "EŞİK bir katalog değil, her gün 2 dakika, hafta sonu bir kapı. Uygulama açılınca ne
+**Sunumda anlatılacak hikâye:** "TAÇKAPI bir katalog değil, her gün 2 dakika, hafta sonu bir kapı. Uygulama açılınca ne
 yapacağını bilirsin; bir eserin önünde durunca o an unutulmaz olur; öğrendiğini unutmazsın."
 
 ## 1. UX teşhisi (bugünkü durum)
 
 | # | Sorun | Nerede | Etki |
 |---|---|---|---|
-| U1 | Ana sayfa bir katalog: Günün Eşiği kartının altında 744 eserlik liste, arama ve şehir çipleri | `(tabs)/index.tsx` | İlk açılışta "ne yapmalıyım?" sorusunun cevabı yok; uygulamanın en güçlü özellikleri (yerinde mühür, rota, oyun) görünmüyor |
+| U1 | Ana sayfa bir katalog: Günün Kapısı kartının altında 744 eserlik liste, arama ve şehir çipleri | `(tabs)/index.tsx` | İlk açılışta "ne yapmalıyım?" sorusunun cevabı yok; uygulamanın en güçlü özellikleri (yerinde mühür, rota, oyun) görünmüyor |
 | U2 | İlk açılış deneyimi yok | `_layout.tsx` | Kullanıcı değer önerisini görmeden listeye düşüyor; izinler bağlamsız |
 | U3 | Eser ekranı uzun bir düğme yığını: mühürle, yerinde mühür, yol tarifi, paylaş, dinle, Esere Sor, fotoğraflar, hatıra, kaynak alt alta | `eser/[slug].tsx` | Ana eylem belli değil; okuma metni düğmelerin arasında kayboluyor |
 | U4 | Kitap metni yoğun; kısa giriş seçeneği yok | eser ekranı | Tarihle bağı zayıf kullanıcı ilk metinde bırakıyor |
@@ -38,7 +38,7 @@ Ayarlar ve hesap Pasaport ekranının sağ üstünde.
 
 ### Bugün (yeni ana sayfa) — yukarıdan aşağı
 1. Üst şerit: selamlama (sabah/öğle/akşam), seri çipi (alev + gün/hafta sayısı), Seyahat modu aktifse "Bursa'dasın".
-2. **Günün Eşiği** büyük görsel kart: eser adı, tek cümle, iki eylem: "30 sn dinle" · "Hikâyeyi aç".
+2. **Günün Kapısı** büyük görsel kart: eser adı, tek cümle, iki eylem: "30 sn dinle" · "Hikâyeyi aç".
 3. **Detay Avı** kartı: bugünün bulmacası (çözülmediyse bulanık yakın çekim + "Tahmin et"; çözüldüyse sonuç ve "Paylaş").
 4. **Hatırla** kartı: "3 kart seni bekliyor" (tekrar zamanı gelen kart yoksa gizli).
 5. **Yakınında**: konum izni varsa en yakın 5 eser yatay kaydırmalı; yoksa "Yakınımdaki eserleri göster" düğmesi
@@ -62,7 +62,7 @@ Kural: Bugün ekranında uzun liste yok. Her kart tek bir eyleme götürür. Bo�
 1. Değer önerisi: "Önünden geçtiğin her tarihî kapının ardındaki gerçek hikâye." (kapı kemeri görseli)
 2. "Nasıl keşfetmek istersin?" Hikâye dinle · Yakınımda gez · Oyna · Çocuğumla · Derinlemesine öğren
    → varsayılan anlatım biçimini ve Bugün ekranındaki kart sırasını belirler.
-3. İlk eşik: Günün Eşiği'ne götürür. İzin istenmez.
+3. İlk kapı: Günün Kapısı'na götürür. İzin istenmez.
 
 ## 3. Bu sprintte eklenecek özellikler
 
@@ -71,7 +71,7 @@ Kural: Bugün ekranında uzun liste yok. Her kart tek bir eyleme götürür. Bo�
 | Ö13 | Esnek seri | Günlük ya da haftalık seri; haftada bir izin günü; mühür, Detay Avı, Hatırla oturumu, ≥%75 okuma/dinleme seriyi sürdürür | Şart |
 | Ö12 | Kademeli madalyonlar | Şehir, eser türü, yerinde ziyaret, seri ve bilgi için Bronz/Gümüş/Altın kademeler; bir sonraki kademeye ilerleme çubuğu | Şart |
 | Ö10 | Anlatım seçici | Eser ekranında Özet/Hikâye/Çocuk/Kitap | Şart |
-| Ö1 | Detay Avı | Günde bir bulmaca: bir eser fotoğrafının yakın çekimi (4× → 2.5× → 1.5× → tam), 4 seçenek, her yanlışta uzaklaşır. Sonuç kartı adı vermeden paylaşılır ("EŞİK Detay Avı #12 · 2/4"). Herkes için aynı gün aynı eser (tarihe göre belirlenimci). Cevaptan sonra eser açılır | Şart |
+| Ö1 | Detay Avı | Günde bir bulmaca: bir eser fotoğrafının yakın çekimi (4× → 2.5× → 1.5× → tam), 4 seçenek, her yanlışta uzaklaşır. Sonuç kartı adı vermeden paylaşılır ("TAÇKAPI Detay Avı #12 · 2/4"). Herkes için aynı gün aynı eser (tarihe göre belirlenimci). Cevaptan sonra eser açılır | Şart |
 | Ö2 | Hatırla kartları | Keşfedilen eserlerden (`quiz.ts generateQuestions`) ve sözlükten terim kartları; aralıklı tekrar 1-3-7-21 gün (Leitner); oturum 3–5 kart | Önemli |
 | — | İlk açılış | Yukarıdaki 3 adım | Önemli |
 | Ö5 | Seyahat modu | Konum izni zaten varsa, en yakın eserin şehri 25 km içindeyse "Bursa'ya hoş geldin" şeridi: o şehrin rotaları + çevrimdışı paket | Önemli |
@@ -109,7 +109,7 @@ kendi kart bileşenini o klasöre ekler.
 
 ## 5. Demo senaryosu (taslak, 4 dakika)
 1. İlk açılış → "Hikâye dinle" seçimi → Bugün ekranı (değer önerisi 10 sn'de anlaşılır).
-2. Günün Eşiği → 30 sn dinle → eser ekranı, anlatım seçicide Çocuk'a geç.
+2. Günün Kapısı → 30 sn dinle → eser ekranı, anlatım seçicide Çocuk'a geç.
 3. Demo konumu açık: "Yerinde mühürle" → titreşim, altın mühür, paylaşım kartı.
 4. Detay Avı: iki tahminde bul → paylaşım kartı ("adı vermeden paylaşılır").
 5. Hatırla: 3 kart → "öğrendiğini unutmazsın".
@@ -120,7 +120,7 @@ kendi kart bileşenini o klasöre ekler.
 - Yeni kullanıcı ilk 60 saniyede bir hikâye açıp mühür basabiliyor.
 - Bugün ekranında kaydırmadan en az 3 farklı eylem görünüyor.
 - Tüm yeni ekranlar TR/EN, ekran okuyucu etiketli, `tsc` hatasız.
-- APK telefonda çevrimdışı açılıyor; Günün Eşiği ve Detay Avı ağ olmadan da son hâliyle görünüyor.
+- APK telefonda çevrimdışı açılıyor; Günün Kapısı ve Detay Avı ağ olmadan da son hâliyle görünüyor.
 
 > P10a yapıldı (2 Kas): gizli demo modu (Ayarlar → sürüm satırına 7 dokunuş → Sunum) ve mühür/doğru cevap mikro anları; P10b (tutarlılık, erişilebilirlik, "sonra" görüntüleri) bekliyor.
 >

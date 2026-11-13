@@ -181,7 +181,7 @@ function Editor({ article: a, cities, onSaved }: { article: Article; cities: { s
             <label key={k} className={f.kind === k ? 'on' : ''}><input type="radio" name="kind" checked={f.kind === k} onChange={() => set('kind', k as ArticleKind)} />{l}</label>)}</div>
           <Field label="Şehir"><select value={f.city} onChange={e => set('city', e.target.value)}><option value="">Şehre bağlı değil</option>
             {cities.map(c => <option key={c.slug} value={c.slug}>{c.name_tr}</option>)}</select></Field>
-          <Field label="Yazarlar" hint="Virgülle ayırın. Boşsa “EŞİK editörleri” (ziyaretçide takma adı)."><input value={f.authors} onChange={e => set('authors', e.target.value)} /></Field>
+          <Field label="Yazarlar" hint="Virgülle ayırın. Boşsa “TAÇKAPI editörleri” (ziyaretçide takma adı)."><input value={f.authors} onChange={e => set('authors', e.target.value)} /></Field>
           <Field label="Adres" hint={`Sitede: #/makale/${f.slug || '…'}`}><input value={f.slug} onChange={e => set('slug', e.target.value)} /></Field>
           <label className="pilot-toggle"><input type="checkbox" checked={f.featured} onChange={e => set('featured', e.target.checked)} /><Star size={14} /> Öne çıkan (listenin başında)</label>
         </section>

@@ -10,7 +10,7 @@
       "category": "Test kategorisi",
       "description": "Bu kayıt yalnızca veri okuma akışını denemek için hazırlanmıştır. Gerçek bir tarihî eser veya doğrulanmış tarihsel bilgi içermez.",
       "sourceReferences": [
-        { "title": "Örnek bağlantı — tarihsel kaynak değildir", "url": "https://example.org/esik-test" }
+        { "title": "Örnek bağlantı — tarihsel kaynak değildir", "url": "https://example.org/tackapi-test" }
       ]
     }
   ]

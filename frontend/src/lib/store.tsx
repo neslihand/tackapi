@@ -93,6 +93,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }}>{children}</Context.Provider>;
 }
 // fired when the visitor stamps a work, for what follows that moment (components/AppPromo.tsx)
-export const STAMPED_EVENT = 'esik:stamped';
+export const STAMPED_EVENT = 'tackapi:stamped';
 
 export function useProgress() { const context = useContext(Context); if (!context) throw new Error('ProgressProvider gerekli.'); return context; }

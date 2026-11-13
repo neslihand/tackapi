@@ -1,10 +1,10 @@
-# CLAUDE.md — EŞİK Mobil (Claude Code için bağlam)
+# CLAUDE.md — TAÇKAPI Mobil (Claude Code için bağlam)
 
 Bu dosyayı her oturumun başında oku. Sonra `AGENTS.md` (Expo kuralları), `docs/sprint-7-kasim.md` (bu haftanın planı)
 ve görevin ilgili olduğu dosyaları oku. Geliştirici Türkçe konuşuyor; açıklamaları Türkçe ve sade yap.
 
 ## Proje
-EŞİK — Tarihe Açılan Kapı. Vakıf eserlerini (Bursa, Konya, Hatay envanter kitaplarından ~744 eser) tanıtan uygulamanın
+TAÇKAPI — Tarihe Açılan Kapı. Vakıf eserlerini (Bursa, Konya, Hatay envanter kitaplarından ~744 eser) tanıtan uygulamanın
 React Native sürümü. Expo SDK 58, Expo Router, TypeScript. Arka uç `../backend/pipeline/api.py` (FastAPI) web sitesiyle ortak.
 Final sunumu **7–8 Kasım 2026**. Bu hafta hedef: UX'i baştan iyileştirmek ve `docs/sprint-7-kasim.md`'deki özellikleri eklemek.
 
@@ -24,7 +24,7 @@ Final sunumu **7–8 Kasım 2026**. Bu hafta hedef: UX'i baştan iyileştirmek v
 7. **Pasaport biçimi:** `Progress` (`src/lib/passport.ts`) hesapla eşitlenir. Arka uç (`backend/pipeline/users.py`
    `clean_progress`) **bilinmeyen alanları siler.** `Progress`'e alan eklersen arka uçta `clean_progress`,
    `merge_progress` ve `backend/tests/test_visitors.py` / ilgili testler de güncellenmeli. Bu hafta tercih: yeni veriyi
-   (Detay Avı, Hatırla kartları, ayarlar) ayrı AsyncStorage anahtarlarında tut (`esik:<ad>:v1`). Seri günü üreten her
+   (Detay Avı, Hatırla kartları, ayarlar) ayrı AsyncStorage anahtarlarında tut (`tackapi:<ad>:v1`). Seri günü üreten her
    anlamlı eylem `progress.days`'e gün ekleyebilir (o alan zaten eşitleniyor).
 8. **Bildirim:** Günde en fazla bir bildirim. İçeriksiz ("seni özledik") bildirim yok. İzinler bağlamında istenir,
    uygulama açılışında değil.
@@ -44,7 +44,7 @@ Final sunumu **7–8 Kasım 2026**. Bu hafta hedef: UX'i baştan iyileştirmek v
 ## Kod düzeni
 - `src/app/(tabs)/` sekmeler; `src/app/eser/[slug].tsx` eser; `sor/` Esere Sor; `rota/` rota yürüyüşü.
 - `src/lib/api.ts` arka uç + çevrimdışı önbellek; `store.tsx` sağlayıcılar (`useContent`, `usePassport`, `useSettings`,
-  `useQuests`); `passport.ts` pasaport, seri, madalyonlar; `daily.ts` Günün Eşiği; `quiz.ts` soru üretimi;
+  `useQuests`); `passport.ts` pasaport, seri, madalyonlar; `daily.ts` Günün Kapısı; `quiz.ts` soru üretimi;
   `notify.ts` yerel bildirimler; `share.ts` paylaşım kartı (react-native-view-shot).
 - Yorumlar İngilizce ve kısa; dosyanın başında bir satırlık amaç yorumu var, koru.
 

@@ -3,7 +3,7 @@
 // current language while it renders: t('Türkçe', 'English'). Text the backend only has in Turkish (routes, quiz,
 // announcements) stays Turkish.
 export type Lang = 'tr' | 'en';
-const KEY = 'esik-lang';
+const KEY = 'tackapi-lang';
 
 function stored(): Lang {
   try { const value = localStorage.getItem(KEY); if (value === 'tr' || value === 'en') return value; } catch { /* storage closed */ }

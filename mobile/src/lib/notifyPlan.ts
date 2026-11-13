@@ -1,7 +1,7 @@
 // Bildirim kuralları (master plan §10.1), the part with no device in it: what goes out on which day. All notifications
 // are local, so the rules are applied while scheduling, on the phone's own clock:
 //   quiet hours 22:00-09:00; at most one notification a calendar day; on a day with more than one, what the visitor
-//   already started (Hatırla, the rhythm) comes before chosen content (Günün Eşiği); three Günün Eşiği left unopened
+//   already started (Hatırla, the rhythm) comes before chosen content (Günün Kapısı); three Günün Kapısı left unopened
 //   slow it down to once a week, which Ayarlar says plainly, and opening one brings the daily rhythm back.
 import { addDays, dayKey } from './passport';
 import { dailyRun, weekOf, type Rhythm } from './rhythm';
@@ -29,7 +29,7 @@ function atHour(day: string, hour: number) {
   return new Date(y, m - 1, d, hour, 0, 0);
 }
 
-/** Günün Eşiği notifications that have come and gone since the last one opened, or since they were turned on. */
+/** Günün Kapısı notifications that have come and gone since the last one opened, or since they were turned on. */
 export function unopenedDaily(since: number, hour: number, now = new Date()) {
   if (!since) return 0;
   let count = 0;

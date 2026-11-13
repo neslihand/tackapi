@@ -1,5 +1,5 @@
 // Bugün: what to do today, one card per action (src/components/home/), never a long list. The collection is in Keşfet.
-// The greeting and Günün Eşiği share a night band at the top; the other cards sit on ivory below it, in the order that
+// The greeting and Günün Kapısı share a night band at the top; the other cards sit on ivory below it, in the order that
 // suits the way the visitor likes to explore (personal.ts homeOrder). Someone we know sees their own card first: it sits
 // in the night band, right under the greeting.
 import { Fragment, useMemo, type ReactNode } from 'react';

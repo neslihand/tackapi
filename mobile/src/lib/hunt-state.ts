@@ -1,4 +1,4 @@
-// Today's Detay Avı as saved on the phone (esik:hunt:v1, apart from the passport). Read again whenever a screen comes
+// Today's Detay Avı as saved on the phone (tackapi:hunt:v1, apart from the passport). Read again whenever a screen comes
 // into focus, so Bugün's card and the puzzle screen show the same guesses.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';

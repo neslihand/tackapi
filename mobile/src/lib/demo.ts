@@ -1,8 +1,8 @@
 // The hidden "Sunum" section of Ayarlar and its demo location: the phone acts as if it stood at a chosen work. Pure
-// functions; the saved state is esik:demo:v1 (demo-state.ts), apart from the passport.
+// functions; the saved state is tackapi:demo:v1 (demo-state.ts), apart from the passport.
 import type { Item } from './api';
 
-export const DEMO_KEY = 'esik:demo:v1';
+export const DEMO_KEY = 'tackapi:demo:v1';
 /** Taps on the version line that open the section. */
 export const TAPS_TO_UNLOCK = 7;
 

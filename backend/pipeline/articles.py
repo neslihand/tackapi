@@ -224,7 +224,7 @@ def byline(r, lang):
         return ', '.join(r['authors'])
     if r['origin'] == 'book':
         return 'Vakıf Katılım inventory book' if en else 'Vakıf Katılım envanter kitabı'
-    return 'EŞİK editors' if en else 'EŞİK editörleri'
+    return 'TAÇKAPI editors' if en else 'TAÇKAPI editörleri'
 
 
 def cover(r, lang):

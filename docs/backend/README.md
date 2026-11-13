@@ -673,7 +673,7 @@ python migrate.py --apply                          # göç 015
 python demo_activity.py --write                    # sunum için deneme ziyaretleri (demo = true; varsayılan 400 ziyaret, 30 gün)
 python demo_activity.py --clear                    # deneme verisini siler; gerçek olaylara dokunmaz
 ```
-- **Hesap** (`users.py`, `visitors.py`): e-posta + şifre (`scrypt`), httpOnly çerez `esik_oturum` (30 gün,
+- **Hesap** (`users.py`, `visitors.py`): e-posta + şifre (`scrypt`), httpOnly çerez `tackapi_oturum` (30 gün,
   SameSite=Lax; veritabanında anahtarın özeti). Kayıt bilgileri (takma ad, yaş aralığı, şehir, amaç, ilgi alanları)
   isteğe bağlı; aydınlatma onayı ve sürümü saklanır. Hesap silinince kişisel alanlar, oturumlar ve katkılar silinir.
 - **Pasaport:** giriş yapınca tarayıcıdaki ilerleme hesaptakiyle birleştirilir (`users.merge_progress`; mühür ve
@@ -922,7 +922,7 @@ yanlış anahtar denenirse o adres bir süre `429` alır (aynı eski anahtarın 
 | GET | `/api/admin/periods` | Dönemler (düzenleme formu için) |
 | GET | `/api/admin/log?target` | Denetim kaydı |
 
-Bu uçları kullanan arayüz `../admin` klasöründeki yönetim panelidir (ayrı bir React + Vite uygulaması; bkz. `admin/README.md`).
+Bu uçları kullanan arayüz `../admin` klasöründeki yönetim panelidir (ayrı bir React + Vite uygulaması; bkz. `docs/admin/README.md`).
 
 Kurallar:
 - **Kitap metni panelden değiştirilemez** (`409`), çünkü doğruluk kaynağıdır. Kitap eserlerinin künye alanları

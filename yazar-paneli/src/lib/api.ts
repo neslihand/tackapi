@@ -1,6 +1,6 @@
 // Yazar paneli API istemcisi (/api/author/*). Oturum anahtarı yalnızca bu sekmede (sessionStorage) tutulur: ortak
 // bilgisayarda sekme kapanınca oturum da biter. Sunucu tarafında oturum 12 saatte kendiliğinden düşer.
-export const SESSION_KEY = 'esik:yazar-oturum';
+export const SESSION_KEY = 'tackapi:yazar-oturum';
 
 export class ApiError extends Error {
   status: number;

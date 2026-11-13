@@ -1,6 +1,6 @@
 // Miras Haritası: Leaflet 1.9.4 (the site's and the panel's version) with OpenStreetMap tiles, in a WebView, so the
 // installed app needs no Google Maps key. The page draws what it is sent and reports taps back:
-//   app → page  window.esik.show({pins, here, fit})   pins: {slug, name, lat, lon, approximate, radius, state}
+//   app → page  window.tackapi.show({pins, here, fit})   pins: {slug, name, lat, lon, approximate, radius, state}
 //   page → app  {type:'ready'} once Leaflet is up, {type:'select', slug} when a pin is tapped
 // An approximate (not yet verified) location is drawn as an uncertainty circle, never as an exact pin.
 // The browser build uses HeritageMap.web.tsx.
@@ -33,7 +33,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, att
 var layer = L.layerGroup().addTo(map), me = L.layerGroup().addTo(map), fitted = false;
 var COLOR = { open: '${colors.emeraldLight}', read: '${colors.emerald}', visit: '${colors.gold}' };
 map.on('click', function () { send({ type: 'select', slug: null }); });
-window.esik = { show: function (d) {
+window.tackapi = { show: function (d) {
   layer.clearLayers(); me.clearLayers();
   var bounds = [];
   d.pins.forEach(function (p) {
@@ -52,7 +52,7 @@ window.esik = { show: function (d) {
 send({ type: 'ready' });
 </script></body></html>`;
 
-const PAGE_URL = 'https://esik.local/';
+const PAGE_URL = 'https://tackapi.local/';
 
 // The map page never navigates: a tapped link (the OpenStreetMap credit) opens in the phone's browser, and no other
 // page can load inside the map and reach the app's message bridge
@@ -77,7 +77,7 @@ export function HeritageMap({ pins, here, selected, onSelect }: MapProps) {
     // a new own location centres the map on it
     const focus = hereKey && hereKey !== last.current.here ? here : null;
     last.current = { pins: key, here: hereKey };
-    web.current?.injectJavaScript(`window.esik && window.esik.show(${JSON.stringify({ pins, here, selected, fit, focus })}); true;`);
+    web.current?.injectJavaScript(`window.tackapi && window.tackapi.show(${JSON.stringify({ pins, here, selected, fit, focus })}); true;`);
   }, [ready, pins, here, selected]);
 
   function message(e: WebViewMessageEvent) {

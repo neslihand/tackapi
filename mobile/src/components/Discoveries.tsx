@@ -91,7 +91,7 @@ export function AskPreferences({ style }: Outer) {
   return <View style={[s.notice, style]}>
     <Eyebrow>✦ {t('SANA GÖRE', 'FOR YOU')}</Eyebrow>
     <Text style={s.noticeTitle} accessibilityRole="header">{t('Keşfet senin gibi olsun mu?', 'Shall Explore be more like you?')}</Text>
-    <Text style={s.noticeBody}>{t('Şehrini ve ilgi alanlarını seçersen öneriler, harita ve Günün Eşiği ona göre gelir. Yalnızca bu telefonda kalır.', 'Choose your city and interests, and suggestions, the map and Today’s Threshold will follow them. It stays on this phone only.')}</Text>
+    <Text style={s.noticeBody}>{t('Şehrini ve ilgi alanlarını seçersen öneriler, harita ve Günün Kapısı ona göre gelir. Yalnızca bu telefonda kalır.', 'Choose your city and interests, and suggestions, the map and Today’s Gate will follow them. It stays on this phone only.')}</Text>
     <View style={{ flexDirection: 'row', gap: space.s }}>
       <Button style={{ flex: 1 }} icon="options-outline" label={t('Seçeyim', 'Choose')} onPress={() => { change({ personalAsked: true }); router.push('/tercihler'); }} />
       <Button style={{ flex: 1 }} kind="plain" label={t('Şimdi değil', 'Not now')} onPress={() => change({ personalAsked: true })} />

@@ -3,8 +3,8 @@
 // gönderilmemiş olaylar silinir. Olaylar biriktirilip birkaç saniyede bir, sayfa kapanırken de toplu gönderilir.
 import { setApiReporter, vakifApiEnabled } from './vakifApi.ts';
 
-const CONSENT_KEY = 'esik:consent:v1';
-const SID_KEY = 'esik:sid:v1';
+const CONSENT_KEY = 'tackapi:consent:v1';
+const SID_KEY = 'tackapi:sid:v1';
 const FLUSH_MS = 4000;
 export type Consent = 'granted' | 'denied';
 type Event = { type: string; slug?: string; path?: string; props?: Record<string, unknown> };

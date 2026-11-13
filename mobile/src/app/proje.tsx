@@ -12,7 +12,7 @@ export default function Project() {
   const { items } = useContent();
   const cities = [...new Set(items.map(i => i.city.name))];
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
-    <Eyebrow>EŞİK · GIRLS & CODES</Eyebrow>
+    <Eyebrow>TAÇKAPI · GIRLS & CODES</Eyebrow>
     <Title>{t('Kaynaklarıyla keşfet.', 'Explore with the sources.')}</Title>
     <Text style={s.p}>{t('Bu koleksiyondaki eserlerin açıklamalarını ve varsa anlatımlarını okuyabilir, kaynaklarını inceleyebilir, dijital keşiflerini pasaportuna ekleyebilirsin. Eserin önündeyken yerinde mühür basabilirsin.', 'You can read the descriptions of the works in this collection and their narrations where there are any, look at their sources and add your digital discoveries to your passport. When you stand in front of a work you can take its on-the-spot stamp.')}</Text>
     {items.length > 0 && <View style={s.stats}>
@@ -33,7 +33,7 @@ export default function Project() {
     <Text style={s.p}>Neslihan Doğan · AI & Mobile Developer{'\n'}Fatmanur Çetintaş · Full Stack & Game Developer</Text>
     <Text style={s.p}>42 Kocaeli · Kök & Kod Hackathon</Text>
     <Text style={s.small}>{t('Vakıf Katılım · Vakıf Eserleri Envanter Projesi kapsamında geliştirilen dijital keşif platformu.', 'A digital discovery platform built within Vakıf Katılım’s Waqf Works Inventory Project.')}</Text>
-    <Text style={s.small}>© {new Date().getFullYear()} EŞİK · Girls & Codes</Text>
+    <Text style={s.small}>© {new Date().getFullYear()} TAÇKAPI · Girls & Codes</Text>
     <Button icon="compass-outline" label={t('Eserleri keşfet', 'Explore the works')} onPress={() => router.navigate('/')} />
   </ScrollView>;
 }

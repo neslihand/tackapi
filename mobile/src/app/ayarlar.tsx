@@ -106,11 +106,11 @@ export default function Settings() {
     {!notificationsSupported && <Notice icon="phone-portrait-outline">{t('Tarayıcı sürümünde bildirim kurulmaz; ayarlar kaydedilir ve telefonda çalışır.', 'The browser version sets up no notifications; the settings are saved and work on the phone.')}</Notice>}
     {refused && <Notice tone="warn" icon="notifications-off-outline">{t('Bildirim izni kapalı, bu yüzden açılmadı. İstersen telefonunun ayarlarından izin verebilirsin; burada tekrar sormayız.', 'Notifications are not allowed, so this stayed off. You can allow them in your phone’s settings; we will not keep asking here.')}</Notice>}
     <Card style={s.stack}>
-      <Line title={t('Günün Eşiği', 'Today’s Threshold')} body={t('Her gün bir eser ve kitabından kısa bir cümle.', 'One work a day with a short line from its book.')}
+      <Line title={t('Günün Kapısı', 'Today’s Gate')} body={t('Her gün bir eser ve kitabından kısa bir cümle.', 'One work a day with a short line from its book.')}
         value={settings.dailyWork} onChange={v => toggle('dailyWork', v)} />
       {settings.dailyWork && <View style={[s.row, { paddingTop: space.xs }]} accessibilityRole="radiogroup" accessibilityLabel={t('Bildirim saati', 'Notification time')}>{HOURS.map(h =>
         <Chip key={h} radio label={`${String(h).padStart(2, '0')}:00`} selected={allowedHour(settings.dailyHour) === h} onPress={() => change({ dailyHour: h })} />)}</View>}
-      {dailySlowed(settings) && <Text style={s.small}>{t('Son üç bildirimi açmadığın için Günün Eşiği şimdilik haftada bir geliyor. Birini açınca yeniden her güne döner.', 'You did not open the last three, so Today’s Threshold comes once a week for now. Opening one brings it back to every day.')}</Text>}
+      {dailySlowed(settings) && <Text style={s.small}>{t('Son üç bildirimi açmadığın için Günün Kapısı şimdilik haftada bir geliyor. Birini açınca yeniden her güne döner.', 'You did not open the last three, so Today’s Gate comes once a week for now. Opening one brings it back to every day.')}</Text>}
       {flags.spaced_repetition && <View style={s.divider} />}
       {flags.spaced_repetition && <Line title={t('Hatırla', 'Recall')} body={t('Okuduğun bir eserden ya da açtığın bir terimden kart hazır olduğunda 18:00’de tek bir not.', 'A single note at 18:00 when a card from a work you read or a term you opened is ready.')}
         value={settings.recallReminder} onChange={v => toggle('recallReminder', v)} />}
@@ -231,7 +231,7 @@ function Presentation({ showWelcome }: { showWelcome: () => void }) {
     </>}
     {done && <Notice tone={done.warn ? 'warn' : 'info'} icon={done.warn ? 'alert-circle-outline' : 'checkmark-circle-outline'}>{done.text}</Notice>}
     <Pressable onPress={tap} accessibilityRole="button" accessibilityLabel={t(`Sürüm ${VERSION}`, `Version ${VERSION}`)} style={s.version}>
-      <Text style={s.small}>{t(`EŞİK · Sürüm ${VERSION}`, `EŞİK · Version ${VERSION}`)}</Text>
+      <Text style={s.small}>{t(`TAÇKAPI · Sürüm ${VERSION}`, `TAÇKAPI · Version ${VERSION}`)}</Text>
     </Pressable>
   </>;
 }

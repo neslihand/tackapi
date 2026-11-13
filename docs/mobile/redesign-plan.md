@@ -1,4 +1,4 @@
-# EŞİK Mobil — Yeniden Giydirme Planı
+# TAÇKAPI Mobil — Yeniden Giydirme Planı
 
 > **2 Kasım güncellemesi — kısa plan geçerli.** Zaman ve bütçe nedeniyle aşağıdaki ayrıntılı Faz 1–4 yerine üç faz
 > uygulanır. Aşağıdaki bölümler başvuru olarak kalır; çelişkide bu kutu geçerlidir.
@@ -78,7 +78,7 @@ Hepsi mevcut teknolojiyle yapılabilir. Sınırlar ve çözümler:
 Öncelik sırası. Her satır: ne değişir → hangi bileşen.
 
 ### 3.1 Tab bar ve header (tüm uygulama)
-- Header: `night.bg`, alt kenarda hairline; başlık `serif`. Bugün'de başlık yerine `Brand` (kemer + EŞİK).
+- Header: `night.bg`, alt kenarda hairline; başlık `serif`. Bugün'de başlık yerine `Brand` (kemer + TAÇKAPI).
   Geri ok ve ayarlar ikonu `night.accent`, etiketli.
 - Tab bar: `night.bg`, üst kenar `night.line`; özel `tabBarIcon` — aktif: altın ikon + altında 4px nokta;
   pasif: `night.muted`. Etiketler `caption`. Sekme adları/ikon seçimleri aynı.
@@ -86,7 +86,7 @@ Hepsi mevcut teknolojiyle yapılabilir. Sınırlar ve çözümler:
 ### 3.2 Bugün
 - **Üst bölüm `Surface night`**: `TodayHeader` → `DisplayTitle size="display" accent={1}` selamlama (son kelime altın
   italik), seri `StatPill` gece tonunda, şehir çipi, alt metin `night.body`.
-- **Günün Eşiği hero** (aynı gece yüzeyinde, tam genişlik): `ArchImage lg` → `Eyebrow mark` "GÜNÜN EŞİĞİ" →
+- **Günün Kapısı hero** (aynı gece yüzeyinde, tam genişlik): `ArchImage lg` → `Eyebrow mark` "GÜNÜN KAPISI" →
   `DisplayTitle size="title"` eser adı → teaser → `GoldButton primary` "Hikâyeyi aç" + `GoldButton ghost`
   "20 sn dinle". (Bugün: dinle gold, aç dark → **sıra ve vurgu değişir, eylemler aynı.** `HeroCard` bu tasarıma döner.)
 - **İkinci plan `Surface ivory`**: Detay Avı ve Hatırla kartları kartsız bölümler olur, aralarında `Hairline`;
@@ -145,7 +145,7 @@ Brand). Çoğu yalnızca ortak bileşenlerin yeni hâlini alır; ekrana özel st
 ## Doğrulama (her faz)
 1. `npx tsc --noEmit` ve `npx expo lint` (lint kurulumu onaylanırsa).
 2. Arka uç + `npm run web`, Playwright ile 390×844; değişen ekranlar TR ve EN → `docs/screenshots/faz-N/`.
-3. `frontend/docs/reference` ile yan yana karşılaştırma; zayıf noktalar listelenip düzeltilir.
+3. `docs/frontend/reference` ile yan yana karşılaştırma; zayıf noktalar listelenip düzeltilir.
 4. Özel durumlar: **görselsiz eser**, **uzun isimli eser** (ör. "Mahmut Çelebi Camii (Yakup Ecezade Mescidi)"),
    **boş liste** (eşleşmeyen arama), yükleniyor, çevrimdışı.
 5. Tek commit (`feat(mobile): ...`), faz raporu.

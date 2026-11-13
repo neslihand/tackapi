@@ -1,4 +1,4 @@
-// Hatırla on the phone: which glossary terms were opened, and when (esik:recall:v1, apart from the passport), and the
+// Hatırla on the phone: which glossary terms were opened, and when (tackapi:recall:v1, apart from the passport), and the
 // day's cards. The schedule itself is in the passport (recall.ts), so it follows the account. Read again whenever a
 // screen comes into focus, so Bugün's card and the review screen count the same cards.
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +12,7 @@ import { loadTerms, type GlossaryTerm } from './reading';
 import { answerCard, DAILY_CARDS, dueCards, dueTermCards, nextRecallDay, nextTermDay, type RecallAnswer } from './recall';
 import { useContent, usePassport } from './store';
 
-export const RECALL_KEY = 'esik:recall:v1';
+export const RECALL_KEY = 'tackapi:recall:v1';
 type Saved = { terms: Record<string, string>; forward: string | null };
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 

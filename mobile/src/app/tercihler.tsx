@@ -51,7 +51,7 @@ export default function Preferences() {
     <Group title={t('Nasıl keşfetmek istersin?', 'How would you like to explore?')} note={t('Keşfet’in ilk kartlarını belirler.', 'Decides the first cards on Explore.')}>
       {INTENTS.map(id => <Choice key={id} label={intentLabel(id)} selected={prefs.intent === id} onPress={() => chooseIntent(id)} />)}
     </Group>
-    <Group title={t('Şehrin', 'Your city')} note={t('Önerilerde, haritada ve Günün Eşiği’nde önce bu şehir gelir.', 'This city comes first in suggestions, on the map and in Today’s Threshold.')}>
+    <Group title={t('Şehrin', 'Your city')} note={t('Önerilerde, haritada ve Günün Kapısı’nda önce bu şehir gelir.', 'This city comes first in suggestions, on the map and in Today’s Gate.')}>
       {cities.map(([slug, name]) => <Choice key={slug} label={name} selected={prefs.homeCity === slug} onPress={() => store({ homeCity: prefs.homeCity === slug ? null : slug })} />)}
     </Group>
     {elsewhere && <Text style={s.small}>{t(`Hesabındaki şehir: ${elsewhere}. Koleksiyonda henüz yok, bu yüzden önerilerde kullanılmıyor.`, `The city on your account: ${elsewhere}. It is not in the collection yet, so it is not used for suggestions.`)}</Text>}

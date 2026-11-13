@@ -1,5 +1,5 @@
 // Local notifications, scheduled on the device (no server, no push token; they work in Expo Go too):
-//   "Günün Eşiği": every morning one work with a sentence from its book summary; a week is set up ahead, so it
+//   "Günün Kapısı": every morning one work with a sentence from its book summary; a week is set up ahead, so it
 //                  arrives without a connection. Tapping it opens the work.
 //   Hatırla: one note on the day a review card opens. Tapping it opens the cards.
 //   rhythm reminder: one gentle evening note, only while a daily rhythm is alive and today has no discovery yet.
@@ -16,7 +16,7 @@ import { PLAN_DAYS, planNotifications, type PlanInput } from './notifyPlan';
 import type { Progress } from './passport';
 import { dailyRun } from './rhythm';
 
-const CHANNEL = 'esik';
+const CHANNEL = 'tackapi';
 const OURS = /^(daily-|recall-|streak)/;
 
 export const notificationsSupported = true;
@@ -26,7 +26,7 @@ export function setupNotifications() {
     handleNotification: async () => ({ shouldPlaySound: false, shouldSetBadge: false, shouldShowBanner: true, shouldShowList: true }),
   });
   if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync(CHANNEL, { name: t('Günün Eşiği ve hatırlatmalar', 'Daily work and reminders'),
+    Notifications.setNotificationChannelAsync(CHANNEL, { name: t('Günün Kapısı ve hatırlatmalar', 'Daily work and reminders'),
       // eslint-disable-next-line import/namespace -- exported through `export *`, which the rule does not follow here
       importance: Notifications.AndroidImportance.DEFAULT }).catch(() => {});
   }
@@ -79,7 +79,7 @@ export async function syncNotifications(input: PlanInput, items: Item[], progres
 
 function dailyContent(item: Item | undefined) {
   if (!item) return null;
-  return { title: t(`Günün Eşiği · ${item.name}`, `Today’s Threshold · ${item.name}`), body: teaser(item), data: { slug: item.slug } };
+  return { title: t(`Günün Kapısı · ${item.name}`, `Today’s Gate · ${item.name}`), body: teaser(item), data: { slug: item.slug } };
 }
 
 function recallContent() {

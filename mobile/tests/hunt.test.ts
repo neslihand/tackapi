@@ -38,8 +38,8 @@ test('Saklanan kayıt geri okunur, bozuğu atılır', () => {
 
 test('T09: paylaşım metni yalnızca tarih ve deneme deseni taşır', () => {
   const text = huntShareText(day, 2, true, 4);
-  assert.equal(text, 'EŞİK Detay Avı · 7 Kasım\n○●··\n2. denemede buldum.');
-  assert.equal(huntShareText(day, 3, false, 3), 'EŞİK Detay Avı · 7 Kasım\n○○○\nBu kez bulamadım.');
+  assert.equal(text, 'TAÇKAPI Detay Avı · 7 Kasım\n○●··\n2. denemede buldum.');
+  assert.equal(huntShareText(day, 3, false, 3), 'TAÇKAPI Detay Avı · 7 Kasım\n○○○\nBu kez bulamadım.');
 });
 
 test('Gün sınırı: tarih cihazın saat diliminden kaymaz', () => {

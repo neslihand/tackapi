@@ -10,7 +10,7 @@ import { createServer } from 'vite';
 
 const chromePath = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 await access(chromePath);
-const output = await mkdtemp(join(tmpdir(), 'esik-ui-audit-'));
+const output = await mkdtemp(join(tmpdir(), 'tackapi-ui-audit-'));
 const profile = join(output, 'chrome-profile');
 await mkdir(profile);
 const axe = await readFile(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
@@ -204,10 +204,10 @@ try {
   checked('Kayıp Parçalar Zor: 5×5 keeps 44 px pieces at 320 px, the board is one tab stop with arrow, Home and End keys, the first Escape drops the selection and the second closes');
 
   // Two other artifacts already solved: the puzzle opened from Selimiye's page is the third and earns Usta Eller.
-  await evaluate(`(() => { const p = JSON.parse(localStorage.getItem('esik:passport:v1')); p.games.puzzle = { haseki: { kolay: 9 }, divrigi: { kolay: 8 } }; localStorage.setItem('esik:passport:v1', JSON.stringify(p)); })()`);
+  await evaluate(`(() => { const p = JSON.parse(localStorage.getItem('tackapi:passport:v1')); p.games.puzzle = { haseki: { kolay: 9 }, divrigi: { kolay: 8 } }; localStorage.setItem('tackapi:passport:v1', JSON.stringify(p)); })()`);
   // The marker tells the reloaded page from the old one, which still has its heading while the reload starts.
-  await evaluate(`window.esikBeforeReload = true`);
-  await send('Page.reload'); await until(`!window.esikBeforeReload && !!document.querySelector('main h1')`);
+  await evaluate(`window.tackapiBeforeReload = true`);
+  await send('Page.reload'); await until(`!window.tackapiBeforeReload && !!document.querySelector('main h1')`);
   await route('/eser/selimiye');
   await keyboardActivate('.story-finish-play a');
   await until(`document.querySelector('dialog.play-modal')?.open && document.querySelectorAll('.mg-tile').length === 25 && document.querySelector('.mg-tile img').getAttribute('src').includes('selimiye')`);
@@ -256,7 +256,7 @@ try {
   assert(await evaluate(`Number(document.querySelector('#quiz-points').textContent.match(/\\d+/)[0]) % 25 === 0`));
   await scan('quiz-result-320', true);
   checked('Quiz: four questions worth 25 points, keyboard-only round, textual feedback, focus follows the round');
-  const stored = await evaluate(`JSON.parse(localStorage.getItem('esik:passport:v1'))`);
+  const stored = await evaluate(`JSON.parse(localStorage.getItem('tackapi:passport:v1'))`);
   assert.equal(stored.quiz.completed, 1);
   assert(await evaluate(`document.querySelectorAll('.play-activities li.done').length === 3 && document.querySelector('.play-notebook-count small').textContent.includes('3 / 4')`));
   checked('Keşif Defteri marks the puzzle, detective and quiz as done for this tab');
@@ -281,9 +281,9 @@ try {
   await until(`document.activeElement.id === 'quests-title' && document.querySelectorAll('.quest-card').length === 3`);
   await scan('quests-320', true);
   // Three of the four steps of the Anatolian route done; the last one is a question about Bursa Yeşil Külliye.
-  await evaluate(`(() => { const p = JSON.parse(localStorage.getItem('esik:passport:v1')); const now = new Date().toISOString(); p.discovered.divrigi = now; p.discovered['yesil-kulliye'] = now; p.games.puzzle.divrigi = { kolay: 9 }; p.answered = []; localStorage.setItem('esik:passport:v1', JSON.stringify(p)); })()`);
-  await evaluate(`window.esikBeforeReload = true`);
-  await send('Page.reload'); await until(`!window.esikBeforeReload && document.querySelectorAll('.quest-card').length === 3`);
+  await evaluate(`(() => { const p = JSON.parse(localStorage.getItem('tackapi:passport:v1')); const now = new Date().toISOString(); p.discovered.divrigi = now; p.discovered['yesil-kulliye'] = now; p.games.puzzle.divrigi = { kolay: 9 }; p.answered = []; localStorage.setItem('tackapi:passport:v1', JSON.stringify(p)); })()`);
+  await evaluate(`window.tackapiBeforeReload = true`);
+  await send('Page.reload'); await until(`!window.tackapiBeforeReload && document.querySelectorAll('.quest-card').length === 3`);
   const anadolu = '[aria-labelledby="quest-anadolunun-tas-isciligi"]';
   assert(await evaluate(`document.querySelector('${anadolu} .quest-progress').textContent.includes('3 / 4') && document.querySelector('${anadolu} .quest-next').getAttribute('href') === '#/oyun/quiz?eser=yesil-kulliye'`));
   await keyboardActivate(`${anadolu} .quest-next`);
@@ -297,7 +297,7 @@ try {
     right = await evaluate(`document.querySelector('#quiz-feedback').textContent.includes('Doğru cevap!')`);
   }
   assert(right, 'No right answer in 40 focused rounds');
-  await until(`document.querySelector('.toast').textContent.includes('Görev tamamlandı') && JSON.parse(localStorage.getItem('esik:passport:v1')).answered.includes('yesil-kulliye')`);
+  await until(`document.querySelector('.toast').textContent.includes('Görev tamamlandı') && JSON.parse(localStorage.getItem('tackapi:passport:v1')).answered.includes('yesil-kulliye')`);
   await route('/oyun/gorevler');
   assert(await evaluate(`document.querySelector('${anadolu}').classList.contains('complete') && document.querySelector('${anadolu} .quest-done').textContent.includes('GÖREV TAMAMLANDI') && !document.querySelector('${anadolu} .quest-next')`));
   await scan('quest-complete-320', true);
@@ -317,7 +317,7 @@ try {
 
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await route('/eser/suleymaniye');
-  await evaluate(`localStorage.removeItem('esik:chat:v1:suleymaniye')`);
+  await evaluate(`localStorage.removeItem('tackapi:chat:v1:suleymaniye')`);
   await keyboardActivate('.story-tools .ask-button');
   await until(`document.querySelector('.chat-panel.open') && document.activeElement.matches('.chat-composer textarea')`);
   assert(await evaluate(`document.querySelector('.story-tools .ask-button').getAttribute('aria-expanded') === 'true' && document.querySelector('.chat-panel').getAttribute('aria-modal') === null && !document.getElementById('root').inert`));
@@ -327,7 +327,7 @@ try {
   assert.equal(chatRequests.at(-1).artifactId, 'suleymaniye');
   assert(chatRequests.at(-1).messages.length === 1 && chatRequests.at(-1).messages[0].role === 'user' && ['short', 'story', 'child'].includes(chatRequests.at(-1).mode));
   assert(await evaluate(`document.querySelectorAll('.chat-message.assistant .chat-chapter').length === 2 && !!document.querySelector('.chat-sources button') && !document.querySelector('.chat-suggestions')`));
-  assert.equal(await evaluate(`JSON.parse(localStorage.getItem('esik:chat:v1:suleymaniye')).length`), 2);
+  assert.equal(await evaluate(`JSON.parse(localStorage.getItem('tackapi:chat:v1:suleymaniye')).length`), 2);
   await scan('chat-answer-1440', true);
   await keyboardActivate('.chat-message.assistant:last-of-type .chat-chapter');
   await until(`Math.abs(document.getElementById('chapter-0').getBoundingClientRect().top + document.getElementById('chapter-0').getBoundingClientRect().height / 2 - innerHeight / 2) < 200`);
@@ -339,8 +339,8 @@ try {
   await until(`!document.querySelector('.chat-panel.open') && document.activeElement.matches('.story-tools .ask-button')`);
   checked('Esere Sor (desktop): opens beside the story by keyboard, a suggestion sends the artifact id, the streamed answer links its chapters and sources, history is saved, Escape returns focus');
 
-  await evaluate(`window.esikBeforeReload = true`);
-  await send('Page.reload'); await until(`!window.esikBeforeReload && !!document.querySelector('.story-tools .ask-button')`);
+  await evaluate(`window.tackapiBeforeReload = true`);
+  await send('Page.reload'); await until(`!window.tackapiBeforeReload && !!document.querySelector('.story-tools .ask-button')`);
   await keyboardActivate('.story-tools .ask-button');
   await until(`document.querySelectorAll('.chat-panel.open .chat-message').length === 3 && document.activeElement.matches('.chat-composer textarea')`);
   checked('Esere Sor: the conversation for this artifact survives a reload');
@@ -350,7 +350,7 @@ try {
   await until(`!document.querySelector('.chat-confirm') && document.activeElement.matches('[aria-label="Sohbeti temizle"]') && !!document.querySelector('.chat-panel.open')`);
   await keyboardActivate('.chat-head-actions button[aria-label="Sohbeti temizle"]');
   await keyboardActivate('.chat-confirm .danger');
-  await until(`document.querySelectorAll('.chat-message').length === 1 && !!document.querySelector('.chat-suggestions') && localStorage.getItem('esik:chat:v1:suleymaniye') === null && document.activeElement.matches('.chat-composer textarea')`);
+  await until(`document.querySelectorAll('.chat-message').length === 1 && !!document.querySelector('.chat-suggestions') && localStorage.getItem('tackapi:chat:v1:suleymaniye') === null && document.activeElement.matches('.chat-composer textarea')`);
   await key('Escape');
   await until(`!document.querySelector('.chat-panel.open')`);
   checked('Esere Sor: clearing asks first, Escape cancels only the question, clearing empties the saved history and returns to the suggestions');

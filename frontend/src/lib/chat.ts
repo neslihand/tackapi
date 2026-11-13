@@ -3,8 +3,8 @@ import { CHAT_LIMITS, parseSources, type ChatTurn } from './chatContract.ts';
 import { t } from './i18n.ts';
 
 // History lives in this browser only, one list per artifact, kept apart for the local demo and an external feed
-// the same way the passport is (esik:passport:v1 / esik:passport:feed:v1).
-export const chatStorageKey = (artifactId: string, feed: boolean) => `esik:chat:${feed ? 'feed:' : ''}v1:${artifactId}`;
+// the same way the passport is (tackapi:passport:v1 / tackapi:passport:feed:v1).
+export const chatStorageKey = (artifactId: string, feed: boolean) => `tackapi:chat:${feed ? 'feed:' : ''}v1:${artifactId}`;
 
 export function parseHistory(raw: string | null, chapters: number): ChatTurn[] {
   if (!raw) return [];

@@ -74,7 +74,7 @@ export function MapPage({ query = '' }: { query?: string }) {
       ...GEO_LABELS.map(label => L.marker(label.at, { interactive: false, keyboard: false,
         icon: L.divIcon({ className: `mp-geo-label ${label.className}`, html: `<span>${label.text}</span>`, iconSize: [0, 0] }) })),
     ]).addTo(map);
-    map.attributionControl.addAttribution(t('EŞİK · Sadeleştirilmiş Türkiye haritası', 'EŞİK · Simplified map of Türkiye'));
+    map.attributionControl.addAttribution(t('TAÇKAPI · Sadeleştirilmiş Türkiye haritası', 'TAÇKAPI · Simplified map of Türkiye'));
     const resize = new ResizeObserver(() => map.invalidateSize()); resize.observe(ref.current);
     // A pinch or Ctrl + wheel zooms the map, not the page; a plain wheel scrolls the page.
     const unpinch = pinchZoom(map, ref.current);

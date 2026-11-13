@@ -1,5 +1,5 @@
 // Aydınlatma metni: the site's notice (frontend/src/vakif/AccountPages.tsx PrivacyPage), with what only the phone does. It
-// says what the code really does; audit/permission-matrix.md keeps the same list. This is not a legal opinion: the text
+// says what the code really does; docs/audit/permission-matrix.md keeps the same list. This is not a legal opinion: the text
 // waits for the institution's legal review (master plan §10.2).
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -21,7 +21,7 @@ export default function Privacy() {
   return <ScrollView contentContainerStyle={{ padding: space.m, gap: space.m, paddingBottom: space.xl }}>
     <Eyebrow>{t('AYDINLATMA METNİ · SÜRÜM 2026-10-28', 'PRIVACY NOTICE · VERSION 2026-10-28')}</Eyebrow>
     <Title>{t('Verilerin ve senin hakların', 'Your data and your rights')}</Title>
-    <Text style={s.p}>{t('EŞİK, vakıf eserlerini tanıtan bir hackathon prototipidir. Verilerin yalnızca bu uygulamanın sunucusunda ve telefonunda tutulur; reklam ya da dış analitik servisi kullanılmaz.', 'EŞİK is a hackathon prototype that introduces foundation (vakıf) works. Your data is kept only on this app’s server and on your phone; no advertising or outside analytics service is used.')}</Text>
+    <Text style={s.p}>{t('TAÇKAPI, vakıf eserlerini tanıtan bir hackathon prototipidir. Verilerin yalnızca bu uygulamanın sunucusunda ve telefonunda tutulur; reklam ya da dış analitik servisi kullanılmaz.', 'TAÇKAPI is a hackathon prototype that introduces foundation (vakıf) works. Your data is kept only on this app’s server and on your phone; no advertising or outside analytics service is used.')}</Text>
 
     <Part title={t('Hesap olmadan', 'Without an account')}>{t('Hesap zorunlu değildir. Pasaportun, Keşif Defterin, Hatıra Defterin ve ayarların yalnızca bu telefonda kalır. Uygulamayı silmek bunları da siler.', 'An account is not required. Your passport, Discovery Notebook, Memory Book and settings stay on this phone only. Deleting the app deletes them too.')}</Part>
     <Part title={t('Hesap açarsan', 'If you open an account')}>{t('E-posta adresin ve şifren (yalnızca geri çözülemeyen bir özeti) hesabın için saklanır; pasaportun cihazların arasında eşitlenir. Takma ad, yaş aralığı, yaşadığın şehir, geliş amacın ve ilgi alanların isteğe bağlıdır; sana eser önermek ve uygulamanın kimlere ulaştığını toplu olarak görmek için kullanılır. Ad-soyad ve doğum tarihi istemeyiz. 13 yaşından küçükler hesap açamaz.', 'Your email address and password (only a hash that cannot be reversed) are kept for your account, and your passport is synced between your devices. Nickname, age range, home city, reason for coming and interests are optional; they are used to suggest works to you and to see, in aggregate, whom the app reaches. We do not ask for your full name or date of birth. Children under 13 cannot open an account.')}</Part>

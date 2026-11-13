@@ -13,7 +13,7 @@ import { kindNames } from './ArticleParts';
 
 type Draft = { kind: ArticleKind; title: string; summary: string; body: string; city: string; monuments: string[]; cover_alt: string };
 const EMPTY: Draft = { kind: 'heritage', title: '', summary: '', body: '', city: '', monuments: [], cover_alt: '' };
-const DRAFT_KEY = 'esik-article-draft';
+const DRAFT_KEY = 'tackapi-article-draft';
 const kindNotes = (): Record<ArticleKind, string> => ({
   city_history: t('Bir şehrin ya da semtin geçmişi, vakıflarla şekillenen hayatı.', 'The past of a city or quarter, its life shaped by foundations.'),
   heritage: t('Bir caminin, hanın, çeşmenin ya da külliyenin hikâyesi.', 'The story of a mosque, han, fountain or complex.'),

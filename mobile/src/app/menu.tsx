@@ -24,7 +24,7 @@ export default function Menu() {
   const { from: here = '/' } = useLocalSearchParams<{ from?: string }>(); // the place the menu was opened from
   const groups: { title: string; rows: Row[] }[] = [
     { title: t('Keşfet', 'Discover'), rows: [
-      { to: '/', label: t('Bugün', 'Today'), note: t('Günün Eşiği ve sana göre öneriler', 'The day’s threshold and picks for you'), icon: 'sunny-outline' },
+      { to: '/', label: t('Bugün', 'Today'), note: t('Günün Kapısı ve sana göre öneriler', 'The day’s gate and picks for you'), icon: 'sunny-outline' },
       { to: '/kesfet', label: t('Eserleri keşfet', 'Explore the works'), note: t('Harita, şehirler ve dönemler', 'Map, cities and eras'), icon: 'compass-outline' },
       { to: '/kamera', label: t('Tara', 'Scan'), note: t('Bir yapının fotoğrafından eseri bul', 'Find the work from a photo of a building'), icon: 'scan-outline' },
       { to: '/okuma', label: t('Okuma Odası', 'Reading Room'), note: t('Makaleler', 'Articles'), icon: 'newspaper-outline' },

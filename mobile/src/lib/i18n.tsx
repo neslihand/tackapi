@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type Lang = 'tr' | 'en';
-const KEY = 'esik:lang:v1';
+const KEY = 'tackapi:lang:v1';
 let lang: Lang = 'tr';
 
 export const currentLang = () => lang;

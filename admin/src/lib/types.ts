@@ -1,4 +1,4 @@
-// Arka uç yönetim API'sinin (backend/pipeline/admin.py) yanıt ve gövde tipleri. Sözleşme: backend/README.md §9.
+// Arka uç yönetim API'sinin (backend/pipeline/admin.py) yanıt ve gövde tipleri. Sözleşme: docs/backend/README.md §9.
 
 export type ReviewStatus = 'draft' | 'reviewed' | 'published';
 // removed: kaldırılmış eser (sitede ve listelerde görünmez, geri getirilebilir)

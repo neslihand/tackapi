@@ -35,7 +35,7 @@ test('Hiçbiri sessiz saate düşmez', () => {
   }
 });
 
-test('Aynı günde öncelik: Hatırla, ritim, Günün Eşiği', () => {
+test('Aynı günde öncelik: Hatırla, ritim, Günün Kapısı', () => {
   assert.equal(planNotifications(allOn, morning)[0].kind, 'recall');
   assert.equal(planNotifications({ ...allOn, recallDue: null }, morning)[0].kind, 'streak');
   assert.equal(planNotifications({ ...allOn, recallDue: null, streak: null }, morning)[0].kind, 'daily');
@@ -47,7 +47,7 @@ test('Bugünün bildirimi gittiyse akşam ikincisi kurulmaz', () => {
   assert.equal(plan[0].day, '2026-11-05');
 });
 
-test('Hatırla bir kez kurulur, sonraki günler Günün Eşiği sürer', () => {
+test('Hatırla bir kez kurulur, sonraki günler Günün Kapısı sürer', () => {
   const plan = planNotifications({ daily: { hour: 9, slowed: false }, streak: null, recallDue: '2026-11-06' }, morning);
   assert.equal(plan.filter(p => p.kind === 'recall').length, 1);
   assert.equal(plan.find(p => p.kind === 'recall')?.day, '2026-11-06');
@@ -80,7 +80,7 @@ test('Açılmayan bildirimler sayılır, sayaç açılışla sıfırlanır', () 
   assert.equal(unopenedDaily(0, 9, noon), 0);
 });
 
-test('Üç açılmayan bildirimden sonra Günün Eşiği haftada bire iner', () => {
+test('Üç açılmayan bildirimden sonra Günün Kapısı haftada bire iner', () => {
   const settings = { dailyWork: true, dailyHour: 9, notifyOpenedAt: new Date(2026, 10, 1, 8).getTime() };
   assert.equal(dailySlowed(settings, new Date(2026, 10, 2, 12)), false);
   assert.equal(dailySlowed(settings, new Date(2026, 10, 3, 12)), true);

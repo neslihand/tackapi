@@ -10,7 +10,7 @@ export type Progress = {
   games: Record<GameKind, GameRecords>;
   answered: string[]; // artifacts with at least one quiz question answered right (a quest step)
 };
-export const STORAGE_KEY = 'esik:passport:v1';
+export const STORAGE_KEY = 'tackapi:passport:v1';
 export const emptyProgress = (): Progress => ({ version: 1, discovered: {}, favorites: [], quiz: { completed: 0, best: 0 }, games: { puzzle: {}, detective: {} }, answered: [] });
 
 function parseRecords(value: unknown, validIds: string[]): GameRecords {

@@ -1,5 +1,5 @@
 // The web site's palette (frontend/src/entrance.css, theme.css): night-green stages, gold light, ivory where reading
-// happens. The token names stay as before; docs/design-system.md maps them to the new surfaces.
+// happens. The token names stay as before; docs/mobile/design-system.md maps them to the new surfaces.
 import { Platform } from 'react-native';
 
 export const colors = {

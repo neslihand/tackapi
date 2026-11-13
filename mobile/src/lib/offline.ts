@@ -1,7 +1,7 @@
 // Çevrimdışı rota paketi: before a trip, a route's works are fetched once (text, tellings, photo list) into the
 // device copy that cachedGet already keeps, and their photos into expo-image's disk cache. Afterwards the route,
 // its works and the quiz open without a connection; the map tiles still need one.
-// What was fetched is noted per route and language (esik:packs:v1), so the route screen can say it is ready. The
+// What was fetched is noted per route and language (tackapi:packs:v1), so the route screen can say it is ready. The
 // server's manifest gives the size before the download and the version: a changed route says so and the old pack
 // keeps working. Pieces are checked on opening because the system may clear the image cache when it needs room.
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,7 +13,7 @@ import { cacheKey, loadMonument, mediaUrl, request, type Item } from './api';
 import { currentLang, useLang } from './i18n';
 import { packStatus, sizeBucket } from './packStatus';
 
-const KEY = 'esik:packs:v1';
+const KEY = 'tackapi:packs:v1';
 export type Pack = { lang: string; date: string; works: number; photos: number; missedPhotos: number; blockedPhotos?: number; slugs: string[];
   title?: string; version?: string; sizeBytes?: number; urls?: string[]; photoCheck?: boolean };
 type Packs = Record<string, Pack>;   // `${routeId}:${lang}` → pack

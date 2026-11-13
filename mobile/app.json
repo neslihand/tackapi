@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "EŞİK",
-    "slug": "esik-mobil",
+    "name": "TAÇKAPI",
+    "slug": "tackapi-mobil",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "tr.girlsandcodes.esik",
+      "bundleIdentifier": "tr.girlsandcodes.tackapi",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Yakınındaki vakıf eserlerini göstermek ve yerinde mühür basmak için konumun kullanılır; konumun cihazından çıkmaz.",
         "NSCameraUsageDescription": "Bir yapının fotoğrafını çekip hangi eser olduğunu bulmak için.",
@@ -23,7 +23,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "tr.girlsandcodes.esik",
+      "package": "tr.girlsandcodes.tackapi",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -72,9 +72,9 @@
       ],
       "expo-sharing"
     ],
-    "scheme": "esik",
+    "scheme": "tackapi",
     "backgroundColor": "#0F2F26",
-    "description": "EŞİK — Tarihe Açılan Kapı: vakıf eserlerini kaynağıyla keşfet, yerinde mühürle.",
+    "description": "TAÇKAPI — Tarihe Açılan Kapı: vakıf eserlerini kaynağıyla keşfet, yerinde mühürle.",
     "extra": {
       "router": {
         "asyncRoutes": {

@@ -1,4 +1,4 @@
-// The Sunum section as saved on the phone (esik:demo:v1, apart from the passport); every change also reaches geo.ts,
+// The Sunum section as saved on the phone (tackapi:demo:v1, apart from the passport); every change also reaches geo.ts,
 // the one place the demo location is used.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';

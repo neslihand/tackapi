@@ -7,7 +7,7 @@ import { t } from './i18n';
 import { dropPhoto, keepPhoto, pickBase64 } from './photos';
 
 export type Memory = { id: string; slug: string; date: string; note: string; photo: string | null; onSpot: boolean };
-const KEY = 'esik:journal:v1';
+const KEY = 'tackapi:journal:v1';
 export const NOTE_MAX = 1000;
 
 const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;

@@ -106,7 +106,7 @@ body:has(.chat-panel.open) .consent-banner { display: none; }
 /* Keşfet sayfasının zemini koyu (sabit arka plan katmanı): başlıklar açık renk */
 .explore-page .v-eyebrow { color: #f4f1eb; }
 
-/* Giriş ve kayıt: iki panelli bir kart. Solda koyu yeşil zeminde hesabın kazandırdıkları ve eşiğin kemeri, sağda form.
+/* Giriş ve kayıt: iki panelli bir kart. Solda koyu yeşil zeminde hesabın kazandırdıkları ve kapının kemeri, sağda form.
    Telefonda form önce gelir. Renkler sitenin gece yeşili, fildişi ve altını. */
 .auth { max-width: 1120px; margin: 0 auto; padding: 128px max(4vw, 16px) 88px; }
 .auth-shell { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); overflow: hidden; border-radius: 28px; background: #fffdf8;

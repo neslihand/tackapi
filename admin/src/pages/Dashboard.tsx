@@ -82,7 +82,7 @@ type Range = 'day' | 'week';
  * ve bekleyen moderasyon işleri. Her dakika kendiliğinden tazelenir.
  */
 export function Dashboard({ user }: { user?: string }) {
-  const [range, setRange] = useState<Range>(() => (sessionStorage.getItem('esik:ov-range') as Range) || 'day');
+  const [range, setRange] = useState<Range>(() => (sessionStorage.getItem('tackapi:ov-range') as Range) || 'day');
   const [demo, setDemo] = useState(true);
   const [tick, setTick] = useState(0);
   const ov = useLoad(() => api.overview(demo), [demo, tick]);
@@ -94,7 +94,7 @@ export function Dashboard({ user }: { user?: string }) {
     const c = setInterval(() => setNow(Date.now()), 15_000);
     return () => { clearInterval(t); clearInterval(c); };
   }, []);
-  useEffect(() => { try { sessionStorage.setItem('esik:ov-range', range); } catch { /* yok */ } }, [range]);
+  useEffect(() => { try { sessionStorage.setItem('tackapi:ov-range', range); } catch { /* yok */ } }, [range]);
   const o = ov.data;
   const s = stats.data;
   const hour = new Date().getHours();

@@ -11,10 +11,10 @@ import { ApiError, request, setApiReporter } from './api';
 export type Consent = 'granted' | 'denied';
 type Event = { type: string; slug?: string; props: Record<string, unknown> };
 
-const CONSENT_KEY = 'esik:consent:v1';
-const SID_KEY = 'esik:sid:v1';
-const QUEUE_KEY = 'esik:events:v1';
-const FIRST_OPEN_KEY = 'esik:first-open:v1';
+const CONSENT_KEY = 'tackapi:consent:v1';
+const SID_KEY = 'tackapi:sid:v1';
+const QUEUE_KEY = 'tackapi:events:v1';
+const FIRST_OPEN_KEY = 'tackapi:first-open:v1';
 const FLUSH_MS = 4000;
 const RETRY_MS = 30000;
 const BATCH = 50;

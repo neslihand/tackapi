@@ -1,4 +1,4 @@
-# EŞİK Mobil — Erişilebilirlik denetimi (30 Ekim 2026)
+# TAÇKAPI Mobil — Erişilebilirlik denetimi (30 Ekim 2026)
 
 Şartname 5.1.4: erişilebilirlik çalışan üründe. Hedef WCAG 2.2 AA ve Apple/Android yönergeleri.
 
@@ -32,7 +32,7 @@
 | Yazılarım'daki metin bağlantıları küçüktü | Yazılarım | Dokunma payı büyütüldü |
 | Etiketsiz düğmeler: tür, kategori, araç düğmeleri, hatıra silme | Yazı gönder, Terim öner, Hatıra | Ekran okuyucu etiketleri |
 | Süs fotoğrafları ekran okuyucuda gereksiz okunuyordu | kartlar, rota durakları | Boş `alt` (kartın kendisi etiketli) |
-| Günün Eşiği metni "Hz." kısaltmasında kesiliyordu (ekranda ve bildirimde) | Keşfet, bildirim | İlk cümle en az 40 karakter olacak şekilde alınıyor |
+| Günün Kapısı metni "Hz." kısaltmasında kesiliyordu (ekranda ve bildirimde) | Keşfet, bildirim | İlk cümle en az 40 karakter olacak şekilde alınıyor |
 
 Düzeltmelerden sonraki taramada bu sorunların hiçbiri kalmadı.
 

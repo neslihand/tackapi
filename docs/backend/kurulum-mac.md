@@ -98,4 +98,4 @@ Panel için de `admin` klasöründe `npm run dev` çalıştır (5174). Tek adres
 - **Çalıştırma:** `load_db.py`, `extract_gemini.py`, `embed_gemini.py`, `narrations.py`, `ingest.py --remove-book`.
   Bunlar veriyi baştan kurar ya da siler, bazıları da Gemini kotası harcar.
 - **İsteğe bağlı:** paneldeki "PDF sayfa görünümü" kitap PDF'lerini ister (`VAKIF_PDF_DIR`); site için gerekmez.
-- Ayrıntılı mimari ve diğer ortam değişkenleri: `backend/README.md` (§11).
+- Ayrıntılı mimari ve diğer ortam değişkenleri: `docs/backend/README.md` (§11).

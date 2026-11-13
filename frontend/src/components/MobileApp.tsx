@@ -11,23 +11,23 @@ import { useAccount } from '../lib/account';
 import '../mobileapp.css';
 
 // The mobile app (../mobile, Expo): what the phone adds to the site and where to get it, as a chapter of the home page
-// and as its own page (/uygulama). The Android build is an APK from EAS (mobile/README.md); its address comes from
+// and as its own page (/uygulama). The Android build is an APK from EAS (docs/mobile/README.md); its address comes from
 // VITE_MOBILE_APK_URL. Until there is one the section says the app is on its way instead of offering a download.
 export const apkUrl = () => String(import.meta.env?.VITE_MOBILE_APK_URL ?? '').trim();
 
-const title = () => <>{t('Eşik,', 'The threshold,')} <em>{t('cebinde.', 'in your pocket.')}</em></>;
+const title = () => <>{t('Kapı,', 'The gate,')} <em>{t('cebinde.', 'in your pocket.')}</em></>;
 const lede = () => t('Sitede kapıyı ekrandan aralarsın; uygulamayla kapının önünde durursun. Bir eserin yanına gittiğinde pasaportun mühürlenir, hikâyesini yürürken dinlersin.', 'On the site you open the door from a screen; with the app you stand before it. Reach a work and your passport is stamped; listen to its story as you walk.');
 
-// Only what the phone brings and the site cannot: the app's own features (mobile/docs/mobil-plan.md §1). The keys pick
+// Only what the phone brings and the site cannot: the app's own features (docs/mobile/mobil-plan.md §1). The keys pick
 // the few the app's card (AppPromo.tsx) names.
 export type AppFeature = 'stamp' | 'near' | 'route' | 'audio' | 'offline' | 'daily';
 export const features = (): [AppFeature, ReactNode, string, string][] => [
   ['stamp', <Stamp />, t('Yerinde mühür', 'On-site stamp'), t('Bir eserin yaklaşık 150 metre yakınına geldiğinde pasaportuna altın bir “yerinde” mühür basılır.', 'Come within about 150 metres of a work and a gold “on site” stamp is pressed into your passport.')],
-  ['near', <Navigation />, t('Yakınımdaki eşikler', 'Thresholds near me'), t('Sana en yakın eserler, uzaklıkları ve telefonunun haritasıyla yol tarifi.', 'The works nearest you, how far away they are and directions in your phone’s map app.')],
+  ['near', <Navigation />, t('Yakınımdaki kapılar', 'Gates near me'), t('Sana en yakın eserler, uzaklıkları ve telefonunun haritasıyla yol tarifi.', 'The works nearest you, how far away they are and directions in your phone’s map app.')],
   ['route', <Route />, t('Rota yürüyüşü', 'Route walk'), t('Bir keşif sezonunu durak durak yürü; vardığında mühür kendiliğinden basılır.', 'Walk a discovery season stop by stop; the stamp is pressed as you arrive.')],
   ['audio', <Headphones />, t('Sesli rehber', 'Audio guide'), t('Anlatımları telefonun sesi okur; gezerken ekrana bakmadan dinlersin.', 'Your phone reads the narrations aloud, so you can listen as you walk without looking at the screen.')],
   ['offline', <WifiOff />, t('Çevrimdışı okuma', 'Offline reading'), t('Açtığın eserler ve indirdiğin rotalar telefonunda kalır; çekmeyen bir avluda da okursun.', 'The works you open and the routes you download stay on your phone, so you can read in a courtyard with no signal.')],
-  ['daily', <BellRing />, t('Günün eşiği', 'Threshold of the day'), t('Her sabah bir eser ve kitabından kısa bir cümle bildirim olarak gelir.', 'Every morning a work and a short line from its book arrive as a notification.')],
+  ['daily', <BellRing />, t('Günün kapısı', 'Gate of the day'), t('Her sabah bir eser ve kitabından kısa bir cümle bildirim olarak gelir.', 'Every morning a work and a short line from its book arrive as a notification.')],
 ];
 
 // the app's five tabs (mobile/src/app/(tabs)/_layout.tsx), the first one open, and the reading modes of its work screen
@@ -42,10 +42,10 @@ function Phone({ work }: { work?: { name: string; city: string; image: string; d
   const seen = useInView(ref, { once: true, amount: 0.5 });
   const still = Boolean(useReducedMotion());
   const pressed = { opacity: 1, scale: 1, rotate: -12 };
-  return <div ref={ref} className="ma-phone" role="img" aria-label={t('EŞİK uygulamasında bir eser: fotoğrafında yerinde mühür, altında sesli rehber.', 'A work in the EŞİK app: an on-site stamp on its photo and the audio guide beneath it.')}>
+  return <div ref={ref} className="ma-phone" role="img" aria-label={t('TAÇKAPI uygulamasında bir eser: fotoğrafında yerinde mühür, altında sesli rehber.', 'A work in the TAÇKAPI app: an on-site stamp on its photo and the audio guide beneath it.')}>
     <div className="ma-screen" aria-hidden="true">
       <div className="ma-status"><span>09:41</span><i /><span className="ma-signal"><b /><b /><b /></span></div>
-      <div className="ma-bar"><svg viewBox="0 0 32 42"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><b>EŞİK</b></div>
+      <div className="ma-bar"><svg viewBox="0 0 32 42"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><b>TAÇKAPI</b></div>
       <div className="ma-work">
         <div className="ma-art">
           {work?.image && <img src={work.image} alt="" loading="lazy" />}

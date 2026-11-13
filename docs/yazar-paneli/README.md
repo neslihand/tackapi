@@ -1,4 +1,4 @@
-# EŞİK — Yazar Paneli
+# TAÇKAPI — Yazar Paneli
 
 Vakıf eserleri envanter kitaplarını yazan akademisyenler (bilim kurulu üyeleri) için çalışma alanı. Yazar bir eseri
 yazmadan önce topladığı notları ve kaynakçayı burada tutar, notlarından "eser hakkında" taslağını yazdırır, düzenler ve

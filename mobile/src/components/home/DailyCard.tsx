@@ -1,4 +1,4 @@
-// Bugün's "Günün Eşiği": today's work (the same one the notification names) as the night band's full-width hero on a
+// Bugün's "Günün Kapısı": today's work (the same one the notification names) as the night band's full-width hero on a
 // framed cover plate; opened, or heard in its short summary.
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
@@ -40,10 +40,10 @@ export function DailyCard() {
   const body = teaser(today);
 
   return <View style={[home.pad, s.wrap]}>
-    <Pressable accessibilityRole="button" accessibilityLabel={`${t('Günün Eşiği', 'Today’s Threshold')}: ${today.name}. ${body}`} onPress={open}
+    <Pressable accessibilityRole="button" accessibilityLabel={`${t('Günün Kapısı', 'Today’s Gate')}: ${today.name}. ${body}`} onPress={open}
       style={({ pressed }) => [s.text, pressed && { opacity: motion.pressOpacity }]}>
       <CoverImage uri={mediaUrl(today.image?.src)} light kind={today.kind} kind_label={today.kind_label} style={s.cover} />
-      <Eyebrow light>✦ {t('GÜNÜN EŞİĞİ', 'TODAY’S THRESHOLD')}</Eyebrow>
+      <Eyebrow light>✦ {t('GÜNÜN KAPISI', 'TODAY’S THRESHOLD')}</Eyebrow>
       <Title light>{today.name}</Title>
       {!!body && <Text style={s.body} numberOfLines={2}>{body}</Text>}
     </Pressable>

@@ -4,7 +4,7 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { t } from './i18n';
 
-export const FILE_NAME = 'esik-miras-pasaportum.json';
+export const FILE_NAME = 'tackapi-miras-pasaportum.json';
 
 export async function savePassportFile(content: string) {
   if (!(await Sharing.isAvailableAsync())) throw new Error(t('Bu cihazda paylaşım kullanılamıyor.', 'Sharing is not available on this device.'));

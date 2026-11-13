@@ -1,4 +1,4 @@
-"""EŞİK mobil simgeleri: web'deki kapı kemeri (frontend/public/favicon.svg, 64 birimlik ızgara) zümrüt zemin üstünde.
+"""TAÇKAPI mobil simgeleri: web'deki kapı kemeri (frontend/public/favicon.svg, 64 birimlik ızgara) zümrüt zemin üstünde.
 4 kat büyük çizip küçültülür (kenar yumuşatma). Gereken: Pillow; yazı tipi Cardo (OFL, frontend/public/fonts) TTF olarak.
 
   python scripts/make_icons.py assets cardo-regular.ttf
@@ -86,7 +86,7 @@ def splash():
     draw_arch(img, h * .46, (w / 2, h * .30), GOLD, stroke=2.2)
     d = ImageDraw.Draw(img)
     word = ImageFont.truetype(FONT, int(h * .14))
-    d.text((w / 2, h * .70), 'EŞİK', font=word, fill=GOLD_SOFT, anchor='mm')
+    d.text((w / 2, h * .70), 'TAÇKAPI', font=word, fill=GOLD_SOFT, anchor='mm')
     small = ImageFont.truetype(FONT, int(h * .045))
     tag = 'TARİHE  AÇILAN  KAPI'
     d.text((w / 2, h * .86), tag, font=small, fill=GOLD, anchor='mm')

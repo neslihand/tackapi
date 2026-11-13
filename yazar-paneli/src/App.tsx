@@ -43,7 +43,7 @@ export function App() {
   const [me, setMe] = useState<Me | null>(null);
   const [checking, setChecking] = useState(Boolean(getToken()));
   useEffect(() => {
-    document.title = 'EŞİK — Yazar Paneli';
+    document.title = 'TAÇKAPI — Yazar Paneli';
     handleUnauthorized(() => setMe(null));
     if (!getToken()) return;
     authorApi.me().then(setMe).catch(() => setToken(null)).finally(() => setChecking(false));

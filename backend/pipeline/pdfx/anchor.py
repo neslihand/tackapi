@@ -18,7 +18,7 @@ Okunabilir ad (`name_tr_display`, `name_en_display`): içindekilerdeki ad karı�
 `name_cased` bayrağı (panelde kontrol edilmeli).
 
 Ters yön: hiçbir kayda çapa olmayan başlıklar `untracked` listesinde, içinde kaldıkları kayıtla birlikte:
-  hazire        'X Camii Haziresi', '… Kabri', '… Mezarı' (CLAUDE.md kural 4: hazire caminin alt eseridir)
+  hazire        'X Camii Haziresi', '… Kabri', '… Mezarı' (docs/ai/backend/CLAUDE.md kural 4: hazire caminin alt eseridir)
   complex_part  külliye ya da külliye üyesi içindeki ara başlık (Mevlâna Külliyesi: Semâhâne, Mescit …)
   work_like     eser türü sözcüğüyle biten başlık (içindekilerde atlanmış eser olabilir)
   author        yazar satırı ('Prof. Dr. …')          subheading   diğer ara başlıklar (yalnızca sayılır)
@@ -366,7 +366,7 @@ def set_ends(recs):
 
 def add_hazires(recs, untracked):
     """Geliştirici kararı (2 Kasım 2026): 'X Camii Haziresi' ara başlığı içinde kaldığı eserin alt eseri olur
-    (CLAUDE.md kural 4). Kayıt içindekilerde yoktur (`origin='heading'`); metni başlığından bir sonraki çapaya kadardır.
+    (docs/ai/backend/CLAUDE.md kural 4). Kayıt içindekilerde yoktur (`origin='heading'`); metni başlığından bir sonraki çapaya kadardır.
     Kabir/mezar başlıkları ('… Kabri') ve diğer ara başlıklar ana eserin metninde kalır."""
     by_inside = collections.defaultdict(list)
     for u in untracked:

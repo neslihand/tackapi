@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="frontend/public/favicon.svg" width="84" alt="EŞİK logosu: iç içe iki kapı kemeri" />
+<img src="frontend/public/favicon.svg" width="84" alt="TAÇKAPI logosu: iç içe iki kapı kemeri" />
 
-# EŞİK — Tarihe Açılan Kapı
+# TAÇKAPI — Tarihe Açılan Kapı
 
 **Vakıf eserlerini kayıttan keşfe taşıyan, dört platformlu bir kültürel miras ekosistemi.**
 
@@ -25,12 +25,12 @@ Vakıf Katılım · Dijital Vakıf Eserleri Envanteri · Kök & Kod Hackathon 20
 
 <br />
 
-![EŞİK sitesinin giriş sahnesi: "Vakıf tarihine açılan kapı."](docs/readme/site-giris.jpg)
+![TAÇKAPI sitesinin giriş sahnesi: "Vakıf tarihine açılan kapı."](docs/readme/site-giris.jpg)
 
 ## Nedir?
 
 Vakıf Katılım'ın şehir envanteri kitapları (Bursa I–III, Konya I–II, Hatay I) yüzyılların mirasını titiz bir bilimsel
-emekle kayda geçirir. EŞİK bu kaydı **yaşayan bir keşif deneyimine** dönüştürür: 730'u aşkın vakıf eseri web'de ve
+emekle kayda geçirir. TAÇKAPI bu kaydı **yaşayan bir keşif deneyimine** dönüştürür: 730'u aşkın vakıf eseri web'de ve
 mobilde keşfedilir, her eserin hikâyesi kitabın kendi sözleriyle anlatılır, merak edilen her şey eserin kendisine sorulur.
 
 Arkada iki panel bu döngüyü besler: bilim kurulu **yazar panelinde** yeni eserlerin metnini kaynaklı notlardan üretir,
@@ -140,15 +140,15 @@ satırı boş bırakın.
 **Docker ile:**
 
 ```bash
-docker run -d --name esik-db \
+docker run -d --name tackapi-db \
   -e POSTGRES_PASSWORD=degistir \
   -p 127.0.0.1:5432:5432 \
-  -v esik-pgdata:/var/lib/postgresql \
+  -v tackapi-pgdata:/var/lib/postgresql \
   pgvector/pgvector:pg18
 
-docker exec esik-db createdb -U postgres vakif
-docker exec esik-db psql -U postgres -d vakif -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
-docker exec -i esik-db pg_restore -U postgres -d vakif --no-owner --no-privileges < vakif.dump
+docker exec tackapi-db createdb -U postgres vakif
+docker exec tackapi-db psql -U postgres -d vakif -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+docker exec -i tackapi-db pg_restore -U postgres -d vakif --no-owner --no-privileges < vakif.dump
 ```
 
 **Postgres.app ile:** PostgreSQL 18 sunucusu açıkken `createdb vakif`, ardından aynı `CREATE EXTENSION` ve
@@ -266,7 +266,7 @@ npx expo start     # telefonda: Expo Go ile QR kodu okutun
   yapılır). İndirme bağlantısı `VITE_MOBILE_APK_URL`'e yazılınca site düzenli dönen ziyaretçiye uygulamayı QR kodu ve
   indirme düğmesiyle önerir.
 
-Ayrıntılar: [`mobile/README.md`](mobile/README.md).
+Ayrıntılar: [`docs/mobile/README.md`](docs/mobile/README.md).
 
 ## Testler
 
@@ -282,7 +282,7 @@ Arka uç testleri Gemini'yi hiç çağırmaz ve adı `_test` ile biten **boş** 
 şemasını silip yeniden kurar; gerçek veritabanınızda çalışmayı reddeder.
 
 ```bash
-docker exec esik-db createdb -U postgres vakif_test     # bir kez
+docker exec tackapi-db createdb -U postgres vakif_test     # bir kez
 cd backend
 VAKIF_TEST_DSN=postgresql://postgres:degistir@127.0.0.1:5432/vakif_test TZ=UTC \
   .venv/bin/python -m unittest discover -s tests
@@ -301,10 +301,16 @@ Toplamda 600'ü aşkın otomatik test var.
 ├── backend/
 │   ├── pipeline/   FastAPI uygulaması, RAG, veri hattı ve bakım betikleri
 │   ├── migrations/ Veritabanı göçleri (migrate.py --apply)
-│   ├── tests/      Arka uç testleri
-│   └── docs/       Kurulum ve tasarım belgeleri
-├── audit/          Envanter, izin matrisi, başlangıç ölçümleri
-├── docs/readme/    Bu belgedeki ekran görüntüleri
+│   └── tests/      Arka uç testleri
+├── docs/           Bütün belgeler (kodun yanında belge yok)
+│   ├── backend/    Arka uç: kurulum, API sözleşmesi, tasarım planları
+│   ├── frontend/   Site belgesi, örnek veri, referans ekranlar
+│   ├── mobile/     Mobil belgeleri, tasarım sistemi, UX ekranları
+│   ├── admin/      Yönetim paneli
+│   ├── yazar-paneli/ Yazar paneli ve tanıtımı
+│   ├── audit/      Envanter, izin matrisi, başlangıç ölçümleri
+│   ├── ai/         Yapay zekâ araçları için dosyalar (CLAUDE.md, AGENTS.md, skill'ler, launch.json)
+│   └── readme/     Bu belgedeki ekran görüntüleri
 ├── .env.example    Bütün ayarlar, açıklamalarıyla
 └── .env.production Derlemelerin tek adres ayarları
 ```
@@ -337,11 +343,11 @@ Toplamda 600'ü aşkın otomatik test var.
 
 ## Daha fazla belge
 
-- [`backend/README.md`](backend/README.md): veri hattı, veritabanı şeması, RAG mimarisi, REST API, bütün ortam değişkenleri
-- [`backend/docs/kurulum-mac.md`](backend/docs/kurulum-mac.md): macOS'ta hazır veritabanıyla adım adım kurulum
-- [`yazar-paneli/TANITIM.md`](yazar-paneli/TANITIM.md): yazar panelinin akışı ve "uydurma yok" güvenceleri
-- [`admin/README.md`](admin/README.md) ve [`mobile/README.md`](mobile/README.md): panel ve mobil ayrıntıları
-- [`audit/`](audit): izin matrisi, içerik envanteri, başlangıç ölçümleri
+- [`docs/backend/README.md`](docs/backend/README.md): veri hattı, veritabanı şeması, RAG mimarisi, REST API, bütün ortam değişkenleri
+- [`docs/backend/kurulum-mac.md`](docs/backend/kurulum-mac.md): macOS'ta hazır veritabanıyla adım adım kurulum
+- [`docs/yazar-paneli/TANITIM.md`](docs/yazar-paneli/TANITIM.md): yazar panelinin akışı ve "uydurma yok" güvenceleri
+- [`docs/admin/README.md`](docs/admin/README.md) ve [`docs/mobile/README.md`](docs/mobile/README.md): panel ve mobil ayrıntıları
+- [`docs/audit/`](docs/audit): izin matrisi, içerik envanteri, başlangıç ölçümleri
 
 ## Ekip
 

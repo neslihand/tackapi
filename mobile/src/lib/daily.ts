@@ -1,4 +1,4 @@
-// "Günün Eşiği": which work belongs to which day, and its one-line teaser. Pure functions, so the Keşfet screen and
+// "Günün Kapısı": which work belongs to which day, and its one-line teaser. Pure functions, so the Keşfet screen and
 // the notifications (notify.ts) pick the same work on every platform.
 import type { Item } from './api';
 import { t } from './i18n';

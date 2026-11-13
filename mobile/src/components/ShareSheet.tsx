@@ -23,7 +23,7 @@ export type Shared =
   | { kind: 'hunt'; number: number; marks: ('right' | 'wrong')[]; solved: boolean; photo: string | null; focus: Focus };
 
 const metalWord = (m: keyof typeof METAL) => m === 'gold' ? t('ALTIN MADALYON KAZANDIM', 'I EARNED A GOLD MEDALLION') : m === 'silver' ? t('GÜMÜŞ MADALYON KAZANDIM', 'I EARNED A SILVER MEDALLION') : t('BRONZ MADALYON KAZANDIM', 'I EARNED A BRONZE MEDALLION');
-const huntTitle = (n: number) => t(`EŞİK Detay Avı #${n}`, `EŞİK Detail Hunt #${n}`);
+const huntTitle = (n: number) => t(`TAÇKAPI Detay Avı #${n}`, `TAÇKAPI Detail Hunt #${n}`);
 
 export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose: () => void }) {
   const card = useRef<ComponentRef<typeof View>>(null);
@@ -49,7 +49,7 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
           <View style={s.frame} />
           <View style={s.top}>
             <Image source={ARCH} alt="" style={s.arch} contentFit="cover" />
-            <Text style={s.kicker}>✦ {t('EŞİK DETAY AVI', 'EŞİK DETAIL HUNT')}</Text>
+            <Text style={s.kicker}>✦ {t('TAÇKAPI DETAY AVI', 'TAÇKAPI DETAIL HUNT')}</Text>
           </View>
           <View style={s.middle}>
             <Text style={s.number}>#{shared.number}</Text>
@@ -57,7 +57,7 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
             <Text style={[s.line, { textAlign: 'center' }]}>{huntScore(shared.solved, shared.marks.length, 'me')}</Text>
             <Text style={[s.date, { textAlign: 'center' }]}>{t('Bugünün ayrıntısını sen de bul.', 'Find today’s detail too.')}</Text>
           </View>
-          <Text style={s.foot}>EŞİK · {t('Tarihe Açılan Kapı', 'A Door to History')}</Text>
+          <Text style={s.foot}>TAÇKAPI · {t('Tarihe Açılan Kapı', 'A Door to History')}</Text>
         </View> : shared && <View ref={card} collapsable={false} style={s.card}>
           {shared.kind === 'stamp' && shared.photo && <Image source={shared.photo} alt="" style={StyleSheet.absoluteFill} contentFit="cover" />}
           <View style={[StyleSheet.absoluteFill, { backgroundColor: shared.kind === 'stamp' && shared.photo ? overlay.shade : colors.emerald }]} />
@@ -80,7 +80,7 @@ export function ShareSheet({ shared, onClose }: { shared: Shared | null; onClose
             <Text style={s.name}>{shared.name}</Text>
             <Text style={[s.line, { textAlign: 'center' }]}>{shared.description}</Text>
           </View>}
-          <Text style={s.foot}>EŞİK · {t('Tarihe Açılan Kapı', 'A Door to History')}</Text>
+          <Text style={s.foot}>TAÇKAPI · {t('Tarihe Açılan Kapı', 'A Door to History')}</Text>
         </View>}
         {error && <Notice tone="warn" icon="alert-circle-outline">{error}</Notice>}
         <Button kind="gold" icon="share-social-outline" label={shareVerb()} onPress={share} busy={busy} style={{ alignSelf: 'stretch' }} />

@@ -7,7 +7,7 @@ import { VakifWork } from './VakifStory';
 import type { PublicDetail, PublicItem } from './model';
 
 type Preview = { item: PublicItem; detail: PublicDetail };
-const TOKEN_KEY = 'esik:admin-token';   // the panel keeps its key under this name (admin/src/lib/api.ts)
+const TOKEN_KEY = 'tackapi:admin-token';   // the panel keeps its key under this name (admin/src/lib/api.ts)
 
 // the panel's address, the only other page allowed to hand over its key (same address in the single-server demo)
 function panelOrigin() {
@@ -41,10 +41,10 @@ export function PreviewWork({ slug, query }: { slug: string; query: string }) {
     if (token) return;
     const allowed = [location.origin, panelOrigin()];
     const take = (e: MessageEvent) => {
-      if (allowed.includes(e.origin) && e.data?.type === 'esik:preview-token' && typeof e.data.token === 'string') setToken(e.data.token);
+      if (allowed.includes(e.origin) && e.data?.type === 'tackapi:preview-token' && typeof e.data.token === 'string') setToken(e.data.token);
     };
     window.addEventListener('message', take);
-    window.parent?.postMessage({ type: 'esik:preview-ready' }, '*');   // carries nothing; the panel answers to this page's address only
+    window.parent?.postMessage({ type: 'tackapi:preview-ready' }, '*');   // carries nothing; the panel answers to this page's address only
     const late = setTimeout(() => setError(t('Önizleme için yönetim panelinden açılmalı.', 'The preview has to be opened from the admin panel.')), 4000);
     return () => { window.removeEventListener('message', take); clearTimeout(late); };
   }, [token]);
@@ -64,7 +64,7 @@ export function PreviewWork({ slug, query }: { slug: string; query: string }) {
   useEffect(() => {
     const el = box.current;
     if (!card || !el || typeof ResizeObserver === 'undefined') return;
-    const tell = () => window.parent?.postMessage({ type: 'esik:preview-height', height: Math.ceil(el.getBoundingClientRect().height) }, '*');
+    const tell = () => window.parent?.postMessage({ type: 'tackapi:preview-height', height: Math.ceil(el.getBoundingClientRect().height) }, '*');
     const watch = new ResizeObserver(tell);
     watch.observe(el); tell();
     return () => watch.disconnect();

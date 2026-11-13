@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 export type PlayActivity = 'puzzle' | 'detective' | 'quiz';
 export type PlaySession = Record<PlayActivity, boolean> & { flipped: string[] };
-const KEY = 'esik:play-session:v1';
+const KEY = 'tackapi:play-session:v1';
 
 function read(): PlaySession {
   try {

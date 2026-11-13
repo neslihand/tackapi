@@ -58,7 +58,7 @@ export default function Passport() {
 
   async function saveFile() {
     setFileError(null);
-    const content = { platform: 'EŞİK — Tarihe Açılan Kapı', exportedAt: new Date().toISOString(), notice: t('Dijital mühürler keşfi, yerinde mühürler eserin önünde basıldığını gösterir.', 'Digital stamps show a discovery; on-the-spot stamps were taken in front of the work.'),
+    const content = { platform: 'TAÇKAPI — Tarihe Açılan Kapı', exportedAt: new Date().toISOString(), notice: t('Dijital mühürler keşfi, yerinde mühürler eserin önünde basıldığını gösterir.', 'Digital stamps show a discovery; on-the-spot stamps were taken in front of the work.'),
       discoveries: found.map(a => ({ name: a.name, city: a.city.name, discoveredAt: progress.discovered[a.slug], onTheSpotAt: progress.visits[a.slug]?.date ?? null })), achievements: earned.map(a => a.name), quiz: progress.quiz };
     try { await savePassportFile(JSON.stringify(content, null, 2)); } catch (e) { setFileError(String((e as Error)?.message ?? e)); }
   }

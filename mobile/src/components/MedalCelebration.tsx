@@ -16,7 +16,7 @@ import { medals, type Medal } from '@/lib/passport';
 import { useContent, usePassport } from '@/lib/store';
 import { colors, fonts, hit, overlay, radius, serif, space, type } from '@/lib/theme';
 
-const KEY = 'esik:medals-seen:v1';
+const KEY = 'tackapi:medals-seen:v1';
 const metalName = (m: Medal['metal']) => m === 'gold' ? t('Altın', 'Gold') : m === 'silver' ? t('Gümüş', 'Silver') : t('Bronz', 'Bronze');
 
 export function MedalCelebration() {

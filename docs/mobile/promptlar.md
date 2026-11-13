@@ -1,4 +1,4 @@
-# EŞİK Mobil — Claude Code prompt'ları (7 Kasım sprinti)
+# TAÇKAPI Mobil — Claude Code prompt'ları (7 Kasım sprinti)
 
 ## Nasıl kullanılır (önce bunu okuyun)
 
@@ -7,16 +7,16 @@ kurallarını anlatmamak, sonucu görmeden "bitti" kabul etmek ve uzayan bir soh
 bunların her birine karşı kuruldu.
 
 1. **Claude Code'u repoda açın**, sohbet penceresinde değil. Repo kökünde (`Kok-Kod-Hackathon`) `claude` komutuyla
-   başlatın. Claude `mobile/CLAUDE.md` dosyasını okuyarak kuralları öğrenir.
+   başlatın. Claude `docs/ai/mobile/CLAUDE.md` dosyasını okuyarak kuralları öğrenir.
 2. **Her prompt yeni bir oturum.** Bir görev bitince `/clear` yazın ya da yeni oturum açın. Aynı sohbette 3 görevi
    art arda yaptırmayın.
 3. **Önce plan.** Her prompt "önce planını yaz, onayımı bekle" der. Planı okuyun; kapsam dışına çıkıyorsa söyleyin.
    (Claude Code'da Shift+Tab ile plan moduna da geçebilirsiniz.)
 4. **Kendi gözünüzle bakın.** Claude ekran görüntüsü alıp kontrol eder; siz de telefonda (Expo Go) açıp deneyin.
-   Beğenmediğinizi somut söyleyin: "Günün Eşiği kartı çok yüksek, ekranın üçte birini geçmesin."
+   Beğenmediğinizi somut söyleyin: "Günün Kapısı kartı çok yüksek, ekranın üçte birini geçmesin."
 5. **Her görevden sonra commit.** Bir şey bozulursa `git restore .` ile son çalışan hâle dönersiniz. Bozuk kodun
    üstüne yeni görev başlatmayın.
-6. **Arka uç açık olsun.** Mobil web önizlemesi veri için arka uca ihtiyaç duyar (komut `mobile/CLAUDE.md`'de).
+6. **Arka uç açık olsun.** Mobil web önizlemesi veri için arka uca ihtiyaç duyar (komut `docs/ai/mobile/CLAUDE.md`'de).
 7. **Model:** En güçlü modeli seçin (`/model`). Ekran tasarımında fark çok belirgin.
 8. Takıldığında: "Dur. Şu an ne denedin, ne çalışmadı, iki seçenek öner" deyin. Aynı hatayı üçüncü kez deniyorsa
    oturumu kapatıp prompt'u daha küçük parçayla yeniden verin.
@@ -29,13 +29,13 @@ Prompt'u olduğu gibi kopyalayın; köşeli parantezleri kendi notlarınızla do
 ## P0 — Hazırlık ve "önce" ekran görüntüleri
 
 ```
-mobile/CLAUDE.md, mobile/AGENTS.md ve mobile/docs/sprint-7-kasim.md dosyalarını oku. Bu hafta bu planı uygulayacağız.
+docs/ai/mobile/CLAUDE.md, docs/ai/mobile/AGENTS.md ve docs/mobile/sprint-7-kasim.md dosyalarını oku. Bu hafta bu planı uygulayacağız.
 
 Görev: Çalışma ortamını doğrula ve uygulamanın bugünkü hâlinin ekran görüntülerini al. Kod değiştirme.
 1. Arka ucun çalışıp çalışmadığını kontrol et (http://localhost:8000/api/monuments ya da benzeri bir uç). Çalışmıyorsa
    bana başlatma komutunu ver, kendin uzun süreli süreç başlatma.
 2. mobile içinde `npx tsc --noEmit` çalıştır, sonucu söyle.
-3. `npm run web` ile uygulamayı aç. 390×844 pencerede şu ekranların görüntüsünü mobile/docs/ux/once/ altına kaydet:
+3. `npm run web` ile uygulamayı aç. 390×844 pencerede şu ekranların görüntüsünü docs/mobile/ux/once/ altına kaydet:
    Keşfet, Harita, Kamera, Oyna, Pasaport, bir eser ekranı (üst ve en alt), Esere Sor, Ayarlar.
 4. Her ekran için 1–2 cümlelik UX gözlemi yaz ve sprint planındaki UX teşhisi tablosunda (U1–U8) eksik kalan önemli bir
    sorun varsa bana öner (dosyaya yazma).
@@ -46,7 +46,7 @@ Bitiş: Kaydettiğin dosyaların listesi ve gözlemler. Commit: `chore(mobile): 
 ## P1 — Tasarım temeli (ortak bileşenler)
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md dosyalarını oku (özellikle "Yeni bilgi mimarisi"). Sonra
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md dosyalarını oku (özellikle "Yeni bilgi mimarisi"). Sonra
 src/lib/theme.ts, src/components/UI.tsx ve docs/ux/once/ altındaki ekran görüntülerine bak.
 
 Görev: Sonraki ekranların kullanacağı ortak bileşenleri ve tema token'larını hazırla. Ekranları henüz değiştirme.
@@ -77,7 +77,7 @@ Button gibi mevcut bileşenler bozulmadı.
 ## P2 — Sekmeler, Bugün ana sayfası ve Keşfet
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md (bölüm 2 "Bugün" ve sekmeler) dosyalarını oku. P1'de eklenen
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md (bölüm 2 "Bugün" ve sekmeler) dosyalarını oku. P1'de eklenen
 bileşenleri (src/components/) ve şu dosyaları incele: src/app/(tabs)/_layout.tsx, (tabs)/index.tsx, (tabs)/yakin.tsx,
 src/lib/daily.ts, src/lib/store.tsx, src/lib/geo.ts.
 
@@ -92,7 +92,7 @@ Görev:
    yakin.tsx içeriğini kullanır (kodu kopyalama; bileşene çıkar ve iki yerden kullan ya da yakin.tsx'i Keşfet'in
    harita görünümüne taşı).
 3. Bugün: planın bölüm 2'deki sırasıyla yeni ana sayfa. Bu görevde gerçek veriyle çalışanlar: üst şerit (selamlama +
-   mevcut streak() ile seri), Günün Eşiği HeroCard ("30 sn dinle" = speech.ts ile item.summary'yi okur; "Hikâyeyi aç"),
+   mevcut streak() ile seri), Günün Kapısı HeroCard ("30 sn dinle" = speech.ts ile item.summary'yi okur; "Hikâyeyi aç"),
    Yakınında rayı (konum izni yoksa düğme; izin yalnızca düğmeye basınca istenir), Devam et (useQuests'ten yarım kalan görev;
    yoksa en son açılıp mühürlenmemiş eser — bunun için küçük bir yerel kayıt ekle), Keşif Sezonu
    şeridi, Okuma Odası/Sözlük kartları.
@@ -121,7 +121,7 @@ ve düzelt; sonra tekrar çek.
 ## P3 — Eser ekranı ve anlatım seçici
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md ("Eser ekranı") dosyalarını oku. src/app/eser/[slug].tsx'i baştan
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md ("Eser ekranı") dosyalarını oku. src/app/eser/[slug].tsx'i baştan
 sona oku; içindeki her davranışı (dijital mühür, yerinde mühür ve mesafe kontrolü, yol tarifi, paylaşım kartı, sesli
 dinleme, Esere Sor, fotoğraflar, Hatıra Defteri, kaynak, çevrimdışı uyarı) listele. Yeni tasarımda hiçbiri kaybolmamalı.
 
@@ -151,7 +151,7 @@ docs/ux/sonra/ altına kaydet, bak, düzelt.
 ## P4 — İlk açılış
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md ("İlk açılış") dosyalarını oku. src/app/_layout.tsx, src/lib/store.tsx
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md ("İlk açılış") dosyalarını oku. src/app/_layout.tsx, src/lib/store.tsx
 (SettingsProvider) ve P1 bileşenlerine bak.
 
 Görev: Yalnızca ilk açılışta görünen 3 adımlı karşılama.
@@ -159,8 +159,8 @@ Görev: Yalnızca ilk açılışta görünen 3 adımlı karşılama.
 2. "Nasıl keşfetmek istersin?" — 5 seçenek (Hikâye dinle · Yakınımda gez · Oyna · Çocuğumla · Derinlemesine öğren).
    Seçim settings'e kaydedilir: varsayılan anlatım (Çocuğumla→child, Derinlemesine→text, Hikâye→story, diğerleri→summary)
    ve Bugün ekranındaki kart önceliği (Yakınımda gez → Yakınında rayı ikinci sırada; Oyna → Detay Avı ikinci sırada).
-3. "İlk eşiğin hazır" → Günün Eşiği eserini açar.
-- Her adımda "Atla". Bayrak: AsyncStorage `esik:onboarded:v1`. Ayarlar'a "Karşılamayı yeniden göster" ekle.
+3. "İlk kapın hazır" → Günün Kapısı eserini açar.
+- Her adımda "Atla". Bayrak: AsyncStorage `tackapi:onboarded:v1`. Ayarlar'a "Karşılamayı yeniden göster" ekle.
 - İzin penceresi açılmaz. Hesap açma istenmez.
 
 Kapsam dışı: hesap/giriş akışı, bildirim izni.
@@ -175,7 +175,7 @@ Commit: `feat(mobile): add a three-step first-run welcome that sets the default 
 ## P5 — Esnek seri, kademeli madalyonlar, Pasaport ekranı
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md (Ö13, Ö12) dosyalarını oku. src/lib/passport.ts'i tamamen oku
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md (Ö13, Ö12) dosyalarını oku. src/lib/passport.ts'i tamamen oku
 (özellikle streak, longestStreak, medals, discover, visit, days alanı) ve (tabs)/pasaport.tsx, notify.ts
 scheduleStreakReminder'a bak. backend/pipeline/users.py'de days alanının nasıl temizlendiğine bak (DAYS_KEPT).
 
@@ -211,7 +211,7 @@ Doğrulama: Pasaport ekranının boş ve dolu (birkaç eser mühürlenmiş) hâl
 ## P6 — Detay Avı
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md (Ö1) dosyalarını oku. src/lib/daily.ts, src/lib/share.ts,
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md (Ö1) dosyalarını oku. src/lib/daily.ts, src/lib/share.ts,
 src/components/ShareSheet.tsx, src/lib/api.ts (Item.image, loadMonument images) ve src/components/home/ yuvalarına bak.
 
 Görev: Günlük Detay Avı.
@@ -222,9 +222,9 @@ Görev: Günlük Detay Avı.
 - Oyun: görsel 4× yakınlaştırılmış başlar (expo-image + transform ya da kırpma; yeni paket ekleme); her yanlış
   tahminde 2.5× → 1.5× → tam. 4 seçenek; doğru bulunca ya da hak bitince sonuç: eser adı, kaynakta yazan tek cümle
   (teaser), "Eseri aç" ve "Paylaş".
-- Durum AsyncStorage `esik:hunt:v1`: gün → {tahminler, çözüldü}. Bugün çözüldüyse tekrar oynanmaz, sonuç gösterilir.
+- Durum AsyncStorage `tackapi:hunt:v1`: gün → {tahminler, çözüldü}. Bugün çözüldüyse tekrar oynanmaz, sonuç gösterilir.
   Çözülünce `markActiveDay` (P5) çağrılır.
-- Paylaşım kartı: eser adını VERMEZ. "EŞİK Detay Avı #12", kaç tahminde bulunduğu (dört kare, doğru tahmin altın),
+- Paylaşım kartı: eser adını VERMEZ. "TAÇKAPI Detay Avı #12", kaç tahminde bulunduğu (dört kare, doğru tahmin altın),
   bulanık küçük görsel. Mevcut ShareSheet/shareCard altyapısını kullan.
 - Bugün ekranı kartı: src/components/home/HuntCard.tsx (çözülmemiş: bulanık yakın çekim + "Bugünün detayını bul";
   çözülmüş: sonuç + paylaş). Oyna sekmesinde de en üstte giriş.
@@ -244,7 +244,7 @@ Commit: `feat(mobile): add the daily detail hunt with a spoiler-free share card`
 ## P7 — Hatırla kartları
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md (Ö2) dosyalarını oku. src/lib/quiz.ts (generateQuestions, quizPool),
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md (Ö2) dosyalarını oku. src/lib/quiz.ts (generateQuestions, quizPool),
 src/app/quiz.tsx, src/lib/reading.ts (loadTerms, GlossaryTerm) ve src/components/home/ yuvalarına bak.
 
 Görev: Aralıklı tekrarla Hatırla kartları.
@@ -253,11 +253,11 @@ Görev: Aralıklı tekrarla Hatırla kartları.
   Yeni kartlar: kullanıcının keşfettiği (progress.discovered) eserlerden quiz.ts'in ürettiği sorular (yalnızca veriden
   gelen alanlar: şehir, tür, dönem, yapım yılı, yapımcı) ve kullanıcının açtığı terimler. Bir eser keşfedildikten
   1 gün sonra ilk kez sorulur. Oturum: en fazla 5 kart, ilk oturumda 3.
-- Durum AsyncStorage `esik:recall:v1`.
+- Durum AsyncStorage `tackapi:recall:v1`.
 - Ekran src/app/hatirla.tsx: kart önü soru, "Cevabı göster", sonra Biliyordum/Bilmiyordum (ya da çoktan seçmeli),
   oturum sonunda kapanış kartı: "Bugün 2 eseri hatırladın, 1 terimi tekrar edeceğiz." Oturum bitince `markActiveDay`.
 - Bugün kartı src/components/home/RecallCard.tsx: zamanı gelen kart varsa "3 kart seni bekliyor", yoksa null.
-- Günün Eşiği bildirimini değiştirme (bu sprintte yok).
+- Günün Kapısı bildirimini değiştirme (bu sprintte yok).
 
 Kapsam dışı: yeni soru metni yazmak (kaynak kuralı), arka uç, Progress alanı.
 
@@ -272,7 +272,7 @@ bölümüne (P10'da eklenecek; yoksa geçici olarak) "Hatırla kartlarını şim
 ## P8 — Seyahat modu
 
 ```
-mobile/CLAUDE.md ve mobile/docs/sprint-7-kasim.md (Ö5) dosyalarını oku. src/lib/geo.ts, src/lib/offline.ts
+docs/ai/mobile/CLAUDE.md ve docs/mobile/sprint-7-kasim.md (Ö5) dosyalarını oku. src/lib/geo.ts, src/lib/offline.ts
 (downloadRoute, useRoutePack), src/lib/store.tsx (useQuests) ve src/components/home/ yuvalarına bak.
 
 Görev:
@@ -280,7 +280,7 @@ Görev:
   o şehirdeki eser sayısı, en yakın 5 eser, o şehre ait rotalar (Season.artifactIds'in çoğu o şehirdeyse).
 - Bugün kartı src/components/home/TravelCard.tsx: YALNIZCA konum izni zaten verilmişse çalışır (izin isteme);
   "Bursa'ya hoş geldin · 212 eser" + en yakın rota "Rotayı yürü" + "Çevrimdışı indir" (mevcut downloadRoute).
-  Aynı şehir için kullanıcı kapatırsa 7 gün gösterme (AsyncStorage `esik:travel:v1`).
+  Aynı şehir için kullanıcı kapatırsa 7 gün gösterme (AsyncStorage `tackapi:travel:v1`).
 - Bugün üst şeridine "Bursa'dasın" çipi.
 - Konum bir kez, ekran açılınca alınır; sürekli izleme yok.
 
@@ -296,7 +296,7 @@ Doğrulama: kart görüntüsü docs/ux/sonra/ altına (web'de konumu Playwright 
 ## P9 — (İsteğe bağlı) Mobil analitik
 
 ```
-mobile/CLAUDE.md, backend/docs/kullanici-ve-analitik-plani.md ve mobile/docs/mobil-plan.md (bölüm 2, analitik satırı)
+docs/ai/mobile/CLAUDE.md, docs/backend/kullanici-ve-analitik-plani.md ve docs/mobile/mobil-plan.md (bölüm 2, analitik satırı)
 dosyalarını oku. backend/pipeline/visitors.py'de olay kabul ucunu ve kabul edilen olay türlerini bul; frontend'in olay
 gönderen koduna (frontend/src/lib altında analytics) bak.
 
@@ -316,7 +316,7 @@ olaylar görünüyor; arka uç testleri geçiyor; `npx tsc --noEmit` hatasız.
 ## P10 — Cila, erişilebilirlik, demo modu, "sonra" görüntüleri
 
 ```
-mobile/CLAUDE.md, mobile/docs/sprint-7-kasim.md (demo senaryosu ve başarı ölçütleri) ve mobile/docs/erisilebilirlik.md
+docs/ai/mobile/CLAUDE.md, docs/mobile/sprint-7-kasim.md (demo senaryosu ve başarı ölçütleri) ve docs/mobile/erisilebilirlik.md
 dosyalarını oku. docs/ux/once ve docs/ux/sonra klasörlerindeki görüntülere bak.
 
 Görev:
@@ -327,7 +327,7 @@ Görev:
    P7 notu ("Hatırla kartlarını şimdi getir"): src/lib/recall.ts'e saf `bringForward(state, candidates, now)` ekle.
    `workCards` + `termCards` ile bulunan her kartın (henüz hiç sorulmamış yeni kartlar dahil) `due` alanını bugüne
    çeker; kutuları ve `sessions`'ı değiştirmez. Böylece bugün keşfedilen eserin kartları da hemen açılır. Durum
-   `esik:recall:v1`'e yazılır; Hatırla ekranı ve Bugün kartı useFocusEffect ile yeniden okur. Oturum yine en fazla
+   `tackapi:recall:v1`'e yazılır; Hatırla ekranı ve Bugün kartı useFocusEffect ile yeniden okur. Oturum yine en fazla
    5 kart (ilk oturumda 3) olur. Demodan önce en az 1–2 eser keşfedilmiş olmalı, yoksa kart çıkmaz.
 2. Tutarlılık turu: tüm sekmeler ve yeni ekranlarda başlık boyutları, boşluklar, kart yarıçapları, boş durumlar,
    yükleniyor göstergeleri aynı dili konuşuyor mu? Sapmaları listele, onayımla düzelt.
@@ -347,7 +347,7 @@ Kabul ölçütleri: demo senaryosunun 7 adımı baştan sona hatasız oynanıyor
 ## P11 — APK ve telefonda deneme
 
 ```
-mobile/CLAUDE.md ve mobile/README.md ("Kurulabilir APK") bölümünü oku.
+docs/ai/mobile/CLAUDE.md ve docs/mobile/README.md ("Kurulabilir APK") bölümünü oku.
 
 Görev: Demo APK'sini hazırlamama yardım et. Komutları sırayla ver, ben çalıştırayım; her adımın çıktısını yorumla.
 1. `npx expo-doctor` ve `npx tsc --noEmit` temiz mi?
@@ -364,7 +364,7 @@ Kod değiştirme gerekiyorsa önce sor. Commit: `chore(mobile): bump version for
 
 ```
 [Ekran adı] ekranını docs/ux/sonra/[dosya].png görüntüsüyle birlikte incele. Sorunlar:
-- [ör. Günün Eşiği kartı ekranın yarısını kaplıyor, en fazla üçte biri olmalı]
+- [ör. Günün Kapısı kartı ekranın yarısını kaplıyor, en fazla üçte biri olmalı]
 - [ör. kartlar arası boşluk tutarsız]
 Yalnızca bu ekranı ve gerekirse kullandığı bileşeni değiştir. Önce ne değiştireceğini 3–5 madde yaz, onayımı bekle.
 Bitince aynı boyutta yeni görüntüyü kaydet ve öncekiyle karşılaştır.

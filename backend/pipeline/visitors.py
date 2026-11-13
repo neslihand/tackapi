@@ -18,7 +18,7 @@
   GET    /api/popular?days=7                  en çok merak edilenler ve trend
   GET    /api/site-settings                   varsayılan anlatım biçimi, öne çıkan rota (veriden ya da elle)
 
-Oturum: httpOnly çerez (esik_oturum; HTTPS'te Secure), 30 gün; veritabanında anahtarın yalnızca özeti tutulur. Mobil uygulama
+Oturum: httpOnly çerez (tackapi_oturum; HTTPS'te Secure), 30 gün; veritabanında anahtarın yalnızca özeti tutulur. Mobil uygulama
 giriş/kayıtta token=true gönderir, anahtarı yanıttan alır ve `Authorization: Bearer <anahtar>` ile kullanır. Durum değiştiren
 uçlar yalnızca JSON kabul eder (başka sitelerden form gönderimiyle tetiklenemez) ve çerez SameSite=Lax'tır.
 """
@@ -31,7 +31,7 @@ from pydantic import BaseModel, ConfigDict, Field
 import users as U
 import insights as I
 
-COOKIE = 'esik_oturum'
+COOKIE = 'tackapi_oturum'
 EVENT_TYPES = {
     'page_view', 'monument_view', 'narration_mode', 'read_depth', 'read_time', 'photo_open', 'chat_question',
     'chat_answer', 'camera_search', 'search', 'filter', 'map_select', 'map_locate', 'route_open', 'quiz_finish',

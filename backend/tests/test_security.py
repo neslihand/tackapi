@@ -32,7 +32,7 @@ def build(**env):
         @app.get('/{rest:path}')
         def page(rest: str):
             from fastapi.responses import HTMLResponse
-            return HTMLResponse('<!doctype html><title>EŞİK</title>')
+            return HTMLResponse('<!doctype html><title>TAÇKAPI</title>')
         app.middleware_stack = app.build_middleware_stack()   # ara katman ayarları bu ortamla okunsun
         return TestClient(app)
 

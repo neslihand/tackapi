@@ -1,10 +1,10 @@
 // "Detay Avı": the day's close-up puzzle. Pure functions: the same date gives everyone the same work, options and
-// close-up; the saved state (esik:hunt:v1, hunt-state.ts) is only read and changed here.
+// close-up; the saved state (tackapi:hunt:v1, hunt-state.ts) is only read and changed here.
 import type { Item } from './api';
 import { dailyPicks } from './daily';
 import { compareKeys, dayKey, emptyProgress } from './passport';
 
-export const HUNT_KEY = 'esik:hunt:v1';
+export const HUNT_KEY = 'tackapi:hunt:v1';
 /** Puzzle #1; every local day after it adds one. */
 export const HUNT_START = '2026-11-01';
 /** The close-up's zoom: at the start, then after each wrong guess; the last one is the whole photo. */
@@ -45,7 +45,7 @@ export function huntFor(items: Item[], date: Date): Hunt | null {
   if (pool.length < HUNT_TRIES + 1) return null;
   const number = huntNumber(date);
   const at = (n: number) => pool[((n - 1) % pool.length + pool.length) % pool.length];
-  // a first-time visitor's Günün Eşiği is never the day's answer (a returning one's is personal, see dailyPicks)
+  // a first-time visitor's Günün Kapısı is never the day's answer (a returning one's is personal, see dailyPicks)
   const threshold = dailyPicks(items, emptyProgress(), date, 1)[0]?.slug;
   const answer = at(number).slug === threshold ? at(number + 1) : at(number);
 

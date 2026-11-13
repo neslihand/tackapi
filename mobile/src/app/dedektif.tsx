@@ -79,7 +79,7 @@ function Game({ requestedLevel }: { requestedLevel?: GameLevel }) {
     {!round ? <Notice icon="information-circle-outline">{t('Bu seviyede ipucu çıkarılabilecek bir eser yok. Daha kolay bir seviye seçebilirsin.', 'No work has enough clues for this level. You can choose an easier level.')}</Notice> : <>
       <View style={s.file}>
         <View style={s.fileHead}>
-          <Text style={s.fileTitle}>{t('EŞİK • GİZLİ DOSYA', 'EŞİK • SECRET FILE')}</Text>
+          <Text style={s.fileTitle}>{t('TAÇKAPI • GİZLİ DOSYA', 'TAÇKAPI • SECRET FILE')}</Text>
           <Text style={s.fileCount}>{t(`${revealed} / ${round.clues.length} ipucu açık`, `${revealed} / ${round.clues.length} clues open`)}</Text>
         </View>
         {round.clues.map((clue, i) => i < revealed

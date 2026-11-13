@@ -189,13 +189,13 @@ function DataPanel({ onReplaced }: { onReplaced: () => void }) {
   const rows: [keyof Content, string, number][] = [['artifacts', 'Eserler ve hikâyeler', content.artifacts.length], ['quizQuestions', 'Quiz soruları', content.quizQuestions.length], ['seasons', 'Keşif sezonları', content.seasons.length]];
   function download() {
     const url = URL.createObjectURL(new Blob([serializeOverrides(content.overrides)], { type: 'application/json' }));
-    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'esik-yerel-icerik.json'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'tackapi-yerel-icerik.json'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function upload(file: File) {
     setError('');
     if (file.size > 2 * 1024 * 1024) { setError('Dosya 2 MB sınırını aşıyor.'); return; }
     const parsed = parseOverrides(await file.text(), baseContent);
-    if (!Object.keys(parsed.overrides).length) { setError('Dosyada geçerli bir EŞİK içerik kaydı bulunamadı.'); return; }
+    if (!Object.keys(parsed.overrides).length) { setError('Dosyada geçerli bir TAÇKAPI içerik kaydı bulunamadı.'); return; }
     content.replace(parsed.overrides); onReplaced(); notify('Yerel içerik dosyadan yüklendi.');
   }
   return <div className="admin-stack">

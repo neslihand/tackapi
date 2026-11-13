@@ -4,7 +4,7 @@ import { STATUS_LABELS } from '../lib/format';
 import type { ImageStatus } from '../lib/types';
 
 export function Brand() {
-  return <span className="brand"><svg viewBox="0 0 32 42" aria-hidden="true"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><span>EŞİK<small>YÖNETİM PANELİ</small></span></span>;
+  return <span className="brand"><svg viewBox="0 0 32 42" aria-hidden="true"><path d="M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39" /></svg><span>TAÇKAPI<small>YÖNETİM PANELİ</small></span></span>;
 }
 export function Field({ label, hint, children, wide = false }: { label: string; hint?: string; children: ReactNode; wide?: boolean }) {
   return <label className={`admin-field ${wide ? 'wide' : ''}`}><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;

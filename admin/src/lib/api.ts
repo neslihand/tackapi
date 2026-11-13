@@ -3,7 +3,7 @@ import type { QuestionRow, QuestionStatus, WeeklyFields, WeeklyItem, WorkDetail,
   PagePhotos, ParaDecision, Period, SegItem, SplitPart, Stats } from './types';
 import type { Lang, Narration, NarrationMode, Preview, VisualSearchResult } from '../public/model';
 
-export const TOKEN_KEY = 'esik:admin-token';
+export const TOKEN_KEY = 'tackapi:admin-token';
 
 export class ApiError extends Error {
   status: number;

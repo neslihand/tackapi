@@ -345,7 +345,7 @@ def ensure_fresh(db):
 
 # ------------------------------------------------------------------------------------------- taslak
 # Ziyaretçinin okuyacağı metin: yöneticinin iç gerekçesi (hemen çıkma oranı, düşen geri dönüş…) asla metne girmez.
-DRAFT_RULES = """Sen, Türkiye'deki vakıf eserlerini tanıtan "EŞİK" adlı kültür sitesinin editörüsün. Yöneticinin düzenleyip
+DRAFT_RULES = """Sen, Türkiye'deki vakıf eserlerini tanıtan "TAÇKAPI" adlı kültür sitesinin editörüsün. Yöneticinin düzenleyip
 onaylayacağı, ziyaretçinin okuyacağı kısa metinler yazıyorsun. İyi bir müze ya da kültür dergisi editörü gibi yaz.
 
 DOĞRULUK (en önemli kural):

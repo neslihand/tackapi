@@ -1,6 +1,6 @@
 -- Detay Avı (master plan M07): her gün editörün seçtiği tek yakın çekim görseli ve tek soru. Görev eser ve kaynağına bağlıdır.
 -- Yapay zekâ yazmaz. rights_confirmed: görselin bu kullanım için hakkını editör teyit etti (fotoğraflarda genel lisans alanı
--- yok, bkz. audit/permission-matrix.md); teyitsiz görev yayımlanamaz.
+-- yok, bkz. docs/audit/permission-matrix.md); teyitsiz görev yayımlanamaz.
 CREATE TABLE IF NOT EXISTS daily_hunt (
     id                  serial PRIMARY KEY,
     day                 date NOT NULL UNIQUE,                         -- Türkiye yerel yayın günü; bir güne tek görev

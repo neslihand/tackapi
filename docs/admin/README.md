@@ -1,4 +1,4 @@
-# EŞİK — Yönetim Paneli
+# TAÇKAPI — Yönetim Paneli
 
 Vakıf eserleri platformunun yönetim paneli: eser kayıtlarını ve fotoğrafları düzenleme, onaylama ve yayına alma.
 Ziyaretçi uygulamasından (`../frontend`) **ayrı** bir uygulamadır ve arka ucun yönetim API'sini (`../backend`,
@@ -14,7 +14,7 @@ Ziyaretçi uygulamasından (`../frontend`) **ayrı** bir uygulamadır ve arka uc
   `src/styles.css`'in başındaki blokta toplanmıştır.
 
 ## Çalıştırma
-Önce arka ucu başlatın (`backend/README.md` §4). Yönetim uçları için anahtarlar kökteki `.env` dosyasında tanımlı
+Önce arka ucu başlatın (`docs/backend/README.md` §4). Yönetim uçları için anahtarlar kökteki `.env` dosyasında tanımlı
 olmalı (`VAKIF_ADMIN_TOKENS=neslihan:<uzun-rastgele-anahtar>,fatmanur:<uzun-rastgele-anahtar>`; bkz. `../.env.example`):
 ```powershell
 python -m uvicorn api:app --port 8000

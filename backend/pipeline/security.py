@@ -4,7 +4,7 @@
   çalıştırır. Araya sızmış bir HTML parçası (ör. eser adına yazılmış <script>) çalışamaz, sayfa başka sitelere veri
   gönderemez. İzinli dış adresler: harita karoları (OpenStreetMap) ve sohbet başka bir servisteyse onun adresi
   (VITE_CHAT_API_URL). Sayfalar yalnızca aynı adresten çerçeveye alınır: yönetim panelinin önizlemesi siteyi
-  /yonetim/'den gösterir, başka bir site EŞİK'i çerçeveye alıp tıklama tuzağı kuramaz.
+  /yonetim/'den gösterir, başka bir site TAÇKAPI'yı çerçeveye alıp tıklama tuzağı kuramaz.
 - /api: JSON uçları çerçeveye alınmaz. Hesap, yönetim ve yazar yanıtları tarayıcıda saklanmaz (no-store).
 - /media: fotoğraflar betiksiz ve kum havuzunda (sandbox) sunulur; dosya türü tahmin edilmez (nosniff).
 - /docs, /redoc: FastAPI'nin API belgesi dış betik kullanır; içerik politikası uygulanmaz, diğer başlıklar uygulanır.
@@ -27,7 +27,7 @@ COMMON = {
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
 }
-# kamera (fotoğrafla eser bulma) ve konum (harita, yakınımdakiler) yalnızca EŞİK'in kendi sayfalarında
+# kamera (fotoğrafla eser bulma) ve konum (harita, yakınımdakiler) yalnızca TAÇKAPI'nın kendi sayfalarında
 PERMISSIONS = 'camera=(self), geolocation=(self), microphone=(), payment=(), usb=()'
 
 

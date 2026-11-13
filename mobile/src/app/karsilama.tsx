@@ -36,7 +36,7 @@ export default function Welcome() {
   const { change } = useSettings();
   const { prefs } = usePreferences();
   const account = useAccount();
-  // the same work as Bugün's Günün Eşiği card; a choice that promises a telling opens a work that has it
+  // the same work as Bugün's Günün Kapısı card; a choice that promises a telling opens a work that has it
   const tiers = useMemo(() => preferenceTiers(prefs), [prefs]);
   const today = useMemo(() => dailyPicks(items, progress, new Date(), 1, tiers)[0], [items, progress, tiers]);
   const pickFor = (fit: (i: Item) => boolean) => dailyPicks(items.filter(fit), progress, new Date(), 1, tiers)[0];

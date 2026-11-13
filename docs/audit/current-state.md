@@ -1,4 +1,4 @@
-# EŞİK Mobil: mevcut durum (ESK-001)
+# TAÇKAPI Mobil: mevcut durum (ESK-001)
 
 31 Ekim 2026'da kod incelenerek ve uygulama çalıştırılarak çıkarıldı, 1 Kasım 2026'da iki kez güncellendi. Master planın §2 kontrol listesinin ve §13 iş listesinin karşılığıdır.
 
@@ -24,11 +24,11 @@
 | Kamera ile tanıma | Var (`POST /api/visual-search`), düşük güvende aday listesi | Korundu |
 | Rota yürüyüşü ve sesli rehber | Var. Ses cihazın kendi sesiyle (TTS); ses dosyası ve transkript ayrımı yok, metin her zaman ekranda | Korundu, ölçüm eklendi |
 | Çevrimdışı rota paketi | Var (metin ve izinli fotoğraf). İndirmeden önce boyut, içerik sürümü, eksik parça kontrolü, fotoğraf izni ve Ayarlar'da silme var | ESK-011 |
-| WCAG denetimi | `mobile/docs/erisilebilirlik.md` (30 Ekim, axe taraması) | Yeni ekranlar cihazda ekran okuyucuyla test edilmedi |
+| WCAG denetimi | `docs/mobile/erisilebilirlik.md` (30 Ekim, axe taraması) | Yeni ekranlar cihazda ekran okuyucuyla test edilmedi |
 | Web analitiği, profil, `Senin için` | Backend ve web'de var. Mobil bu turda aynı `POST /api/events` ucuna bağlandı | İkinci analitik sistemi açılmadı |
 | Web katkı onayı | Backend, web, panel ve mobilde var | Aynı onay akışı |
 | Okuma Odası | Var; veritabanında 0 makale, 55 terim | Korundu |
-| Bildirimler | Üç yerel bildirim (Günün Eşiği, Hatırla, ritim), hepsi varsayılan kapalı. Sessiz saat, günde bir sınırı ve yavaşlama var | ESK-019 bitti (sunucu bildirimi yok) |
+| Bildirimler | Üç yerel bildirim (Günün Kapısı, Hatırla, ritim), hepsi varsayılan kapalı. Sessiz saat, günde bir sınırı ve yavaşlama var | ESK-019 bitti (sunucu bildirimi yok) |
 
 ## İş listesi durumu
 
@@ -43,7 +43,7 @@
 | ESK-007 Defter + giriş sonrası birleşme | Bitti | Birleşme birim testli; tarayıcıda gerçek hesapla denenmedi |
 | ESK-008 Şehir seçimi + yakınımdakiler | Bitti | Konumsuz şehir listesi, 50 km'den uzakta dürüst yönlendirme |
 | ESK-009 Rota listesi/detay/yürüyüş | Motor bitti, **editör rotası yok** | Panelde süre (20/45/90, seyahat 1/3/6 saat) ve erişim notu; süre yazılınca yayın için bütün durakların konumu doğrulanmış olmalı. Telefonda süre seçimi yalnızca süreli rota varsa görünür. Veritabanında 0 yazılı rota |
-| ESK-010 Paylaşım sayfası + deep link | Bitti, tek eksikle | `/eser/<slug>` sunucuda üretilir, uygulamasız açılır; "Uygulamada aç" `esik://` kullanır. **Universal link yok:** gerçek alan adı, Apple Team ID ve Android SHA-256 gerekiyor (aşağıda) |
+| ESK-010 Paylaşım sayfası + deep link | Bitti, tek eksikle | `/eser/<slug>` sunucuda üretilir, uygulamasız açılır; "Uygulamada aç" `tackapi://` kullanır. **Universal link yok:** gerçek alan adı, Apple Team ID ve Android SHA-256 gerekiyor (aşağıda) |
 | ESK-011 Çevrimdışı paket | Bitti, **izin bekliyor** | Sürüm, boyut, eksik parça, silme, fotoğraf izni. **0 fotoğrafta izin var, paketler şu an fotoğrafsız iner.** Parça bazında bayt doğrulaması yok: `expo-image` izin vermiyor, metin okunabilirliği ve fotoğrafın önbellekte oluşu kontrol ediliyor |
 | ESK-012 Ekran okuyucu testleri | Kısmi | Yeni ekranlar axe-core ile tarandı, yeni ihlal yok. Cihazda VoiceOver/TalkBack testi yok |
 | ESK-013 Detay Avı | Motor bitti, **içerik yok** | Panelde `#/detay-avi`, telefonda Oyna → Detay Avı. Veritabanında 0 görev: editör yazmadan oyun görünmez. Oyun bitince eser Hatırla kartlarına girer. Hedef 30 günlük takvim |
@@ -149,7 +149,7 @@ Master planla ayrı bir belge. 1 Kasım'da M06, M07, M08, M09, M10 ve M12 ile M1
 | Keşfet kart sırası | Niyet | Gezgine önce rotalar, araştırmacıya önce Okuma Odası, aileye önce çocuk anlatımlı öneriler |
 | Senin için | Şehir, ilgi alanı, niyet, okunanlar, ziyaretler, favoriler, defter etiketleri, gitmek istenen esere yakınlık | Her öneri gerekçesini söyler; okunan ve ilk kartta çıkan tekrar edilmez |
 | Katalog | Aynı sinyaller | Uyanlar önce; kişi arama ya da filtre yapıyorsa sıra değişmez |
-| Günün Eşiği ve bildirimi | Önce şehir + ilgi, sonra şehir, sonra ilgi | En az 3 okunmamış eser yoksa bütün koleksiyon |
+| Günün Kapısı ve bildirimi | Önce şehir + ilgi, sonra şehir, sonra ilgi | En az 3 okunmamış eser yoksa bütün koleksiyon |
 | Harita, Yakınımdakiler | Şehir | O şehirle açılır; "Tüm şehirler" kişinin seçimi olarak kalır |
 | Rotalar | Şehir | O şehirden geçenler önce |
 | Eser sayfası | Niyet, seçilen anlatım | Başlangıç anlatımı; kart çocuk anlatımı vaat ettiyse o açılır |
@@ -187,11 +187,11 @@ Ayrıca plan S02'deki `Tema`, `Süre` ve `Erişilebilirlik` filtreleri kurulmad�
 
 1. `app.json`: `ios.associatedDomains: ["applinks:<alan-adı>"]`, `android.intentFilters` (`autoVerify`, `https`, `<alan-adı>`, `pathPrefix: /eser`).
 2. Sunucuda `/.well-known/apple-app-site-association` (Apple Team ID ile) ve `/.well-known/assetlinks.json` (`eas credentials` ile alınan SHA-256).
-3. Yeni derleme. `esik://` Expo Go'da çalışmaz, geliştirme derlemesi ister.
+3. Yeni derleme. `tackapi://` Expo Go'da çalışmaz, geliştirme derlemesi ister.
 
 ## Cihazda doğrulanması gerekenler
 
-- `esik://eser/<slug>` bağlantısı ve paylaşım penceresi (`Share.share`).
+- `tackapi://eser/<slug>` bağlantısı ve paylaşım penceresi (`Share.share`).
 - Katkı fotoğrafının galeriden seçilip yüklenmesi (HEIC), `Pasaportumu indir` paylaşım penceresi.
 - Yapboz dokunuşları, kart kaydırma ve titreşim; metin ölçeği 1.3 ve 2.0.
 - Bildirim sırası, sessiz saat ve dokununca açılan ekran (`/hatirla`, `/eser/...`).

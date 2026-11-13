@@ -43,7 +43,7 @@ export function NearList({ items, here, locating, error, onLocate, header, narro
   if (!here) return <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
     {header}
     <View style={s.ask}>
-      <Eyebrow>✦ {t('YAKINIMDAKİ EŞİKLER', 'THRESHOLDS NEAR ME')}</Eyebrow>
+      <Eyebrow>✦ {t('YAKINIMDAKİ KAPILAR', 'GATES NEAR ME')}</Eyebrow>
       <Title>{t('Hangi kapılar sana yakın?', 'Which doors are near you?')}</Title>
       <Text style={s.body}>{t('Konumuna göre en yakın vakıf eserlerini sıralarız. Bir eserin önündeyken pasaportuna altın "yerinde mühür" basabilirsin.', 'We list the waqf works closest to you. When you stand in front of one, you can take its golden “on-the-spot stamp”.')}</Text>
       <Notice icon="lock-closed-outline">{t('Konumun yalnızca bu telefonda mesafe ölçmek için kullanılır, sunucuya gönderilmez.', 'Your location is only used on this phone to measure distances; it is not sent to the server.')}</Notice>

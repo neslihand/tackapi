@@ -1,4 +1,4 @@
-# EŞİK Mobil — Tasarım Sistemi
+# TAÇKAPI Mobil — Tasarım Sistemi
 
 Bu dosya mobil arayüzün **tek kaynağıdır**. Faz 1–4'te yazılan her renk, yazı, boşluk, köşe, gölge ve süre değeri
 buradaki token'lardan gelir; token'lar kodda yalnızca `src/lib/theme.ts` içinde tanımlanır. Değer bu dosyada yoksa önce
@@ -6,7 +6,7 @@ buraya eklenir, sonra koda.
 
 Kaynak: web sitesi (`frontend/src`) — özellikle `entrance.css` (giriş, altın düğme), `home.css` (kemerli görseller),
 `catalogue.css` (Keşfet), `storytelling.css` (hikâye okuma), `theme.css` (fildişi yüzeyler), `components/StoryMotifs.tsx`
-(çizgi çizimler), `components/UI.tsx` (logo) ve `frontend/docs/reference/*.png`.
+(çizgi çizimler), `components/UI.tsx` (logo) ve `docs/frontend/reference/*.png`.
 
 > İlke: **Webin dilini al, temposunu alma.** Gece yeşili sahneler, altın ışık, fildişi okuma yüzeyleri, serif başlıkta
 > altın italik vurgu, kemer formu ve ince altın çizgiler — evet. Kaydırmayla tetiklenen uzun animasyonlar, ekranı kaplayan
@@ -187,7 +187,7 @@ kayma ve shimmer yok; yalnızca anlık durum değişimi (opaklık bile yok). Hap
 ## 5. Yüzeyler
 
 **Surface `night`** — `night.surface` zemin + `nightGlow` (üst-sağ ışık) + `nightVignette`. Üzerinde `night.*` metin
-ailesi. Kullanım: Bugün'ün üst bölümü, Günün Eşiği hero, eser kapağı, pasaport kapağı, tab bar, header.
+ailesi. Kullanım: Bugün'ün üst bölümü, Günün Kapısı hero, eser kapağı, pasaport kapağı, tab bar, header.
 
 **Surface `ivory`** — `ivory.bg` zemin + isteğe bağlı `ivoryGlow`. Üzerinde `ivory.*` ailesi. Kullanım: okuma,
 listeler, formlar, ikinci plan kartları. Web kuralı: *"parchment where reading happens"*.
@@ -273,8 +273,8 @@ Props: `width`, `height`, `shape: 'rect' | 'arch' | 'line' | 'circle'`, `tone`. 
 düz zemin. `accessibilityRole="progressbar"` yalnızca kapsayıcıda bir kez.
 
 ### Brand (logo)
-Web `UI.tsx` `Brand`: `M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39` kemer + "EŞİK"
-(serif, `letterSpacing` .09em). Header başlığı olarak; `accessibilityLabel="EŞİK"`.
+Web `UI.tsx` `Brand`: `M3 39V18Q3 6 16 2Q29 6 29 18V39M8 39V19Q8 10 16 7Q24 10 24 19V39M16 15V39` kemer + "TAÇKAPI"
+(serif, `letterSpacing` .09em). Header başlığı olarak; `accessibilityLabel="TAÇKAPI"`.
 
 ### Diğer (mevcut bileşenlerin yeniden giydirilmesi)
 - **Chip**: seçili = `goldButton` dolgu + `gold.on` metin + ✓ (renk tek ipucu değil); diğerleri saydam + 1px

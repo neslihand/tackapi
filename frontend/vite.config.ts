@@ -11,7 +11,14 @@ export default defineConfig(({ mode }) => {
   // backend in dev and preview, so the browser needs no CORS and the photos stay same-origin.
   const env = loadEnv(mode, envDir, '');
   const target = env.VAKIF_API_PROXY || env.CHAT_API_PROXY;
-  const proxy = target ? { '/api': { target, changeOrigin: true }, '/media': { target, changeOrigin: true } } : undefined;
+  // The built admin panel (/yonetim/) and author panel (/yazar/) are served by the backend too, so typing
+  // localhost:5173/yonetim opens the same panel as the single address does. The site itself routes with the hash
+  // (#/yonetim is its local demo page), so these paths never clash with it.
+  const proxy = target ? {
+    '/api': { target, changeOrigin: true },
+    '/media': { target, changeOrigin: true },
+    '^/(yonetim|yazar)(/|$)': { target, changeOrigin: true },
+  } : undefined;
   return {
     envDir,
     plugins: [react()],

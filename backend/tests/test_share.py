@@ -41,7 +41,7 @@ class SharePageTest(unittest.TestCase):
         detail = self.c.get(f'/api/monuments/{CAMI}').json()
         self.assertIn(detail['card']['name_tr'], r.text)
         self.assertIn(detail['source']['book'], r.text)     # aynı kaynak web ve mobilde
-        self.assertIn(f'esik://eser/{CAMI}?ref=share', r.text)
+        self.assertIn(f'tackapi://eser/{CAMI}?ref=share', r.text)
         self.assertIn('og:title', r.text)
 
     def test_carries_no_photo_script_or_cookie(self):

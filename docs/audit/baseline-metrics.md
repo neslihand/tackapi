@@ -53,7 +53,7 @@ Bir kişi, bir ISO haftasında aşağıdakilerden en az birini yaptıysa **bir k
 | T16 Ekran okuyucu, büyük yazı | Kısmi | axe-core taraması temiz (expo-image web `alt` notu hariç). Cihaz testi yok |
 | T17 Uçak modu | Kısmi | Defter, olay kuyruğu, sunucusuz paket ve eksik parça uyarısı tarayıcıda geçti. Fotoğraf önbelleği cihazda denenmedi. Sorularım çevrimdışı açılmaz, cihaza kaydedilmez |
 | T18 Uygunsuz katkı | Geçti | Tarayıcı: onaysız katkı görünmüyor, ret gerekçesi hesapta |
-| T19 Paylaşım linki | Geçti | Tarayıcı + backend. `esik://` geçişi cihazda denenmedi |
+| T19 Paylaşım linki | Geçti | Tarayıcı + backend. `tackapi://` geçişi cihazda denenmedi |
 | T20 İçerik yeni sürümü | Geçti | Birim + tarayıcı: eski paket çalışır, güncelleme önerilir |
 
 ## Tekrar çalıştırma

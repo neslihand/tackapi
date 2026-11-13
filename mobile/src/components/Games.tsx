@@ -75,7 +75,7 @@ export function DetectivePreview({ uri }: { uri: string | null }) {
     {!!uri && <Image source={uri} alt="" contentFit="cover" blurRadius={14} style={StyleSheet.absoluteFill} />}
     <View style={[StyleSheet.absoluteFill, { backgroundColor: '#061410a6' }]} />
     <View style={s.file}>
-      <Text style={s.fileHead}>{t('EŞİK • GİZLİ DOSYA', 'EŞİK • SECRET FILE')}</Text>
+      <Text style={s.fileHead}>{t('TAÇKAPI • GİZLİ DOSYA', 'TAÇKAPI • SECRET FILE')}</Text>
       {[0, 1].map(i => <View key={i} style={s.fileRow}><Ionicons name="search-outline" size={13} color={colors.gold} /><View style={[s.fileLine, { width: i ? '46%' : '62%' }]} /></View>)}
       <View style={s.fileRow}><Ionicons name="lock-closed-outline" size={13} color={colors.goldSoft} /><View style={[s.fileLine, { width: '34%', opacity: .5 }]} /></View>
     </View>

@@ -5,7 +5,7 @@
 import type { Progress } from './progress.ts';
 
 export type PromoState = { days: string[]; shown: string[]; snoozedUntil?: string; off?: boolean };
-export const PROMO_KEY = 'esik:app-promo:v1';
+export const PROMO_KEY = 'tackapi:app-promo:v1';
 export const PROMO_RULES = { days: 2, interest: 3, shows: 3, gapDays: 7, snoozeDays: 14, keepDays: 30 };
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
