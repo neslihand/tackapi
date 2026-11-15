@@ -109,8 +109,8 @@ flowchart LR
 Veritabanı, arka uç ve yapay zekâ olmadan siteyi görmek için:
 
 ```bash
-git clone https://github.com/facetint/Kok-Kod-Hackathon.git
-cd Kok-Kod-Hackathon/frontend
+git clone https://github.com/neslihand/tackapi.git
+cd tackapi/frontend
 npm install
 npm run dev
 ```
@@ -129,11 +129,6 @@ satırı boş bırakın.
 | Python | 3.10+ | Arka uç |
 | PostgreSQL | 18, `pgvector` eklentisiyle | En kolayı Docker (`pgvector/pgvector:pg18`) ya da [Postgres.app](https://postgresapp.com) |
 | Gemini API anahtarı | isteğe bağlı | Yalnızca "Esere Sor" ve yapay zekâ taslakları için ([Google AI Studio](https://aistudio.google.com/)) |
-
-> [!IMPORTANT]
-> **Veri paketi depoda yok.** Kitap metinleri, veritabanı ve fotoğraflar telifli içerik taşıdığı için git'e konmaz.
-> Tam kurulum için ekipten iki şey alınır: veritabanı yedeği **`vakif.dump`** ve fotoğraf klasörü **`media/`**
-> (yaklaşık 330 MB). İkisini de paylaşmayın ve depoya eklemeyin.
 
 ### 1. Veritabanı
 

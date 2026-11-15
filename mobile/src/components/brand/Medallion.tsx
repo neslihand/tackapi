@@ -32,7 +32,8 @@ export function Medallion({ metal, earned, symbol, size = 96 }: { metal: CoinMet
         <RadialGradient id={`f${id}`} cx="0.4" cy="0.35" r="0.7">
           <Stop offset="0" stopColor={tone.light} /><Stop offset="1" stopColor={tone.mid} />
         </RadialGradient>
-        <Path id={`a${id}`} d="M17 50A33 33 0 0 1 83 50" />
+        {/* 220° of the r=33 ring: room for "TAÇKAPI · ANADOLU MİRASI" and its longer English legend */}
+        <Path id={`a${id}`} d="M19 61.3A33 33 0 1 1 81 61.3" />
       </Defs>
       {/* the coin's edge: a darker rim under it, then the face */}
       <Circle cx="50" cy="52" r="48" fill={tone.dark} />
@@ -40,7 +41,7 @@ export function Medallion({ metal, earned, symbol, size = 96 }: { metal: CoinMet
       <Circle cx="50" cy="50" r="45.5" fill="none" stroke={tone.light} strokeWidth="1.4" />
       <Circle cx="50" cy="50" r="43" fill="none" stroke={tone.dark} strokeWidth="1.6" strokeDasharray="0.1 3" strokeLinecap="round" />
       <Circle cx="50" cy="50" r="38" fill={`url(#f${id})`} stroke={tone.dark} strokeWidth="0.8" />
-      <SvgText fill={tone.dark} fontSize="6.4" fontFamily={fonts.sansSemi} letterSpacing="1.1">
+      <SvgText fill={tone.dark} fontSize="6" fontFamily={fonts.sansSemi} letterSpacing="0.8">
         <TextPath href={`#a${id}`} startOffset="50%" textAnchor="middle">{t('TAÇKAPI · ANADOLU MİRASI', 'TAÇKAPI · ANATOLIAN HERITAGE')}</TextPath>
       </SvgText>
     </Svg>
